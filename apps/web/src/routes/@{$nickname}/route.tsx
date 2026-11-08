@@ -4,18 +4,14 @@ import { Outlet, createFileRoute, useParams } from "@tanstack/react-router";
 import { PageMain } from "@/components/layout/page-main";
 import { PendingStatus } from "@/components/router/pending";
 import { Skeleton } from "@/components/ui/skeleton";
-import { filterSearchSchema } from "@/features/filters/search-schema";
-import { collectionsUrl } from "@/features/objekt/collections-url";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
-import { ownedCopiesUrl } from "@/features/profile/owned-copies-url";
 import { ProfileHeader } from "@/features/profile/profile-header";
 import { ProfileNotFound } from "@/features/profile/profile-not-found";
 import { ProfileProvider } from "@/features/profile/profile-provider";
 import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
 import { locksOptions, pinsOptions, profileQuery } from "@/features/profile/queries";
-import { isSpinAddress, useProfileSummary } from "@/features/profile/use-profile-objekts";
-import { orpc } from "@/lib/orpc";
+import { useProfileSummary } from "@/features/profile/use-profile-objekts";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -33,28 +29,6 @@ export const Route = createFileRoute("/@{$nickname}")({
       void queryClient.query(locksOptions(profile.address)).catch(noop);
     }
     return profile;
-  },
-  // the header and every tab read the owned copies joined to the collection list, which the browser
-  // would only ask for after hydration; preloaded, they download beside the scripts. The URLs match
-  // the queries' exactly (`useProfileSummary`), or the browser fetches twice. Only the first document
-  // needs them: on a client navigation the query starts at once, and a link added then is fetched
-  // again beside it
-  head: ({ match, loaderData }) => {
-    if (!import.meta.env.SSR || !loaderData || isSpinAddress(loaderData.address)) return {};
-    const artist = match.context.queryClient.getQueryData(
-      orpc.config.getSelectedArtists.queryKey(),
-    );
-    if (!artist) return {};
-    // the layout's search is the raw URL, read the way the header reads it
-    const filters = { artist, at: filterSearchSchema.parse(match.search).at };
-    return {
-      links: [ownedCopiesUrl(loaderData.address, filters), collectionsUrl(filters)].map((href) => ({
-        rel: "preload",
-        as: "fetch",
-        href,
-        crossOrigin: "anonymous" as const,
-      })),
-    };
   },
   notFoundComponent: ProfileNotFound,
   component: ProfileLayout,
