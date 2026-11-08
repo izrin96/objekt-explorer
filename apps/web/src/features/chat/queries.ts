@@ -59,7 +59,8 @@ export const conversationsOptions = (box: ChatBox, q?: string, show: InboxShow =
     }),
     initialPageParam: undefined as ConversationCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    staleTime: 0,
+    // long enough that the page does not refetch what its loader just read
+    staleTime: 10_000,
     meta: { box },
     // typing a search keeps the list on screen until the new results arrive; another box does not
     placeholderData: (previous, previousQuery) =>

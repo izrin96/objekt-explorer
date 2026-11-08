@@ -41,7 +41,8 @@ export const peopleOptions = (input: BrowseInput) =>
 export const tradePersonOptions = (input: { handle: string } | { userId: string }) =>
   orpc.trade.person.queryOptions({ input, staleTime: 60_000, retry: retryUnlessRefused });
 
-export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 0 });
+// 10s: long enough that Browse does not refetch what its loader just read
+export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 10_000 });
 
 export const tradeBlockedOptions = () => orpc.trade.blocked.queryOptions({ staleTime: 0 });
 

@@ -123,14 +123,16 @@ export const mineOptions = () =>
     input: (cursor: HistoryCursor | undefined) => ({ cursor }),
     initialPageParam: undefined as HistoryCursor | undefined,
     getNextPageParam: (page) => page.history.nextCursor ?? undefined,
-    staleTime: 0,
+    // long enough that the page does not refetch what its loader just read
+    staleTime: 10_000,
   });
 
 /** A trade changes on chain with no message, so it polls while the live socket is down. */
 export const tradeOptions = (tradeId: number, live = true) =>
   orpc.offer.trade.queryOptions({
     input: { tradeId },
-    staleTime: 0,
+    // long enough that the page does not refetch what its loader just read
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
     // no event fires when the indexer falls behind or catches up, so an in-progress trade polls
     refetchInterval: (query) =>

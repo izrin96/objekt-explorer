@@ -7,6 +7,6 @@ export const bannersOptions = () =>
     input: (cursor: BannerCursor | undefined) => ({ cursor }),
     initialPageParam: undefined as BannerCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    staleTime: 0,
+    staleTime: 10_000,
     retry: false,
   });
