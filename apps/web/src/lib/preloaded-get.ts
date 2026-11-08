@@ -4,10 +4,11 @@ import { ofetch } from "ofetch";
 /**
  * A plain GET of an `/api/v1` URL a route's `head` preloads, so the browser reuses the response it
  * started beside the scripts; RPC would ask again. An error comes back as the oRPC error RPC would
- * throw, which is what the retry default, the error reporting and `refusalText` read.
+ * throw, which is what the retry default, the error reporting and `refusalText` read. ofetch's own
+ * retry is off, since the query retries.
  */
-export function preloadedGet<T>(url: string) {
-  return ofetch<T>(url).catch((error: unknown) => {
+export function preloadedGet<T>(url: string, signal?: AbortSignal) {
+  return ofetch<T>(url, { retry: 0, signal }).catch((error: unknown) => {
     const body = (error as { data?: unknown }).data;
     throw isORPCErrorJson(body) ? createORPCErrorFromJson(body) : error;
   });

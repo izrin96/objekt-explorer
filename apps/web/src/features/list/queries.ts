@@ -28,7 +28,8 @@ export const listEntriesOptions = (slug: string, artist: ValidArtist[]) =>
   orpc.list.listEntries.queryOptions({
     input: { slug, artist },
     // the list routes preload this URL
-    queryFn: () => preloadedGet<Outputs["list"]["listEntries"]>(listEntriesUrl(slug, artist)),
+    queryFn: ({ signal }) =>
+      preloadedGet<Outputs["list"]["listEntries"]>(listEntriesUrl(slug, artist), signal),
     // search and the edition facet read fields the endpoint does not carry
     select: (data) => data.map(mapObjektWithTag),
     staleTime: 0,

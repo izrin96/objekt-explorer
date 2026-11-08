@@ -44,11 +44,11 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters
 export const ownedCopiesOptions = (address: string, filters?: OwnedByFilters) =>
   infiniteQueryOptions({
     queryKey: ["owned-copies", address, filters],
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       pageParam === undefined
         ? // the profile layout preloads the first page
-          preloadedGet<OwnedCopiesOutput>(ownedCopiesUrl(address, filters))
-        : client.objekts.ownedCopies({ ...filters, address, cursor: pageParam }),
+          preloadedGet<OwnedCopiesOutput>(ownedCopiesUrl(address, filters), signal)
+        : client.objekts.ownedCopies({ ...filters, address, cursor: pageParam }, { signal }),
     initialPageParam: undefined as OwnedCopiesOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
