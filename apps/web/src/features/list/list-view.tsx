@@ -107,6 +107,8 @@ function ListEntries() {
   const { selectedArtistIds } = useCosmoArtist();
   const entriesQuery = useQuery({
     ...listEntriesOptions(list.slug, selectedArtistIds),
+    // the loader prefetches these, and at 0 the mount would refetch them; own edits invalidate them
+    staleTime: 30_000,
     enabled: compare === null,
   });
   const compareQuery = useCompareQuery(list.slug, compare);
