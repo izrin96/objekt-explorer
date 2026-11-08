@@ -1,5 +1,9 @@
 import { ORPCError } from "@orpc/client";
-import { createSerializationAdapter } from "@tanstack/react-router";
+import {
+  createSerializationAdapter,
+  isNotFound as isRouterNotFound,
+  isRedirect,
+} from "@tanstack/react-router";
 
 export const isNotFound = (error: unknown) =>
   error instanceof ORPCError && error.code === "NOT_FOUND";
@@ -18,18 +22,23 @@ export function errorReason(error: unknown) {
 export const isClientError = (error: unknown) => error instanceof ORPCError && error.status < 500;
 
 /**
- * Every query's default retry. A refusal answers the same on a retry, and a retried 429 spends more
- * of the limit; a server failure or a dropped connection still gets React Query's three.
+ * Whether a failed query is worth asking again. A refusal answers the same on a retry, and a retried
+ * 429 spends more of the limit; a loader's `notFound()` or `redirect()` is an answer too. The server
+ * render never retries, as React Query's own default: each try holds the whole page (1s, 2s, 4s).
  */
+const isRetryable = (error: unknown) =>
+  !import.meta.env.SSR && !isClientError(error) && !isRouterNotFound(error) && !isRedirect(error);
+
+/** Every query's default retry: a server failure or a dropped connection gets three. */
 export const retryUnlessClientError = (failureCount: number, error: unknown) =>
-  !isClientError(error) && failureCount < 3;
+  isRetryable(error) && failureCount < 3;
 
 /**
  * The retry of a rate-limited read (the Trade feed, the offer builder's candidates): as
  * `retryUnlessClientError`, but twice, since each try counts against the limit.
  */
 export const retryUnlessRefused = (failureCount: number, error: unknown) =>
-  !isClientError(error) && failureCount < 2;
+  isRetryable(error) && failureCount < 2;
 
 export const isBadRequest = (error: unknown) =>
   error instanceof ORPCError && error.code === "BAD_REQUEST";

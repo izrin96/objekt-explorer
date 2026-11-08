@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { ORPCError } from "@orpc/client";
+import { notFound, redirect } from "@tanstack/react-router";
 
 import {
   SERVER_ERROR_MESSAGE,
@@ -16,6 +17,23 @@ describe("retryUnlessClientError", () => {
   test("never retries a refusal", () => {
     for (const code of ["BAD_REQUEST", "NOT_FOUND", "TOO_MANY_REQUESTS", "UNAUTHORIZED"]) {
       expect(retryUnlessClientError(0, new ORPCError(code))).toBe(false);
+    }
+  });
+
+  test("never retries a loader's notFound or redirect", () => {
+    expect(retryUnlessClientError(0, notFound())).toBe(false);
+    expect(retryUnlessClientError(0, redirect({ to: "/" }))).toBe(false);
+    expect(retryUnlessRefused(0, notFound())).toBe(false);
+  });
+
+  test("never retries during the server render", () => {
+    // Bun's `import.meta.env` is `process.env`; Vite inlines `SSR` at build time
+    process.env.SSR = "true";
+    try {
+      expect(retryUnlessClientError(0, new ORPCError("INTERNAL_SERVER_ERROR"))).toBe(false);
+      expect(retryUnlessRefused(0, new TypeError("Failed to fetch"))).toBe(false);
+    } finally {
+      delete process.env.SSR;
     }
   });
 
