@@ -237,7 +237,7 @@ A v1 serial or a manual anchor inside a fitted run's slot SHALL pin that slot's 
 - **THEN** the anchored token keeps its reported serial and the slot is numbered from the anchor
 
 ### Requirement: Every range write applies the member grid
-Every process that writes offline reserved ranges SHALL apply the member grid after the drop grid: the periodic populate job, the daily verifier including its rediscovery, and the maintenance scripts that recompute ranges.
+Every process that writes offline reserved ranges SHALL apply the member grid after the drop grid: the periodic populate job, the verifier's passes including their rediscovery, and the maintenance scripts that recompute ranges.
 
 #### Scenario: Verifier rediscovers a fitted run's collection
 - **WHEN** the verifier rediscovers the batches of `cream02-kaede-336a` while KaeDe's run is fitted
@@ -257,17 +257,6 @@ The grid review script SHALL report member runs beside drops. Per run, it SHALL 
 - **WHEN** the operator runs the script for Cream02 without `APPLY=1`
 - **THEN** it reports KaeDe's 334A to 337A run as fitted with slot 500 and 240 serials to change, reports KaeDe's 307A and 305A run as unpinned, and writes nothing
 
-### Requirement: The verifier checks the indexer daily
-The batch-boundary verifier SHALL run every day. A run that is not a probe run SHALL make no Cosmo API call. It SHALL check each unanchored batch against the indexer: a foreign token minted inside the batch, or a batch edge token whose indexer owner shows the range too big or too small. On drift it SHALL rediscover and rewrite the collection as a probe run does.
-
-#### Scenario: A foreign mint inside a range, found the next day
-- **WHEN** a foreign token mints on Wednesday inside an unanchored batch
-- **THEN** Thursday's run reports drift for that collection and rewrites its ranges and serials, without waiting for Monday
-
-#### Scenario: A quiet day
-- **WHEN** no indexer check finds drift
-- **THEN** the run ends having made no Cosmo API call
-
 ### Requirement: Probes skip tokens the indexer has
 A probe run SHALL judge every edge token the indexer has as minted by its indexer owner, and SHALL ask the Cosmo API only about edge tokens the indexer has not seen.
 
@@ -279,20 +268,194 @@ A probe run SHALL judge every edge token the indexer has as minted by its indexe
 - **WHEN** the token just past a batch's end is not in the indexer
 - **THEN** the run probes it through the Cosmo API, as before
 
-### Requirement: Probe runs cover recent collections weekly and all monthly
-The run on each Monday SHALL probe the unanchored batches of collections with a mint in the last 8 weeks. The run on the first Monday of a month SHALL probe the unanchored batches of every collection. Anchored and grid-fitted batches SHALL stay unprobed.
-
-#### Scenario: An old collection on an ordinary Monday
-- **WHEN** a collection's newest mint is 10 weeks old and the run is on the second Monday of the month
-- **THEN** the run checks it against the indexer only and makes no Cosmo API call for it
-
-#### Scenario: The first Monday of the month
-- **WHEN** the run is on the first Monday of the month
-- **THEN** it probes that same collection's unanchored batches
-
 ### Requirement: A manual run chooses its probe scope
-A manual verifier run SHALL take a probe scope of none, recent or all, and SHALL default to the scope that day's scheduled run would use. A dry run SHALL write nothing whatever the scope.
+A manual verifier run SHALL take a probe scope of none, recent or all, and SHALL default to none. A dry run SHALL write nothing whatever the scope.
 
 #### Scenario: A manual dry run of every collection
 - **WHEN** an operator runs the verifier with `DRY_RUN=1` and `PROBES=all` on a Thursday
 - **THEN** it probes every unanchored collection's batches and writes nothing
+
+#### Scenario: A manual run with no scope
+- **WHEN** an operator runs the verifier without `PROBES`
+- **THEN** it checks every collection against the indexer and makes no probe
+
+### Requirement: A grid fit is recorded on the collections it sets
+A collection SHALL carry the time its stored ranges were first written from a fitted grid (a drop fit that is start-pinned with its whole roster minted, or a run fit). A write that stores one collection's ranges SHALL mark only that collection; a write that stores every member's slot SHALL mark them all. A mark SHALL keep its time while later writes still fit. An unfitted, ambiguous, unpinned or roster-short fit SHALL leave it unset.
+
+#### Scenario: The last member of a drop mints
+- **WHEN** Cream02 355A has 21 of its 24 members minted, then the remaining three mint and the populate job's open-drop step finds the drop grid-fitted
+- **THEN** it writes all 24 slots and all 24 collections of Cream02 355A carry the time of that run
+
+#### Scenario: A rediscovery fits one member's drop
+- **WHEN** a rediscovery of `cream02-kaede-355a` finds Cream02 355A grid-fitted and start-pinned, and the other members still hold their discovered ranges
+- **THEN** only `cream02-kaede-355a` carries a fit time, so the drop still reads open until the open-drop step writes every slot
+
+#### Scenario: A drop still minting
+- **WHEN** the populate job processes `cream02-sullin-355a` while Cream02 355A does not fit
+- **THEN** no collection of Cream02 355A carries a fit time
+
+#### Scenario: The first member has not minted
+- **WHEN** a drop's first member in token order has not minted, the grid fits the other members from the second member's first mint, and the token right before that start is unminted
+- **THEN** no collection of the drop carries a fit time
+
+#### Scenario: A fitted member run
+- **WHEN** KaeDe's Cream02 334A to 337A run is fitted and `cream02-kaede-336a` is rediscovered
+- **THEN** `cream02-kaede-336a` carries the fit time, and the run's other collections carry one once their own writes store their slots
+
+#### Scenario: A later fit keeps the first time
+- **WHEN** the weekly verifier pass finds Cream02 356A fitted again days after it was first marked
+- **THEN** its collections keep the first time
+
+### Requirement: A lost fit clears the collection's fit time
+When a range write for a collection that carries a fit time finds neither its drop grid-fitted, start-pinned and roster-complete nor its member run fitted, the write SHALL store the discovered ranges, as it does today, and clear that collection's fit time.
+
+#### Scenario: A rediscovery no longer fits
+- **WHEN** `cream02-kaede-355a` carries a fit time, a new mint sends it to rediscovery, and Cream02 355A no longer fits
+- **THEN** the collection takes its discovered ranges and its fit time is cleared, while the other members keep theirs until their own next write
+
+#### Scenario: A rediscovery that still fits
+- **WHEN** a marked collection is rediscovered and its drop still fits and is start-pinned
+- **THEN** it keeps its slot and its first fit time
+
+### Requirement: A drop is start-pinned by a foreign mint before it
+A grid-fitted drop SHALL count as start-pinned only when the token right before its start is a minted token of another collection. A drop whose first member has not minted starts inside that member's unminted slot, so the token before it is unminted.
+
+#### Scenario: A complete drop
+- **WHEN** Cream02 356A is grid-fitted from token 29549511 and token 29549510 is a minted 107Z token
+- **THEN** the drop is start-pinned
+
+#### Scenario: An unminted token before the start
+- **WHEN** Atom02 350A is grid-fitted and the token right before its start is unminted
+- **THEN** the drop is not start-pinned, and its ranges still follow the grid as before
+
+### Requirement: A drop is roster-complete when its largest sibling has no more members
+A grid-fitted drop SHALL count as roster-complete only when it has at least as many minted members as the largest other A drop of the same season and artist, counting each drop's collections. A drop with no other A drop in its season SHALL not count as roster-complete. A drop that is not roster-complete SHALL be left unsettled and unmarked.
+
+#### Scenario: A middle member has not minted
+- **WHEN** a drop's members A and C have minted, member B between them has not, the drop fits a single slot size and is start-pinned, and the season's other A drops of the artist have 3 members
+- **THEN** the drop is not roster-complete, so the populate run writes nothing for it and no collection carries a fit time
+
+#### Scenario: Every member has minted
+- **WHEN** all 24 members of Cream02 355A have minted and the largest other Cream02 A drop of tripleS has 24 members
+- **THEN** the drop is roster-complete
+
+#### Scenario: A subunit drop
+- **WHEN** a 12-member A drop fits and is start-pinned in a season whose largest other A drop of the artist has 24 members
+- **THEN** it is not roster-complete and carries no fit time
+
+#### Scenario: The first A drop of a season
+- **WHEN** a drop is the only A drop of its season and artist
+- **THEN** it is not roster-complete
+
+### Requirement: The populate job re-fits recent open drops
+Each populate run SHALL fit the drop grid of every A drop in a block season whose earliest collection is less than 7 days old and at least one of whose collections carries no fit time. When the drop fits, is start-pinned and is roster-complete, the run SHALL write every member's grid ranges and serials, as the operator script's `APPLY=1` does, and record the fit time. Otherwise the run SHALL change nothing.
+
+#### Scenario: A foreign mint closes the drop after the last member
+- **WHEN** all 24 members of a drop have minted, no member is rediscovered afterwards, and a foreign token then mints right after the drop's end
+- **THEN** the next populate run fits the drop, writes its members' slots and serials, and records the fit time
+
+#### Scenario: A drop still minting
+- **WHEN** Cream02 355A has 21 of 24 members minted
+- **THEN** the populate run fits nothing for it and writes nothing
+
+#### Scenario: A drop whose fit was lost fits again
+- **WHEN** one collection of a 4-day-old drop lost its fit time and the drop fits and is start-pinned again
+- **THEN** the next populate run writes the slots and gives every collection without a fit time the time of that run
+
+#### Scenario: A fit with the first member missing
+- **WHEN** Binary02 304A's first member had not minted and the grid fits the other members from the second member's first mint
+- **THEN** the populate run writes nothing for the drop, because the token before that start is unminted
+
+#### Scenario: An old unfitted drop
+- **WHEN** a drop's earliest collection is 7 days old or more and it carries no fit time
+- **THEN** the populate run does not try to fit it
+
+### Requirement: The operator script records fits under APPLY
+`script/drop-grid.ts` under `APPLY=1` SHALL record the fit time on every collection of each start-pinned drop and each run it reports as fitted that does not carry one yet, including those whose ranges and serials need no change. Its report SHALL say which fitted drops it leaves unmarked, and why: not start-pinned, or members still to mint. A dry run SHALL record nothing.
+
+#### Scenario: Backfill of an already applied drop
+- **WHEN** the operator runs the script with `APPLY=1` over Cream02, where 356A is fitted and has 0 serials to change
+- **THEN** every collection of Cream02 356A carries a fit time
+
+#### Scenario: Dry run
+- **WHEN** the operator runs the script without `APPLY=1`
+- **THEN** no fit time is written
+
+### Requirement: The verifier checks recent mints every 15 minutes
+Every 15 minutes, the verifier SHALL check every token minted in the last 24 hours against the stored offline ranges of all collections. A token with a collection that falls inside a stored range of another collection SHALL make that collection a candidate. A token whose collection is unknown SHALL make none, as the verifier's own checks ignore it. The window SHALL cover mint times, so an objekt the held-transfer replay inserts late is still checked.
+
+#### Scenario: A foreign mint inside a range
+- **WHEN** a token of `cream02-kaede-336a` mints inside a stored range of `cream02-kaede-337a`
+- **THEN** the next pass makes `cream02-kaede-337a` a candidate
+
+#### Scenario: A held transfer replayed late
+- **WHEN** the held-transfer replay inserts, 3 hours late, an objekt with its original mint time, and its token sits inside another collection's stored range
+- **THEN** the next pass makes that other collection a candidate
+
+#### Scenario: A mint inside its own range
+- **WHEN** a token mints inside a stored range of its own collection
+- **THEN** no collection becomes a candidate on its account
+
+#### Scenario: A mint with no collection yet
+- **WHEN** an objekt with no collection sits inside a stored range
+- **THEN** no collection becomes a candidate on its account
+
+### Requirement: A recent-pass candidate is checked and fixed in the same pass
+Each candidate SHALL get the verifier's indexer checks: a foreign token minted inside an unanchored batch, and the batch edge tokens judged by their indexer owners. Anchored batches SHALL stay shielded. On drift, the pass SHALL rediscover the collection and rewrite its ranges, fit marks and serials as the weekly pass does. A candidate whose checks find no drift SHALL be left unchanged.
+
+#### Scenario: A candidate with drift
+- **WHEN** `cream02-kaede-337a` is a candidate and a foreign token sits inside one of its unanchored batches
+- **THEN** the pass rediscovers it and rewrites its ranges and serials
+
+#### Scenario: A foreign mint inside an anchored batch
+- **WHEN** a collection is a candidate only because of a foreign token inside a batch that holds a v1 serial or a manual anchor
+- **THEN** the pass leaves the collection unchanged
+
+#### Scenario: A failed fix
+- **WHEN** the Cosmo API fails while the pass rediscovers a candidate
+- **THEN** the pass logs it, and a later pass checks the candidate again while its token is under 24 hours old
+
+### Requirement: A drift rediscovery cannot fix is not retried within the window
+When a candidate's rediscovery gives back its stored ranges, or no ranges, the worker SHALL not rediscover it again for 24 hours while every foreign token it holds is one already tried. A foreign token not tried before SHALL make it a candidate again at once; a tried token aging out of the window SHALL not.
+
+#### Scenario: Rediscovery gives back the stored ranges
+- **WHEN** a candidate drifts, its rediscovery returns the batches already stored, and the next pass finds the same foreign token inside them
+- **THEN** that pass skips the candidate without calling the Cosmo API
+
+#### Scenario: A tried token ages out of the window
+- **WHEN** a skipped candidate held foreign tokens 510 and 520, and 510 is now more than 24 hours old
+- **THEN** the next pass still skips it, since 520 was already tried
+
+#### Scenario: Another foreign token lands in the range
+- **WHEN** a skipped candidate's range then takes a second foreign mint
+- **THEN** the next pass checks and, on drift, rediscovers it
+
+### Requirement: A skipped recent pass is visible
+When a recent pass finds the `serial-offline` lock held by another run, it SHALL log a warning, so a run of skipped passes during a busy drop shows in the log. A pass that fixes a collection SHALL log one summary line with the collections fixed and its duration, and the passes SHALL add their counts to an hourly heartbeat line. A candidate whose check throws SHALL count as failed without stopping the rest of the pass.
+
+#### Scenario: One candidate's check throws
+- **WHEN** a database error interrupts the check of the second of five candidates
+- **THEN** the pass counts it as failed and still checks the other four
+
+#### Scenario: Populate holds the lock
+- **WHEN** the populate job still holds the lock at the start of a recent pass
+- **THEN** the pass is skipped with a warning, and the pass 15 minutes later runs as usual
+
+### Requirement: The verifier makes a full indexer pass weekly
+Once a week, at Sunday 19:08 UTC, the verifier SHALL check and fix every collection's unanchored batches against the indexer, as the recent pass does its candidates. No scheduled run SHALL call the Cosmo API except to rediscover a drifted collection. It SHALL never share a minute with a recent pass, SHALL warn when it finds the lock held, and SHALL run again at 19:38 when skipped or failed at 19:08.
+
+#### Scenario: A drift older than the recent window
+- **WHEN** a foreign token inside an unanchored batch is more than 24 hours old and was never caught
+- **THEN** the next weekly pass reports drift for that collection and rewrites it
+
+#### Scenario: The weekly pass finds the lock held
+- **WHEN** a populate run still holds the lock at 19:08 UTC on Sunday
+- **THEN** the weekly pass is skipped with a warning, and runs at 19:38 instead
+
+#### Scenario: The weekly pass completed at 19:08
+- **WHEN** the weekly pass finished after starting at 19:08 UTC on Sunday
+- **THEN** nothing runs at 19:38
+
+#### Scenario: No scheduled probes
+- **WHEN** the weekly pass judges a batch edge token the indexer has not seen
+- **THEN** it leaves that token unknown and makes no Cosmo API call for it
