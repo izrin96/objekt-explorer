@@ -52,14 +52,15 @@ export const Route = createFileRoute("/(container)/")({
   },
   // the grid's list starts downloading with the document rather than after hydration; the root
   // loader has already read the artist scope the query will ask with. The first row's images
-  // start with it too, as the page's largest paint
+  // start with it too, as the page's largest paint. Only the first document carries the list's
+  // link: on a client navigation the query has it cached, and a link added then still revalidates it
   head: ({ match, loaderData }) => {
     const artist = match.context.queryClient.getQueryData(
       orpc.config.getSelectedArtists.queryKey(),
     );
     return {
       links: [
-        ...(artist
+        ...(import.meta.env.SSR && artist
           ? [
               {
                 rel: "preload",
