@@ -17,6 +17,13 @@ export function errorReason(error: unknown) {
 /** A refusal (any status under 500: bad input, not found, over a rate limit), not a server failure. */
 export const isClientError = (error: unknown) => error instanceof ORPCError && error.status < 500;
 
+/**
+ * Every query's default retry. A refusal answers the same on a retry, and a retried 429 spends more
+ * of the limit; a server failure or a dropped connection still gets React Query's three.
+ */
+export const retryUnlessClientError = (failureCount: number, error: unknown) =>
+  !isClientError(error) && failureCount < 3;
+
 export const isBadRequest = (error: unknown) =>
   error instanceof ORPCError && error.code === "BAD_REQUEST";
 

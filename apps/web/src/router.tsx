@@ -7,7 +7,7 @@ import { NotFoundComponent } from "./components/router/not-found";
 import { PendingComponent } from "./components/router/pending";
 import { parseSearch, stringifySearch } from "./features/filters/search-params";
 import { currentUserOptions } from "./features/user/queries";
-import { isUnauthorized } from "./lib/orpc-error";
+import { isUnauthorized, retryUnlessClientError } from "./lib/orpc-error";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -26,6 +26,7 @@ export function getRouter() {
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,
+        retry: retryUnlessClientError,
       },
     },
   });

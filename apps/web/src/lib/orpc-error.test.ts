@@ -7,8 +7,31 @@ import {
   errorReason,
   isFromServer,
   orpcErrorAdapter,
+  retryUnlessClientError,
   serverErrorAdapter,
 } from "./orpc-error";
+
+describe("retryUnlessClientError", () => {
+  test("never retries a refusal", () => {
+    for (const code of ["BAD_REQUEST", "NOT_FOUND", "TOO_MANY_REQUESTS", "UNAUTHORIZED"]) {
+      expect(retryUnlessClientError(0, new ORPCError(code))).toBe(false);
+    }
+  });
+
+  test("retries a server failure or a network error three times", () => {
+    for (const error of [
+      new ORPCError("INTERNAL_SERVER_ERROR"),
+      new TypeError("Failed to fetch"),
+    ]) {
+      expect([0, 1, 2, 3].map((count) => retryUnlessClientError(count, error))).toEqual([
+        true,
+        true,
+        true,
+        false,
+      ]);
+    }
+  });
+});
 
 describe("orpcErrorAdapter", () => {
   test("keeps code, status, message and data across a round trip", () => {
