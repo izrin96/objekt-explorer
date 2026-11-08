@@ -64,7 +64,7 @@ A replayed objekt carries its old `minted_at`, and the `objekt` table has no ins
 ### Schedule
 
 - The recent pass runs every 15 minutes at :02, :17, :32 and :47, off populate's 5-minute grid. A first draft ran hourly at :32, but the review pointed out that populate runs longest during a live drop. If its :30 run is still going at :32, an hourly pass loses a whole hour without a trace. At 15 minutes, a skip costs 15 minutes, and `safeRun` logs it as a `warn` for this job (`warnOnSkip`) instead of `debug`.
-- The full pass moves from `2 3 * * *` to weekly at `8 19 * * 0` (Sunday 19:08 UTC, Monday 03:08 in Malaysia), with scope `none` and `warnOnSkip`. Minute 8 is outside the recent pass's minutes. A second review caught that a Monday 03:02 slot collided with the 03:02 recent pass, so one of the two silently lost the lock. Malaysian night is the quietest hour for its ~10-minute hold on the lock.
+- The full pass moves from `2 3 * * *` to weekly at `8 19 * * 0` (Sunday 19:08 UTC, Monday 03:08 in Malaysia), with scope `none` and `warnOnSkip`. Minute 8 is outside the recent pass's minutes. A second review caught that a Monday 03:02 slot collided with the 03:02 recent pass, so one of the two silently lost the lock. Malaysian night is the quietest hour for its ~10-minute hold on the lock. A review after the deploy pointed out that one skip (populate's 19:05 run still holding the lock) or one failure would lose the backstop for a week, so a 19:38 tick runs it again unless it finished within the last hour. The worker remembers that in memory, so a restart in between costs at most one extra run.
 - Both take `serial-offline` through `safeRun`.
 - `import.meta.main` gains `RECENT=1` to run the recent pass by hand; `DRY_RUN` applies to it too.
 

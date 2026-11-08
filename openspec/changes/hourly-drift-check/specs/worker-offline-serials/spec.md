@@ -63,7 +63,7 @@ When a recent pass finds the `serial-offline` lock held by another run, it SHALL
 - **THEN** the pass is skipped with a warning, and the pass 15 minutes later runs as usual
 
 ### Requirement: The verifier makes a full indexer pass weekly
-Once a week, at Sunday 19:08 UTC, the verifier SHALL check each unanchored batch of every collection against the indexer, as the recent pass checks its candidates. On drift it SHALL rediscover and rewrite the collection. No scheduled run SHALL call the Cosmo API except to rediscover a drifted collection. The weekly pass SHALL never fall in the same minute as a recent pass, and SHALL log a warning when it finds the lock held.
+Once a week, at Sunday 19:08 UTC, the verifier SHALL check and fix every collection's unanchored batches against the indexer, as the recent pass does its candidates. No scheduled run SHALL call the Cosmo API except to rediscover a drifted collection. It SHALL never share a minute with a recent pass, SHALL warn when it finds the lock held, and SHALL run again at 19:38 when skipped or failed at 19:08.
 
 #### Scenario: A drift older than the recent window
 - **WHEN** a foreign token inside an unanchored batch is more than 24 hours old and was never caught
@@ -71,7 +71,11 @@ Once a week, at Sunday 19:08 UTC, the verifier SHALL check each unanchored batch
 
 #### Scenario: The weekly pass finds the lock held
 - **WHEN** a populate run still holds the lock at 19:08 UTC on Sunday
-- **THEN** the weekly pass is skipped with a warning, so the missed backstop shows in the log
+- **THEN** the weekly pass is skipped with a warning, and runs at 19:38 instead
+
+#### Scenario: The weekly pass completed at 19:08
+- **WHEN** the weekly pass finished after starting at 19:08 UTC on Sunday
+- **THEN** nothing runs at 19:38
 
 #### Scenario: No scheduled probes
 - **WHEN** the weekly pass judges a batch edge token the indexer has not seen

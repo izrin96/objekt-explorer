@@ -103,18 +103,28 @@ if (indexerWrites) {
   // quietest hour since it holds the lock ~10 minutes, and off the 15-minute pass's minutes so it
   // never loses the lock to one; its skip warns too. No startup run. Both rewrite the same serials
   // as populateSerialOffline, so they take that job's lock, off its 5-minute grid so they don't
-  // race for it in the same minute.
+  // race for it in the same minute. A weekly pass skipped or failed at 19:08 runs again at 19:38,
+  // else the backstop would be lost for a week.
   crons.push(
     cron(
       "2,17,32,47 * * * *",
       safeRun("serial-offline", () => verifyRecentDrift(), { warnOnSkip: true }),
     ),
   );
+  let weeklyDoneAt = 0;
+  const runWeekly = safeRun(
+    "serial-offline",
+    async () => {
+      await verifyBatchBoundaries("none");
+      weeklyDoneAt = Date.now();
+    },
+    { warnOnSkip: true },
+  );
+  crons.push(cron("8 19 * * 0", runWeekly));
   crons.push(
-    cron(
-      "8 19 * * 0",
-      safeRun("serial-offline", () => verifyBatchBoundaries("none"), { warnOnSkip: true }),
-    ),
+    cron("38 19 * * 0", async () => {
+      if (Date.now() - weeklyDoneAt > 60 * 60 * 1000) await runWeekly();
+    }),
   );
 
   // process collection images - download, convert to WebP, upload to S3

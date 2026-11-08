@@ -34,6 +34,7 @@
 - [x] 5.2 Stop the scheduled probes: the weekly run uses scope `none`, the manual default becomes `none`, `probeScopeFor` and its tests go. Verify that `bun run check --filter=worker` passes and that `RECENT=1 DRY_RUN=1` and `DRY_RUN=1` runs (read-only, `.env.local`) still report today's drift.
 
 - [x] 5.3 Apply the second review: move the weekly pass to `8 19 * * 0` with `warnOnSkip` (it collided with the 03:02 recent pass); add an hourly heartbeat to the recent pass; catch a throwing candidate and count it as failed; skip a stuck candidate while all its foreign tokens were already tried (`onlyTriedTokens`, tested) instead of by exact key; make the walk-back test name what it checks; fix the stale "hourly" and null-collection wording, and the main spec's "daily verifier". Verify that `bun run check --filter=worker` passes and a `RECENT=1 DRY_RUN=1` run still reports today's drift.
+- [x] 5.4 Retry a skipped or failed weekly pass at 19:38 the same day (`apps/worker/src/index.ts`: a 19:38 tick runs it when no weekly pass finished within the hour). Verify that `bun run check --filter=worker` passes.
 
 ## 6. Docs
 
