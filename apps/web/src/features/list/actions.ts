@@ -19,10 +19,15 @@ import { LIST_QUERY_KEY } from "./queries";
 function useListInvalidation() {
   const queryClient = useQueryClient();
 
-  return (slug?: string) =>
-    Promise.all([
+  /**
+   * `deleted`: the list's own reads go stale without a refetch. Its page stays mounted until the
+   * delete dialog navigates away, and each of them would come back a 404.
+   */
+  return (slug?: string, { deleted = false }: { deleted?: boolean } = {}) => {
+    const own = deleted ? ("none" as const) : undefined;
+    return Promise.all([
       queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
-      queryClient.invalidateQueries({ queryKey: LIST_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: LIST_QUERY_KEY, refetchType: own }),
       queryClient.invalidateQueries({ queryKey: orpc.trade.key() }),
       // Market lists sale entries and their prices
       queryClient.invalidateQueries({ queryKey: orpc.market.key() }),
@@ -30,9 +35,25 @@ function useListInvalidation() {
         ? [
             queryClient.invalidateQueries({
               queryKey: orpc.list.listEntries.key({ input: { slug } }),
+              refetchType: own,
             }),
             // refetched while the dialog is still open, so the next open seeds from the saved list
-            queryClient.invalidateQueries({ queryKey: orpc.list.find.key({ input: { slug } }) }),
+            queryClient.invalidateQueries({
+              queryKey: orpc.list.find.key({ input: { slug } }),
+              refetchType: own,
+            }),
+            ...(deleted
+              ? [
+                  queryClient.invalidateQueries({
+                    queryKey: orpc.list.rules.key({ input: { slug } }),
+                    refetchType: own,
+                  }),
+                  queryClient.invalidateQueries({
+                    queryKey: orpc.list.ruleObjekts.key({ input: { slug } }),
+                    refetchType: own,
+                  }),
+                ]
+              : []),
             queryClient.invalidateQueries({ queryKey: orpc.list.listPreviews.key() }),
             queryClient.invalidateQueries({ queryKey: orpc.list.profileLists.key() }),
           ]
@@ -44,6 +65,7 @@ function useListInvalidation() {
             }),
           ]),
     ]);
+  };
 }
 
 export function useCreateList() {
@@ -127,7 +149,7 @@ export function useDeleteList() {
     orpc.list.delete.mutationOptions({
       onSuccess: async (_data, { slug }) => {
         toastManager.add({ type: "success", title: m.list_delete_success() });
-        await invalidate(slug);
+        await invalidate(slug, { deleted: true });
       },
       onError: (error) => {
         toastManager.add({
