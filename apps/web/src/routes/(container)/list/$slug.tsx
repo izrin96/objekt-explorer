@@ -48,8 +48,9 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       });
     }
 
-    // unlike the entries, small enough to stream with the server render
-    if (list.listType === "want" && cause !== "preload") {
+    // the browser only, as the entries: streamed in before hydration, they would draw a strip the
+    // server's HTML left out
+    if (!import.meta.env.SSR && list.listType === "want" && cause !== "preload") {
       void queryClient.query(listRulesOptions(params.slug)).catch(noop);
     }
 

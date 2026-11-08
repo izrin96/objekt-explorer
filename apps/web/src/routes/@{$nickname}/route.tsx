@@ -25,9 +25,10 @@ export const Route = createFileRoute("/@{$nickname}")({
       ...profileQuery({ nickname: params.nickname }),
       staleTime: "static",
     });
-    // the pins and locks mark the owned grid; started here, they come with the first document
-    // rather than after hydration. A hover preload leaves them to the click
-    if (cause !== "preload") {
+    // the pins and locks mark the owned grid, so a client navigation starts them beside the
+    // profile. Never on the server: streamed in before hydration, they would render counts the
+    // server's HTML drew as 0. A hover preload leaves them to the click
+    if (!import.meta.env.SSR && cause !== "preload") {
       void queryClient.query(pinsOptions(profile.address)).catch(noop);
       void queryClient.query(locksOptions(profile.address)).catch(noop);
     }
