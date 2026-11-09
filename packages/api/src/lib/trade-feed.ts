@@ -437,7 +437,8 @@ export function nextSlice(people: readonly OrderEntry[], at: number, limit: numb
 
 /**
  * Where a cursor goes on in an order it was not read from (expired, or another filter): after
- * its person when they are in it, else at its position.
+ * its person when they are in it, else at its position. A position past a capped order's end is
+ * kept, so `orderReader` goes on from the cursor's own keyset instead of the order's end.
  */
 export function resumeAt(
   people: readonly OrderEntry[],
@@ -445,7 +446,7 @@ export function resumeAt(
 ): number {
   const found = people.findIndex((entry) => entry.id === cursor.userId);
   if (found !== -1) return found + 1;
-  return Math.min(cursor.at, people.length);
+  return cursor.at;
 }
 
 /** A place a page of people reads: an order entry, or a person past a capped order. */

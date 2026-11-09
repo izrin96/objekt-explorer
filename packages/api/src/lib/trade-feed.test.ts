@@ -711,9 +711,12 @@ describe("resumeAt", () => {
     expect(resumeAt(order, { userId: "t2", at: 0 })).toBe(5);
   });
 
-  test("else at the cursor's position, never past the end", () => {
+  test("else at the cursor's position", () => {
     expect(resumeAt(order, { userId: "gone", at: 2 })).toBe(2);
-    expect(resumeAt(order, { userId: "gone", at: 9 })).toBe(5);
+  });
+
+  test("keeps a position past the end, so a capped order's tail goes on from the cursor's keyset", () => {
+    expect(resumeAt(order, { userId: "gone", at: 9 })).toBe(9);
   });
 });
 
