@@ -1,9 +1,10 @@
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { conversation, user, userSanction } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { pairKey } from "../../lib/chat-rules";
 import { effectiveSanction } from "../../lib/sanctions";
+import { lockUsersShared } from "../account/cosmo-link";
 import {
   activeSanctionWhere,
   banned,
@@ -57,6 +58,25 @@ export async function chatSafety(userId: string, partnerId: string) {
     tradeBlocked: row?.trade_blocked ?? false,
     partnerTradeBlocked: row?.partner_trade_blocked ?? false,
   };
+}
+
+/**
+ * `chatSafety`'s `blocked` again inside a send's transaction, after both user rows are held
+ * `FOR SHARE`: a block between the two, the partner's ban, or either account deleted. A block
+ * locks both rows `FOR NO KEY UPDATE` before writing, a ban the banned user's row, and a
+ * deletion's scrub the deleted user's row, so each either committed before this read or waits
+ * behind the send. The sender's own ban is not re-read: like `chatSafety`, it relies on the
+ * ban ending the sender's sessions. A mute is not re-read, as `refuseUnsafeIn` explains for offers.
+ */
+export async function blockedIn(tx: Tx, userId: string, partnerId: string) {
+  const users = await lockUsersShared(tx, [userId, partnerId]);
+  if (users.some((row) => row.deleted_at !== null)) return true;
+  // a separate statement from the lock: under read committed it takes a snapshot after the
+  // lock wait, so a block committed while the send waited is seen; one merged statement would miss it
+  const { rows } = await tx.execute<{ blocked: boolean }>(sql`
+    SELECT NOT ${notBlockedEither(userId, partnerId)} OR ${banned(partnerId)} AS blocked
+  `);
+  return rows[0]?.blocked ?? false;
 }
 
 /** The blocker's list and badge drop the conversation, and both sides' For you change. */

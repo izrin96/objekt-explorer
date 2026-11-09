@@ -22,7 +22,7 @@ import { appendMessage, findMembership, findSentMessage } from "./members";
 import { toChatMessages } from "./messages";
 import { checkMessageRate } from "./rate";
 import { refuseChat } from "./refuse";
-import { chatSafety } from "./safety";
+import { blockedIn, chatSafety } from "./safety";
 import { activityBetween } from "./settings";
 import {
   checkStart,
@@ -146,6 +146,8 @@ export async function sendMessage(
       ? null
       : await prepareFirst(me, createdAt, partnerId, now);
     return db.transaction(async (tx) => {
+      // user rows, then the start lock, then the conversation row: the order createOffer takes
+      if (await blockedIn(tx, me, partnerId)) refuseSend({ blocked: true, mute: null });
       if (first) await lockStarts(tx, me);
       return appendMessage(tx, input.conversationId, me, {
         body,
