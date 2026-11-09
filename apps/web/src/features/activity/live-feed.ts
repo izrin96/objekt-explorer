@@ -28,7 +28,7 @@ export type LiveFeed = {
   clock: number;
 };
 
-export type LiveReward = Pick<ActivityItem, "transfer" | "objekt">;
+type LiveReward = Pick<ActivityItem, "transfer" | "objekt">;
 
 export function emptyFeed(key: ActivityParams): LiveFeed {
   return { key, rows: [], queued: [], newIds: new Set(), rewards: new Map(), clock: 0 };
