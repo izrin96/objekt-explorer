@@ -50,6 +50,7 @@ import { offersOf, openOffersWhere } from "./cancel";
 import { fetchObjekts, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { countVerified, lockTradeRow, progressColumns } from "./trade-row";
 import { autoAcceptedLegs, heldCopies, heldCopyWhere, loadOpenLegs, matchOpenLegs } from "./verify";
 import { fetchOffers, offerItemCards, topupView, itemViews } from "./view";
 
@@ -75,18 +76,6 @@ export async function findTrade(tradeId: number, me: string) {
   if (!row) throw new ORPCError("NOT_FOUND");
   return { ...row, partnerId: row.userA === me ? row.userB : row.userA };
 }
-
-const progressColumns = {
-  total: sql<number>`count(*)::int`,
-  verified: sql<number>`(count(*) FILTER (WHERE ${tradeLeg.verifiedAt} IS NOT NULL))::int`,
-};
-
-export const countVerified = (tx: Tx, tradeId: number) =>
-  tx
-    .select(progressColumns)
-    .from(tradeLeg)
-    .where(eq(tradeLeg.tradeId, tradeId))
-    .then((rows) => rows[0] ?? { total: 0, verified: 0 });
 
 /**
  * Ends an in-progress trade as cancelled, under its row lock: every leg closes, releasing its
@@ -155,16 +144,11 @@ export async function cancelTrade(me: string, tradeId: number) {
   const name = await partyNames([me]);
 
   const notified = await db.transaction(async (tx) => {
-    // the verifier settles a trade under this same lock, so a leg it verifies is seen here
-    const [locked] = await tx
-      .select({ status: sql<TradeStatus>`${trade.status}` })
-      .from(trade)
-      .where(eq(trade.id, tradeId))
-      .for("update");
+    const status = await lockTradeRow(tx, tradeId);
     const counts = await countVerified(tx, tradeId);
     const refusal = cancelRefusal(
       {
-        status: locked!.status,
+        status: status!,
         acceptedAt: row.acceptedAt,
         endedAt: row.endedAt,
         verifiedLegs: counts.verified,

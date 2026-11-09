@@ -5,7 +5,7 @@ import { chunkMap } from "@repo/lib";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, exists, inArray, sql } from "drizzle-orm";
 
-import { TOKEN_CHUNK_SIZE } from "./utils";
+import { TOKEN_CHUNK_SIZE } from "../constants";
 
 /**
  * One index probe per collection: a large owner such as Spin holds millions

@@ -5,11 +5,11 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 
+import { mergeSortedTransfers } from "../lib/transfer-merge";
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
 import { getCollectionFilters } from "./activity-feed";
-import { getCollectionColumns } from "./objekt";
+import { getCollectionColumns } from "./collection-columns";
 import { withSpinRewards } from "./spin-rewards";
-import { mergeSortedTransfers } from "./transfer-merge";
 
 const PER_PAGE = 150;
 

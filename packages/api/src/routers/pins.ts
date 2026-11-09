@@ -3,6 +3,7 @@ import { pins } from "@repo/db/schema";
 import { chunk } from "@repo/lib";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
+import { TOKEN_CHUNK_SIZE } from "../constants";
 import { authed, pub } from "../orpc";
 import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
@@ -11,7 +12,6 @@ import { ownedTokenIds } from "../services/owned";
 import { fetchPins, getValidPins } from "../services/pins";
 import { assertProfileOwned } from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
-import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const pinsRouter = {
   list: pub

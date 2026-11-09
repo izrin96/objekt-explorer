@@ -46,7 +46,8 @@ export function touchList(listIds: number[]) {
 
 /**
  * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
- * put one list in two posts. List create takes the same lock, in the same order, before it links.
+ * put one list in two posts. Every writer of a link takes it first, in this order: list create when
+ * it links, `list.delete`, `anonymizeUser`, and `trade.savePost` / `takeDownPost`.
  */
 export async function lockTradeLists(tx: Tx, userId: string): Promise<PlanList[]> {
   return tx

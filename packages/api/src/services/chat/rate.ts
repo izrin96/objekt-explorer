@@ -1,6 +1,6 @@
 import { MESSAGE_WINDOW_MS, messageRateDecision } from "../../lib/chat-rules";
 import { redis, redisFailOpen } from "../redis";
-import { refuse } from "./refuse";
+import { refuseChat } from "./refuse";
 
 const MESSAGE_WINDOW_SCRIPT = `
 redis.call("ZREMRANGEBYSCORE", KEYS[1], "-inf", ARGV[1] - ARGV[2])
@@ -39,7 +39,7 @@ export async function checkMessageRate(userId: string, now: Date): Promise<() =>
   const decision = messageRateDecision(prior.map(sendTime), now);
   if (!decision.ok) {
     await release();
-    refuse("message_limit", decision.retryAt);
+    refuseChat("message_limit", decision.retryAt);
   }
   return release;
 }

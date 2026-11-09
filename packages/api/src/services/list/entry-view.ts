@@ -8,8 +8,8 @@ import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 
-import { getCollectionColumns, getPartialCollectionColumns } from "../objekt";
-import { TOKEN_CHUNK_SIZE } from "../utils";
+import { TOKEN_CHUNK_SIZE } from "../../constants";
+import { getCollectionColumns, getPartialCollectionColumns } from "../collection-columns";
 import { fetchCollectionsBySlug } from "./collections";
 
 interface ListEntryTransformConfig {

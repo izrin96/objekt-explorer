@@ -6,9 +6,9 @@ import type { List, ListEntry } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
+import { TOKEN_CHUNK_SIZE } from "../../constants";
 import { refuse } from "../../lib/refuse";
 import { type AddSource } from "../../schemas/list";
-import { TOKEN_CHUNK_SIZE } from "../utils";
 import { touchList } from "./shared";
 
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;

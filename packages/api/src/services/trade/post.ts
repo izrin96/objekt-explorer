@@ -51,7 +51,7 @@ export async function savePost(userId: string, choice: PostChoice) {
 
     if (plan.link) {
       const [offerId, wantId] = plan.link;
-      // any other list still pointing at either half loses its link, as `list.edit` does
+      // any other list still pointing at either half loses its link, as `writeList` does
       const stale = await tx
         .update(lists)
         .set({ linkedListId: null })

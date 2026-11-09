@@ -6,7 +6,7 @@ import { pairSpinsInWindows, type SpinEvent, spinNotes, spinWindows } from "@rep
 import { eq, inArray, sql } from "drizzle-orm";
 
 import type { TransferItem } from "../schemas/transfers";
-import { getCollectionColumns } from "./objekt";
+import { getCollectionColumns } from "./collection-columns";
 
 type PageRow = {
   transfer: { id: string; from: string; to: string; timestamp: string };

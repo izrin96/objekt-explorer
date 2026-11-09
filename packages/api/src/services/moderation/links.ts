@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { addressLinkEvent, userAddress } from "@repo/db/schema";
 import { desc, eq, type SQL, sql } from "drizzle-orm";
@@ -69,10 +68,8 @@ export async function addressHistory(input: AddressHistoryInput) {
 /** A staff move, or a staff unlink when `toUserId` is absent: both take one lock order and one set of refusals. */
 async function relink(
   me: string,
-  isAdmin: boolean,
   change: { address: string; fromUserId: string; toUserId?: string; reason: string },
 ) {
-  if (!isAdmin) throw new ORPCError("FORBIDDEN");
   const { address, fromUserId, toUserId, reason } = change;
   await findAccount(fromUserId);
   if (toUserId !== undefined) await findAccount(toUserId);
@@ -139,11 +136,10 @@ async function relink(
   });
 }
 
-export const moveAddress = (me: string, isAdmin: boolean, input: MoveAddressInput) =>
-  relink(me, isAdmin, input);
+export const moveAddress = (me: string, input: MoveAddressInput) => relink(me, input);
 
-export const unlinkAddress = (me: string, isAdmin: boolean, input: UnlinkAddressInput) =>
-  relink(me, isAdmin, {
+export const unlinkAddress = (me: string, input: UnlinkAddressInput) =>
+  relink(me, {
     address: input.address,
     fromUserId: input.userId,
     reason: input.reason,

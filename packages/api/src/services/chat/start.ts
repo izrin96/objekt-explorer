@@ -13,7 +13,7 @@ import {
   startVerdict,
 } from "../../lib/chat-rules";
 import { type ChatTarget } from "../../schemas/chat";
-import { refuse } from "./refuse";
+import { refuseChat } from "./refuse";
 import { chatSafety } from "./safety";
 import { fetchPref } from "./settings";
 
@@ -103,7 +103,7 @@ export async function prepareFirst(
 /** Refuses what `startVerdict` refuses; `existing` is a conversation that holds a message. */
 function refuseStart(ctx: StartContext, existing: boolean) {
   const verdict = startVerdict(startFactsOf(ctx, existing));
-  if (!verdict.ok) refuse(verdict.reason, verdict.retryAt);
+  if (!verdict.ok) refuseChat(verdict.reason, verdict.retryAt);
 }
 
 /**

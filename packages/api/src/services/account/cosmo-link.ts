@@ -13,7 +13,7 @@ const byValue = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 type LinkEventRow = typeof addressLinkEvent.$inferInsert;
 
 /** Every account that ever held the address, plus the one holding it now. */
-export async function holdersOf(executor: Executor, address: string) {
+async function holdersOf(executor: Executor, address: string) {
   const [events, current] = await Promise.all([
     executor
       .selectDistinct({ userId: addressLinkEvent.userId })

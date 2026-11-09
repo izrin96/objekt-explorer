@@ -4,6 +4,7 @@ import { listEntries } from "@repo/db/schema";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { escapeCSV } from "../lib/csv";
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { errorResponses } from "../schemas/common/documented";
@@ -19,7 +20,6 @@ import { buildListEntries, fetchPartialOwnedListCollections } from "../services/
 import { fetchListWithEntries, findOwnedList, refuseUnheldProfile } from "../services/list/read";
 import { fetchRuleDefs } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
-import { escapeCSV } from "../services/utils";
 
 async function ruleLines(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({ columns: { id: true }, where: { slug, userId } });

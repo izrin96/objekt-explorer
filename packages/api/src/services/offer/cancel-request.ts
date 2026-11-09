@@ -1,23 +1,14 @@
 import { db, type Tx } from "@repo/db";
-import { trade, tradeCancelRequest } from "@repo/db/schema";
+import { tradeCancelRequest } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { cancelAnswerRefusal, cancelAskWait } from "../../lib/offer-rules";
-import type { CancelRequestStatus, TradeStatus } from "../../schemas/offer";
+import type { CancelRequestStatus } from "../../schemas/offer";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
-import { countVerified, endTradeCancelled, findTrade } from "./trades";
-
-/** The trade row first, the lock the verifier and `cancelTrade` take, then its requests. */
-async function lockTrade(tx: Tx, tradeId: number) {
-  const [locked] = await tx
-    .select({ status: sql<TradeStatus>`${trade.status}` })
-    .from(trade)
-    .where(eq(trade.id, tradeId))
-    .for("update");
-  return locked!.status;
-}
+import { countVerified, lockTradeRow } from "./trade-row";
+import { endTradeCancelled, findTrade } from "./trades";
 
 const pendingRequest = (tx: Tx, tradeId: number) =>
   tx
@@ -38,7 +29,7 @@ export async function askCancel(me: string, tradeId: number) {
   const name = await partyNames([me]);
 
   const notified = await db.transaction(async (tx) => {
-    if ((await lockTrade(tx, tradeId)) !== "in_progress") refuseOffer("trade_ended");
+    if ((await lockTradeRow(tx, tradeId)) !== "in_progress") refuseOffer("trade_ended");
     const requests = await tx
       .select({
         askedBy: tradeCancelRequest.askedBy,
@@ -90,9 +81,9 @@ export async function answerCancel(me: string, tradeId: number, accept: boolean)
   const name = await partyNames([me]);
 
   const notified = await db.transaction(async (tx) => {
-    const status = await lockTrade(tx, tradeId);
+    const status = await lockTradeRow(tx, tradeId);
     const pending = await pendingRequest(tx, tradeId);
-    const refusal = cancelAnswerRefusal(status, pending, me, "answer");
+    const refusal = cancelAnswerRefusal(status!, pending, me, "answer");
     if (refusal) refuseOffer(refusal);
     const { id, askedBy } = pending!;
 
@@ -126,9 +117,9 @@ export async function withdrawCancel(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
 
   await db.transaction(async (tx) => {
-    const status = await lockTrade(tx, tradeId);
+    const status = await lockTradeRow(tx, tradeId);
     const pending = await pendingRequest(tx, tradeId);
-    const refusal = cancelAnswerRefusal(status, pending, me, "withdraw");
+    const refusal = cancelAnswerRefusal(status!, pending, me, "withdraw");
     if (refusal) refuseOffer(refusal);
     await closeRequest(tx, pending!.id, "withdrawn");
   });

@@ -240,7 +240,6 @@ export async function openAnyCopyLegs(
 
 export const copyKey = (userId: string, slug: string) => `${userId}:${slug}`;
 
-/** Open, unexpired offers holding each objekt, with their two parties. */
 /** The open offers `me` is a party to that hold each of `ids`. */
 export async function openOfferHolders(ids: string[], me: string) {
   const map = new Map<string, OpenOfferHolder[]>();

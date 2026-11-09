@@ -1,7 +1,9 @@
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 
 import { redis, redisFailOpen } from "../redis";
-import { MARKET_VERSION_KEY } from "./safety";
+
+/** Folded into Market's and Trade's shared cache keys, so a trade block or ban applies on the next load. */
+const MARKET_VERSION_KEY = "market:v";
 
 export async function marketVersion() {
   return (await redisFailOpen("market version", () => redis.get(MARKET_VERSION_KEY))) ?? "0";

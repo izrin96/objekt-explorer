@@ -6,7 +6,7 @@ import { type MessagePref, showsActivityTo, toMessagePref } from "../../lib/chat
 import { MESSAGE_PREF_DEFAULTS, type MessageSettings } from "../../schemas/chat";
 import { notBlockedEither } from "../moderation/safety";
 import { redis, redisFailOpen } from "../redis";
-import { refuse } from "./refuse";
+import { refuseChat } from "./refuse";
 
 export async function fetchPref(userId: string): Promise<MessagePref> {
   const [row] = await db
@@ -105,7 +105,7 @@ export async function saveSettings(userId: string, input: Partial<MessageSetting
     });
     if (free === false) {
       const ttl = Number(await redisFailOpen("activity change", () => redis.send("PTTL", [key])));
-      refuse(
+      refuseChat(
         "settings_limit",
         new Date(Date.now() + (ttl > 0 ? ttl : ACTIVITY_CHANGE_SECONDS * 1000)),
       );

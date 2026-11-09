@@ -1,4 +1,4 @@
-import { authed, moderator } from "../orpc";
+import { adminOnly, authed, moderator } from "../orpc";
 import {
   actInputSchema,
   addressHistoryInputSchema,
@@ -55,11 +55,9 @@ export const moderationRouter = {
     ),
 
   /** Admins only: grants or removes the moderator role; an admin's role is not changed here. */
-  setRole: moderator
+  setRole: adminOnly
     .input(setRoleInputSchema)
-    .handler(async ({ input, context }) =>
-      setUserRole(context.session.user.id, context.isAdmin, input),
-    ),
+    .handler(async ({ input, context }) => setUserRole(context.session.user.id, input)),
 
   /** An address's link history, or one account's: who held it, when, and how it changed hands. */
   addressHistory: moderator
@@ -67,16 +65,12 @@ export const moderationRouter = {
     .handler(async ({ input }) => addressHistory(input)),
 
   /** Admins only: moves a linked address to another account, for an owner who lost access. */
-  moveAddress: moderator
+  moveAddress: adminOnly
     .input(moveAddressInputSchema)
-    .handler(async ({ input, context }) =>
-      moveAddress(context.session.user.id, context.isAdmin, input),
-    ),
+    .handler(async ({ input, context }) => moveAddress(context.session.user.id, input)),
 
   /** Admins only: unlinks an address from its account, which starts the 7-day wait. */
-  unlinkAddress: moderator
+  unlinkAddress: adminOnly
     .input(unlinkAddressInputSchema)
-    .handler(async ({ input, context }) =>
-      unlinkAddress(context.session.user.id, context.isAdmin, input),
-    ),
+    .handler(async ({ input, context }) => unlinkAddress(context.session.user.id, input)),
 };

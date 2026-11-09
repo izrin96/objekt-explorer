@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { notification, report, user, userSanction } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
@@ -163,8 +162,7 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
   await publishNotify(sanction.userId, MOD_NOTIFY);
 }
 
-export async function setUserRole(me: string, isAdmin: boolean, input: SetRoleInput) {
-  if (!isAdmin) throw new ORPCError("FORBIDDEN");
+export async function setUserRole(me: string, input: SetRoleInput) {
   if (input.userId === me) refuseModeration("self");
   const target = await findAccount(input.userId);
   if (roleList(target.role).includes("admin")) refuseModeration("staff_target");

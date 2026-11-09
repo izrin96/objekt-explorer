@@ -42,7 +42,7 @@ import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { fetchPostCards } from "../trade/feed/post-cards";
 import { matchableList } from "../trade/lists";
 import { personMatch } from "../trade/matches";
-import { refuse } from "./refuse";
+import { refuseChat } from "./refuse";
 
 type CardContext = { senderId: string; partnerId: string };
 
@@ -78,7 +78,7 @@ async function resolvePostCard(
         notTradeSanctioned(sql`${lists.userId}`),
       ),
     );
-  if (!list) refuse("invalid_card");
+  if (!list) refuseChat("invalid_card");
   const match = input.withMatch ? await savedMatch(senderId, partnerId) : null;
   return {
     stored: { kind: "post", listId: list.id, ...(match ? { match } : {}) },
@@ -141,11 +141,11 @@ async function resolveObjektCard(
           .then((rows) => rows[0] ?? null),
   ]);
 
-  if (list === null || collection === null || objekt === null) refuse("invalid_card");
+  if (list === null || collection === null || objekt === null) refuseChat("invalid_card");
   if (list && !cardListAllowed(list, context.senderId, context.partnerId)) {
-    refuse("invalid_card");
+    refuseChat("invalid_card");
   }
-  if (objekt && objekt.collectionId !== collection.id) refuse("invalid_card");
+  if (objekt && objekt.collectionId !== collection.id) refuseChat("invalid_card");
 
   const [entries, addressRows] = await Promise.all([
     list
@@ -178,7 +178,7 @@ async function resolveObjektCard(
       memberAddresses,
     })
   ) {
-    refuse("invalid_card");
+    refuseChat("invalid_card");
   }
 
   return {

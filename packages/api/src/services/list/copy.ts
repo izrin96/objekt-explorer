@@ -7,6 +7,7 @@ import { chunkMap } from "@repo/lib";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type * as z from "zod";
 
+import { TOKEN_CHUNK_SIZE } from "../../constants";
 import { buildCopyRows, type CopyRow, type OwnedCopy } from "../../lib/list-copy";
 import { refuse } from "../../lib/refuse";
 import { type copyPreviewInputSchema } from "../../schemas/list";
@@ -18,7 +19,6 @@ import {
   needsHoldings,
 } from "../../schemas/list-copy";
 import { assertProfileOwned } from "../profile";
-import { TOKEN_CHUNK_SIZE } from "../utils";
 
 type CopyTarget = Pick<
   z.infer<typeof copyPreviewInputSchema>,

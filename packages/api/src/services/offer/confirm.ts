@@ -3,11 +3,11 @@ import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
-import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { lockTradeRow } from "./trade-row";
 import { finishSettle } from "./verify";
 
 /** NOT_FOUND unless the viewer is a party to the leg's trade. */
@@ -42,12 +42,7 @@ export async function confirmLeg(me: string, legId: number) {
   const name = await partyNames(parties);
 
   const settled = await db.transaction(async (tx) => {
-    const [locked] = await tx
-      .select({ status: sql<TradeStatus>`${trade.status}` })
-      .from(trade)
-      .where(eq(trade.id, found.tradeId))
-      .for("update");
-    if (locked?.status !== "in_progress") refuseOffer("trade_ended");
+    if ((await lockTradeRow(tx, found.tradeId)) !== "in_progress") refuseOffer("trade_ended");
     const legs = await tx
       .select({ id: tradeLeg.id, open: tradeLeg.open, verifiedAt: tradeLeg.verifiedAt })
       .from(tradeLeg)

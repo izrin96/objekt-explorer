@@ -22,7 +22,7 @@ import type {
   SerialTransfersOutput,
   SerialsOutput,
 } from "../schemas/collections";
-import { getCollectionColumns } from "./objekt";
+import { getCollectionColumns } from "./collection-columns";
 import { redis, redisFailOpen } from "./redis";
 
 const MODIFIED_AT_KEY = "collection:modified-at";

@@ -19,7 +19,7 @@ import { loadThread } from "./inbox";
 import { publishChatMessage } from "./live";
 import { appendMessage, findMembership, findSentMessage } from "./members";
 import { checkMessageRate } from "./rate";
-import { refuse } from "./refuse";
+import { refuseChat } from "./refuse";
 import { chatSafety } from "./safety";
 import { activityBetween } from "./settings";
 import {
@@ -35,7 +35,7 @@ import {
 /** A blocked send reads exactly like a recipient who accepts no messages. */
 function refuseSend(safety: { blocked: boolean; mute: { until: string | null } | null }) {
   const verdict = sendVerdict({ blocked: safety.blocked, senderMuted: safety.mute !== null });
-  if (!verdict.ok) refuse(verdict.reason, muteEnd(safety.mute));
+  if (!verdict.ok) refuseChat(verdict.reason, muteEnd(safety.mute));
 }
 
 /**
@@ -51,7 +51,7 @@ export async function startConversation(
   const ctx = await prepareStart(me, createdAt, input.to, new Date()).catch((error: unknown) => {
     // a Message button on a list that was deleted since the page loaded
     if (input.to.kind === "list" && error instanceof ORPCError && error.code === "NOT_FOUND") {
-      refuse("invalid_card");
+      refuseChat("invalid_card");
     }
     throw error;
   });
@@ -128,9 +128,9 @@ export async function sendMessage(
     hasLinkedAddress(me),
     input.replyTo === undefined ? true : replyTargetAllowed(input.conversationId, input.replyTo),
   ]);
-  if (!hasAddress) refuse("no_address");
+  if (!hasAddress) refuseChat("no_address");
   refuseSend(safety);
-  if (!replyAllowed) refuse("invalid_reply");
+  if (!replyAllowed) refuseChat("invalid_reply");
   const release = await checkMessageRate(me, now);
   const body = input.body ?? null;
   const caution = body === null ? [] : scanMessage(body);
@@ -212,7 +212,7 @@ export async function unsendMessage(me: string, messageId: number) {
       ),
     )
     .returning({ conversationId: message.conversationId });
-  if (!row) refuse("unsend_closed");
+  if (!row) refuseChat("unsend_closed");
   const { partnerId } = await findMembership(row.conversationId, me);
   await Promise.all(
     [me, partnerId].map((userId) =>

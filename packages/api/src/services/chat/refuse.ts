@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 
 import type { ChatRefusal } from "../../schemas/chat";
 
-export function refuse(reason: ChatRefusal, retryAt?: Date): never {
+export function refuseChat(reason: ChatRefusal, retryAt?: Date): never {
   const data = retryAt ? { reason, retryAt: retryAt.toISOString() } : { reason };
   switch (reason) {
     case "message_limit":

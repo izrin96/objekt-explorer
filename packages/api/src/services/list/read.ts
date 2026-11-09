@@ -11,9 +11,9 @@ import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { normalizeUserText } from "../../schemas/common/user-text";
 import { type ListPreview, type PublicList } from "../../schemas/list";
+import { getCollectionColumns } from "../collection-columns";
 import { isBlockedEither } from "../moderation/core";
 import { isBanned } from "../moderation/safety";
-import { getCollectionColumns } from "../objekt";
 import { assertProfileOwned, toPublicUser } from "../profile";
 import { fetchCollectionsBySlug } from "./collections";
 

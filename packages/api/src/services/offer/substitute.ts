@@ -4,11 +4,11 @@ import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
 import { substituteRefusal } from "../../lib/offer-rules";
-import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { countVerified, lockTradeRow } from "./trade-row";
 import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "./verify";
 
 /** NOT_FOUND unless the viewer is a party to the substitute's trade. */
@@ -42,17 +42,13 @@ type Found = Awaited<ReturnType<typeof findSubstitute>>;
 
 /** Under the trade's row lock, the lock the verifier settles under: see `substituteRefusal`. */
 async function lockOpen(tx: Tx, found: Found, substituteId: number) {
-  const [locked] = await tx
-    .select({ status: sql<TradeStatus>`${trade.status}` })
-    .from(trade)
-    .where(eq(trade.id, found.tradeId))
-    .for("update");
+  const status = await lockTradeRow(tx, found.tradeId);
   const [state] = await tx
     .select({ open: tradeLeg.open, status: tradeSubstitute.status })
     .from(tradeSubstitute)
     .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
     .where(eq(tradeSubstitute.id, substituteId));
-  const refusal = substituteRefusal(locked?.status ?? null, state ?? null);
+  const refusal = substituteRefusal(status, state ?? null);
   if (refusal) refuseOffer(refusal);
 }
 
@@ -115,13 +111,7 @@ export async function declineSubstitute(me: string, substituteId: number) {
       .update(tradeSubstitute)
       .set({ status: "declined", decidedAt: sql`now()` })
       .where(eq(tradeSubstitute.id, substituteId));
-    const [progress] = await tx
-      .select({
-        total: sql<number>`count(*)::int`,
-        verified: sql<number>`(count(*) FILTER (WHERE ${tradeLeg.verifiedAt} IS NOT NULL))::int`,
-      })
-      .from(tradeLeg)
-      .where(eq(tradeLeg.tradeId, found.tradeId));
+    const progress = await countVerified(tx, found.tradeId);
     return writeNotes(tx, [
       wrongCopyNote(
         found,

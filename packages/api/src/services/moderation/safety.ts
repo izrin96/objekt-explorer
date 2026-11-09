@@ -55,6 +55,3 @@ export function notTradeSanctioned(user: UserRef) {
       AND ${activeSanctionWhere}
   )`;
 }
-
-/** Folded into Market's and Trade's shared cache keys, so a trade block or ban applies on the next load. */
-export const MARKET_VERSION_KEY = "market:v";

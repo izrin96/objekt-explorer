@@ -7,15 +7,15 @@ import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
+import { TOKEN_CHUNK_SIZE } from "../constants";
 import type {
   HeldByOutput,
   OwnedByFilters,
   OwnedByOutput,
   OwnedCopiesOutput,
 } from "../schemas/objekts";
-import { getCollectionColumns } from "./objekt";
+import { getCollectionColumns } from "./collection-columns";
 import { getCache, redis, redisFailOpen } from "./redis";
-import { TOKEN_CHUNK_SIZE } from "./utils";
 
 const PER_PAGE = 8000;
 // a slim copy is about a tenth of a full row, so a page holds five times the copies: a large

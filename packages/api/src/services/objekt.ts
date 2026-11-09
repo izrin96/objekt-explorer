@@ -2,11 +2,15 @@ import type { ValidArtist, ValidFourSeason } from "@repo/cosmo/types/common";
 import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import type { CollectionField, ProcessedImageField } from "@repo/lib/types/objekt";
 import { asc, count, countDistinct, eq, inArray } from "drizzle-orm";
 
 import { getStaleCache } from "./redis";
-import { classOrder } from "./utils";
+
+const classOrder: Record<ValidArtist, string[]> = {
+  tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
+  artms: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
+  idntt: ["Basic", "Event", "Motion", "Special", "Unit", "Welcome"],
+};
 
 async function fetchUniqueCollections() {
   const result = await indexer
@@ -115,45 +119,6 @@ export async function fetchFilterData() {
       classesMap,
     };
   });
-}
-
-export function getCollectionColumns() {
-  return {
-    id: collections.id,
-    createdAt: collections.createdAt,
-    slug: collections.slug,
-    collectionId: collections.collectionId,
-    season: collections.season,
-    member: collections.member,
-    members: collections.members,
-    artist: collections.artist,
-    collectionNo: collections.collectionNo,
-    class: collections.class,
-    thumbnailImage: collections.thumbnailImage,
-    frontImage: collections.frontImage,
-    backImage: collections.backImage,
-    backgroundColor: collections.backgroundColor,
-    textColor: collections.textColor,
-    onOffline: collections.onOffline,
-    bandImageUrl: collections.bandImageUrl,
-    frontMedia: collections.frontMedia,
-    hasAudio: collections.hasAudio,
-    processedThumbnailImage: collections.processedThumbnailImage,
-    processedFrontImage: collections.processedFrontImage,
-    processedBackImage: collections.processedBackImage,
-  } satisfies Record<CollectionField | ProcessedImageField, unknown>;
-}
-
-export function getPartialCollectionColumns() {
-  return {
-    slug: collections.slug,
-    season: collections.season,
-    collectionNo: collections.collectionNo,
-    member: collections.member,
-    artist: collections.artist,
-    collectionId: collections.collectionId,
-    class: collections.class,
-  };
 }
 
 /** Each owner's objekt count, as the profile's grid counts them, keyed by lowercased address. */

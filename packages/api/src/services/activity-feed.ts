@@ -8,7 +8,7 @@ import { type SQL, and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzl
 
 import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
 import type { CollectionFilters } from "../schemas/common/filters";
-import { getCollectionColumns } from "./objekt";
+import { getCollectionColumns } from "./collection-columns";
 import { withSpinRewards } from "./spin-rewards";
 
 const PAGE_SIZE = 300;
