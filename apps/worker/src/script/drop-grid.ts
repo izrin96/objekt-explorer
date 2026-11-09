@@ -27,6 +27,7 @@
  */
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
+import { preBlockSeasons } from "@repo/lib/serial";
 import { and, eq, inArray, like, notInArray } from "drizzle-orm";
 
 import {
@@ -40,7 +41,6 @@ import {
   planGridWrites,
 } from "@/job/serial-batches";
 import { type DropGrid, fitMemberRun } from "@/lib/drop-grid";
-import { preBlockSeasons } from "@/lib/serial-constants";
 import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const APPLY = process.env.APPLY === "1";

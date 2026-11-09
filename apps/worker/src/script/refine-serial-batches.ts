@@ -17,14 +17,12 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
+import { preBlockSeasons } from "@repo/lib/serial";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
 import { fitRanges, rewriteSerials, storeRanges } from "@/job/serial-batches";
 import { log } from "@/lib/log";
-import {
-  preAssignedCollections as excludeCollections,
-  preBlockSeasons,
-} from "@/lib/serial-constants";
+import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOfflineSerialUpdates, holdoutExact } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;

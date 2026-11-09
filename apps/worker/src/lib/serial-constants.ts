@@ -10,5 +10,3 @@ export const preAssignedCollections = [
   "cream02-xinyu-315z",
   "cream02-yeonji-315z",
 ];
-
-export { preBlockSeasons } from "@repo/lib/serial";

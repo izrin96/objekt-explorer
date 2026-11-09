@@ -20,6 +20,7 @@ import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries, verifyRecentDrift } from "./job/verify-batch-boundaries";
 import { sendWantAlerts } from "./job/want-alerts";
 import { log } from "./lib/log";
+import { redis } from "./lib/redis";
 import { releaseHeldLocks, withRedisLock } from "./lib/redis-lock";
 
 const workerLog = log("worker");
@@ -74,7 +75,7 @@ if (indexerWrites) {
   // minutes because a held transfer pins the verifier's seenUntil, showing users "behind"
   const runReplayPending = safeRun("fix-collection", replayPendingTransfers);
   startupRuns.push(runReplayPending);
-  crons.push(cron("*/5 * * * *", runReplayPending));
+  crons.push(cron("3-59/5 * * * *", runReplayPending));
 
   // populate missing serials for online objekts
   const runSerialOnline = safeRun("serial-online", populateSerial);
@@ -111,20 +112,25 @@ if (indexerWrites) {
       safeRun("serial-offline", () => verifyRecentDrift(), { warnOnSkip: true }),
     ),
   );
-  let weeklyDoneAt = 0;
-  const runWeekly = safeRun(
-    "serial-offline",
-    async () => {
-      await verifyBatchBoundaries("none");
-      weeklyDoneAt = Date.now();
-    },
-    { warnOnSkip: true },
-  );
-  crons.push(cron("8 19 * * 0", runWeekly));
+  // in Valkey, so a worker that lost the 19:08 lock to another doesn't run the pass again
+  const WEEKLY_DONE_KEY = "worker:serial-offline:weekly-done-at";
+  const weekly = async () => {
+    await verifyBatchBoundaries("none");
+    await redis.set(WEEKLY_DONE_KEY, String(Date.now()), "EX", 7 * 24 * 60 * 60);
+  };
+  crons.push(cron("8 19 * * 0", safeRun("serial-offline", weekly, { warnOnSkip: true })));
   crons.push(
-    cron("38 19 * * 0", async () => {
-      if (Date.now() - weeklyDoneAt > 60 * 60 * 1000) await runWeekly();
-    }),
+    cron(
+      "38 19 * * 0",
+      safeRun(
+        "serial-offline",
+        async () => {
+          const doneAt = Number((await redis.get(WEEKLY_DONE_KEY)) ?? 0);
+          if (Date.now() - doneAt > 60 * 60 * 1000) await weekly();
+        },
+        { warnOnSkip: true },
+      ),
+    ),
   );
 
   // process collection images - download, convert to WebP, upload to S3
@@ -138,10 +144,10 @@ if (indexerWrites) {
 // indexer reads never stack with the hourly jobs at minute 0.
 crons.push(cron("30 4 * * 1", safeRun("cleanup", cleanupStaleEntries)));
 
-// cache collection rarity list
+// cache collection rarity list; off minute 0, where cosmo-spin reads the indexer
 const runRarity = safeRun("rarity", populateRarity);
 startupRuns.push(runRarity);
-crons.push(cron("0 * * * *", runRarity));
+crons.push(cron("7 * * * *", runRarity));
 
 // member avatars and artist logos into the bucket; touches the bucket and Valkey, never the indexer
 const runArtistImages = safeRun("artist-images", mirrorArtistImages);
@@ -158,10 +164,10 @@ const runPriceHistory = safeRun("price-history", () => snapshotPriceHistory());
 startupRuns.push(runPriceHistory);
 crons.push(cron(SNAPSHOT_CRON, runPriceHistory));
 
-// want-list alerts; the first run only sets the cursor
+// want-list alerts; the first run only sets the cursor. Off the serial jobs' 5-minute grid
 const runWantAlerts = safeRun("want-alerts", sendWantAlerts);
 startupRuns.push(runWantAlerts);
-crons.push(cron("*/5 * * * *", runWantAlerts));
+crons.push(cron("1-59/5 * * * *", runWantAlerts));
 
 // keeps want-list rules current with new collections and the owners' holdings; reads the
 // indexer, writes the app database only

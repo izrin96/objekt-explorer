@@ -29,13 +29,13 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
+import { isUniqueViolation } from "@repo/lib/pg-error";
 import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
 import { awayNotes, awayPlan, stuckPlan } from "../../lib/leg-marks";
 import { heartbeat, log } from "../../lib/log";
-import { isUniqueViolation } from "../../lib/pg-error";
 import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
 import { type Publish, publishAll } from "../../lib/trade-publish";

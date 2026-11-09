@@ -10,3 +10,6 @@ export function findPgError(error: unknown, match: (error: PgError) => boolean):
   }
   return null;
 }
+
+export const isUniqueViolation = (error: unknown) =>
+  findPgError(error, (e) => e.code === "23505") !== null;

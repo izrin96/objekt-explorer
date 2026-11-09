@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { isGridDrop } from "@repo/lib/serial";
+import { isGridDrop, preBlockSeasons } from "@repo/lib/serial";
 import { and, between, eq, inArray, isNotNull, isNull, like, lte, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
@@ -16,7 +16,6 @@ import {
   rosterComplete,
 } from "@/lib/drop-grid";
 import type { Logger } from "@/lib/log";
-import { preBlockSeasons } from "@/lib/serial-constants";
 import {
   type Batch,
   claimGapBlocks,

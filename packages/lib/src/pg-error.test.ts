@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { findPgError } from "./pg-error";
+import { findPgError, isUniqueViolation } from "./pg-error";
 
 const pg = (code: string, constraint?: string) =>
   Object.assign(new Error("db"), { code, constraint });
@@ -22,5 +22,16 @@ describe("findPgError", () => {
     expect(findPgError(pg("23503"), (e) => e.code === "23505")).toBeNull();
     expect(findPgError("23505", () => true)).toBeNull();
     expect(findPgError(undefined, () => true)).toBeNull();
+  });
+});
+
+describe("isUniqueViolation", () => {
+  test("finds the code anywhere on the cause chain", () => {
+    expect(isUniqueViolation(new Error("wrapped", { cause: pg("23505") }))).toBe(true);
+  });
+
+  test("rejects other errors and non-errors", () => {
+    expect(isUniqueViolation(new Error("x"))).toBe(false);
+    expect(isUniqueViolation("23505")).toBe(false);
   });
 });

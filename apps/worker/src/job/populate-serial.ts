@@ -1,14 +1,11 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { OPEN_DROP_DAYS } from "@repo/lib/serial";
+import { OPEN_DROP_DAYS, preBlockSeasons } from "@repo/lib/serial";
 import { and, eq, gte, notInArray, inArray, like, or, lte, sql } from "drizzle-orm";
 
 import { heartbeat, log, type Logger } from "@/lib/log";
-import {
-  preAssignedCollections as excludeCollections,
-  preBlockSeasons,
-} from "@/lib/serial-constants";
+import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
   computeOnlineSerials,
   planRediscovery,
