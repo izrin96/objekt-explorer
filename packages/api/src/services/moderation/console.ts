@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 import { notification, report, user, userSanction } from "@repo/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { sanctionEnd } from "../../lib/sanctions";
 import { disconnectUser, publishNotify } from "../../realtime";
@@ -129,10 +129,13 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
   if (staffTargetRefused(target.role, isAdmin, "revoke")) refuseModeration("staff_target");
 
   await db.transaction(async (tx) => {
-    await tx
+    // a second staff revoke waits on the row, then finds it already revoked
+    const [revoked] = await tx
       .update(userSanction)
       .set({ revokedAt: sql`now()`, revokedBy: me })
-      .where(eq(userSanction.id, sanction.id));
+      .where(and(eq(userSanction.id, sanction.id), isNull(userSanction.revokedAt)))
+      .returning({ id: userSanction.id });
+    if (!revoked) refuseModeration("not_active");
     if (sanction.type === "ban") await syncBan(tx, sanction.userId, { revokeSessions: false });
     if (sanction.type === "chat_mute" || sanction.type === "trade_block") {
       await tx.insert(notification).values({
