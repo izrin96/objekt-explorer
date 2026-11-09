@@ -28,10 +28,12 @@ export function startRequest(request: Request, pathname: string): () => void {
 
 /**
  * Ends the request once its body has been sent. SSR streams, so React renders while the body is
- * read, well after the handler returned its Response. A HEAD response's body is never read.
+ * read, well after the handler returned its Response. A body of known length is already built,
+ * so it ends now and goes out unwrapped: a wrapped stream would lose its Content-Length. A HEAD
+ * response's body is never read.
  */
 export function endAfterBody(request: Request, response: Response, end: () => void): Response {
-  if (!response.body || request.method === "HEAD") {
+  if (!response.body || request.method === "HEAD" || response.headers.has("content-length")) {
     end();
     return response;
   }

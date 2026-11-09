@@ -12,7 +12,6 @@ const shapeSchema = collectionListInputSchema.pick({ originals: true, ids: true 
  * `oFf`), and a key per spelling would let a crawler fill memory with copies of one list.
  */
 export function listCacheKey(url: URL, headers: Headers): string | null {
-  if (url.pathname !== "/api/v1/collections") return null;
   if (headers.has("if-modified-since")) return null;
   const names = [...url.searchParams.keys()];
   // a repeated name reaches the handler as an array, which it refuses

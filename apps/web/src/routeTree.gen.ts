@@ -71,6 +71,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1.$'
+import { Route as ApiV1CollectionsRouteImport } from './routes/api/v1.collections'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
 import { Route as containerModAddressesIndexRouteImport } from './routes/(container)/mod/addresses/index'
 import { Route as containerModAddressesAddressRouteImport } from './routes/(container)/mod/addresses/$address'
@@ -411,6 +412,11 @@ const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
   path: '/api/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1CollectionsRoute = ApiV1CollectionsRouteImport.update({
+  id: '/api/v1/collections',
+  path: '/api/v1/collections',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const containerAtChar123nicknameChar125ListSlugRoute =
   containerAtChar123nicknameChar125ListSlugRouteImport.update({
     id: '/@{$nickname}_/list/$slug',
@@ -566,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/account/': typeof containerAccountIndexRoute
   '/link/': typeof containerLinkIndexRoute
   '/list/': typeof containerListIndexRoute
@@ -637,6 +644,7 @@ export interface FileRoutesByTo {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/account': typeof containerAccountIndexRoute
   '/link': typeof containerLinkIndexRoute
   '/list': typeof containerListIndexRoute
@@ -719,6 +727,7 @@ export interface FileRoutesById {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/(container)/account/': typeof containerAccountIndexRoute
   '/(container)/link/': typeof containerLinkIndexRoute
   '/(container)/list/': typeof containerListIndexRoute
@@ -801,6 +810,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/api/v1/collections'
     | '/account/'
     | '/link/'
     | '/list/'
@@ -872,6 +882,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/api/v1/collections'
     | '/account'
     | '/link'
     | '/list'
@@ -953,6 +964,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/api/v1/collections'
     | '/(container)/account/'
     | '/(container)/link/'
     | '/(container)/list/'
@@ -995,6 +1007,7 @@ export interface RootRouteChildren {
   ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
+  ApiV1CollectionsRoute: typeof ApiV1CollectionsRoute
   ApiObjektsHeldByAddressRoute: typeof ApiObjektsHeldByAddressRoute
   ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
   ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
@@ -1438,6 +1451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/collections': {
+      id: '/api/v1/collections'
+      path: '/api/v1/collections'
+      fullPath: '/api/v1/collections'
+      preLoaderRoute: typeof ApiV1CollectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(container)/@{$nickname}_/list/$slug': {
       id: '/(container)/@{$nickname}_/list/$slug'
       path: '/@{$nickname}/list/$slug'
@@ -1809,6 +1829,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTransfersAddressRoute: ApiTransfersAddressRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
+  ApiV1CollectionsRoute: ApiV1CollectionsRoute,
   ApiObjektsHeldByAddressRoute: ApiObjektsHeldByAddressRoute,
   ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
   ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,

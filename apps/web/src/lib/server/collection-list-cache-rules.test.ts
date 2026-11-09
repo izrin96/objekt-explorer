@@ -29,7 +29,6 @@ describe("listCacheKey", () => {
         "if-modified-since": "Sun, 08 Nov 2026 11:12:59 GMT",
       }),
     ).toBeNull();
-    expect(key("/api/v1/collections/abc/metadata")).toBeNull();
   });
 });
 

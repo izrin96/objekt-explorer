@@ -18,57 +18,49 @@ const gzipAsync = promisify(gzip);
 type Entry = {
   lastModifiedMs: number;
   storedAt: number;
-  status: number;
   headers: [string, string][];
-  /** one compression per encoding, shared by the requests that arrive while it runs */
-  bodies: Partial<Record<Encoding, Promise<Uint8Array<ArrayBuffer>>>>;
+  bodies: Record<Encoding, Uint8Array<ArrayBuffer>>;
 };
 
-/** A rebuild's outcome: the entry, or the handler's response when it can't be cached. */
-type Built = { entry: Entry } | { response: Response };
+/** A copy per shape, or the rebuild that will produce it; a request that sees one waits for it. */
+const slots = new Map<string, Promise<Entry | null>>();
 
-const entries = new Map<string, Entry>();
-const building = new Map<string, Promise<Built>>();
-
-async function encode(raw: Uint8Array<ArrayBuffer>, encoding: Encoding) {
-  if (encoding === "br") {
-    // the quality `bun-server/compress.ts` uses
-    const out = await brotli(raw, { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } });
-    return new Uint8Array(out);
+/** The handler's list with every encoding made, or `null` when its response can't be cached. */
+async function build(response: Response): Promise<Entry | null> {
+  const lastModified = response.headers.get("last-modified");
+  if (response.status !== 200 || !lastModified || response.headers.has("content-encoding")) {
+    return null;
   }
-  if (encoding === "gzip") return new Uint8Array(await gzipAsync(raw));
-  return raw;
+  const raw = new Uint8Array(await response.arrayBuffer());
+  const [br, gz] = await Promise.all([
+    // the quality `bun-server/compress.ts` uses
+    brotli(raw, { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }),
+    gzipAsync(raw),
+  ]);
+  return {
+    lastModifiedMs: new Date(lastModified).getTime(),
+    storedAt: Date.now(),
+    headers: [...response.headers].filter(([name]) => name !== "content-length"),
+    bodies: { identity: raw, br: new Uint8Array(br), gzip: new Uint8Array(gz) },
+  };
 }
 
-async function respond(entry: Entry, encoding: Encoding): Promise<Response> {
-  const body = await (entry.bodies[encoding] ??= entry.bodies.identity!.then((raw) =>
-    encode(raw, encoding),
-  ));
+function respond(entry: Entry, encoding: Encoding): Response {
+  const body = entry.bodies[encoding];
   const headers = new Headers(entry.headers);
   headers.set("Content-Length", String(body.byteLength));
   headers.append("Vary", "Accept-Encoding");
   if (encoding !== "identity") headers.set("Content-Encoding", encoding);
-  return new Response(body, { status: entry.status, headers });
+  return new Response(body, { status: 200, headers });
 }
 
-async function build(key: string, handle: () => Promise<Response>): Promise<Built> {
-  const response = await handle();
-  const lastModified = response.headers.get("last-modified");
-  if (response.status !== 200 || !lastModified || response.headers.has("content-encoding")) {
-    return { response };
-  }
-  const entry: Entry = {
-    lastModifiedMs: new Date(lastModified).getTime(),
-    storedAt: Date.now(),
-    status: response.status,
-    headers: [...response.headers].filter(([name]) => name !== "content-length"),
-    bodies: { identity: response.arrayBuffer().then((buffer) => new Uint8Array(buffer)) },
-  };
-  entries.set(key, entry);
-  void entry.bodies.identity!.catch(() => {
-    if (entries.get(key) === entry) entries.delete(key);
-  });
-  return { entry };
+/** Whether a stored copy can still be served: young enough, and nothing changed since it. */
+async function isCurrent(entry: Entry): Promise<boolean> {
+  if (Date.now() - entry.storedAt >= MAX_AGE_MS) return false;
+  // the check reads `collection:modified-at` fail-open, so during a Valkey outage a staff bump
+  // waits out the entry's age; a failed indexer read rebuilds instead
+  const current = await fetchCollectionList({ artist: [] }, entry.lastModifiedMs).catch(() => null);
+  return current?.notModified ?? false;
 }
 
 /**
@@ -76,37 +68,36 @@ async function build(key: string, handle: () => Promise<Response>): Promise<Buil
  * page fetches it, and building and compressing its 10 MB of JSON cost about 90 ms of CPU a
  * request. Each hit asks the list service whether anything changed since the stored copy's
  * Last-Modified, the question a browser's If-Modified-Since asks, so a new collection or a staff
- * bump shows on the next request. `null` when the request is not one it serves.
+ * bump shows on the next request. Any other request goes straight to `handle`.
  */
 export async function cachedCollectionList(
   request: Request,
   handle: () => Promise<Response>,
-): Promise<Response | null> {
-  if (request.method !== "GET") return null;
-  const key = listCacheKey(new URL(request.url), request.headers);
-  if (key === null) return null;
+): Promise<Response> {
+  const key = request.method === "GET" ? listCacheKey(new URL(request.url), request.headers) : null;
+  if (key === null) return handle();
   const encoding = jsonEncoding(request.headers.get("accept-encoding"), COMPRESSION_ON);
 
-  const entry = entries.get(key);
-  if (entry && Date.now() - entry.storedAt < MAX_AGE_MS) {
-    // the check reads `collection:modified-at` fail-open, so during a Valkey outage a staff bump
-    // waits out the entry's age; a failed indexer read rebuilds through the handler instead
-    const current = await fetchCollectionList({ artist: [] }, entry.lastModifiedMs).catch(
-      () => null,
-    );
-    if (current?.notModified) return respond(entry, encoding);
-  }
-  if (entry) entries.delete(key);
+  const seen = slots.get(key);
+  const entry = await seen?.catch(() => null);
+  if (entry && (await isCurrent(entry))) return respond(entry, encoding);
 
-  // concurrent misses share one rebuild instead of each serializing the list
-  let pending = building.get(key);
-  const mine = !pending;
-  if (!pending) {
-    pending = build(key, handle).finally(() => building.delete(key));
-    building.set(key, pending);
+  // replace only the slot this request judged: one that moved on is a rebuild already started
+  const moved = slots.get(key);
+  if (moved && moved !== seen) {
+    const built = await moved.catch(() => null);
+    return built ? respond(built, encoding) : handle();
   }
-  const built = await pending;
-  if ("entry" in built) return respond(built.entry, encoding);
-  // a response that can't be cached is read once, so only the request that made it gets it
-  return mine ? built.response : null;
+
+  // an uncacheable response is left unread, so the request that made it can still send it
+  let unread: Response | undefined;
+  const slot = handle().then(async (response) => {
+    const built = await build(response);
+    if (!built) unread = response;
+    return built;
+  });
+  slots.set(key, slot);
+  const built = await slot.catch(() => null);
+  if (!built && slots.get(key) === slot) slots.delete(key);
+  return built ? respond(built, encoding) : (unread ?? handle());
 }
