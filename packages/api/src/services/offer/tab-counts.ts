@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { offer, trade } from "@repo/db/schema";
 
-import { inProgressWhere, needsYouWhere } from "./trades";
+import { inProgressWhere, needsYouWhere } from "./trade-history";
 
 /** The Trade tab badge: offers to answer plus trades in progress. */
 export async function tabCounts(userId: string) {

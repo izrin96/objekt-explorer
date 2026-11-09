@@ -18,7 +18,9 @@ import { answerCancel, askCancel, withdrawCancel } from "../services/offer/cance
 import { confirmLeg } from "../services/offer/confirm";
 import { offerCandidates, suggestOffer } from "../services/offer/picker";
 import { acceptSubstitute, declineSubstitute } from "../services/offer/substitute";
-import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer/trades";
+import { fetchMine } from "../services/offer/trade-history";
+import { fetchTrade } from "../services/offer/trade-view";
+import { cancelTrade, rateTrade } from "../services/offer/trades";
 import { refuseOverUserLimit } from "../services/redis";
 
 /** The picker pages and the suggestion share one budget: a minute of fast scrolling stays well under it. */
