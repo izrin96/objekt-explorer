@@ -31,6 +31,9 @@ export function publishRequest(userId: string, event: RealtimeEvent): ApiRequest
       channel: userChannel(userId),
       data: event,
       idempotency_key: crypto.randomUUID(),
+      // the user history holds 100 events for 5 minutes; typing would push out the events a
+      // reconnecting tab recovers, and a missed ping is worth nothing
+      ...(event.type === "chat_typing" ? { skip_history: true } : {}),
     },
   };
 }

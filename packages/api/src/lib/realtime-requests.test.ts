@@ -25,6 +25,16 @@ describe("requests", () => {
     });
   });
 
+  test("a typing ping stays out of the channel's history", () => {
+    const typing: RealtimeEvent = { type: "chat_typing", conversationId: 7 };
+    expect(publishRequest("u1", typing).body).toEqual({
+      channel: "user:#u1",
+      data: typing,
+      idempotency_key: KEY,
+      skip_history: true,
+    });
+  });
+
   test("a broadcast names each user's channel once", () => {
     expect(broadcastRequest(["u1", "u2", "u1"], changed).body).toEqual({
       channels: ["user:#u1", "user:#u2"],
