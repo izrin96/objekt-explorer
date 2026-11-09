@@ -5,6 +5,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { openApiRouter } from "@repo/api";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { cachedCollectionList } from "@/lib/server/collection-list-cache";
 import { logORPCError } from "@/lib/server/orpc-error-log";
 
 const handler = new OpenAPIHandler(openApiRouter, {
@@ -25,14 +26,17 @@ export const Route = createFileRoute("/api/v1/$")({
   server: {
     handlers: {
       ANY: async ({ request }) => {
-        const { response } = await handler.handle(request, {
-          prefix: "/api/v1",
-          context: {
-            headers: request.headers,
-          },
-        });
+        const handle = async () => {
+          const { response } = await handler.handle(request, {
+            prefix: "/api/v1",
+            context: {
+              headers: request.headers,
+            },
+          });
+          return response ?? new Response("Not Found", { status: 404 });
+        };
 
-        return response ?? new Response("Not Found", { status: 404 });
+        return (await cachedCollectionList(request, handle)) ?? handle();
       },
     },
   },
