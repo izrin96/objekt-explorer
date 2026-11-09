@@ -1,12 +1,12 @@
 import { publishBatch } from "../../realtime";
 import type { RealtimeEvent } from "../../schemas/realtime";
-import { toChatMessages } from "./cards";
+import { loadConversationRow } from "./inbox";
 import {
   hasUnseenRequests,
-  loadConversationRow,
   requestConversationCount,
   unreadConversationCount,
-} from "./inbox";
+} from "./inbox-counts";
+import { toChatMessages } from "./messages";
 
 type SentRow = Parameters<typeof toChatMessages>[0][number];
 type Viewed = Awaited<ReturnType<typeof toChatMessages>>;

@@ -4,14 +4,12 @@ import { conversationMember, message, offer } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type * as z from "zod";
 
-import { isMuted, rowUnread, searchPatterns } from "../../lib/chat-rules";
+import { rowUnread, searchPatterns } from "../../lib/chat-rules";
 import { HOUR_MS } from "../../lib/time";
 import { publishNotify } from "../../realtime";
 import {
   CONVERSATION_PAGE_SIZE,
-  type ChatBox,
   type ConversationRow,
-  type InboxShow,
   type listConversationsInputSchema,
   MUTE_HOURS,
   type muteInputSchema,
@@ -23,45 +21,23 @@ import {
 } from "../../schemas/chat";
 import { dealOf } from "../../schemas/chat-deal";
 import { loadIdentities } from "../account/identities";
-import { notBlockedBy } from "../moderation/safety";
 import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
-import { hydrateCards, hydratePostCards, parseCard, toChatMessages } from "./cards";
-import { needsYouSql, readDeals } from "./deal";
+import { hydrateCards, hydratePostCards, parseCard } from "./cards";
+import { readDeals } from "./deal";
+import {
+  SHOW_WHERE,
+  lastIncoming,
+  matchesSearch,
+  partnerOf,
+  toMuted,
+  visibleIn,
+} from "./inbox-sql";
 import { findMembership, updateMember } from "./members";
+import { toChatMessages } from "./messages";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
 import { activityBetween } from "./settings";
-
-const BOX_WHERE: Record<ChatBox, ReturnType<typeof sql>> = {
-  inbox: sql`m.archived_at IS NULL AND NOT m.request`,
-  requests: sql`m.archived_at IS NULL AND m.request`,
-  archived: sql`m.archived_at IS NOT NULL`,
-};
-
-const partnerOf = (me: string) =>
-  sql`CASE WHEN c.user_low = ${me} THEN c.user_high ELSE c.user_low END`;
-
-const partnerDeleted = (me: string) =>
-  sql`EXISTS (SELECT 1 FROM "user" d WHERE d.id = ${partnerOf(me)} AND d.deleted_at IS NOT NULL)`;
-
-/** Mirrors `visibleBox`, over member `m` of conversation `c`; a deleted account's request is no request. */
-function visibleIn(box: ChatBox, me: string) {
-  if (box === "archived") return BOX_WHERE[box];
-  const unblocked = sql`${BOX_WHERE[box]} AND ${notBlockedBy(me, partnerOf(me))}`;
-  return box === "requests" ? sql`${unblocked} AND NOT ${partnerDeleted(me)}` : unblocked;
-}
-
-/** Names and sent cards only; message text is never searched. */
-const matchesSearch = (me: string, { name, slug }: ReturnType<typeof searchPatterns>) => sql`AND (
-  EXISTS (SELECT 1 FROM "user" u WHERE u.id = ${partnerOf(me)} AND u.name ILIKE ${name})
-  OR EXISTS (SELECT 1 FROM user_address a WHERE a.user_id = ${partnerOf(me)} AND a.nickname ILIKE ${name})
-  OR EXISTS (
-    SELECT 1 FROM message x
-    WHERE x.conversation_id = c.id AND x.card IS NOT NULL AND x.unsent_at IS NULL
-      AND x.card->>'collectionSlug' ILIKE ${slug}
-  )
-)`;
 
 type ConversationListRow = {
   id: number;
@@ -85,26 +61,6 @@ type ConversationListRow = {
 
 /** How many of a conversation's newest messages the row's context card is looked for in. */
 const CONTEXT_SCAN = 200;
-
-/** The id of the newest message the other member sent and did not unsend: unread is measured by it. */
-const lastIncoming = (me: string) => sql`(
-  SELECT max(u.id) FROM message u
-  WHERE u.conversation_id = c.id AND u.sender_id <> ${me} AND u.unsent_at IS NULL
-)`;
-
-const notMuted = sql`NOT (m.muted_until IS NOT NULL AND m.muted_until > now())`;
-
-const hasUnread = (me: string) => sql`${lastIncoming(me)} > coalesce(m.last_read_message_id, 0)`;
-
-const SHOW_WHERE: Record<Exclude<InboxShow, "all">, (me: string) => ReturnType<typeof sql>> = {
-  unread: hasUnread,
-  "needs-you": needsYouSql,
-};
-
-const toMuted = (mutedUntil: string | null, now: Date) =>
-  isMuted(mutedUntil, now)
-    ? { until: mutedUntil === "infinity" ? null : new Date(mutedUntil!).toISOString() }
-    : null;
 
 /** Each account as a conversation heads it, with its avatar. */
 export async function fetchPartners(userIds: string[]) {
@@ -404,89 +360,4 @@ export async function acceptConversation(me: string, id: number) {
   // accepting lets the sender's thread show this account's Seen and typing
   const { partnerId } = await findMembership(id, me);
   await publishChatChanged([me, partnerId], id);
-}
-
-/** Uncached so it is always exact; the conditions are `countsTowardBadge`'s, in its order. */
-export async function unreadConversationCount(me: string) {
-  const result = await db.execute<{ count: number }>(sql`
-    SELECT count(*)::int AS count
-    FROM conversation_member m
-    JOIN conversation c ON c.id = m.conversation_id
-    WHERE m.user_id = ${me}
-      AND ${visibleIn("inbox", me)}
-      AND ${notMuted}
-      AND ${hasUnread(me)}
-  `);
-  return result.rows[0]?.count ?? 0;
-}
-
-/**
- * The Inbox's Unread and Needs you counts, over the whole Inbox and each capped like the row's
- * count. Muted conversations count toward neither, as toward the Messages icon.
- */
-export async function inboxCounts(me: string) {
-  const count = (where: ReturnType<typeof sql>) => sql`(
-    SELECT count(*)::int FROM (
-      SELECT 1 FROM conversation_member m
-      JOIN conversation c ON c.id = m.conversation_id
-      WHERE m.user_id = ${me} AND c.last_message_id IS NOT NULL
-        AND ${visibleIn("inbox", me)} AND ${notMuted} AND ${where}
-      LIMIT ${UNREAD_COUNT_CAP}
-    ) x
-  )`;
-  const result = await db.execute<{ unread: number; needs_you: number }>(sql`
-    SELECT ${count(hasUnread(me))} AS unread, ${count(needsYouSql(me))} AS needs_you
-  `);
-  const row = result.rows[0];
-  return { unread: row?.unread ?? 0, needsYou: row?.needs_you ?? 0 };
-}
-
-/** Requests waiting on the viewer that hold at least one message from the other member. */
-export async function requestConversationCount(me: string) {
-  const result = await db.execute<{ count: number }>(sql`
-    SELECT count(*)::int AS count
-    FROM conversation_member m
-    JOIN conversation c ON c.id = m.conversation_id
-    WHERE m.user_id = ${me}
-      AND ${visibleIn("requests", me)}
-      AND EXISTS (
-        SELECT 1 FROM message msg
-        WHERE msg.conversation_id = m.conversation_id AND msg.sender_id <> ${me}
-          AND msg.unsent_at IS NULL
-      )
-  `);
-  return result.rows[0]?.count ?? 0;
-}
-
-export async function hasUnseenRequests(me: string) {
-  const result = await db.execute<{ unseen: boolean }>(sql`
-    SELECT EXISTS (
-      SELECT 1
-      FROM conversation_member m
-      JOIN conversation c ON c.id = m.conversation_id
-      WHERE m.user_id = ${me}
-        AND ${visibleIn("requests", me)}
-        AND ${lastIncoming(me)} > coalesce(
-          (SELECT p.requests_seen_message_id FROM message_pref p WHERE p.user_id = ${me}), 0)
-    ) AS unseen
-  `);
-  return result.rows[0]?.unseen ?? false;
-}
-
-/** The newest id is read in the same statement as the write, so a request arriving meanwhile stays unseen. */
-export async function seeRequests(me: string) {
-  await db.execute(sql`
-    INSERT INTO message_pref (user_id, requests_seen_message_id)
-    SELECT ${me}, max(incoming.id)
-    FROM (
-      SELECT ${lastIncoming(me)} AS id
-      FROM conversation_member m
-      JOIN conversation c ON c.id = m.conversation_id
-      WHERE m.user_id = ${me} AND ${visibleIn("requests", me)}
-    ) incoming
-    HAVING max(incoming.id) IS NOT NULL
-    ON CONFLICT (user_id) DO UPDATE
-    SET requests_seen_message_id = greatest(
-      coalesce(message_pref.requests_seen_message_id, 0), excluded.requests_seen_message_id)
-  `);
 }

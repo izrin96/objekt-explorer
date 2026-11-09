@@ -1,196 +1,24 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, message, userAddress } from "@repo/db/schema";
+import { objekts } from "@repo/db/indexer/schema";
+import { listEntries, lists, userAddress } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { and, eq, inArray } from "drizzle-orm";
 
-import { cardAllowed, cardListAllowed, hidesSerials } from "../../lib/chat-rules";
-import type { ActorLimits } from "../../lib/offer-rules";
+import { hidesSerials } from "../../lib/chat-rules";
 import { unique } from "../../lib/unique";
 import {
-  type CardInput,
   type CardView,
-  type ChatMessage,
-  cardKinds,
-  splitCards,
-  isPostInput,
-  MATCH_SLUGS,
-  type ObjektCardInput,
-  type PostCardInput,
   type PostCardView,
-  parseCaution,
-  quoteSourceOf,
-  type ReplyQuote,
-  replyQuote,
   type StoredCard,
-  type StoredMatch,
   type CardRef,
-  type StoredObjektCard,
   type StoredPostCard,
   storedCardSchema,
-  unsentMessage,
 } from "../../schemas/chat";
-import type { ListType } from "../../schemas/list";
 import type { ShownSerial } from "../../schemas/offer";
-import { mutualOf } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list/collections";
-import { notTradeSanctioned } from "../moderation/safety";
-import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { fetchPostCards } from "../trade/feed/post-cards";
-import { matchableList } from "../trade/lists";
-import { personMatch } from "../trade/matches";
-import { refuseChat } from "./refuse";
-
-type CardContext = { senderId: string; partnerId: string };
-
-/** The list a card names, for `firstListed`. */
-type CardList = { ownerId: string; listType: ListType } | null;
-
-export type ResolvedCard = { list: CardList } & (
-  | { kind: "post"; input: PostCardInput; stored: StoredPostCard }
-  | { kind: "objekt"; input: ObjektCardInput; stored: StoredObjektCard }
-);
-
-/** The card to store for `input`, or `invalid_card` when it can no longer be sent. */
-export async function resolveCard(input: CardInput, context: CardContext): Promise<ResolvedCard> {
-  return isPostInput(input)
-    ? { kind: "post", input, ...(await resolvePostCard(input, context)) }
-    : { kind: "objekt", input, ...(await resolveObjektCard(input, context)) };
-}
-
-/** A post is a list shown on Trade that the partner owns; a match is the server's, never the client's. */
-async function resolvePostCard(
-  input: PostCardInput,
-  { senderId, partnerId }: CardContext,
-): Promise<{ stored: StoredPostCard; list: CardList }> {
-  const [list] = await db
-    .select({ id: lists.id, listType: lists.listType })
-    .from(lists)
-    .where(
-      and(
-        eq(lists.slug, input.listSlug),
-        eq(lists.userId, partnerId),
-        eq(lists.discoverable, true),
-        matchableList,
-        notTradeSanctioned(sql`${lists.userId}`),
-      ),
-    );
-  if (!list) refuseChat("invalid_card");
-  const match = input.withMatch ? await savedMatch(senderId, partnerId) : null;
-  return {
-    stored: { kind: "post", listId: list.id, ...(match ? { match } : {}) },
-    list: { ownerId: partnerId, listType: list.listType },
-  };
-}
-
-/**
- * The overlap by the person sheet's rules and order: the owner's collections on the sender's
- * wants, then the sender's on the owner's, with the counts and the first three of each. Null
- * when there is none either way.
- */
-async function savedMatch(senderId: string, ownerId: string): Promise<StoredMatch | null> {
-  const partner = await personMatch(senderId, ownerId);
-  if (!partner) return null;
-  const side = (count: number, items: { slug: string }[]) => ({
-    count,
-    slugs: unique(items.map((item) => item.slug)).slice(0, MATCH_SLUGS),
-  });
-  const ownerHas = side(partner.counts.theyHave, partner.theyHaveIWant);
-  const senderHas = side(partner.counts.youHave, partner.iHaveTheyWant);
-  return ownerHas.count === 0 && senderHas.count === 0
-    ? null
-    : { ownerHas, senderHas, canSwap: mutualOf(partner.counts) > 0 };
-}
-
-/**
- * An objekt only of the card's collection, and a list by `cardListAllowed`. A list must hold
- * the collection (and the objekt, unless it lists any copy), and a named objekt must be held by
- * the sender or the partner (`cardAllowed`).
- */
-async function resolveObjektCard(
-  input: ObjektCardInput,
-  context: CardContext,
-): Promise<{ stored: StoredObjektCard; list: CardList }> {
-  const [list, collection, objekt] = await Promise.all([
-    input.listSlug === undefined
-      ? undefined
-      : db
-          .select({
-            id: lists.id,
-            ownerId: lists.userId,
-            listType: lists.listType,
-            hideSerial: lists.hideSerial,
-          })
-          .from(lists)
-          .where(eq(lists.slug, input.listSlug))
-          .then((rows) => rows[0] ?? null),
-    indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(eq(collections.slug, input.collectionSlug))
-      .then((rows) => rows[0] ?? null),
-    input.objektId === undefined
-      ? undefined
-      : indexer
-          .select({ collectionId: objekts.collectionId, owner: objekts.owner })
-          .from(objekts)
-          .where(eq(objekts.id, input.objektId))
-          .then((rows) => rows[0] ?? null),
-  ]);
-
-  if (list === null || collection === null || objekt === null) refuseChat("invalid_card");
-  if (list && !cardListAllowed(list, context.senderId, context.partnerId)) {
-    refuseChat("invalid_card");
-  }
-  if (objekt && objekt.collectionId !== collection.id) refuseChat("invalid_card");
-
-  const [entries, addressRows] = await Promise.all([
-    list
-      ? db
-          .select({ objektId: listEntries.objektId })
-          .from(listEntries)
-          .where(
-            and(
-              eq(listEntries.listId, list.id),
-              eq(listEntries.collectionSlug, input.collectionSlug),
-            ),
-          )
-      : null,
-    objekt
-      ? db
-          .select({
-            address: userAddress.address,
-          })
-          .from(userAddress)
-          .where(inArray(userAddress.userId, [context.senderId, context.partnerId]))
-      : [],
-  ]);
-  const memberAddresses = addressRows.map((row) => row.address);
-  if (
-    !cardAllowed({
-      entries,
-      collectionOnly: hidesSerials(list, context.senderId),
-      objektId: input.objektId,
-      holder: objekt?.owner ?? null,
-      memberAddresses,
-    })
-  ) {
-    refuseChat("invalid_card");
-  }
-
-  return {
-    stored: {
-      kind: "objekt",
-      collectionSlug: input.collectionSlug,
-      ...(input.objektId === undefined ? {} : { objektId: input.objektId }),
-      ...(list ? { listId: list.id } : {}),
-    },
-    list: list ? { ownerId: list.ownerId, listType: list.listType } : null,
-  };
-}
 
 /** Either kind of card; for what is written to `message.card` and for the thread's own readers. */
 export function parseCard(value: unknown): StoredCard | null {
@@ -347,98 +175,4 @@ export async function hydratePostCards(cards: StoredPostCard[], viewerId: string
       ValidObjekt
     >,
   };
-}
-
-type MessageRow = {
-  id: number;
-  senderId: string;
-  body: string | null;
-  card: unknown;
-  createdAt: string;
-  caution: string[] | null;
-  offerId?: number | null;
-  unsentAt?: string | null;
-  replyToId?: number | null;
-};
-
-const quoted = alias(message, "quoted");
-
-/**
- * The quotes of these replies, read now, so an unsend since the reply shows. A quoted message is
- * read through its reply's conversation only, so a stored id never reaches another one.
- */
-async function readQuotes(replies: { id: number; replyToId: number }[], viewerId: string) {
-  if (replies.length === 0) return new Map<number, ReplyQuote>();
-  const rows = await db
-    .select({
-      id: quoted.id,
-      senderId: quoted.senderId,
-      body: quoted.body,
-      card: quoted.card,
-      unsentAt: quoted.unsentAt,
-    })
-    .from(message)
-    .innerJoin(
-      quoted,
-      and(eq(quoted.id, message.replyToId), eq(quoted.conversationId, message.conversationId)),
-    )
-    .where(
-      inArray(
-        message.id,
-        replies.map((reply) => reply.id),
-      ),
-    );
-  const found = new Map(rows.map((row) => [row.id, { ...row, card: parseCard(row.card) }]));
-  return new Map(
-    replies.map(({ replyToId }) => [
-      replyToId,
-      replyQuote(replyToId, quoteSourceOf(found.get(replyToId), viewerId)),
-    ]),
-  );
-}
-
-/** `limits` are the viewer's own, so an offer card offers only what the viewer may do. */
-export async function toChatMessages(
-  rows: MessageRow[],
-  viewerId: string,
-  limits: ActorLimits = {},
-) {
-  const cards = rows.map((row) => (row.unsentAt ? null : parseCard(row.card)));
-  const offers = await fetchOffers(rows.flatMap((row) => (row.offerId ? [row.offerId] : [])));
-  const split = splitCards(cards);
-  const replies = rows.flatMap((row) =>
-    row.replyToId && !row.unsentAt ? [{ id: row.id, replyToId: row.replyToId }] : [],
-  );
-  const [objekts, posts, quotes] = await Promise.all([
-    hydrateCards([...split.objekts, ...offerItemCards(offers.values())], viewerId),
-    hydratePostCards(split.posts, viewerId),
-    readQuotes(replies, viewerId),
-  ]);
-  const { view, serial } = objekts;
-  const now = new Date();
-  const messages: ChatMessage[] = rows.map((row, i) => {
-    const card = cardKinds(cards[i] ?? null);
-    const offer = row.offerId ? offers.get(row.offerId) : undefined;
-    if (row.unsentAt) {
-      return unsentMessage({
-        id: row.id,
-        mine: row.senderId === viewerId,
-        createdAt: new Date(row.createdAt).toISOString(),
-      });
-    }
-    return {
-      id: row.id,
-      mine: row.senderId === viewerId,
-      body: row.body,
-      card: card.objekt ? view(card.objekt) : card.post ? posts.view(card.post) : null,
-      createdAt: new Date(row.createdAt).toISOString(),
-      // an offer's caution is its note's, shown on the offer card
-      caution: row.senderId === viewerId || offer ? null : parseCaution(row.caution),
-      offer: offer ? toOfferView(offer, viewerId, now, limits, serial) : null,
-      unsent: false,
-      replyTo: row.replyToId ? (quotes.get(row.replyToId) ?? null) : null,
-    };
-  });
-  const collectionMap = { ...objekts.collections, ...posts.collections };
-  return { messages, collections: collectionMap };
 }

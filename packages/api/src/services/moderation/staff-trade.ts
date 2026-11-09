@@ -15,8 +15,8 @@ import { iso } from "../../lib/time";
 import { awayBreaksAt } from "../../schemas/offer";
 import type { StaffTrade } from "../../schemas/staff-totals";
 import { hydrateCards } from "../chat";
-import { tradeDetail } from "./reads";
 import { activeSanctionWhere } from "./safety";
+import { tradeDetail } from "./trade-detail";
 import { staffPeople } from "./trade-tracking";
 
 /**

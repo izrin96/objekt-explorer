@@ -10,7 +10,9 @@ export {
   prepareStart,
   type StartContext,
 } from "./start";
-export { hydrateCards, parseCard, resolveCard, toChatMessages } from "./cards";
+export { hydrateCards, parseCard } from "./cards";
+export { toChatMessages } from "./messages";
+export { resolveCard } from "./card-resolve";
 export { publishActivityChanged, publishChatChanged } from "./notify";
 export { refuseChat } from "./refuse";
 export { fetchPartners } from "./inbox";

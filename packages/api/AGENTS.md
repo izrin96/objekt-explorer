@@ -72,7 +72,7 @@ What blocks deletion is decided once, in `lib/account-deletion.ts`. The `/delete
 
 ## Chat: requests and the icon's dot
 
-Requests add no number to the Messages icon, but they set its dot: `hasUnseenRequests` (`services/chat/inbox.ts`, served as `chat.requestsUnseen`) is true while a request's `lastIncoming` message has an id above `message_pref.requests_seen_message_id`. `chat.seeRequests` moves that marker forward (`greatest`, computed in SQL at write time) when the web opens the Requests tab. Every `chat_message` event carries the viewer's `requestsUnseen`, so a new field on that event must be filled in `buildChatMessages` (`services/chat/live.ts`), beside `unread` and `requests`.
+Requests add no number to the Messages icon, but they set its dot: `hasUnseenRequests` (`services/chat/inbox-counts.ts`, served as `chat.requestsUnseen`) is true while a request's `lastIncoming` message has an id above `message_pref.requests_seen_message_id`. `chat.seeRequests` moves that marker forward (`greatest`, computed in SQL at write time) when the web opens the Requests tab. Every `chat_message` event carries the viewer's `requestsUnseen`, so a new field on that event must be filled in `buildChatMessages` (`services/chat/live.ts`), beside `unread` and `requests`.
 
 ## Chat: deals
 

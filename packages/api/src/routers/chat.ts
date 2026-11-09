@@ -12,16 +12,18 @@ import {
 } from "../schemas/chat";
 import {
   acceptConversation,
-  inboxCounts,
   listConversations,
   loadThread,
-  hasUnseenRequests,
   markConversationRead,
   muteConversation,
+} from "../services/chat/inbox";
+import {
+  inboxCounts,
+  hasUnseenRequests,
   requestConversationCount,
   seeRequests,
   unreadConversationCount,
-} from "../services/chat/inbox";
+} from "../services/chat/inbox-counts";
 import { updateMember } from "../services/chat/members";
 import { publishActivityChanged, publishChatChanged } from "../services/chat/notify";
 import { notifyTyping, sendMessage, startConversation, unsendMessage } from "../services/chat/send";

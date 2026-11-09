@@ -14,10 +14,12 @@ import {
   UNSEND_WINDOW_MINUTES,
 } from "../../schemas/chat";
 import { redis, redisFailOpen } from "../redis";
-import { hydrateCards, hydratePostCards, resolveCard, toChatMessages } from "./cards";
+import { resolveCard } from "./card-resolve";
+import { hydrateCards, hydratePostCards } from "./cards";
 import { loadThread } from "./inbox";
 import { publishChatMessage } from "./live";
 import { appendMessage, findMembership, findSentMessage } from "./members";
+import { toChatMessages } from "./messages";
 import { checkMessageRate } from "./rate";
 import { refuseChat } from "./refuse";
 import { chatSafety } from "./safety";
