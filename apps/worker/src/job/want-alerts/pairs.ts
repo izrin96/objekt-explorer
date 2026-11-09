@@ -2,8 +2,8 @@ import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
 import { listedCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
   offerMatchesWantSql,
-  offersOnTradeSql,
-  takesPartInTradeSql,
+  boundOfferListSql,
+  matchableListSql,
   tradePartnerSql,
 } from "@repo/api/services/trade/lists";
 import { db } from "@repo/db";
@@ -49,7 +49,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable
-        AND ${takesPartInTradeSql("l")}
+        AND ${matchableListSql("l")}
         AND l.id IN (SELECT id FROM listed)
         AND e.collection_slug IS NOT NULL
         AND ${where}
@@ -70,7 +70,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
       WHERE c.list_type = 'want'
-        AND ${offersOnTradeSql("ol")}
+        AND ${boundOfferListSql("ol")}
         AND ${offerMatchesWantSql("ol", "c")}
         AND ol.user_id <> c.user_id
     )

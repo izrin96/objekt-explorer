@@ -7,7 +7,7 @@ import { isPostIdle, pairPosts } from "../../../lib/trade-feed";
 import { addressesByUser } from "../../../lib/trade-rank";
 import type { ListType } from "../../../schemas/list";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { takesPartInTrade } from "../lists";
+import { matchableList } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
 import { type FeedList, feedListColumns, fetchPostEntries } from "./entries";
 
@@ -19,7 +19,7 @@ export const isTradeType = (type: ListType): type is (typeof TRADE_TYPES)[number
 export const visibleOnTrade = (viewerId: string | null) =>
   and(
     eq(lists.discoverable, true),
-    takesPartInTrade,
+    matchableList,
     notTradeSanctioned(sql`${lists.userId}`),
     viewerId === null ? undefined : notBlockedEither(viewerId, sql`${lists.userId}`),
   );

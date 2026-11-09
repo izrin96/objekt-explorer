@@ -5,7 +5,7 @@ import { type MatchIndex, type PostTag } from "../../../lib/trade-feed";
 import { IDLE_DAYS } from "../../../lib/trade-rank";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { offersSwapsSql, takesPartInTradeSql } from "../lists";
+import { offersSwapsSql, matchableListSql } from "../lists";
 
 /**
  * The SQL twin of `tagsOf` (schemas/trade-post.ts): WTT for a have list, a sale list that takes
@@ -33,7 +33,7 @@ export const postsCte = sql`
     SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, takes_swaps, bumped_at,
       updated_at, created_at
     FROM lists
-    WHERE discoverable AND ${takesPartInTradeSql()}
+    WHERE discoverable AND ${matchableListSql()}
   ),
   posts AS (
     SELECT

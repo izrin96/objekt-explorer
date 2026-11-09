@@ -40,7 +40,7 @@ import { fetchCollectionsBySlug } from "../list/collections";
 import { notTradeSanctioned } from "../moderation/safety";
 import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { fetchPostCards } from "../trade/feed/post-cards";
-import { takesPartInTrade } from "../trade/lists";
+import { matchableList } from "../trade/lists";
 import { personMatch } from "../trade/matches";
 import { refuse } from "./refuse";
 
@@ -74,7 +74,7 @@ async function resolvePostCard(
         eq(lists.slug, input.listSlug),
         eq(lists.userId, partnerId),
         eq(lists.discoverable, true),
-        takesPartInTrade,
+        matchableList,
         notTradeSanctioned(sql`${lists.userId}`),
       ),
     );

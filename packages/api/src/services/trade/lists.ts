@@ -5,23 +5,24 @@ import { notBlockedEither, notTradeSanctioned, ref, type UserRef } from "../mode
 
 /**
  * Which lists Trade uses. Want lists always take part; have and sale lists offer their
- * objekts only while bound to a Cosmo profile, never everything a wallet holds.
+ * objekts only while bound to a Cosmo profile, never everything a wallet holds. Neither check
+ * asks whether the list is on Trade (`discoverable`): a user's own lists match without it.
  */
-export const offersOnTrade = and(
+export const boundOfferList = and(
   inArray(lists.listType, ["have", "sale"]),
   eq(lists.isProfileBind, true),
 ) as SQL;
 
-export const takesPartInTrade = or(eq(lists.listType, "want"), offersOnTrade) as SQL;
+export const matchableList = or(eq(lists.listType, "want"), boundOfferList) as SQL;
 
 /** A have or sale list put on Trade, idle or not: what an offer may ask another member for. */
-export const askableOnTrade = and(offersOnTrade, eq(lists.discoverable, true)) as SQL;
+export const askableOnTrade = and(boundOfferList, eq(lists.discoverable, true)) as SQL;
 
 const column = (alias: string | undefined, name: string) =>
   sql.raw(alias ? `${alias}.${name}` : name);
 
-/** {@link offersOnTrade} over a raw `lists` row, aliased or not. */
-export const offersOnTradeSql = (alias?: string) =>
+/** {@link boundOfferList} over a raw `lists` row, aliased or not. */
+export const boundOfferListSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} IN ('have', 'sale') AND ${column(alias, "is_profile_bind")})`;
 
 /**
@@ -39,9 +40,9 @@ export const offersSwapsSql = (alias?: string) =>
 export const offerMatchesWantSql = (offer: string, want: string) =>
   sql`((${offersSwapsSql(offer)} AND ${column(want, "match_have")}) OR (${column(offer, "list_type")} = 'sale' AND ${column(want, "match_sale")}))`;
 
-/** {@link takesPartInTrade} over a raw `lists` row, aliased or not. */
-export const takesPartInTradeSql = (alias?: string) =>
-  sql`(${column(alias, "list_type")} = 'want' OR ${offersOnTradeSql(alias)})`;
+/** {@link matchableList} over a raw `lists` row, aliased or not. */
+export const matchableListSql = (alias?: string) =>
+  sql`(${column(alias, "list_type")} = 'want' OR ${boundOfferListSql(alias)})`;
 
 /**
  * Whether `viewer` sees `partner`'s lists on Trade: not hidden by the viewer, no block either

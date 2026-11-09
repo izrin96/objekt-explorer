@@ -4,12 +4,7 @@ import { sql } from "drizzle-orm";
 import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../../lib/trade-rank";
 import type { TradeFilter } from "../../../schemas/trade";
 import { listedCte, postsCte } from "../feed/query";
-import {
-  offerMatchesWantSql,
-  offersSwapsSql,
-  takesPartInTradeSql,
-  tradePartnerSql,
-} from "../lists";
+import { offerMatchesWantSql, offersSwapsSql, matchableListSql, tradePartnerSql } from "../lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -80,7 +75,7 @@ export async function fetchTradeCandidates(
         l.linked_list_id
       FROM lists l
       WHERE l.discoverable
-        AND ${takesPartInTradeSql("l")}
+        AND ${matchableListSql("l")}
         AND l.user_id <> ${userId}
         -- an idle list does not count: a pair's lists share the pair's freshness
         AND l.id IN (SELECT id FROM listed)

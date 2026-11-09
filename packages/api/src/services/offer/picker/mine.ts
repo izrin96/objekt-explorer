@@ -11,7 +11,7 @@ import {
   type PickerNarrowing,
 } from "../../../schemas/offer";
 import { pickerTagsFor } from "../../trade/feed/near";
-import { offersOnTrade } from "../../trade/lists";
+import { boundOfferList } from "../../trade/lists";
 import {
   type Addressed,
   type IndexedObjekt,
@@ -91,7 +91,7 @@ export async function mineCandidates(
           })
           .from(listEntries)
           .innerJoin(lists, eq(lists.id, listEntries.listId))
-          .where(and(eq(lists.userId, me), offersOnTrade))
+          .where(and(eq(lists.userId, me), boundOfferList))
           .orderBy(listEntries.id),
   ]);
 

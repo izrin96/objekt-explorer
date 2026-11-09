@@ -12,7 +12,7 @@ import {
 } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { getCache, redis, redisFailOpen } from "../../redis";
-import { offersOnTrade, takesPartInTrade } from "../lists";
+import { boundOfferList, matchableList } from "../lists";
 import { fetchAddresses, fetchHoldings } from "../matches/holdings";
 
 const HAVE_TTL_SECONDS = 300;
@@ -31,7 +31,7 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
       })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
-      .where(and(eq(lists.userId, userId), offersOnTrade, isNotNull(listEntries.collectionSlug))),
+      .where(and(eq(lists.userId, userId), boundOfferList, isNotNull(listEntries.collectionSlug))),
     fetchAddresses([userId]),
   ]);
   if (entries.length === 0) return [];
@@ -57,7 +57,7 @@ export async function hasTradeList(userId: string) {
   const [row] = await db
     .select({ id: lists.id })
     .from(lists)
-    .where(and(eq(lists.userId, userId), takesPartInTrade))
+    .where(and(eq(lists.userId, userId), matchableList))
     .limit(1);
   return row !== undefined;
 }

@@ -26,7 +26,7 @@ import {
 import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
 import { personNear } from "../../trade/feed/near";
-import { takesPartInTrade } from "../../trade/lists";
+import { matchableList } from "../../trade/lists";
 import { recountPartners, resolveCompareSides } from "../../trade/matches";
 import {
   type Addressed,
@@ -245,7 +245,7 @@ async function nearPicks(
 
 /** The partner's post named by one of its lists (`postSides`), null when it is not on Trade. */
 async function postListsOf(partnerId: string, slug: string) {
-  const onTrade = and(eq(lists.userId, partnerId), eq(lists.discoverable, true), takesPartInTrade);
+  const onTrade = and(eq(lists.userId, partnerId), eq(lists.discoverable, true), matchableList);
   const [named] = await db
     .select({ id: lists.id, linkedListId: lists.linkedListId })
     .from(lists)

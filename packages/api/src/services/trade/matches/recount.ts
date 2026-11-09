@@ -17,7 +17,7 @@ import {
 } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { mutualOf, type TradeFilter } from "../../../schemas/trade";
-import { takesPartInTrade } from "../lists";
+import { matchableList } from "../lists";
 import { type CandidateOptions, fetchTradeCandidates } from "./candidates";
 import { fetchAddresses, fetchHoldings } from "./holdings";
 
@@ -44,7 +44,7 @@ export async function resolveTradeSides(
       takesSwaps: lists.takesSwaps,
     })
     .from(lists)
-    .where(and(eq(lists.userId, userId), takesPartInTrade));
+    .where(and(eq(lists.userId, userId), matchableList));
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
   return { ...matchSides(myLists, named?.id ?? null, filter), postOf: viewerPostOf(myLists) };
 }

@@ -15,7 +15,7 @@ import {
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
 import { notTradeSanctioned } from "../../moderation/safety";
-import { takesPartInTrade, takesPartInTradeSql } from "../lists";
+import { matchableList, matchableListSql } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
 import { feedListColumns } from "./entries";
 
@@ -23,7 +23,7 @@ async function fetchOwnTradeLists(userId: string) {
   return db
     .select(feedListColumns)
     .from(lists)
-    .where(and(eq(lists.userId, userId), eq(lists.discoverable, true), takesPartInTrade));
+    .where(and(eq(lists.userId, userId), eq(lists.discoverable, true), matchableList));
 }
 
 export async function fetchMyPosts(userId: string) {
@@ -92,7 +92,7 @@ export async function bumpPerson(userId: string) {
     UPDATE lists SET bumped_at = now()
     WHERE user_id = ${userId}
       AND discoverable
-      AND ${takesPartInTradeSql()}
+      AND ${matchableListSql()}
       AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
       AND NOT EXISTS (
         SELECT 1 FROM lists x
