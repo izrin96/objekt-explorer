@@ -173,7 +173,7 @@ export function DrawerBody({
           <div className="w-full max-sm:mx-auto max-sm:max-w-[min(16rem,26dvh)]">
             <ObjektFlip objekt={objekt} />
           </div>
-          <ObjektSummary objekt={objekt} artistName={artistName} />
+          <ObjektSummary objekt={objekt} artistName={artistName} serial={selected} />
         </div>
 
         {/* at least a screen tall, so every tab scrolls the card away to the

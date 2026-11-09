@@ -9,7 +9,16 @@ import { m } from "@/paraglide/messages";
 import { isObjektOwned, memberNames } from "../objekt-utils";
 
 /** the attribute list and the outbound links beside the drawer's card */
-export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; artistName: string }) {
+export function ObjektSummary({
+  objekt,
+  artistName,
+  serial,
+}: {
+  objekt: ValidObjekt;
+  artistName: string;
+  /** the serial the drawer has browsed to, not the card's own `objekt.serial` */
+  serial: number | null;
+}) {
   const owned = isObjektOwned(objekt);
 
   // mono marks an identifier read character by character; names and labels stay sans
@@ -22,6 +31,10 @@ export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; art
     [m.objekt_type(), objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()],
   ];
   if (owned) attributes.push([m.objekt_serial(), `#${objekt.serial}`, true]);
+
+  const apolloUrl = new URL("https://apollo.cafe/");
+  apolloUrl.searchParams.set("id", objekt.slug);
+  if (serial !== null) apolloUrl.searchParams.set("serial", String(serial));
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -52,9 +65,7 @@ export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; art
         <Button
           variant="outline"
           size="sm"
-          render={
-            <a href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank" rel="noreferrer" />
-          }
+          render={<a href={apolloUrl.href} target="_blank" rel="noreferrer" />}
         >
           <ApolloIcon className="size-4" />
           {m.objekt_view_in_apollo()}
