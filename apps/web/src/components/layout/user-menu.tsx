@@ -69,7 +69,8 @@ export function useSignInSearch(): { redirect: string | undefined } {
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
-  // stays mounted once opened, so closing still animates
+  // mounted closed while the menu is open, since Base UI skips the enter animation of a dialog
+  // that mounts open; stays mounted after, so closing still animates
   const [createListUsed, setCreateListUsed] = useState(false);
   useEffect(() => preloadWhenIdle(loadCreateList), []);
   const [discordOpen, setDiscordOpen] = useState(false);
@@ -88,7 +89,13 @@ export function UserMenu({ user }: { user: User }) {
     <>
       {/* the menu opens before Create list can be picked, so an idle preload that hasn't run yet
           starts here */}
-      <Menu onOpenChange={(open) => open && void loadCreateList()}>
+      <Menu
+        onOpenChange={(open) => {
+          if (!open) return;
+          void loadCreateList();
+          setCreateListUsed(true);
+        }}
+      >
         <MenuTrigger
           render={
             <button
@@ -122,10 +129,7 @@ export function UserMenu({ user }: { user: User }) {
           <ArtistsSubmenu />
 
           <MyListsSubmenu
-            onCreateList={() => {
-              setCreateListUsed(true);
-              setCreateListOpen(true);
-            }}
+            onCreateList={() => setCreateListOpen(true)}
             onDiscordFormat={() => setDiscordOpen(true)}
           />
 

@@ -12,6 +12,7 @@ import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, type RefObject, use, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { FramePanel } from "@/components/ui/frame";
@@ -101,7 +102,9 @@ export function PostBlock({
   // each Report this post… mounts a fresh report, which opens itself; none until the first
   const [reportRequest, setReportRequest] = useState(0);
   const showAll = (listId: number, viaMenu: boolean) => {
-    setMounted((current) => new Set(current).add(listId));
+    // committed closed first: Base UI skips the enter animation of a sheet that mounts open
+    if (!mounted.has(listId))
+      flushSync(() => setMounted((current) => new Set(current).add(listId)));
     setFromMenu(viaMenu);
     setAllOpen(listId);
   };
