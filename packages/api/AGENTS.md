@@ -2,6 +2,8 @@
 
 oRPC routers (`src/routers/`), Zod inputs (`src/schemas/`), and the services they call (`src/services/`). Pure logic lives in `src/lib/` beside its `*.test.ts`.
 
+A procedure checks its input and the caller, then calls a service; database and Redis reads and writes live in the service. A few older routers still query in place (`pins.ts`, `list-utils.ts`, `compare.ts`); new code follows the services, and a procedure you change moves its queries there when that is cheap. Services sit in their domain's folder (`services/objekt/`, `services/offer/`, `services/list/` and so on), and a new service joins the folder of its domain.
+
 ## `/rpc` stays compatible with open tabs
 
 A tab loaded before a deploy keeps calling `/rpc` with the input shape it was built with, so every input an older client sends must still validate to the same data. New input fields are optional with a default. Before changing an `.input()`, state what an open tab sends after the deploy and confirm it still validates.

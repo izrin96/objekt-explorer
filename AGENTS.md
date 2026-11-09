@@ -130,6 +130,7 @@ Every package extends the shared oxlint baseline from its own config file (`oxli
 - `import * as z from "zod"` — never `import { z }` (convention only; oxlint's `no-restricted-imports` cannot tell the two apart)
 - Prefer TS type inference from Zod schemas over manual type declarations
 - Await all promises or explicitly void them
+- A comment states a non-obvious why: a workaround, an invariant, a trap. Vendored files (`apps/web/src/components/ui/*`) keep their comments as they are
 - Avoid `class` and `enum` — use functions/objects and `as const`/unions
 - In Tailwind, prefer theme-based spacing (e.g. `p-2`) over arbitrary values (`p-[8px]`)
 - oxfmt handles all formatting — do not add Prettier or Biome
