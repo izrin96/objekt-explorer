@@ -1,5 +1,3 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { refuse } from "../lib/refuse";
@@ -15,7 +13,7 @@ import {
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
-import { findOwnedList, refuseUnheldProfile } from "../services/list/read";
+import { findListBySlug, findOwnedList, refuseUnheldProfile } from "../services/list/read";
 import {
   addRule,
   deleteRule,
@@ -30,12 +28,6 @@ import { ipRateLimited, refuseOverUserLimit } from "../services/redis";
 /** Each rule save reads the indexer and writes an entry for every collection the rule wants. */
 const limitRuleWrites = (userId: string) => refuseOverUserLimit("list-rule", userId, 60, 3600);
 
-async function findList(slug: string) {
-  const list = await db.query.lists.findFirst({ where: { slug } });
-  if (!list) throw new ORPCError("NOT_FOUND");
-  return list;
-}
-
 export const listRulesRouter = {
   /** A want list's rules with how many objekts each wants now; anyone who can open the list. */
   rules: pub
@@ -49,7 +41,7 @@ export const listRulesRouter = {
     .input(listRulesInputSchema)
     .output(documented(listRulesOutputSchema))
     .handler(async ({ input: { slug } }) => {
-      const list = await findList(slug);
+      const list = await findListBySlug(slug);
       return fetchListRules(list);
     }),
 
@@ -110,7 +102,7 @@ export const listRulesRouter = {
       if (await ipRateLimited("rule-objekts", context.headers ?? getRequestHeaders(), 60, 60)) {
         refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
       }
-      const list = await findList(slug);
+      const list = await findListBySlug(slug);
       return ruleObjekts(list, ruleId, cursor);
     }),
 };

@@ -1,11 +1,13 @@
 import { db } from "@repo/db";
 import type { Tx } from "@repo/db";
 import { addressLinkEvent, userAddress, userSanction } from "@repo/db/schema";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { linkRefusal, unlinkRefusal } from "../../lib/link-rules";
 import { refuse } from "../../lib/refuse";
+import type { LinkedPreview } from "../../schemas/cosmo-link";
 import { activeSanctionWhere } from "../moderation/safety";
+import { fetchOwnerCounts } from "../objekt/catalog";
 
 type Executor = Pick<typeof db, "select" | "selectDistinct" | "execute">;
 const byValue = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -267,4 +269,46 @@ export async function unlink(userId: string, address: string) {
       })),
     );
   });
+}
+
+export async function assertAddressNotLinked(address: string, userId: string) {
+  const [existing] = await db
+    .select({ userId: userAddress.userId })
+    .from(userAddress)
+    .where(and(eq(userAddress.address, address), isNotNull(userAddress.userId)))
+    .limit(1);
+
+  if (existing) {
+    if (existing.userId === userId) {
+      refuse(
+        "BAD_REQUEST",
+        "cosmo_link_already_linked_self",
+        "This Cosmo ID is already linked to your account",
+      );
+    }
+    refuse(
+      "BAD_REQUEST",
+      "cosmo_link_already_linked_other",
+      "This Cosmo ID is already linked to another account",
+    );
+  }
+}
+
+/** Previews of only those `addresses` the user has linked. */
+export async function fetchLinkedPreviews(userId: string, addresses: string[]) {
+  const linked = await db
+    .select({
+      address: userAddress.address,
+      bannerImgUrl: userAddress.bannerImgUrl,
+      bannerImgType: userAddress.bannerImgType,
+    })
+    .from(userAddress)
+    .where(and(eq(userAddress.userId, userId), inArray(userAddress.address, addresses)));
+  const counts = await fetchOwnerCounts(linked.map((row) => row.address));
+  return linked.map((row): LinkedPreview => ({
+    address: row.address,
+    bannerImgUrl: row.bannerImgUrl,
+    bannerImgType: row.bannerImgType,
+    count: counts.get(row.address.toLowerCase()) ?? 0,
+  }));
 }

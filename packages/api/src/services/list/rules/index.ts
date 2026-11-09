@@ -13,6 +13,7 @@ import {
   RULE_MAX_PER_LIST,
   ruleCovers,
   ruleDef,
+  ruleLine,
   ruleProblem,
   type RuleCollection,
 } from "../../../schemas/list-rule";
@@ -329,4 +330,11 @@ export async function fetchRulesById(ruleIds: number[]) {
   if (ruleIds.length === 0) return new Map<number, ListRuleDef>();
   const rows = await db.select(ruleColumns).from(listRule).where(inArray(listRule.id, ruleIds));
   return new Map(rows.map((row) => [row.id, toDef(row)]));
+}
+
+/** The Discord format's rule lines of the caller's list. */
+export async function ownRuleLines(slug: string, userId: string) {
+  const list = await db.query.lists.findFirst({ columns: { id: true }, where: { slug, userId } });
+  if (!list) return [];
+  return ((await fetchRuleDefs([list.id])).get(list.id) ?? []).map(ruleLine);
 }

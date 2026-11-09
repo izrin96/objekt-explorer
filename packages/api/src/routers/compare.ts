@@ -1,12 +1,16 @@
-import { db } from "@repo/db";
-import { isAddress } from "@repo/lib";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 
 import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed } from "../orpc";
 import { addressInputSchema } from "../schemas/common/address";
 import { compareInputSchema } from "../schemas/compare";
-import { fetchHeldSlugs, fetchListSlugs, performComparison } from "../services/compare";
+import {
+  fetchHeldSlugs,
+  fetchListSlugs,
+  findOwnProfileAddress,
+  findProfileAddress,
+  performComparison,
+} from "../services/compare";
 import { buildListEntries } from "../services/list/entry-view";
 import { fetchListWithEntries } from "../services/list/read";
 
@@ -27,12 +31,7 @@ export const compareRouter = {
     /** the collection slugs the target holds; the comparison needs nothing else */
     async function buildTargetSlugs(): Promise<Set<string>> {
       if (input.targetType === "profile") {
-        const targetProfile = await db.query.userAddress.findFirst({
-          columns: { address: true },
-          where: {
-            [isAddress(input.targetProfile) ? "address" : "nickname"]: input.targetProfile,
-          },
-        });
+        const targetProfile = await findProfileAddress(input.targetProfile);
 
         if (!targetProfile)
           refuse("NOT_FOUND", "compare_target_profile_not_found", "Target profile not found");
@@ -63,10 +62,7 @@ export const compareRouter = {
   heldSlugs: authed
     .input(addressInputSchema)
     .handler(async ({ context: { session }, input: { address } }) => {
-      const profile = await db.query.userAddress.findFirst({
-        columns: { address: true },
-        where: { address, userId: session.user.id },
-      });
+      const profile = await findOwnProfileAddress(address, session.user.id);
 
       if (!profile)
         refuse("NOT_FOUND", "compare_target_profile_not_found", "Target profile not found");

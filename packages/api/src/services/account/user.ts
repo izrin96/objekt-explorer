@@ -1,6 +1,10 @@
+import { db } from "@repo/db";
+import { user as userSchema } from "@repo/db/auth-schema";
 import { fetchUserProfiles } from "@repo/lib/server/user";
+import { eq } from "drizzle-orm";
+import type * as z from "zod";
 
-import type { CurrentUserOutput } from "../../schemas/user";
+import type { CurrentUserOutput, updateAccountInputSchema } from "../../schemas/user";
 import { fetchOwnedLists } from "../list/read";
 import { loadIdentities } from "./identities";
 import { getSession } from "./session";
@@ -21,4 +25,20 @@ export async function getCurrentUser(): Promise<CurrentUserOutput> {
     profiles,
     defaultAddress: identities.get(session.user.id)?.identity.address ?? null,
   };
+}
+
+export async function updateAccount(
+  userId: string,
+  input: z.infer<typeof updateAccountInputSchema>,
+) {
+  await db
+    .update(userSchema)
+    .set({
+      name: input.name,
+      showSocial: input.showSocial,
+      showOnline: input.showOnline,
+      image: input.removePic ? null : undefined,
+      removeImage: input.removePic,
+    })
+    .where(eq(userSchema.id, userId));
 }

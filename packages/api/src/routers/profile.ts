@@ -1,11 +1,7 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
-import { userAddress } from "@repo/db/schema";
 import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
-import { and, eq, sql } from "drizzle-orm";
 
 import { ownBannerKey } from "../lib/banner-key";
-import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed } from "../orpc";
 import { addressOrBareInputSchema, addressSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
@@ -14,7 +10,12 @@ import {
   presignedPostInputSchema,
   profilePreviewOutputSchema,
 } from "../schemas/profile";
-import { assertProfileOwned, fetchProfilePreview } from "../services/profile";
+import {
+  assertProfileOwned,
+  fetchOwnedProfile,
+  fetchProfilePreview,
+  updateProfile,
+} from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
 import {
   createPresignedUploadUrl,
@@ -52,16 +53,12 @@ export const profileRouter = {
         throw new ORPCError("BAD_REQUEST");
       }
 
-      await db
-        .update(userAddress)
-        .set({
-          bannerImgUrl,
-          bannerImgType,
-          gridColumns,
-          bio,
-          bannerUpdatedAt: bannerImgUrl !== undefined ? sql`'now'` : undefined,
-        })
-        .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
+      await updateProfile(address, session.user.id, {
+        bannerImgUrl,
+        bannerImgType,
+        gridColumns,
+        bio,
+      });
 
       // Delete the old banner only once the row no longer points at it, so a
       // failed update cannot leave a dangling URL
@@ -96,26 +93,3 @@ export const profileRouter = {
       };
     }),
 };
-
-async function fetchOwnedProfile(address: string, userId: string) {
-  const profile = await db.query.userAddress.findFirst({
-    columns: {
-      nickname: true,
-      address: true,
-      bannerImgUrl: true,
-      bannerImgType: true,
-      gridColumns: true,
-      bio: true,
-    },
-    where: { address, userId },
-    orderBy: {
-      id: "desc",
-    },
-  });
-
-  if (!profile) {
-    refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
-  }
-
-  return profile;
-}

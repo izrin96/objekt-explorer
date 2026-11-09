@@ -346,3 +346,17 @@ function getProviderUsername(providerId: string, info: { data?: unknown } | null
   const data = info?.data as { username?: string; data?: { username?: string } } | undefined;
   return providerId === "discord" ? data?.username : data?.data?.username;
 }
+
+/** The user's account with one social provider, with its tokens. */
+export function findProviderAccount(userId: string, providerId: string) {
+  return db.query.account.findFirst({
+    columns: {
+      userId: true,
+      providerId: true,
+      idToken: true,
+      accessToken: true,
+      refreshToken: true,
+    },
+    where: { userId, providerId },
+  });
+}

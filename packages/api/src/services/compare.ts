@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { chunkMap } from "@repo/lib";
+import { chunkMap, isAddress } from "@repo/lib";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, exists, inArray, sql } from "drizzle-orm";
 
@@ -65,4 +65,22 @@ export function performComparison(
   return mode === "missing"
     ? sourceEntries.filter((e) => !targetCollectionSlugs.has(e.slug))
     : sourceEntries.filter((e) => targetCollectionSlugs.has(e.slug));
+}
+
+/** A profile by nickname or address. */
+export function findProfileAddress(identifier: string) {
+  return db.query.userAddress.findFirst({
+    columns: { address: true },
+    where: {
+      [isAddress(identifier) ? "address" : "nickname"]: identifier,
+    },
+  });
+}
+
+/** One of the caller's own profiles. */
+export function findOwnProfileAddress(address: string, userId: string) {
+  return db.query.userAddress.findFirst({
+    columns: { address: true },
+    where: { address, userId },
+  });
 }

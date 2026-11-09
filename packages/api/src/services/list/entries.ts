@@ -4,11 +4,16 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries } from "@repo/db/schema";
 import type { List, ListEntry } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import type * as z from "zod";
 
 import { TOKEN_CHUNK_SIZE } from "../../constants";
 import { refuse } from "../../lib/refuse";
-import { type AddSource } from "../../schemas/list";
+import {
+  type AddSource,
+  type setRatioInputSchema,
+  type updateEntryPricesInputSchema,
+} from "../../schemas/list";
 import { touchList } from "./shared";
 
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
@@ -168,4 +173,69 @@ async function insertTokens(
   );
   if (inserted.length > 0) await touchList([listId]);
   return inserted;
+}
+
+/** A sale list's prices, QYOP flags and notes, one statement for the batch. */
+export async function setEntryPrices(
+  listId: number,
+  updates: z.infer<typeof updateEntryPricesInputSchema>["updates"],
+) {
+  // one statement for the whole batch; an omitted note keeps the stored one
+  await db.execute(sql`
+      UPDATE ${listEntries}
+      SET price = v.price,
+          is_qyop = v.is_qyop,
+          note = CASE WHEN v.has_note THEN v.note ELSE ${listEntries.note} END
+      FROM unnest(
+        ${sql.param(updates.map((u) => u.entryId))}::int[],
+        ${sql.param(updates.map((u) => u.price))}::real[],
+        ${sql.param(updates.map((u) => u.isQyop))}::boolean[],
+        ${sql.param(updates.map((u) => u.note !== undefined))}::boolean[],
+        ${sql.param(updates.map((u) => u.note ?? null))}::varchar[]
+      ) AS v(id, price, is_qyop, has_note, note)
+      WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${listId}
+    `);
+}
+
+/** Sets the ratio of a list's own entries; refuses, writing nothing, unless every id is one. */
+export async function setEntryRatio(
+  listId: number,
+  entryIds: number[],
+  ratio: z.infer<typeof setRatioInputSchema>["ratio"],
+) {
+  const ids = [...new Set(entryIds)];
+  // one array parameter, not one per id: a list holds up to 50,000 entries
+  const inIds = sql`${listEntries.id} = ANY(${sql.param(ids)}::int[])`;
+  const ownEntries = and(inIds, eq(listEntries.listId, listId), isNull(listEntries.ruleId));
+  // a refused request changes nothing, so every id is checked before the write
+  await db.transaction(async (tx) => {
+    const found = await tx
+      .select({ id: listEntries.id })
+      .from(listEntries)
+      .where(ownEntries)
+      .for("update");
+    if (found.length !== ids.length) {
+      refuse(
+        "BAD_REQUEST",
+        "list_ratio_entry",
+        "A rule's objekts take the rule's ratio, and every entry must be on the list",
+      );
+    }
+    await tx.update(listEntries).set({ ratio }).where(ownEntries);
+  });
+}
+
+/** Removes a list's own entries (never a rule's), returning the ids that were there. */
+export async function removeEntries(listId: number, entryIds: number[]) {
+  // an entry already gone, say removed from another tab, is not counted
+  return db
+    .delete(listEntries)
+    .where(
+      and(
+        inArray(listEntries.id, entryIds),
+        eq(listEntries.listId, listId),
+        isNull(listEntries.ruleId),
+      ),
+    )
+    .returning({ id: listEntries.id });
 }

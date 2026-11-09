@@ -1,7 +1,7 @@
 import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries } from "@repo/db/schema";
+import { listEntries, lists } from "@repo/db/schema";
 import type { List } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { and, eq, inArray, isNull } from "drizzle-orm";
@@ -19,6 +19,8 @@ import {
   needsHoldings,
 } from "../../schemas/list-copy";
 import { assertProfileOwned } from "../profile";
+import { type PreparedList, writeList } from "./create";
+import { copyRulesTx } from "./rules";
 
 type CopyTarget = Pick<
   z.infer<typeof copyPreviewInputSchema>,
@@ -107,4 +109,25 @@ export async function insertCopyRows(tx: Tx, listId: number, rows: CopyRow[]) {
       .values(rows.slice(i, i + TOKEN_CHUNK_SIZE).map((row) => ({ listId, ...row })))
       .onConflictDoNothing();
   }
+}
+
+/** Creates the copy, its rows, a carried Ratio for all and a want list's rules, in one transaction. */
+export async function writeCopy(
+  source: List,
+  listType: CopyTarget["listType"],
+  prepared: PreparedList,
+  rows: CopyRow[],
+) {
+  return db.transaction(async (tx) => {
+    const created = await writeList(tx, prepared);
+    await insertCopyRows(tx, created.id, rows);
+    if (source.ratio !== null && carriesRatios(source.listType, listType)) {
+      await tx.update(lists).set({ ratio: source.ratio }).where(eq(lists.id, created.id));
+    }
+    // any other copy drops the rules with the objekts they want
+    if (listType === "want" && source.listType === "want") {
+      await copyRulesTx(tx, source.id, created.id);
+    }
+    return created;
+  });
 }

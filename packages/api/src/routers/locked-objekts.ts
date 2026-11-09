@@ -1,14 +1,8 @@
-import { db } from "@repo/db";
-import { lockedObjekts } from "@repo/db/schema";
-import { chunk } from "@repo/lib";
-import { and, eq, inArray } from "drizzle-orm";
-
-import { TOKEN_CHUNK_SIZE } from "../constants";
 import { authed, pub } from "../orpc";
 import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
 import { lockedObjektsOutputSchema } from "../schemas/locked-objekts";
-import { fetchLockedObjekts } from "../services/objekt/locked";
+import { fetchLockedObjekts, lockTokens, unlockTokens } from "../services/objekt/locked";
 import { ownedTokenIds } from "../services/objekt/owned";
 import { assertProfileOwned } from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
@@ -36,23 +30,7 @@ export const lockedObjektsRouter = {
       const tokenIds = await ownedTokenIds(address, asked);
       if (tokenIds.length === 0) return;
 
-      await db.transaction(async (tx) => {
-        await chunk(tokenIds, TOKEN_CHUNK_SIZE, async (batch) => {
-          await tx
-            .delete(lockedObjekts)
-            .where(and(inArray(lockedObjekts.tokenId, batch), eq(lockedObjekts.address, address)));
-
-          await tx
-            .insert(lockedObjekts)
-            .values(
-              batch.map((tokenId) => ({
-                address,
-                tokenId,
-              })),
-            )
-            .onConflictDoNothing();
-        });
-      });
+      await lockTokens(address, tokenIds);
     }),
 
   batchUnlock: authed
@@ -62,8 +40,6 @@ export const lockedObjektsRouter = {
 
       if (tokenIds.length === 0) return;
 
-      await db
-        .delete(lockedObjekts)
-        .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
+      await unlockTokens(address, tokenIds);
     }),
 };

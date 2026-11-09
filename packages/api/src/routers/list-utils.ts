@@ -1,7 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
-import { listEntries } from "@repo/db/schema";
-import { and, eq, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { escapeCSV } from "../lib/csv";
@@ -16,16 +13,11 @@ import {
 } from "../schemas/list";
 import { ruleLine } from "../schemas/list-rule";
 import { takesRatio } from "../schemas/trade-ratio";
+import { setEntryPrices, setEntryRatio } from "../services/list/entries";
 import { buildListEntries, fetchPartialOwnedListCollections } from "../services/list/entry-view";
 import { fetchListWithEntries, findOwnedList, refuseUnheldProfile } from "../services/list/read";
-import { fetchRuleDefs } from "../services/list/rules";
+import { fetchRuleDefs, ownRuleLines } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
-
-async function ruleLines(slug: string, userId: string) {
-  const list = await db.query.lists.findFirst({ columns: { id: true }, where: { slug, userId } });
-  if (!list) return [];
-  return ((await fetchRuleDefs([list.id])).get(list.id) ?? []).map(ruleLine);
-}
 
 export const listUtils = {
   updateEntryPrices: authed.input(updateEntryPricesInputSchema).handler(
@@ -45,21 +37,7 @@ export const listUtils = {
         refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
       }
 
-      // one statement for the whole batch; an omitted note keeps the stored one
-      await db.execute(sql`
-          UPDATE ${listEntries}
-          SET price = v.price,
-              is_qyop = v.is_qyop,
-              note = CASE WHEN v.has_note THEN v.note ELSE ${listEntries.note} END
-          FROM unnest(
-            ${sql.param(updates.map((u) => u.entryId))}::int[],
-            ${sql.param(updates.map((u) => u.price))}::real[],
-            ${sql.param(updates.map((u) => u.isQyop))}::boolean[],
-            ${sql.param(updates.map((u) => u.note !== undefined))}::boolean[],
-            ${sql.param(updates.map((u) => u.note ?? null))}::varchar[]
-          ) AS v(id, price, is_qyop, has_note, note)
-          WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${list.id}
-        `);
+      await setEntryPrices(list.id, updates);
       await touchList([list.id]);
     },
   ),
@@ -77,26 +55,7 @@ export const listUtils = {
       if (!takesRatio(list.listType)) {
         refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
       }
-      const ids = [...new Set(entryIds)];
-      // one array parameter, not one per id: a list holds up to 50,000 entries
-      const inIds = sql`${listEntries.id} = ANY(${sql.param(ids)}::int[])`;
-      const ownEntries = and(inIds, eq(listEntries.listId, list.id), isNull(listEntries.ruleId));
-      // a refused request changes nothing, so every id is checked before the write
-      await db.transaction(async (tx) => {
-        const found = await tx
-          .select({ id: listEntries.id })
-          .from(listEntries)
-          .where(ownEntries)
-          .for("update");
-        if (found.length !== ids.length) {
-          refuse(
-            "BAD_REQUEST",
-            "list_ratio_entry",
-            "A rule's objekts take the rule's ratio, and every entry must be on the list",
-          );
-        }
-        await tx.update(listEntries).set({ ratio }).where(ownEntries);
-      });
+      await setEntryRatio(list.id, entryIds, ratio);
       await touchList([list.id]);
     },
   ),
@@ -111,7 +70,7 @@ export const listUtils = {
       const [haveCollections, wantCollections, wantRules] = await Promise.all([
         haveListSlug ? fetchPartialOwnedListCollections(haveListSlug, user.id) : null,
         wantListSlug ? fetchPartialOwnedListCollections(wantListSlug, user.id) : null,
-        wantListSlug ? ruleLines(wantListSlug, user.id) : [],
+        wantListSlug ? ownRuleLines(wantListSlug, user.id) : [],
       ]);
 
       // `wantRules` comes before the want objekts; a tab that predates it ignores it

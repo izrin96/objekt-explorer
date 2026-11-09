@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 import type { Tx } from "@repo/db";
-import { trade, tradeLeg, userSanction } from "@repo/db/schema";
+import { offer, trade, tradeLeg, userSanction } from "@repo/db/schema";
 import { APIError } from "better-auth/api";
 import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 
@@ -8,9 +8,11 @@ import {
   type DeletionSanction,
   type DeletionTrade,
   deletionBlockers,
+  deletionStep,
   refusalOf,
 } from "../../lib/account-deletion";
 import type { DeleteRefusal } from "../../schemas/user";
+import { offersOf, openOffersWhere } from "../offer/cancel";
 import { heldCopies } from "../offer/verify";
 
 /** The trades and sanctions `deletionBlockers` decides on, read through `db` or a transaction. */
@@ -74,3 +76,25 @@ export async function deleteRefusal(userId: string): Promise<DeleteRefusal | nul
 /** The client words it by `code`. */
 export const refusalError = (refusal: DeleteRefusal) =>
   new APIError("BAD_REQUEST", { code: refusal, message: refusal });
+
+/** What still blocks deleting the account, the open offers deletion would cancel, and the next step. */
+export async function deletionCheck(session: {
+  user: { id: string; email: string };
+  session: { createdAt: Date };
+}) {
+  const userId = session.user.id;
+  const now = new Date();
+  const [state, [open]] = await Promise.all([
+    deletionState(db, userId),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(offer)
+      .where(openOffersWhere(offersOf(userId))),
+  ]);
+  const blockers = deletionBlockers({ ...state, now });
+  return {
+    blockers,
+    openOffers: open?.count ?? 0,
+    step: deletionStep(session.user.email, session.session.createdAt, now),
+  };
+}

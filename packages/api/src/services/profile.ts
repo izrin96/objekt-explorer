@@ -227,3 +227,50 @@ export async function fetchUserByIdentifier(
     }
   );
 }
+
+/** One of the caller's own profiles, for its edit dialog; refuses one they don't hold. */
+export async function fetchOwnedProfile(address: string, userId: string) {
+  const profile = await db.query.userAddress.findFirst({
+    columns: {
+      nickname: true,
+      address: true,
+      bannerImgUrl: true,
+      bannerImgType: true,
+      gridColumns: true,
+      bio: true,
+    },
+    where: { address, userId },
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  if (!profile) {
+    refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
+  }
+
+  return profile;
+}
+
+/** An omitted field keeps its stored value; a new banner stamps `banner_updated_at`. */
+export async function updateProfile(
+  address: string,
+  userId: string,
+  {
+    bannerImgUrl,
+    bannerImgType,
+    gridColumns,
+    bio,
+  }: Partial<Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "gridColumns" | "bio">>,
+) {
+  await db
+    .update(userAddress)
+    .set({
+      bannerImgUrl,
+      bannerImgType,
+      gridColumns,
+      bio,
+      bannerUpdatedAt: bannerImgUrl !== undefined ? sql`'now'` : undefined,
+    })
+    .where(and(eq(userAddress.address, address), eq(userAddress.userId, userId)));
+}

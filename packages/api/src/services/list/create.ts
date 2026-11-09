@@ -215,3 +215,8 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
 
   return { id: inserted.id, slug, changed };
 }
+
+/** Creates the list in one transaction; returns what `touchList` takes after the commit. */
+export function createList(prepared: PreparedList) {
+  return db.transaction((tx) => writeList(tx, prepared));
+}

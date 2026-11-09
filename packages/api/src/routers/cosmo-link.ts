@@ -2,56 +2,31 @@ import crypto from "node:crypto";
 
 import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
-import { db } from "@repo/db";
-import { userAddress } from "@repo/db/schema";
-import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import * as z from "zod";
 
 import { serverEnv } from "../env";
 import { refuse } from "../lib/refuse";
 import { authed } from "../orpc";
 import { addressSchema } from "../schemas/common/address";
+import { generateCodeInputSchema, linkedPreviewsInputSchema } from "../schemas/cosmo-link";
 import {
-  generateCodeInputSchema,
-  type LinkedPreview,
-  linkedPreviewsInputSchema,
-} from "../schemas/cosmo-link";
-import { linkVerified, setDefault, unlink } from "../services/account/cosmo-link";
+  assertAddressNotLinked,
+  fetchLinkedPreviews,
+  linkVerified,
+  setDefault,
+  unlink,
+} from "../services/account/cosmo-link";
 import {
   clearVerification,
   readVerification,
   storeVerification,
 } from "../services/account/cosmo-verify";
-import { fetchOwnerCounts } from "../services/objekt/catalog";
 import { userRateLimited } from "../services/redis";
 import { getAccessToken } from "../services/token";
 
 function generateCode() {
   const hex = crypto.randomBytes(3).toString("hex");
   return `verify-${hex}`;
-}
-
-async function assertAddressNotLinked(address: string, userId: string) {
-  const [existing] = await db
-    .select({ userId: userAddress.userId })
-    .from(userAddress)
-    .where(and(eq(userAddress.address, address), isNotNull(userAddress.userId)))
-    .limit(1);
-
-  if (existing) {
-    if (existing.userId === userId) {
-      refuse(
-        "BAD_REQUEST",
-        "cosmo_link_already_linked_self",
-        "This Cosmo ID is already linked to your account",
-      );
-    }
-    refuse(
-      "BAD_REQUEST",
-      "cosmo_link_already_linked_other",
-      "This Cosmo ID is already linked to another account",
-    );
-  }
 }
 
 export const cosmoLinkRouter = {
@@ -67,23 +42,7 @@ export const cosmoLinkRouter = {
     .input(linkedPreviewsInputSchema)
     .handler(async ({ input: { addresses }, context: { session } }) => {
       if (addresses.length === 0) return [];
-      const linked = await db
-        .select({
-          address: userAddress.address,
-          bannerImgUrl: userAddress.bannerImgUrl,
-          bannerImgType: userAddress.bannerImgType,
-        })
-        .from(userAddress)
-        .where(
-          and(eq(userAddress.userId, session.user.id), inArray(userAddress.address, addresses)),
-        );
-      const counts = await fetchOwnerCounts(linked.map((row) => row.address));
-      return linked.map((row): LinkedPreview => ({
-        address: row.address,
-        bannerImgUrl: row.bannerImgUrl,
-        bannerImgType: row.bannerImgType,
-        count: counts.get(row.address.toLowerCase()) ?? 0,
-      }));
+      return fetchLinkedPreviews(session.user.id, addresses);
     }),
 
   // remove link

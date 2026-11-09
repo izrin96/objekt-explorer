@@ -1,8 +1,3 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
-import { lists } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
-
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented } from "../schemas/common/documented";
@@ -18,12 +13,10 @@ import {
   slugPreviewInputSchema,
   slugPreviewOutputSchema,
 } from "../schemas/list";
-import { carriesRatios } from "../schemas/list-copy";
-import { insertCopyRows, planCopy } from "../services/list/copy";
-import { generateProfileSlug, prepareList, writeList } from "../services/list/create";
+import { planCopy, writeCopy } from "../services/list/copy";
+import { createList, generateProfileSlug, prepareList } from "../services/list/create";
 import { deleteList, editList } from "../services/list/edit";
 import { fetchList, findOwnedList } from "../services/list/read";
-import { copyRulesTx } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
@@ -34,13 +27,7 @@ export const listCrud = {
   find: authed
     .input(listSlugInputSchema)
     .handler(async ({ input: { slug }, context: { session } }) => {
-      const result = await db.query.lists.findFirst({
-        where: { slug, userId: session.user.id },
-      });
-
-      if (!result) throw new ORPCError("NOT_FOUND");
-
-      return result;
+      return findOwnedList(slug, session.user.id);
     }),
 
   findPublic: pub
@@ -65,7 +52,7 @@ export const listCrud = {
     }) => {
       await limitListWrites(user.id);
       const prepared = await prepareList(input, user.id);
-      const { slug, changed } = await db.transaction((tx) => writeList(tx, prepared));
+      const { slug, changed } = await createList(prepared);
       await touchList(changed);
       // the create dialog offers Post it on the new list
       return { slug };
@@ -87,18 +74,7 @@ export const listCrud = {
         const prepared = await prepareList({ ...input, gridColumns: source.gridColumns }, user.id);
         const { rows, carried, leftOut, unit } = await planCopy(source, input, user.id);
 
-        const { slug, changed } = await db.transaction(async (tx) => {
-          const created = await writeList(tx, prepared);
-          await insertCopyRows(tx, created.id, rows);
-          if (source.ratio !== null && carriesRatios(source.listType, input.listType)) {
-            await tx.update(lists).set({ ratio: source.ratio }).where(eq(lists.id, created.id));
-          }
-          // any other copy drops the rules with the objekts they want
-          if (input.listType === "want" && source.listType === "want") {
-            await copyRulesTx(tx, source.id, created.id);
-          }
-          return created;
-        });
+        const { slug, changed } = await writeCopy(source, input.listType, prepared, rows);
         await touchList(changed);
 
         return { slug, carried, leftOut, unit };

@@ -1,13 +1,9 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
-import { user as userSchema } from "@repo/db/auth-schema";
-import { offer } from "@repo/db/schema";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { generateRandomString } from "better-auth/crypto";
-import { eq, sql } from "drizzle-orm";
 import * as z from "zod";
 
-import { deletionBlockers, deletionStep, refusalOf } from "../lib/account-deletion";
+import { refusalOf } from "../lib/account-deletion";
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
@@ -21,35 +17,13 @@ import {
   userSearchInputSchema,
   userSearchOutputSchema,
 } from "../schemas/user";
-import { auth, refreshProviderProfile } from "../services/account/auth";
-import { deletionState } from "../services/account/delete";
+import { auth, findProviderAccount, refreshProviderProfile } from "../services/account/auth";
+import { deletionCheck } from "../services/account/delete";
 import { loadIdentities } from "../services/account/identities";
-import { getCurrentUser } from "../services/account/user";
-import { offersOf, openOffersWhere } from "../services/offer/cancel";
+import { getCurrentUser, updateAccount } from "../services/account/user";
 import { searchUsers } from "../services/user-search";
 
 const DELETION_TOKEN_MINUTES = 5;
-
-async function deletionCheck(session: {
-  user: { id: string; email: string };
-  session: { createdAt: Date };
-}) {
-  const userId = session.user.id;
-  const now = new Date();
-  const [state, [open]] = await Promise.all([
-    deletionState(db, userId),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(offer)
-      .where(openOffersWhere(offersOf(userId))),
-  ]);
-  const blockers = deletionBlockers({ ...state, now });
-  return {
-    blockers,
-    openOffers: open?.count ?? 0,
-    step: deletionStep(session.user.email, session.session.createdAt, now),
-  };
-}
 
 export const userRouter = {
   search: pub
@@ -86,16 +60,7 @@ export const userRouter = {
         },
         errors,
       }) => {
-        const account = await db.query.account.findFirst({
-          columns: {
-            userId: true,
-            providerId: true,
-            idToken: true,
-            accessToken: true,
-            refreshToken: true,
-          },
-          where: { userId: user.id, providerId },
-        });
+        const account = await findProviderAccount(user.id, providerId);
 
         if (!account)
           refuse(
@@ -163,15 +128,6 @@ export const userRouter = {
   updateAccount: authed
     .input(updateAccountInputSchema)
     .handler(async ({ input, context: { session } }) => {
-      await db
-        .update(userSchema)
-        .set({
-          name: input.name,
-          showSocial: input.showSocial,
-          showOnline: input.showOnline,
-          image: input.removePic ? null : undefined,
-          removeImage: input.removePic,
-        })
-        .where(eq(userSchema.id, session.user.id));
+      await updateAccount(session.user.id, input);
     }),
 };

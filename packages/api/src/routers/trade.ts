@@ -1,8 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
-import { hiddenTradePartner, lists, user, userAddress } from "@repo/db/schema";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed, pub } from "../orpc";
@@ -23,9 +20,7 @@ import {
   unshownEntriesInputSchema,
 } from "../schemas/trade";
 import { tradePersonInputSchema, tradePersonOutputSchema } from "../schemas/trade-person";
-import { bumpTradeVersions } from "../services/moderation/safety-cache";
 import { tabCounts } from "../services/offer/tab-counts";
-import { toPublicUser } from "../services/profile";
 import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
 import { collectionPostCounts } from "../services/trade/feed/counts";
 import { bumpPerson, fetchMyPosts, isTradeBlocked } from "../services/trade/feed/mine";
@@ -37,6 +32,7 @@ import {
   fetchSideItems,
 } from "../services/trade/feed/sides";
 import { fetchUnshownEntries } from "../services/trade/feed/unshown";
+import { fetchHiddenPartners, hidePartner, unhidePartner } from "../services/trade/hidden";
 import { mutualCount } from "../services/trade/matches/mutual";
 import { resolveTradePerson } from "../services/trade/person";
 import { savePost, takeDownPost } from "../services/trade/post";
@@ -212,76 +208,16 @@ export const tradeRouter = {
     .input(tradePartnerInputSchema)
     .handler(async ({ input: { userId }, context: { session } }) => {
       if (userId === session.user.id) throw new ORPCError("BAD_REQUEST");
-      const tradeLists = await db.$count(
-        lists,
-        and(
-          eq(lists.userId, userId),
-          eq(lists.discoverable, true),
-          inArray(lists.listType, ["have", "sale", "want"]),
-        ),
-      );
-      if (tradeLists === 0) return;
-
-      await db
-        .insert(hiddenTradePartner)
-        .values({ userId: session.user.id, hiddenUserId: userId })
-        .onConflictDoNothing();
-      await bumpTradeVersions([session.user.id]);
+      await hidePartner(session.user.id, userId);
     }),
 
   unhidePartner: authed
     .input(tradePartnerInputSchema)
     .handler(async ({ input: { userId }, context: { session } }) => {
-      await db
-        .delete(hiddenTradePartner)
-        .where(
-          and(
-            eq(hiddenTradePartner.userId, session.user.id),
-            eq(hiddenTradePartner.hiddenUserId, userId),
-          ),
-        );
-      await bumpTradeVersions([session.user.id]);
+      await unhidePartner(session.user.id, userId);
     }),
 
-  hiddenPartners: authed.handler(async ({ context: { session } }) => {
-    const rows = await db
-      .select({ user, hiddenAt: hiddenTradePartner.createdAt })
-      .from(hiddenTradePartner)
-      .innerJoin(user, eq(user.id, hiddenTradePartner.hiddenUserId))
-      .where(eq(hiddenTradePartner.userId, session.user.id))
-      .orderBy(desc(hiddenTradePartner.createdAt));
-
-    // only addresses a discoverable list is bound to, as For you named the partner
-    const addresses =
-      rows.length === 0
-        ? []
-        : await db
-            .selectDistinct({
-              userId: lists.userId,
-              address: userAddress.address,
-              nickname: userAddress.nickname,
-            })
-            .from(lists)
-            .innerJoin(userAddress, eq(userAddress.address, lists.profileAddress))
-            .where(
-              and(
-                inArray(
-                  lists.userId,
-                  rows.map((row) => row.user.id),
-                ),
-                eq(lists.discoverable, true),
-                inArray(lists.listType, ["have", "sale", "want"]),
-                eq(userAddress.userId, lists.userId),
-              ),
-            );
-
-    return rows.map((row) => ({
-      userId: row.user.id,
-      user: toPublicUser(row.user),
-      profiles: addresses
-        .filter((a) => a.userId === row.user.id)
-        .map((a) => ({ address: a.address.toLowerCase(), nickname: a.nickname })),
-      hiddenAt: row.hiddenAt,
-    }));
-  }),
+  hiddenPartners: authed.handler(({ context: { session } }) =>
+    fetchHiddenPartners(session.user.id),
+  ),
 };
