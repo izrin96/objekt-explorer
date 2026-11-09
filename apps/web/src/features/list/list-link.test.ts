@@ -25,7 +25,16 @@ describe("tradePostLink", () => {
     });
   });
 
-  test("a want list with no profile and no linked list has no post page", () => {
+  test("an unbound want list goes through its owner's Trade handle", () => {
+    expect(
+      tradePostLink({ slug: "wants", profileAddress: null, linkedList: null, tradeHandle: "rin" }),
+    ).toEqual({
+      to: "/trade/@{$handle}/$slug",
+      params: { handle: "rin", slug: "wants" },
+    });
+  });
+
+  test("a want list with no profile, linked list or handle has no post page", () => {
     expect(tradePostLink({ slug: "wants", profileAddress: null, linkedList: null })).toBeNull();
     expect(
       tradePostLink({ slug: "wants", profileAddress: null, linkedList: { profileAddress: null } }),

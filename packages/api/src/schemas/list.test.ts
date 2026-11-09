@@ -5,6 +5,7 @@ import {
   createListInputSchema,
   editListInputSchema,
   listPreviewsInputSchema,
+  needsTradeHandle,
   slugPreviewInputSchema,
 } from "./list";
 
@@ -90,5 +91,48 @@ describe("slugPreviewInputSchema", () => {
     expect(slugPreviewInputSchema.safeParse({ slug: "abc", name: "a".repeat(257) }).success).toBe(
       false,
     );
+  });
+});
+
+describe("needsTradeHandle", () => {
+  const ADDRESS = "0xabc0000000000000000000000000000000000001";
+  const unboundWant = {
+    listType: "want" as const,
+    isProfileBind: false,
+    discoverable: true,
+    profileAddress: null,
+    linkedList: null,
+  };
+
+  test("an unbound want list on Trade needs its owner's handle", () => {
+    expect(needsTradeHandle(unboundWant)).toBe(true);
+    expect(needsTradeHandle({ ...unboundWant, linkedList: { profileAddress: null } })).toBe(true);
+  });
+
+  test("a list with an address of its own does not", () => {
+    expect(
+      needsTradeHandle({
+        ...unboundWant,
+        listType: "have",
+        isProfileBind: true,
+        profileAddress: ADDRESS,
+      }),
+    ).toBe(false);
+  });
+
+  test("a want list linked to a list with an address does not", () => {
+    expect(needsTradeHandle({ ...unboundWant, linkedList: { profileAddress: ADDRESS } })).toBe(
+      false,
+    );
+  });
+
+  test("a list off Trade does not", () => {
+    expect(needsTradeHandle({ ...unboundWant, discoverable: false })).toBe(false);
+    expect(needsTradeHandle({ ...unboundWant, discoverable: null })).toBe(false);
+  });
+
+  test("a list that can't be on Trade does not, whatever its switch says", () => {
+    expect(needsTradeHandle({ ...unboundWant, listType: "have" })).toBe(false);
+    expect(needsTradeHandle({ ...unboundWant, listType: "general" })).toBe(false);
   });
 });

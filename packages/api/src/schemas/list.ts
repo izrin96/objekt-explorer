@@ -21,6 +21,22 @@ export function canBeOnTrade(type: ListType, isProfileBind: boolean) {
   return type === "want" || ((type === "have" || type === "sale") && isProfileBind);
 }
 
+/** A list on Trade with no address to put its post page under: an unbound want list. */
+export function needsTradeHandle(list: {
+  listType: ListType;
+  isProfileBind: boolean;
+  discoverable?: boolean | null;
+  profileAddress: string | null;
+  linkedList?: { profileAddress: string | null } | null;
+}) {
+  return (
+    !!list.discoverable &&
+    canBeOnTrade(list.listType, list.isProfileBind) &&
+    !list.profileAddress &&
+    !list.linkedList?.profileAddress
+  );
+}
+
 /** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
 export function tradeSideOf(type: ListType): "have" | "want" | null {
   if (type === "want") return "want";
@@ -73,6 +89,11 @@ export type ListPreview = ObjektPreview & { slug: string };
 
 export const publicListSchema = baseListSchema.extend({
   linkedList: baseListSchema.nullish(),
+  /**
+   * The owner's Trade handle, set only when a list on Trade has no profile address of its own or
+   * through its linked list (an unbound want list), so its post page can still be linked.
+   */
+  tradeHandle: z.string().nullish(),
 });
 export type PublicList = z.infer<typeof publicListSchema>;
 

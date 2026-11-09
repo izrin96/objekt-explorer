@@ -10,11 +10,13 @@ import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { normalizeUserText } from "../../schemas/common/user-text";
-import { type ListPreview, type PublicList } from "../../schemas/list";
+import { needsTradeHandle, type ListPreview, type PublicList } from "../../schemas/list";
+import { tradeHandle } from "../../schemas/trade-person";
 import { isBlockedEither } from "../moderation/core";
 import { isBanned } from "../moderation/safety";
 import { getCollectionColumns } from "../objekt/collection-columns";
 import { assertProfileOwned, toPublicUser } from "../profile";
+import { fetchAddresses } from "../trade/matches/holdings";
 import { fetchCollectionsBySlug } from "./collections";
 
 export async function fetchListWithEntries(slug: string) {
@@ -32,6 +34,10 @@ export async function fetchListWithEntries(slug: string) {
 
 function toPartialProfile(profile: Pick<UserAddress, "address" | "nickname">) {
   return { address: profile.address, nickname: profile.nickname || null };
+}
+
+async function ownerTradeHandle(userId: string | null | undefined) {
+  return userId ? tradeHandle(await fetchAddresses([userId])) : null;
 }
 
 export async function fetchList(
@@ -82,6 +88,8 @@ export async function fetchList(
 
   if (!result) return null;
 
+  const handle = needsTradeHandle(result) ? await ownerTradeHandle(result.userId) : null;
+
   return {
     id: result.id,
     slug: result.slug,
@@ -103,6 +111,7 @@ export async function fetchList(
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description ? normalizeUserText(result.description) : null,
+    tradeHandle: handle,
     linkedList: result.linkedList
       ? {
           ...result.linkedList,
@@ -188,10 +197,15 @@ export async function fetchOwnedLists(
     orderBy: { id: "desc" },
   });
 
+  // a profile's lists carry its address, so only an account's own can need the handle
+  const owner = ownerId ?? (column === "userId" ? identifier : undefined);
+  const handle = result.some(needsTradeHandle) ? await ownerTradeHandle(owner) : null;
+
   // oxlint-disable-next-line oxc/no-map-spread
   return result.map(({ userAddress, linkedList, ...rest }) => {
     return {
       ...rest,
+      tradeHandle: needsTradeHandle({ ...rest, linkedList }) ? handle : null,
       profile: userAddress ? toPartialProfile(userAddress) : null,
       linkedList: linkedList
         ? {

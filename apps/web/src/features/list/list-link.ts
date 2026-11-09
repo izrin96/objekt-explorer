@@ -33,18 +33,19 @@ export function getListLinkOption(list: ListLinkTarget) {
 
 /**
  * The Trade post page a list on Trade is in, under its Cosmo profile's address, or its linked
- * list's when it has none (a want list). The person page redirects the address to the handle and
- * a pair's want half to its anchor's slug. Null with neither, which has no page.
+ * list's when it has none (a want list), or else its owner's Trade handle (an unbound want list).
+ * The person page redirects the address to the handle and a pair's want half to its anchor's
+ * slug. Null with none of them, which has no page.
  */
 export function tradePostLink(
-  list: Pick<PublicList, "slug" | "profileAddress"> & {
+  list: Pick<PublicList, "slug" | "profileAddress" | "tradeHandle"> & {
     linkedList?: Pick<PublicList, "profileAddress"> | null;
   },
 ) {
-  const address = list.profileAddress ?? list.linkedList?.profileAddress ?? null;
-  if (!address) return null;
+  const handle = list.profileAddress ?? list.linkedList?.profileAddress ?? list.tradeHandle ?? null;
+  if (!handle) return null;
   return linkOptions({
     to: "/trade/@{$handle}/$slug",
-    params: { handle: address.toLowerCase(), slug: list.slug },
+    params: { handle: handle.toLowerCase(), slug: list.slug },
   });
 }
