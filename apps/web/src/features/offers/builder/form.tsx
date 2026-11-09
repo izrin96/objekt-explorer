@@ -104,7 +104,21 @@ export function BuilderForm({
     ...theirs.data?.collections,
     ...seen,
   };
-  const flagsOf = (pick: OfferPick) => pickFlags(pick, theirFlags);
+  // a counter's own picks come with no flags: the viewer's copies of those collections carry them
+  const unflagged = [
+    ...new Set(
+      give.flatMap((pick) =>
+        pick.objektId !== null && pick.flags === null ? [pick.collectionSlug] : [],
+      ),
+    ),
+  ];
+  const ownChecks = useQueries({
+    queries: unflagged.map((slug) => myCopyOptions(to, collections[slug])),
+  });
+  const myFlags = new Map(
+    ownChecks.flatMap((query) => query.data?.items ?? []).map((item) => [pickKey(item), item]),
+  );
+  const flagsOf = (pick: OfferPick) => pickFlags(pick, theirFlags) ?? pickFlags(pick, myFlags);
   const estimatedOf = (pick: OfferPick) => pickEstimated(pick, theirFlags);
 
   // a counter's any-copy asks: each takes one free copy of the viewer's own, when there is one
@@ -130,7 +144,7 @@ export function BuilderForm({
   const reasonOf = (side: OfferSide, pick: OfferPick) =>
     pickProblem(side, pick, {
       get: getShown,
-      live: theirFlags,
+      live: side === "give" ? myFlags : theirFlags,
       loaded: theirs.data !== undefined,
       source,
       nameOf: (p) => itemName(p, collections),
@@ -208,9 +222,8 @@ export function BuilderForm({
     collections,
   });
 
-  // nothing is lost while the send is on its way
-  const holdsDraft =
-    !create.isPending && holdsDraftOf({ give, get, topup: topupNow, note }, prefill);
+  // held while the send is on its way too: a refusal would land on a page already left
+  const holdsDraft = holdsDraftOf({ give, get, topup: topupNow, note }, prefill);
 
   useEffect(() => {
     onDraft(() => holdsDraft);
@@ -226,14 +239,10 @@ export function BuilderForm({
     }
     if (!gate.canSend) return;
     clearFailure();
-    create.mutate(
-      offerInput(to, {
-        give: giveShown,
-        get: getShown,
-        topup: topupNow,
-        note,
-      }),
-    );
+    create.mutate({
+      ...offerInput(to, { give: giveShown, get: getShown, topup: topupNow, note }),
+      counters: request.counter,
+    });
   };
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
@@ -395,13 +404,11 @@ export function BuilderForm({
               source={source ?? "lists"}
               theirLists={theirs.data?.lists ?? []}
               startList={request.startList}
-              // the get side as shown, so a copy standing in for an ask can be swapped for another
-              picked={picking === "get" ? getShown : sides[picking][0]}
+              // the side as shown, so a copy standing in for an ask can be swapped for another
+              picked={shown[picking]}
               onDone={(picks, found) => {
                 // a picked copy is the sender's own now, no longer standing in for an ask
-                sides[picking][1](
-                  picking === "get" ? picks.map(({ replaces: _r, ...pick }) => pick) : picks,
-                );
+                sides[picking][1](picks.map(({ replaces: _r, ...pick }) => pick));
                 setSeen((current) => ({ ...current, ...found }));
                 setPicking(null);
               }}

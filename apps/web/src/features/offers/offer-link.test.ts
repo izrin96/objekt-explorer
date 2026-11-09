@@ -114,7 +114,7 @@ describe("offerLink and requestOf", () => {
       counter: 881,
     });
     expect(search.counter).toBe(881);
-    expect(request).toEqual({ to: { conversationId: 42 }, name: "rin.trades", counter: true });
+    expect(request).toEqual({ to: { conversationId: 42 }, name: "rin.trades", counter: 881 });
   });
 
   test("a Market listing asks for its one objekt from its sale list", () => {
@@ -230,7 +230,7 @@ describe("a counter's start", () => {
     });
     const request = counterRequest(offer, "rin.trades", {});
     expect(request.to).toEqual({ conversationId: 42 });
-    expect(request.counter).toBe(true);
+    expect(request.counter).toBe(offer.id);
   });
 });
 

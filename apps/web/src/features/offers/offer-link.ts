@@ -116,7 +116,7 @@ export function requestOf(
           ? { target: { kind: "list", slug: search.to } }
           : { target: { kind: "user", userId: partner.userId } },
     name: partner.name,
-    ...(search.counter !== undefined && { counter: true }),
+    ...(search.counter !== undefined && { counter: search.counter }),
     ...(ask && { prefill: ask }),
     ...(search.start !== undefined && { startList: search.start }),
     ...(matched && {

@@ -1750,6 +1750,7 @@
   "offer_refused_not_allowed": "このオファーではその操作はできません。",
   "offer_refused_not_listed": "受け取る側の項目が、オファーできるリストにもうありません。",
   "offer_refused_not_open": "このオファーにはすでに返答されています。",
+  "offer_refused_offer_changed": "カウンター中にこのオファーが変更されました。再読み込みして新しいオファーを確認してください。",
   "offer_refused_not_owned": "所有者がもう所持していません：{objekts}",
   "offer_refused_not_transferable": "送付できません：{objekts}",
   "offer_refused_reserved": "進行中の取引にすでに含まれています：{objekts}",

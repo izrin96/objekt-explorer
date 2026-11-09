@@ -23,7 +23,7 @@ export function counterRequest(
   return {
     to: { conversationId: offer.conversationId },
     name,
-    counter: true,
+    counter: offer.id,
     prefill: {
       // an any-copy ask stays, and the builder finds one of the viewer's copies for it
       give: mergeCounts(offer.give.map((item) => pick(item))),

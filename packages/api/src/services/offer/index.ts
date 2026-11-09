@@ -230,8 +230,9 @@ export async function createOffer(
         // the row lock waits for it and re-reads the status, so a counter never overwrites it
         .for("update");
       let open: OfferRow | null = current ?? null;
+      const lapsedId = open && effectiveStatus(open, now) === "expired" ? open.id : null;
       const expiredNotes: Parameters<typeof writeNotes>[1] = [];
-      if (open && effectiveStatus(open, now) === "expired") {
+      if (open && lapsedId !== null) {
         await tx
           .update(offer)
           .set({ status: "expired", respondedAt: sql`now()` })
@@ -257,6 +258,16 @@ export async function createOffer(
         open = null;
       }
       const effect = createEffect(open, me);
+      // a counter answers the offer its sender saw, never one that replaced it since
+      if (input.counters !== undefined && (effect !== "counter" || open!.id !== input.counters)) {
+        refuseOffer(
+          input.counters === lapsedId
+            ? "expired"
+            : effect === "counter"
+              ? "offer_changed"
+              : "not_open",
+        );
+      }
       // kept objekts ride on countering that very offer; anything else lists them again
       if (keptIds.size > 0 && (effect !== "counter" || open?.id !== kept?.offerId)) {
         refuseOffer("not_listed", { objektIds: [...keptIds] });

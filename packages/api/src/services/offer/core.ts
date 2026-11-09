@@ -36,6 +36,7 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   not_transferable: "CONFLICT",
   reserved: "CONFLICT",
   not_open: "CONFLICT",
+  offer_changed: "CONFLICT",
   expired: "CONFLICT",
   trade_ended: "CONFLICT",
   locked: "CONFLICT",

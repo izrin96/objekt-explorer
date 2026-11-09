@@ -36,7 +36,8 @@ export type OfferRequest = {
   to: OfferAddress;
   /** the partner, as the title names them */
   name: string;
-  counter?: boolean;
+  /** the offer being countered */
+  counter?: number;
   prefill?: OfferPrefill;
   /** a list of theirs You get's List choice opens on, as a Market listing's sale list */
   startList?: string;

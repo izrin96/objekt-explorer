@@ -1750,6 +1750,7 @@
   "offer_refused_not_allowed": "You can't do that with this offer.",
   "offer_refused_not_listed": "Something under You get isn't on a list you can offer for anymore.",
   "offer_refused_not_open": "This offer has already been answered.",
+  "offer_refused_offer_changed": "This offer changed while you were countering it. Reload and check the new one.",
   "offer_refused_not_owned": "No longer held by its owner: {objekts}",
   "offer_refused_not_transferable": "Not transferable: {objekts}",
   "offer_refused_reserved": "Already in a trade in progress: {objekts}",

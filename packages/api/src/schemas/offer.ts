@@ -122,6 +122,7 @@ export const OFFER_REFUSALS = [
   "not_accepting",
   "message_limit",
   "muted",
+  "offer_changed",
 ] as const;
 export type OfferRefusal = (typeof OFFER_REFUSALS)[number];
 
@@ -165,6 +166,8 @@ export const createOfferInputSchema = addressedSchema
   .extend({
     give: giveItemInputSchema.array().max(50),
     get: getItemInputSchema.array().max(50),
+    /** the offer a counter answers, as its sender saw it */
+    counters: idSchema.optional(),
     topup: topupInputSchema.optional(),
     note: z
       .string()

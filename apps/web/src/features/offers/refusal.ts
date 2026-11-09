@@ -51,6 +51,8 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_too_many_open();
     case "not_open":
       return m.offer_refused_not_open();
+    case "offer_changed":
+      return m.offer_refused_offer_changed();
     case "expired":
       return m.offer_refused_expired();
     case "not_allowed":
