@@ -327,7 +327,7 @@ export type TradeState = {
 };
 
 /** legs the receiver closed by hand, which keep a trade from taking feedback */
-export type RatedTrade = TradeState & { confirmedLegs: number };
+export type RatedTrade = Pick<TradeState, "status" | "endedAt"> & { confirmedLegs: number };
 
 export function canReport(trade: TradeState, now: Date) {
   if (trade.status === "failed") return true;
@@ -453,7 +453,8 @@ type LegOwed = { fromUserId: string; verifiedAt: string | Date | null };
 /**
  * The party at fault in a failed trade: the one who still owed a transfer while the other
  * had delivered every leg they gave. A party giving no legs owed nothing the site can see.
- * A leg stuck as non-transferable is still owed. Null when both or neither still owed.
+ * A leg stuck as non-transferable is still owed. Null when both or neither still owed. Its SQL
+ * twin is `faultSql` (`services/trade-fault.ts`): change both together.
  */
 export function atFault(legs: LegOwed[], userA: string, userB: string): string | null {
   const owes = (userId: string) =>

@@ -91,8 +91,8 @@ export async function cancelTrade(me: string, tradeId: number) {
     const ourLegs = legs.filter((leg) => leg.trade_id === tradeId);
     const ours = new Set(ourLegs.map((leg) => leg.id));
     const between = {
-      from: ourLegs.flatMap((leg) => [...addressSet(leg.from_addresses, leg.from_current)]),
-      to: ourLegs.flatMap((leg) => [...addressSet(leg.to_addresses, leg.to_current)]),
+      from: ourLegs.flatMap((leg) => Array.from(addressSet(leg.from_addresses, leg.from_current))),
+      to: ourLegs.flatMap((leg) => Array.from(addressSet(leg.to_addresses, leg.to_current))),
     };
     if (ours.size === 0) return between;
     // only verified legs and held copies lock it, and neither waits on the away grace
@@ -166,7 +166,6 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
   const refusal = rateRefusal(
     {
       ...row,
-      verifiedLegs: 0,
       confirmedLegs: legs.filter((leg) => leg.confirmedAt !== null).length,
     },
     new Date(),

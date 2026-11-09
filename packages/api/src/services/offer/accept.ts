@@ -1,5 +1,6 @@
 import { db } from "@repo/db";
 import { offer, offerItem, trade, tradeLeg } from "@repo/db/schema";
+import { findPgError } from "@repo/lib/pg-error";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { legInsertOrder } from "../../lib/leg-order";
@@ -21,18 +22,14 @@ import {
 } from "./state";
 
 function reservedConflict(error: unknown): string[] | null {
-  let cause: unknown = error;
-  while (cause instanceof Error) {
-    const pg = cause as Error & { code?: string; constraint?: string; detail?: string };
-    if (pg.code === "23505" && pg.constraint === "trade_leg_reserved") {
-      const match = pg.detail?.match(/=\((.+)\)/);
-      return match ? [match[1]!] : [];
-    }
+  const pg = findPgError(
+    error,
     // two accepts reserving shared objekts can still wait on each other's other legs
-    if (pg.code === "40P01") return [];
-    cause = cause.cause;
-  }
-  return null;
+    (e) => e.code === "40P01" || (e.code === "23505" && e.constraint === "trade_leg_reserved"),
+  );
+  if (!pg) return null;
+  const match = pg.code === "23505" ? pg.detail?.match(/=\((.+)\)/) : null;
+  return match ? [match[1]!] : [];
 }
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>

@@ -3,7 +3,8 @@ import { sql } from "drizzle-orm";
 /**
  * Who is at fault in each failed trade: the side that still owed a transfer while the other had
  * delivered everything, null when both or neither owed. One definition for the reputation's
- * unfinished count and the staff area's repeat breakers, so the two never disagree.
+ * unfinished count and the staff area's repeat breakers, so the two never disagree. The SQL twin
+ * of `atFault` (`lib/offer-rules.ts`), which the trade page and rating read: change both together.
  */
 export const faultSql = sql`
       SELECT t.id AS trade_id,

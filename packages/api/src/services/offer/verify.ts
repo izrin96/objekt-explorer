@@ -4,6 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
+import { findPgError } from "@repo/lib/pg-error";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import { and, eq, gte, inArray, isNotNull, or, sql } from "drizzle-orm";
 
@@ -212,15 +213,9 @@ export async function finishSettle(
 }
 
 /** Another leg already verified with this transfer. */
-function transferTaken(error: unknown) {
-  let cause: unknown = error;
-  while (cause instanceof Error) {
-    const pg = cause as Error & { code?: string; constraint?: string };
-    if (pg.code === "23505" && pg.constraint === "trade_leg_transfer_uniq") return true;
-    cause = cause.cause;
-  }
-  return false;
-}
+const transferTaken = (error: unknown) =>
+  findPgError(error, (e) => e.code === "23505" && e.constraint === "trade_leg_transfer_uniq") !==
+  null;
 
 export type AcceptedCopy = {
   id: number;

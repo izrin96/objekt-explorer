@@ -1,15 +1,9 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
-import {
-  collectionPriceHistory,
-  listEntries,
-  lists,
-  messagePref,
-  userAddress,
-} from "@repo/db/schema";
+import { listEntries, lists, messagePref, userAddress } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
-import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { optionalAuthed, pub } from "../orpc";
@@ -26,52 +20,14 @@ import {
   viewerMarketListingsOutputSchema,
   marketStatsOutputSchema,
   marketSummaryOutputSchema,
-  type PriceHistoryOutput,
   priceHistoryInputSchema,
   priceHistoryOutputSchema,
 } from "../schemas/market";
-import { historyCacheSeconds, rangeStart, type PriceHistoryRange } from "../schemas/price-history";
 import { countedListings, pricedUsd, usdPriceExpr } from "../services/market/aggregate";
 import { getUsdRates } from "../services/market/currency-rates";
+import { getPriceHistory } from "../services/market/history";
 import { getMarketSummary } from "../services/market/summary";
 import { notBlockedEither } from "../services/moderation/safety";
-import { getCache } from "../services/redis";
-
-const EMPTY_HISTORY_TTL = 60;
-
-async function fetchPriceHistory(
-  collectionSlug: string,
-  range: PriceHistoryRange,
-  now: Date,
-): Promise<PriceHistoryOutput> {
-  const start = rangeStart(range, now);
-  const slugIs = eq(collectionPriceHistory.collectionSlug, collectionSlug);
-
-  const [points, [tracking]] = await Promise.all([
-    db
-      .select({
-        date: collectionPriceHistory.date,
-        floorUsd: collectionPriceHistory.floorUsd,
-        medianUsd: collectionPriceHistory.medianUsd,
-        listingCount: collectionPriceHistory.listingCount,
-      })
-      .from(collectionPriceHistory)
-      .where(start ? and(slugIs, gte(collectionPriceHistory.date, start)) : slugIs)
-      .orderBy(asc(collectionPriceHistory.date)),
-    db
-      .select({
-        since: sql<string | null>`min(${collectionPriceHistory.date})`,
-        snapshots: sql<number>`count(*)::int`,
-      })
-      .from(collectionPriceHistory)
-      .where(slugIs),
-  ]);
-
-  return {
-    points,
-    tracking: tracking?.since ? { since: tracking.since, snapshots: tracking.snapshots } : null,
-  };
-}
 
 async function fetchObjektMap(
   objektIds: string[],
@@ -270,21 +226,5 @@ export const marketRouter = {
     })
     .input(priceHistoryInputSchema)
     .output(priceHistoryOutputSchema)
-    .handler(async ({ input }) => {
-      const now = new Date();
-      const load = () => fetchPriceHistory(input.collectionSlug, input.range, now);
-      const key = `market:history:${input.collectionSlug}:${input.range}`;
-      try {
-        // nothing recorded yet (or an unknown slug) is kept briefly, so a made-up slug holds a key
-        // for a minute at most while a real collection picks up its first snapshot soon
-        return await getCache(
-          key,
-          (history) => (history.tracking === null ? EMPTY_HISTORY_TTL : historyCacheSeconds(now)),
-          load,
-        );
-      } catch {
-        console.warn("[market] Redis unavailable, falling back to direct DB query");
-        return load();
-      }
-    }),
+    .handler(({ input }) => getPriceHistory(input.collectionSlug, input.range)),
 };

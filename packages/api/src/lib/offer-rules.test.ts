@@ -18,6 +18,7 @@ import {
   rateRefusal,
   toReputation,
   type RatedTrade,
+  type TradeState,
   createEffect,
   effectiveStatus,
   firstItemRefusal,
@@ -466,7 +467,8 @@ describe("atFault", () => {
 });
 
 describe("trade rules", () => {
-  const trade = (overrides: Partial<RatedTrade> = {}): RatedTrade => ({
+  type Trade = TradeState & RatedTrade;
+  const trade = (overrides: Partial<Trade> = {}): Trade => ({
     status: "in_progress",
     acceptedAt: new Date(NOW.getTime() - DAY).toISOString(),
     endedAt: null,

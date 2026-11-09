@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 
 import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
-import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
@@ -18,17 +17,14 @@ import {
   linkedPreviewsInputSchema,
 } from "../schemas/cosmo-link";
 import { linkVerified, setDefault, unlink } from "../services/account/cosmo-link";
+import {
+  clearVerification,
+  readVerification,
+  storeVerification,
+} from "../services/account/cosmo-verify";
 import { fetchOwnerCounts } from "../services/objekt/catalog";
-import { redis, redisFailOpen, userRateLimited } from "../services/redis";
+import { userRateLimited } from "../services/redis";
 import { getAccessToken } from "../services/token";
-
-type VerificationData = {
-  code: string;
-  cosmoId: number;
-  artistId: ValidArtist;
-  nickname: string;
-  address: string;
-};
 
 function generateCode() {
   const hex = crypto.randomBytes(3).toString("hex");
@@ -121,19 +117,15 @@ export const cosmoLinkRouter = {
 
       const code = generateCode();
 
-      const redisKey = `cosmo-verify:${session.user.id}:${input.address}`;
-      const redisValue: VerificationData = {
+      // a code that was never stored could only fail at verify, so no code is handed out
+      const stored = await storeVerification(session.user.id, {
         code,
         cosmoId: input.cosmoId,
         artistId: input.artistId,
         nickname: input.nickname,
         address: input.address,
-      };
-      // a code that was never stored could only fail at verify, so no code is handed out
-      const stored = await redisFailOpen("cosmo verify", () =>
-        redis.set(redisKey, JSON.stringify(redisValue), "EX", 120),
-      );
-      if (stored === null) throw new ORPCError("SERVICE_UNAVAILABLE");
+      });
+      if (!stored) throw new ORPCError("SERVICE_UNAVAILABLE");
 
       return {
         code,
@@ -161,21 +153,16 @@ export const cosmoLinkRouter = {
         );
       }
 
-      const redisKey = `cosmo-verify:${session.user.id}:${address}`;
-      // wrapped, so an unreachable Redis (null) is told apart from an expired code
-      const read = await redisFailOpen("cosmo verify", async () => ({
-        raw: await redis.get(redisKey),
-      }));
-      if (read === null) throw new ORPCError("SERVICE_UNAVAILABLE");
-      const { raw } = read;
-      if (!raw) {
+      const read = await readVerification(session.user.id, address);
+      if (read === "unavailable") throw new ORPCError("SERVICE_UNAVAILABLE");
+      if (read === "expired") {
         throw errors.VERIFICATION_EXPIRED({
           message: "Verification expired, start over",
           data: { reason: "cosmo_link_verification_expired" },
         });
       }
 
-      const data = JSON.parse(raw) as VerificationData;
+      const data = read;
 
       const { accessToken } = await getAccessToken();
 
@@ -209,8 +196,7 @@ export const cosmoLinkRouter = {
         cosmoId: data.cosmoId,
       });
 
-      // the code expires on its own within 2 minutes
-      await redisFailOpen("cosmo verify", () => redis.del(redisKey));
+      await clearVerification(session.user.id, address);
 
       return {
         nickname: data.nickname,
