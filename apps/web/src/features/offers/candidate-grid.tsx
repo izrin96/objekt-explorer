@@ -1,14 +1,11 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { PickerTag } from "@repo/api/schemas/trade";
-import type { GridObjekt } from "@repo/lib/types/objekt";
 import { type ReactNode, createContext, use } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { searchMatcher } from "@/features/filters/filter-utils";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
-import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
@@ -16,27 +13,6 @@ import { m } from "@/paraglide/messages";
 import { CandidateTile } from "./candidate-tile";
 import { type Collections, pickKey } from "./pick";
 import { offerRefusalOf, offerRefusalText } from "./refusal";
-
-/**
- * The quick search over loaded candidates; the facets narrow on the server, but the search
- * reads collection tags the endpoint does not carry, so the caller pages everything in.
- */
-export function candidateMatcher(search: string, collections: Collections) {
-  const matches = searchMatcher(search);
-  if (!matches) return null;
-  const tagged = new Map<string, GridObjekt>();
-  return (item: CandidateItem) => {
-    const collection = collections[item.collectionSlug];
-    if (!collection) return false;
-    let objekt = tagged.get(item.collectionSlug);
-    if (!objekt) {
-      objekt = mapObjektWithTag(collection);
-      tagged.set(item.collectionSlug, objekt);
-    }
-    // a serial term only reads an objekt that has one
-    return matches(item.serial === null ? objekt : { ...objekt, serial: item.serial });
-  };
-}
 
 function loadError(error: unknown, refetch: () => Promise<unknown>) {
   const refusal = offerRefusalOf(error);

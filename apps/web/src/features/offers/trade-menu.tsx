@@ -5,80 +5,36 @@ import {
   type Icon,
   XCircleIcon,
 } from "@phosphor-icons/react";
-import { REPORT_AFTER_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
+import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import { useHydrated } from "@tanstack/react-router";
-import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
-import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { shortDate } from "./format";
+import { type TradeMenuKey, tradeMenuItems } from "./trade-menu-items";
 
-const DAY_MS = 86_400_000;
-
-type Item = {
-  key: string;
-  icon: Icon;
-  label: string;
-  /** why it can't be used; set means the item shows disabled */
-  reason: ReactNode | null;
-  onSelect: () => void;
+const ICONS: Record<TradeMenuKey, Icon> = {
+  report: FlagIcon,
+  cancel: XCircleIcon,
+  askCancel: HandshakeIcon,
 };
 
 type Handlers = { onReport: () => void; onCancel: () => void; onAskCancel: () => void };
 
 function items(trade: Trade, hydrated: boolean, { onReport, onCancel, onAskCancel }: Handlers) {
-  const list: Item[] = [];
-  const inProgress = trade.status === "in_progress";
-  if (inProgress || (trade.status === "failed" && trade.canReport)) {
-    const opens = new Date(Date.parse(trade.acceptedAt) + REPORT_AFTER_DAYS * DAY_MS);
-    list.push({
-      key: "report",
-      icon: FlagIcon,
-      label: m.offer_report_problem(),
-      reason: trade.canReport
-        ? null
-        : // the viewer's zone, so the date waits for the client
-          hydrated
-          ? m.offer_report_opens({ date: shortDate(opens.toISOString()) })
-          : "",
-      onSelect: onReport,
-    });
-  }
-  if (inProgress) {
-    list.push({
-      key: "cancel",
-      icon: XCircleIcon,
-      label: m.offer_trade_cancel(),
-      reason: trade.canCancel
-        ? null
-        : trade.cancelLocked
-          ? m.offer_cancel_locked()
-          : trade.indexerBehind
-            ? m.offer_refused_indexer_behind()
-            : "",
-      onSelect: onCancel,
-    });
-    // an open request shows on the status card instead
-    if (!trade.canCancel && !trade.cancelRequest) {
-      const opens = trade.cancelAskOpensAt;
-      list.push({
-        key: "askCancel",
-        icon: HandshakeIcon,
-        label: m.offer_cancel_ask(),
-        reason: opens
-          ? // the viewer's zone, so the time waits for the client
-            hydrated
-            ? m.offer_cancel_ask_opens({ date: untilLabel(opens) })
-            : ""
-          : null,
-        onSelect: onAskCancel,
-      });
-    }
-  }
-  return list;
+  const onSelect: Record<TradeMenuKey, () => void> = {
+    report: onReport,
+    cancel: onCancel,
+    askCancel: onAskCancel,
+  };
+  return tradeMenuItems(trade, hydrated).map(({ key, label, reason }) => ({
+    key,
+    label,
+    reason,
+    icon: ICONS[key],
+    onSelect: onSelect[key],
+  }));
 }
 
 /**

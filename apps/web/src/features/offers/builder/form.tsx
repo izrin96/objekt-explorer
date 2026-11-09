@@ -1,27 +1,21 @@
 import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { SendingAs } from "@/features/link/shown-as";
 import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
-import { itemLabel, itemName } from "@/features/offers/format";
+import { itemName } from "@/features/offers/format";
 import { type GetSource, sourceOf } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import { type Collections, type OfferPick, type OfferSide, pickKey } from "@/features/offers/pick";
 import { putBack, takeOut, takeOutAdded, takeOutAll } from "@/features/offers/quantity";
-import {
-  invalidateOfferLists,
-  myCopyOptions,
-  theirCandidatesOptions,
-} from "@/features/offers/queries";
-import { offerRefusalOf, offerRefusalText, refusedKeys } from "@/features/offers/refusal";
+import { myCopyOptions, theirCandidatesOptions } from "@/features/offers/queries";
+import { offerRefusalOf } from "@/features/offers/refusal";
 import { useCurrency } from "@/features/settings/use-currency";
-import { orpc } from "@/lib/orpc";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -50,10 +44,11 @@ import {
 import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
-import { BuilderRefused, type SendFailure, SendError } from "./refused";
+import { BuilderRefused, SendError } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
 import type { AddedMatches, OfferRequest } from "./types";
+import { useSendOffer } from "./use-send-offer";
 
 export function BuilderForm({
   request,
@@ -76,7 +71,6 @@ export function BuilderForm({
   added?: AddedMatches;
 }) {
   const { to, name, prefill } = request;
-  const queryClient = useQueryClient();
   const { currency: preferred } = useCurrency();
 
   const [give, setGive] = useState<OfferPick[]>(prefill?.give ?? []);
@@ -86,8 +80,6 @@ export function BuilderForm({
   const topupNow = topupValue(topup, preferred);
   const [note, setNote] = useState(prefill?.note ?? "");
   const [picking, setPicking] = useState<OfferSide | null>(null);
-  const [error, setError] = useState<SendFailure | null>(null);
-  const [refused, setRefused] = useState<ReadonlySet<string>>(new Set());
   const [nearLeft, setNearLeft] = useState<NearGroup[]>(added?.near ?? []);
   const [nearKeys, setNearKeys] = useState(added?.nearKeys ?? { give: [], get: [] });
   // what Remove matches took out, while Undo can put it back
@@ -208,40 +200,13 @@ export function BuilderForm({
     });
     removeRef.current?.focus();
   };
-  const create = useMutation(
-    orpc.offer.create.mutationOptions({
-      onSuccess: async ({ conversationId }) => {
-        // the thread's loader reads its cache as it stands, so the new offer is in it first; the
-        // offer is sent whatever these do, so a failed one never reads as a failed send
-        const ready = Promise.allSettled([
-          invalidateChatLists(queryClient),
-          invalidateOfferLists(queryClient),
-          fetchNewer(queryClient, conversationId),
-        ]);
-        onSent(conversationId, ready);
-        // still pending meanwhile, so Send stays disabled
-        await ready;
-      },
-      onError: (failure) => {
-        const refusal = offerRefusalOf(failure);
-        if (!refusal) {
-          setError({ text: m.offer_send_error(), remove: false, link: false });
-          return;
-        }
-        const keys = refusedKeys(refusal);
-        const named = joinList(
-          [...giveShown, ...getShown]
-            .filter((pick) => keys.has(pick.key))
-            .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
-        );
-        setRefused(keys);
-        const text =
-          offerRefusalText(refusal, named || m.offer_refused_some()) ?? m.offer_send_error();
-        // here the way out is taking the named objekts out of the offer
-        setError({ text, remove: named !== "", link: refusal.reason === "no_address" });
-      },
-    }),
-  );
+  const { create, error, refused, clearFailure } = useSendOffer({
+    onSent,
+    give: giveShown,
+    get: getShown,
+    estimatedOf,
+    collections,
+  });
 
   // nothing is lost while the send is on its way
   const holdsDraft =
@@ -260,8 +225,7 @@ export function BuilderForm({
       return;
     }
     if (!gate.canSend) return;
-    setError(null);
-    setRefused(new Set());
+    clearFailure();
     create.mutate(
       offerInput(to, {
         give: giveShown,
