@@ -18,6 +18,7 @@ import {
 } from "../account/cosmo-link";
 import { fetchPartners } from "../chat";
 import { audit, findAccount, refuseModeration } from "./core";
+import { bumpSafetyVersions } from "./safety-cache";
 
 const HISTORY_LIMIT = 200;
 
@@ -134,6 +135,7 @@ async function relink(
       await audit(tx, { actorId: me, action: "address_move", targetUserId: toUserId, detail });
     }
   });
+  await bumpSafetyVersions(toUserId === undefined ? [fromUserId] : [fromUserId, toUserId]);
 }
 
 export const moveAddress = (me: string, input: MoveAddressInput) => relink(me, input);

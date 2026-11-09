@@ -7,6 +7,7 @@ import { linkRefusal, unlinkRefusal } from "../../lib/link-rules";
 import { refuse } from "../../lib/refuse";
 import type { LinkedPreview } from "../../schemas/cosmo-link";
 import { activeSanctionWhere } from "../moderation/safety";
+import { bumpSafetyVersions } from "../moderation/safety-cache";
 import { fetchOwnerCounts } from "../objekt/catalog";
 
 type Executor = Pick<typeof db, "select" | "selectDistinct" | "execute">;
@@ -204,7 +205,10 @@ async function tryLink(userId: string, data: VerifiedLink) {
 /** Called after the bio proof: refuses a restricted or cooling-down address, then links and records it. */
 export async function linkVerified(userId: string, data: VerifiedLink) {
   for (let attempt = 0; attempt < 2; attempt++) {
-    if ((await tryLink(userId, data)) !== RETRY) return;
+    if ((await tryLink(userId, data)) !== RETRY) {
+      await bumpSafetyVersions([userId]);
+      return;
+    }
   }
   alreadyLinkedOther();
 }
@@ -269,6 +273,7 @@ export async function unlink(userId: string, address: string) {
       })),
     );
   });
+  await bumpSafetyVersions([userId]);
 }
 
 export async function assertAddressNotLinked(address: string, userId: string) {

@@ -24,7 +24,10 @@ export async function bumpTradeVersions(userIds: string[]) {
   await bumpTradeVersion(versionCounter, userIds);
 }
 
-/** After a block, sanction or revoke commits: drops the cached feeds and floors that may hold the user. */
+/**
+ * After a block, sanction, revoke or Cosmo link change commits: drops the cached feeds and floors
+ * that may hold the user, since what they own and who sees them both feed every viewer's matches.
+ */
 export async function bumpSafetyVersions(userIds: string[]) {
   await redisFailOpen("safety versions", () =>
     Promise.all([redis.incr(MARKET_VERSION_KEY), bumpTradeVersion(redis, userIds)]),
