@@ -161,7 +161,8 @@ export function isIpRateLimited(scope: string, headers: Headers): Promise<boolea
   return rateLimitedFailOpen(scope, `${scope}:rl:${ip}`, IP_RATE_LIMIT, IP_RATE_WINDOW_SECONDS);
 }
 
-const FAIL_OPEN_TIMEOUT_MS = 250;
+// a busy event loop holds an already-arrived reply past a shorter wait, turning a hit into a miss
+const FAIL_OPEN_TIMEOUT_MS = 1000;
 const TIMED_OUT = Symbol("timed out");
 
 let connecting: Promise<void> | undefined;
