@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: SITE_NAME },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
       // one only: React collapses two <meta name="theme-color"> into the last
       { name: "theme-color", content: THEME_COLORS.dark },
       { name: "color-scheme", content: "light dark" },
