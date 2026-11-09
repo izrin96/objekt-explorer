@@ -73,6 +73,7 @@ import {
   SERVER_ENTRY_POINT,
   SERVER_PORT,
 } from "./bun-server/config";
+import { endAfterBody, startRequest, watchLoopStalls } from "./bun-server/loop-stall";
 import { initializeStaticRoutes } from "./bun-server/static-routes";
 
 /**
@@ -117,14 +118,16 @@ async function initializeServer() {
       }
 
       // Fallback to TanStack Start handler for all other routes
+      const end = startRequest(req, url.pathname);
       try {
         const response = await handler.fetch(req);
         const contentType = response.headers.get("content-type") ?? "";
         if (contentType.startsWith("text/html")) {
           response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
         }
-        return compressResponse(req, response);
+        return endAfterBody(req, compressResponse(req, response), end);
       } catch (error) {
+        end();
         log.error(`Server handler error: ${String(error)}`);
         return new Response("Internal Server Error", { status: 500 });
       }
@@ -138,6 +141,7 @@ async function initializeServer() {
   });
 
   log.success(`Server listening on http://localhost:${String(server.port)}`);
+  watchLoopStalls();
 
   // Graceful shutdown
   async function shutdown(signal: string) {
