@@ -227,12 +227,19 @@ export const listCrud = {
     }) => {
       const list = await findOwnedList(slug, user.id);
 
-      await db.transaction(async (tx) => {
+      const unlinked = await db.transaction(async (tx) => {
         // ON DELETE SET NULL also locks the partner, so take the shared lock in id order first
         if (list.listType !== "general") await lockTradeLists(tx, user.id);
+        const partners = await tx
+          .select({ id: lists.id })
+          .from(lists)
+          .where(eq(lists.linkedListId, list.id));
         await tx.delete(lists).where(eq(lists.id, list.id));
+        return partners.map((partner) => partner.id);
       });
-      await bumpTradeVersions([user.id]);
+      // the partner loses its link through the foreign key, which leaves its updated_at alone
+      if (unlinked.length > 0) await touchList(unlinked);
+      else await bumpTradeVersions([user.id]);
     },
   ),
 };

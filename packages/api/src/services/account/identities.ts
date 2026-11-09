@@ -1,4 +1,4 @@
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { user, userAddress } from "@repo/db/schema";
 import { asc, inArray, sql } from "drizzle-orm";
 
@@ -8,15 +8,16 @@ import type { LinkedProfile } from "../../schemas/trade-person";
 
 /**
  * How each account is named to the people it chats and trades with. Shared by the API and
- * the worker, so it imports nothing request-bound.
+ * the worker, so it imports nothing request-bound. A caller inside a transaction passes it, so
+ * the read never waits on a second pool connection while the transaction holds its locks.
  */
-export async function loadIdentities(userIds: string[]) {
+export async function loadIdentities(userIds: string[], executor: typeof db | Tx = db) {
   const ids = [...new Set(userIds)];
   if (ids.length === 0)
     return new Map<string, { account: typeof user.$inferSelect; identity: PartnerIdentity }>();
   const [users, addresses] = await Promise.all([
-    db.select().from(user).where(inArray(user.id, ids)),
-    db
+    executor.select().from(user).where(inArray(user.id, ids)),
+    executor
       .select({
         userId: userAddress.userId,
         address: userAddress.address,

@@ -87,7 +87,7 @@ async function acceptDue(seenUntil: string, skips: RunSkips) {
         if (!settled) return null;
         const { open, askedOf, progress } = await readLegs(tx, tradeId);
         const parties = [settled.userA, settled.userB];
-        const name = await partyNames(parties);
+        const name = await partyNames(parties, tx);
         const accepted = await acceptPicked(
           tx,
           settled,
@@ -163,7 +163,10 @@ async function remindDue(seenUntil: string, skips: RunSkips) {
         if (sent.length === 0) return null;
 
         const [name, serialOf] = await Promise.all([
-          partyNames(sent.map(({ leg }) => leg.giverId)),
+          partyNames(
+            sent.map(({ leg }) => leg.giverId),
+            tx,
+          ),
           shownSerials(sent.flatMap(({ leg, copy }) => [copy.objektId, leg.objektId ?? ""])),
         ]);
         const notified = await writeNotes(

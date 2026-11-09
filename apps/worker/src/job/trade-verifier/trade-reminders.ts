@@ -56,7 +56,7 @@ export async function remindStalls(seenUntil: string | null, skips: RunSkips): P
             .where(eq(offer.id, row.offerId)),
         ]);
         const owing = owingParties(legs);
-        const name = await partyNames([row.userA, row.userB]);
+        const name = await partyNames([row.userA, row.userB], tx);
         const progress = {
           verified: legs.filter((leg) => leg.verifiedAt !== null).length,
           total: legs.length,

@@ -1,4 +1,4 @@
-import type { Tx } from "@repo/db";
+import type { db, Tx } from "@repo/db";
 import { notification, notificationPref, offer, offerItem } from "@repo/db/schema";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
@@ -94,7 +94,7 @@ export async function writeNotes(tx: Tx, notes: Note[]): Promise<string[]> {
 }
 
 /** Each account as a conversation names it, for notification payloads. */
-export async function partyNames(userIds: string[]) {
-  const identities = await loadIdentities(userIds);
+export async function partyNames(userIds: string[], executor?: typeof db | Tx) {
+  const identities = await loadIdentities(userIds, executor);
   return (userId: string) => ({ userId, name: identities.get(userId)?.identity.name ?? "" });
 }

@@ -176,7 +176,10 @@ export async function acceptOffer(me: string, offerId: number) {
             .returning(cancelledColumns);
 
     const others = cancelled.length
-      ? await partyNames(cancelled.flatMap((o) => [o.fromUserId, o.toUserId]))
+      ? await partyNames(
+          cancelled.flatMap((o) => [o.fromUserId, o.toUserId]),
+          tx,
+        )
       : name;
     const notified = await writeNotes(tx, [
       {

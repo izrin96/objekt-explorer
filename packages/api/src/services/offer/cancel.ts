@@ -59,7 +59,10 @@ export async function cancelOpenOffers(
     .where(openOffersWhere(where))
     .returning(cancelledColumns);
   if (cancelled.length === 0) return { conversations: [], notified: [] };
-  const name = await partyNames(cancelled.flatMap((o) => [o.fromUserId, o.toUserId]));
+  const name = await partyNames(
+    cancelled.flatMap((o) => [o.fromUserId, o.toUserId]),
+    tx,
+  );
   const notified = await writeNotes(tx, cancelledNotes(cancelled, reason, name));
   return {
     conversations: cancelled.map((o) => ({
