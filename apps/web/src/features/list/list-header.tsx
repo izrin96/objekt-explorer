@@ -41,6 +41,7 @@ import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
 import { useListTarget } from "./list-provider";
 import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
+import { partnerSwitch } from "./partner-switch";
 import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
 import { TagBadges } from "./tag-label";
@@ -70,7 +71,7 @@ export function ListHeader() {
     want: sides.wantListIds.length > 0,
   });
   const tags = listPostTags(list);
-  const swappable = (list.listType === "have" || list.listType === "want") && linked;
+  const switchTo = partnerSwitch(list);
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -131,14 +132,14 @@ export function ListHeader() {
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 md:items-end md:justify-end">
-          {swappable ? (
+          {switchTo && linked ? (
             <Button
               variant="outline"
               size="sm"
               render={<Link {...getListLinkOption(linked)} replace />}
             >
               <ArrowsLeftRightIcon />
-              {list.listType === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+              {switchTo === "have" ? m.list_swap_to_have() : m.list_swap_to_want()}
             </Button>
           ) : null}
           {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}
