@@ -74,7 +74,7 @@ export async function replayPendingTransfers() {
  * change still in a hot block waits: a reorg would not undo this write.
  */
 async function applyLeftoverTransferability() {
-  const result = await indexer.execute(sql`
+  const result = await indexer.execute<never>(sql`
     with pending as (
       select u.id, u.token_id, u.transferable, u.block_number, u.transaction_index
       from ${transferabilityUpdates} u

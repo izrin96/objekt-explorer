@@ -38,8 +38,8 @@ export type HeldBetween = { from: string[]; to: string[] };
 // height checked here, so a send just made between the parties would otherwise go unseen
 async function holdsTransferBetween({ from, to }: HeldBetween) {
   if (from.length === 0 || to.length === 0) return false;
-  const result = await indexer.execute(sql`
-    SELECT 1 FROM pending_transfer
+  const result = await indexer.execute<{ hit: number }>(sql`
+    SELECT 1 AS hit FROM pending_transfer
     WHERE lower("from") = ANY(${sql.param(from)}::text[])
       AND lower("to") = ANY(${sql.param(to)}::text[])
     LIMIT 1

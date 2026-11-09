@@ -1,77 +1,129 @@
 {
-  "id": "f0d76c47-a6b4-4bb5-8e53-22b36d989706",
-  "prevIds": ["00000000-0000-0000-0000-000000000000"],
-  "version": "8",
+  "type": "base",
+  "version": "9",
   "dialect": "postgres",
+  "id": "f0d76c47-a6b4-4bb5-8e53-22b36d989706",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "access_token"
+      ],
+      "writes": [
+        "s|tbl|public.access_token",
+        "n|tbl|public.access_token",
+        "e|tbl|public.access_token",
+        "n|rel|public.access_token",
+        "n|type|public.access_token",
+        "n|rel|public.access_token_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "user_address"
+      ],
+      "writes": [
+        "s|tbl|public.user_address",
+        "n|tbl|public.user_address",
+        "e|tbl|public.user_address",
+        "n|rel|public.user_address",
+        "n|type|public.user_address",
+        "n|rel|public.user_address_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "user_address",
+        "user_address_address_idx"
+      ],
+      "writes": [
+        "s|idx|public.user_address_address_idx",
+        "n|idx|public.user_address_address_idx",
+        "e|idx|public.user_address_address_idx",
+        "n|rel|public.user_address_address_idx"
+      ],
+      "reads": [
+        "n|tbl|public.user_address",
+        "n|sch|public",
+        "n|col|public.user_address.address"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "user_address",
+        "user_address_nickname_idx"
+      ],
+      "writes": [
+        "s|idx|public.user_address_nickname_idx",
+        "n|idx|public.user_address_nickname_idx",
+        "e|idx|public.user_address_nickname_idx",
+        "n|rel|public.user_address_nickname_idx"
+      ],
+      "reads": [
+        "n|tbl|public.user_address",
+        "n|sch|public",
+        "n|col|public.user_address.nickname"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "user_address",
+        "user_address_address_nickname_idx"
+      ],
+      "writes": [
+        "s|idx|public.user_address_address_nickname_idx",
+        "n|idx|public.user_address_address_nickname_idx",
+        "e|idx|public.user_address_address_nickname_idx",
+        "n|rel|public.user_address_address_nickname_idx"
+      ],
+      "reads": [
+        "n|tbl|public.user_address",
+        "n|sch|public",
+        "n|col|public.user_address.address",
+        "n|col|public.user_address.nickname"
+      ]
+    }
+  ],
   "ddl": [
     {
-      "isRlsEnabled": false,
-      "name": "access_token",
       "schema": "public",
+      "name": "access_token",
+      "isRlsEnabled": false,
       "entityType": "tables"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "access_token_pkey",
       "schema": "public",
-      "table": "access_token",
-      "entityType": "pks"
-    },
-    {
-      "type": "serial",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "schema": "public",
-      "table": "access_token",
-      "entityType": "columns"
-    },
-    {
-      "type": "varchar",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "access_token",
-      "schema": "public",
-      "table": "access_token",
-      "entityType": "columns"
-    },
-    {
-      "type": "varchar",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "refresh_token",
-      "schema": "public",
-      "table": "access_token",
-      "entityType": "columns"
-    },
-    {
-      "isRlsEnabled": false,
       "name": "user_address",
-      "schema": "public",
+      "isRlsEnabled": false,
       "entityType": "tables"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "user_address_pkey",
       "schema": "public",
-      "table": "user_address",
-      "entityType": "pks"
-    },
-    {
+      "table": "access_token",
+      "name": "id",
       "type": "serial",
       "typeSchema": null,
       "notNull": true,
@@ -79,25 +131,51 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "access_token",
+      "name": "access_token",
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "access_token",
+      "name": "refresh_token",
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "user_address",
       "name": "id",
-      "schema": "public",
-      "table": "user_address",
-      "entityType": "columns"
-    },
-    {
-      "type": "citext",
+      "type": "serial",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "user_address",
       "name": "address",
-      "schema": "public",
-      "table": "user_address",
-      "entityType": "columns"
-    },
-    {
       "type": "citext",
       "typeSchema": null,
       "notNull": true,
@@ -105,12 +183,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "nickname",
-      "schema": "public",
-      "table": "user_address",
       "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "user_address",
+      "name": "nickname",
+      "type": "citext",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "user_address",
+      "name": "user_address_address_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -126,12 +217,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "user_address_address_idx",
-      "schema": "public",
-      "table": "user_address",
       "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "user_address",
+      "name": "user_address_nickname_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -147,12 +238,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "user_address_nickname_idx",
-      "schema": "public",
-      "table": "user_address",
       "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "user_address",
+      "name": "user_address_address_nickname_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -175,11 +266,27 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "user_address_address_nickname_idx",
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "access_token",
+      "name": "access_token_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "user_address",
-      "entityType": "indexes"
+      "name": "user_address_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
     }
-  ],
-  "renames": []
+  ]
 }
