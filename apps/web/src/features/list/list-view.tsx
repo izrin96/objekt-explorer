@@ -1,12 +1,6 @@
-import {
-  CurrencyDollarIcon,
-  MagnifyingGlassIcon,
-  ScalesIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { ruleLine } from "@repo/api/schemas/list-rule";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import { truncateAddress } from "@repo/lib/address";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -14,7 +8,6 @@ import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
@@ -32,7 +25,7 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { type CardRing, ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
+import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
@@ -54,15 +47,17 @@ import { AddToListAction, AddToListMenuItem } from "./add-to-list-menu-item";
 import { EmptyList } from "./list-empty";
 import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
+import { activeNearOf } from "./list-view-rules";
 import { listEntriesOptions } from "./queries";
 import { RatioChip } from "./ratio-chip";
 import { groupRatio, ratioSideOf, ratioTargets } from "./ratio-text";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
-import { listRulesOptions } from "./rules/queries";
+import { useListRules } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
 import { SetRatioDialog } from "./set-ratio-dialog";
 import { useEntryDialogs } from "./use-entry-dialogs";
+import { useListEntryActions } from "./use-list-entry-actions";
 import { useListOwned } from "./use-list-owned";
 
 export function ListView() {
@@ -95,10 +90,7 @@ function ListEntries() {
   const [showMatches, setShowMatches] = useState(false);
   const matches = useListMatches(list, matchable && showMatches);
 
-  const { data: rules } = useQuery({
-    ...listRulesOptions(list.slug),
-    enabled: list.listType === "want",
-  });
+  const { data: rules } = useListRules(list.slug, list.listType);
   const ruleLines =
     list.listType === "want" && rules && rules.length > 0 ? rules.map(ruleLine) : undefined;
 
@@ -176,39 +168,23 @@ function ListEntries() {
   const dialogs = useEntryDialogs();
   const { openPrice, openRatio, openRemove } = dialogs;
 
-  const menuItems = useCallback(
-    (objekts: ListObjekt[]) => {
-      const objekt = objekts[0];
-      if (!objekt) return null;
-      return (
-        <>
-          <AddToListMenuItem objekts={[objekt]} />
-          {canPrice && compare === null ? (
-            <MenuItem onClick={() => openPrice(objekts)}>
-              <CurrencyDollarIcon />
-              {m.objekt_menu_set_price()}
-            </MenuItem>
-          ) : null}
-          {canRatio && compare === null ? (
-            <MenuItem onClick={() => openRatio(objekts)}>
-              <ScalesIcon />
-              {m.objekt_menu_set_ratio()}
-            </MenuItem>
-          ) : null}
-          {isOwner && compare === null ? (
-            <>
-              <MenuSeparator />
-              <MenuItem variant="destructive" onClick={() => openRemove(objekts)}>
-                <TrashIcon />
-                {m.objekt_menu_remove_from_list()}
-              </MenuItem>
-            </>
-          ) : null}
-        </>
-      );
-    },
-    [isOwner, canPrice, canRatio, compare, openPrice, openRatio, openRemove],
+  const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
+  const targets = useMemo(
+    () => ratioTargets(selected, filtered, grouped),
+    [grouped, selected, filtered],
   );
+
+  const { menuItems, ownerActions } = useListEntryActions({
+    isOwner,
+    canPrice,
+    canRatio,
+    comparing: compare !== null,
+    openPrice,
+    openRatio,
+    openRemove,
+    selected,
+    targets,
+  });
 
   const renderObjekt = useCallback(
     ({ item, rowIndex, ring }: { item: ListObjekt[]; rowIndex: number; ring?: CardRing }) => {
@@ -269,32 +245,12 @@ function ListEntries() {
     ],
   );
 
-  const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
-  const targets = useMemo(
-    () => ratioTargets(selected, filtered, grouped),
-    [grouped, selected, filtered],
-  );
-
   // a bound list hiding serials is a list of collections as far as the drawer
   // is concerned, exactly as the website decides its default tab
   const showOwned = list.isProfileBind && list.hideSerial !== true;
   const activeObjekt = activeGroup[0] ?? null;
   const openComposer = useOpenComposer();
-  // a near card's drawer says why it isn't counted, as a Trade strip's does; a near collection
-  // is never a match, so the only card that opens one is in the near section
-  const activeNear =
-    activeObjekt && matches.near?.slugs.has(activeObjekt.slug) && isTradeRole(list.listType)
-      ? {
-          verb: matches.near.side.verb,
-          role: list.listType,
-          theirList: list.name,
-          myListIds: matches.near.listIdsOf[activeObjekt.slug] ?? [],
-          // as Trade names a person with no name: by the profile's address
-          person:
-            list.user?.name ??
-            (list.profileAddress ? truncateAddress(list.profileAddress) : undefined),
-        }
-      : null;
+  const activeNear = activeNearOf(activeObjekt, matches.near, list);
   const ownedCopies = useMemo(
     () => (showOwned ? ownedCopiesOf(filtered, activeObjekt) : []),
     [activeObjekt, filtered, showOwned],
@@ -309,39 +265,6 @@ function ListEntries() {
       />
     );
   }
-
-  // below `sm` these fold into the bar's "⋯" menu, so the bar fits a phone;
-  // the list's own writes stay on while comparing: the bar acts on the entries
-  // behind the result, which are still this list's
-  const ownerActions: SelectBarAction[] = [
-    ...(isOwner
-      ? [
-          {
-            label: m.filter_remove_from_list(),
-            icon: <TrashIcon />,
-            onClick: () => openRemove(selected),
-          },
-        ]
-      : []),
-    ...(canPrice
-      ? [
-          {
-            label: m.filter_set_price(),
-            icon: <CurrencyDollarIcon />,
-            onClick: () => openPrice(selected),
-          },
-        ]
-      : []),
-    ...(canRatio
-      ? [
-          {
-            label: m.filter_set_ratio(),
-            icon: <ScalesIcon />,
-            onClick: () => openRatio(targets),
-          },
-        ]
-      : []),
-  ];
 
   const nearSection =
     matches.near && nearObjekts.length > 0 ? (
@@ -476,8 +399,4 @@ function ListEntries() {
       {isOwner ? <RemoveFromListDialog {...dialogs.remove} slug={list.slug} /> : null}
     </>
   );
-}
-
-function isTradeRole(listType: string): listType is "have" | "want" | "sale" {
-  return listType === "have" || listType === "want" || listType === "sale";
 }

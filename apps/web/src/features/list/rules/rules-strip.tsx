@@ -6,28 +6,18 @@ import {
   PencilSimpleIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type RefObject, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { rich } from "@/components/shared/message-markup";
-import {
-  AlertDialog,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogPopup,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Spinner } from "@/components/ui/spinner";
-import { toastManager } from "@/components/ui/toast";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
-import { client, orpc } from "@/lib/orpc";
+import type { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -38,9 +28,10 @@ import { useListTarget } from "../list-provider";
 import { RatioChip } from "../ratio-chip";
 import { appliedRatio } from "../ratio-text";
 import { useListOwned } from "../use-list-owned";
-import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "./queries";
+import { ConfirmRule } from "./confirm-rule";
+import { ruleObjektsOptions, useListRules } from "./queries";
 import { RuleDialog } from "./rule-dialog";
-import { mergeRulePages } from "./rule-layout";
+import { mergeRulePages, ruleColumns, ruleRows } from "./rule-layout";
 import { ruleText, shortNo } from "./words";
 
 type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
@@ -48,10 +39,7 @@ type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
 /** A want list's rules, between its header and its filter bar. Nothing when it holds none. */
 export function RulesStrip() {
   const list = useListTarget();
-  const { data: rules } = useQuery({
-    ...listRulesOptions(list.slug),
-    enabled: list.listType === "want",
-  });
+  const { data: rules } = useListRules(list.slug, list.listType);
   const [open, setOpen] = useState(true);
 
   if (list.listType !== "want" || !rules || rules.length === 0) return null;
@@ -269,40 +257,14 @@ function RuleObjekts({ slug, ruleId, owner }: { slug: string; ruleId: number; ow
 
 type RuleGroup = Awaited<ReturnType<typeof client.list.ruleObjekts>>["groups"][number];
 
-/** The card width the grid aims for, and the `gap-2` between cards. */
-const CELL_PX = 96;
-const GAP_PX = 8;
-
-type RuleRow =
-  | { type: "heading"; key: string; group: RuleGroup; first: boolean }
-  | { type: "cards"; key: string; objekts: RuleGroup["objekts"] };
-
 /**
  * A rule can cover thousands of collections, so its grid is virtualised by row against the
  * page's scroll; the column count follows the strip's width, four at the least.
  */
 function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boolean }) {
   const [ref, { width }] = useElementSize<HTMLDivElement>();
-  const columns = Math.max(4, Math.floor((width + GAP_PX) / (CELL_PX + GAP_PX)));
-
-  const rows: RuleRow[] = [];
-  const pushCards = (key: string, objekts: RuleGroup["objekts"]) => {
-    for (let i = 0; i < objekts.length; i += columns) {
-      rows.push({ type: "cards", key: `${key}:${i}`, objekts: objekts.slice(i, i + columns) });
-    }
-  };
-  if (headed) {
-    for (const [index, group] of groups.entries()) {
-      const key = `${group.season} ${group.collectionNo}`;
-      rows.push({ type: "heading", key, group, first: index === 0 });
-      pushCards(key, group.objekts);
-    }
-  } else {
-    pushCards(
-      "all",
-      groups.flatMap((group) => group.objekts),
-    );
-  }
+  const columns = ruleColumns(width);
+  const rows = ruleRows(groups, headed, columns);
 
   return (
     <div ref={ref}>
@@ -339,99 +301,5 @@ function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boole
         </WindowVirtualizer>
       ) : null}
     </div>
-  );
-}
-
-export function ConfirmRule({
-  slug,
-  rule,
-  action,
-  onClose,
-  focusAfterDone,
-}: {
-  slug: string;
-  rule: Rule;
-  action: "delete" | "detach" | null;
-  onClose: () => void;
-  /** where focus goes after a delete or detach succeeds, since the rule's own controls leave */
-  focusAfterDone?: RefObject<HTMLElement | null>;
-}) {
-  const queryClient = useQueryClient();
-  const done = useRef(false);
-  const run = useMutation({
-    mutationFn: (kind: "delete" | "detach") =>
-      kind === "delete"
-        ? client.list.deleteRule({ slug, ruleId: rule.id })
-        : client.list.detachRule({ slug, ruleId: rule.id }),
-    onSuccess: async (_data, kind) => {
-      done.current = true;
-      onClose();
-      toastManager.add({
-        type: "success",
-        title:
-          kind === "delete"
-            ? m.rule_deleted()
-            : rule.canMatch === 1
-              ? m.rule_detached_one()
-              : m.rule_detached({ count: rule.canMatch.toLocaleString(getLocale()) }),
-      });
-      await Promise.all(
-        [...RULE_KEYS, orpc.list.key()].map((queryKey) =>
-          queryClient.invalidateQueries({ queryKey }),
-        ),
-      );
-    },
-    onError: (error, kind) => {
-      toastManager.add({
-        type: "error",
-        title: kind === "delete" ? m.rule_delete_error() : m.rule_detach_error(),
-        description: refusalText(error),
-      });
-    },
-  });
-
-  const ruleName = <span className="text-foreground">{ruleText(rule)}</span>;
-
-  return (
-    <AlertDialog open={action !== null} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogPopup
-        className="max-w-sm"
-        finalFocus={
-          focusAfterDone ? () => (done.current ? focusAfterDone.current : true) : undefined
-        }
-      >
-        <AlertDialogHeader>
-          <AlertDialogTitle className="font-display">
-            {action === "detach" ? m.rule_detach_title() : m.rule_delete_title()}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {action === "detach"
-              ? rich(
-                  rule.canMatch === 1
-                    ? m.rule_detach_desc_one
-                    : (p) =>
-                        m.rule_detach_desc({
-                          ...p,
-                          count: rule.canMatch.toLocaleString(getLocale()),
-                        }),
-                  { rule: ruleName },
-                )
-              : rich(m.rule_delete_desc, { rule: ruleName })}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            {m.common_modal_cancel()}
-          </Button>
-          <Button
-            variant={action === "delete" ? "destructive" : "default"}
-            loading={run.isPending}
-            onClick={() => action && run.mutate(action)}
-          >
-            {action === "detach" ? m.rule_detach() : m.rule_delete()}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogPopup>
-    </AlertDialog>
   );
 }

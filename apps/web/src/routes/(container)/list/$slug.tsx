@@ -3,16 +3,15 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
 import { compareSearchSchema, isComparing } from "@/features/compare/search-schema";
 import { filterSearchSchema } from "@/features/filters/search-schema";
+import { listDetailHead } from "@/features/list/list-head";
 import { ListHeader, ListPageSkeleton } from "@/features/list/list-header";
 import { ListNotFound } from "@/features/list/list-not-found";
 import { ListProvider } from "@/features/list/list-provider";
 import { ListView } from "@/features/list/list-view";
-import { listEntriesPreload, listBySlugQuery, listEntriesOptions } from "@/features/list/queries";
+import { listBySlugQuery, listEntriesOptions } from "@/features/list/queries";
 import { listRulesOptions } from "@/features/list/rules/queries";
 import { nicknameParam } from "@/lib/address";
-import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
-import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),
@@ -56,17 +55,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
 
     return { list };
   },
-  head: ({ loaderData, match }) => {
-    if (!loaderData) return {};
-    const { meta, links } = generateMetadata({ title: m.page_titles_list_detail(loaderData.list) });
-    return {
-      meta,
-      links: [
-        ...links,
-        ...listEntriesPreload(match.context.queryClient, loaderData.list.slug, match.search),
-      ],
-    };
-  },
+  head: listDetailHead,
   component: ListDetailPage,
   notFoundComponent: ListNotFound,
   pendingComponent: ListPageSkeleton,

@@ -1,7 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { orpc } from "@/lib/orpc";
 
 export const listRulesOptions = (slug: string) =>
   orpc.list.rules.queryOptions({ input: { slug }, staleTime: 30_000 });
+
+export function useListRules(slug: string, listType: string) {
+  return useQuery({ ...listRulesOptions(slug), enabled: listType === "want" });
+}
 
 export const ruleObjektsOptions = (slug: string, ruleId: number) =>
   orpc.list.ruleObjekts.infiniteOptions({

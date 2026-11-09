@@ -23,3 +23,40 @@ export function mergeRulePages<O extends { slug: string }>(
   }
   return merged;
 }
+
+/** The card width the grid aims for, and the `gap-2` between cards. */
+const CELL_PX = 96;
+const GAP_PX = 8;
+
+/** The strip's column count follows its width, four at the least. */
+export function ruleColumns(width: number) {
+  return Math.max(4, Math.floor((width + GAP_PX) / (CELL_PX + GAP_PX)));
+}
+
+type GridGroup = { season: string; collectionNo: string; objekts: unknown[] };
+
+type RuleGridRow<G extends GridGroup> =
+  | { type: "heading"; key: string; group: G; first: boolean }
+  | { type: "cards"; key: string; objekts: G["objekts"] };
+
+export function ruleRows<G extends GridGroup>(groups: G[], headed: boolean, columns: number) {
+  const rows: RuleGridRow<G>[] = [];
+  const pushCards = (key: string, objekts: G["objekts"]) => {
+    for (let i = 0; i < objekts.length; i += columns) {
+      rows.push({ type: "cards", key: `${key}:${i}`, objekts: objekts.slice(i, i + columns) });
+    }
+  };
+  if (headed) {
+    for (const [index, group] of groups.entries()) {
+      const key = `${group.season} ${group.collectionNo}`;
+      rows.push({ type: "heading", key, group, first: index === 0 });
+      pushCards(key, group.objekts);
+    }
+  } else {
+    pushCards(
+      "all",
+      groups.flatMap((group) => group.objekts),
+    );
+  }
+  return rows;
+}

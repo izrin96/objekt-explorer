@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { mergeRulePages } from "./rule-layout";
+import { mergeRulePages, ruleColumns, ruleRows } from "./rule-layout";
 
 const group = (collectionNo: string, slugs: string[], season = "Atom01") => ({
   season,
@@ -41,5 +41,51 @@ describe("mergeRulePages", () => {
 
   test("no pages, no groups", () => {
     expect(mergeRulePages([])).toEqual([]);
+  });
+});
+
+describe("ruleColumns", () => {
+  test("four at the least", () => {
+    expect(ruleColumns(0)).toBe(4);
+    expect(ruleColumns(300)).toBe(4);
+  });
+
+  test("one column per 96px card and 8px gap", () => {
+    expect(ruleColumns(8 * 104 - 8)).toBe(8);
+    expect(ruleColumns(8 * 104 - 9)).toBe(7);
+  });
+});
+
+describe("ruleRows", () => {
+  const g = (collectionNo: string, n: number) => ({
+    season: "Atom01",
+    collectionNo,
+    objekts: Array.from({ length: n }, (_, i) => `${collectionNo}-${i}`),
+  });
+
+  test("headed: a heading per group, then its cards cut to the column count", () => {
+    const rows = ruleRows([g("117Z", 5), g("118Z", 2)], true, 4);
+    expect(rows.map((r) => [r.type, r.key])).toEqual([
+      ["heading", "Atom01 117Z"],
+      ["cards", "Atom01 117Z:0"],
+      ["cards", "Atom01 117Z:4"],
+      ["heading", "Atom01 118Z"],
+      ["cards", "Atom01 118Z:0"],
+    ]);
+    expect(rows.filter((r) => r.type === "heading").map((r) => r.first)).toEqual([true, false]);
+    expect(rows[2]).toMatchObject({ objekts: ["117Z-4"] });
+  });
+
+  test("not headed: one run of cards across groups", () => {
+    const rows = ruleRows([g("117Z", 3), g("118Z", 3)], false, 4);
+    expect(rows).toEqual([
+      { type: "cards", key: "all:0", objekts: ["117Z-0", "117Z-1", "117Z-2", "118Z-0"] },
+      { type: "cards", key: "all:4", objekts: ["118Z-1", "118Z-2"] },
+    ]);
+  });
+
+  test("no groups, no rows", () => {
+    expect(ruleRows([], true, 4)).toEqual([]);
+    expect(ruleRows([], false, 4)).toEqual([]);
   });
 });
