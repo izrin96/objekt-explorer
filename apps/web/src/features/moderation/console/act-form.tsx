@@ -17,11 +17,11 @@ import { toastManager } from "@/components/ui/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ACTION_LABEL } from "@/features/moderation/labels";
 import { orpc } from "@/lib/orpc";
-import { errorReason } from "@/lib/orpc-error";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+import { modErrorText } from "./error-text";
 import { sectionTitle } from "./shared";
 
 const ACTION_HINT: Record<ModAction, () => string> = {
@@ -65,14 +65,6 @@ function resolvedText(count: number) {
   if (count === 0) return m.mod_act_success_none();
   if (count === 1) return m.mod_act_success_one();
   return m.mod_act_success({ count: count.toLocaleString(getLocale()) });
-}
-
-function errorText(error: unknown) {
-  const { reason } = errorReason(error);
-  if (reason === "staff_target") return m.mod_staff_target();
-  if (reason === "self") return m.mod_error_self();
-  if (reason === "deleted_target") return m.mod_deleted_target();
-  return m.mod_act_error();
 }
 
 /** A deleted account or an admin keeps its reports to dismiss, and takes no sanction. */
@@ -302,7 +294,7 @@ export function ActForm({
       </div>
 
       <p id={ids.error} role="alert" className="text-destructive-foreground text-sm empty:hidden">
-        {act.isError ? errorText(act.error) : null}
+        {act.isError ? modErrorText(act.error) : null}
       </p>
 
       <div className="flex flex-col gap-1.5">

@@ -29,7 +29,7 @@ import { ListLabel } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
-import { getBaseURL } from "@/lib/utils";
+import { siteOrigin } from "@/lib/site-origin";
 import { m } from "@/paraglide/messages";
 
 import { EMPTY_CHOICES, type Section, joinSections, toFormatOptions } from "./choices";
@@ -75,7 +75,7 @@ export function DiscordFormatDialog({
   const listUrl = (slug: string) => {
     const list = lists.find((entry) => entry.slug === slug);
     if (!list) return null;
-    return new URL(router.buildLocation(getListLinkOption(list)).href, getBaseURL()).toString();
+    return new URL(router.buildLocation(getListLinkOption(list)).href, siteOrigin()).toString();
   };
 
   const submit = () => {

@@ -8,7 +8,7 @@ export const Route = createFileRoute("/(container)/mod/reports/")({
   component: PickAccount,
 });
 
-// below `lg` the queue is the whole page, so the prompt has nothing to point at
+// below `xl` the queue is the whole page, so the prompt has nothing to point at
 function PickAccount() {
   return (
     <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm text-pretty max-xl:hidden xl:col-span-2">

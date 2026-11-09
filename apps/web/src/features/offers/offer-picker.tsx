@@ -266,7 +266,7 @@ function useListChoice(lists: readonly ListChoice[], start = ALL) {
   return [fromList, setList] as const;
 }
 
-function ListSelect({
+function PickerListSelect({
   lists,
   allLabel,
   value,
@@ -374,7 +374,7 @@ function MineGrid({ to, name }: GridProps & { name: string }) {
       sourceActive={fromList !== undefined}
       source={
         lists.length > 0 ? (
-          <ListSelect
+          <PickerListSelect
             lists={lists}
             allLabel={m.offer_picker_list_all()}
             value={fromList}
@@ -439,7 +439,7 @@ function TheirsGrid({
       sourceActive={fromList !== undefined}
       source={
         lists.length > 0 ? (
-          <ListSelect
+          <PickerListSelect
             lists={lists}
             allLabel={m.offer_picker_list_all_theirs()}
             value={fromList}

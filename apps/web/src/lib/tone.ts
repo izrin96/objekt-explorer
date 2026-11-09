@@ -1,3 +1,5 @@
+import type { MineRow } from "@repo/api/schemas/offer";
+
 /**
  * The colours a mark can take: list types, trade progress and outcomes. A chip is ink on a fill
  * with an edge, in Badge's own recipe (8% fill and 30% edge, 16% and 20% in dark), so every
@@ -57,6 +59,22 @@ export const TONE_SOLID: Record<Tone, string> = {
   destructive: "bg-destructive",
   neutral: "bg-muted-foreground",
 };
+
+/** Trades by outcome; an offer is neutral unless it ended badly. */
+const STATUS_TONE: Record<MineRow["status"], Tone> = {
+  open: "neutral",
+  accepted: "neutral",
+  declined: "neutral",
+  withdrawn: "neutral",
+  countered: "neutral",
+  cancelled: "destructive",
+  expired: "destructive",
+  in_progress: "progress",
+  completed: "success",
+  failed: "destructive",
+};
+
+export const statusTone = (status: MineRow["status"]) => STATUS_TONE[status];
 
 /** The trade page's step tones, which the chat's deal line and strip reuse. */
 export const STEP_TONE = {

@@ -11,8 +11,8 @@ import { addActionToast } from "@/lib/action-toast";
 import { copyWithToast } from "@/lib/clipboard";
 import { orpc } from "@/lib/orpc";
 import { isRefusalError, refusalText } from "@/lib/refusal";
+import { siteOrigin } from "@/lib/site-origin";
 import { relativeTime } from "@/lib/time";
-import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { postInput } from "./composer-choice";
@@ -27,7 +27,7 @@ export function useCopyTradeLink() {
       slug === undefined
         ? router.buildLocation({ to: "/trade/@{$handle}", params: { handle } })
         : router.buildLocation({ to: "/trade/@{$handle}/$slug", params: { handle, slug } });
-    const url = new URL(href, getBaseURL()).toString();
+    const url = new URL(href, siteOrigin()).toString();
     await copyWithToast(url, { title: m.list_share_copied(), description: url });
   };
 }

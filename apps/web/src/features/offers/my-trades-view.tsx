@@ -12,13 +12,14 @@ import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/time";
+import { statusTone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
 
 import { mineStatusText, offerNo, offerSummary, tradeNo } from "./format";
 import { Mono } from "./mono";
 import { ProgressRing } from "./progress-ring";
 import { mineOptions } from "./queries";
-import { StatusBadge, statusTone } from "./status-badge";
+import { StatusBadge } from "./status-badge";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 

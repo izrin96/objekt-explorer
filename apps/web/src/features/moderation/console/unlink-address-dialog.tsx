@@ -3,23 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
-import { errorReason } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
+import { modErrorText } from "./error-text";
 import { ReasonDialog, ReasonForm } from "./reason-dialog";
-
-function unlinkErrorText(error: unknown) {
-  switch (errorReason(error).reason) {
-    case "address_sanctioned":
-      return m.mod_address_sanctioned();
-    case "address_in_trade":
-      return m.mod_address_in_trade();
-    case "address_changed":
-      return m.mod_address_changed();
-    default:
-      return m.mod_act_error();
-  }
-}
 
 /** An admin unlinks an address from its account; the 7-day wait starts as for the user's own unlink. */
 export function UnlinkAddressDialog({
@@ -74,7 +61,7 @@ function UnlinkForm({
       submitLabel={m.mod_unlink_address_submit()}
       submitVariant="destructive"
       pending={unlink.isPending}
-      error={unlink.isError ? unlinkErrorText(unlink.error) : null}
+      error={unlink.isError ? modErrorText(unlink.error) : null}
       onSubmit={(reason) => unlink.mutate({ address, userId, reason })}
     />
   );

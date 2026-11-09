@@ -6,28 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
-import { errorReason, isNotFound } from "@/lib/orpc-error";
+import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
+import { modErrorText } from "./error-text";
 import { accountOptions } from "./queries";
 import { ReasonDialog, ReasonForm } from "./reason-dialog";
-
-function moveErrorText(error: unknown) {
-  switch (errorReason(error).reason) {
-    case "address_sanctioned":
-      return m.mod_address_sanctioned();
-    case "address_in_trade":
-      return m.mod_address_in_trade();
-    case "address_changed":
-      return m.mod_address_changed();
-    case "same_account":
-      return m.mod_same_account();
-    case "deleted_target":
-      return m.mod_move_deleted_target();
-    default:
-      return m.mod_act_error();
-  }
-}
 
 /** An admin moves an address to another account at once, for an owner who lost access. */
 export function MoveAddressDialog({
@@ -104,7 +88,7 @@ function MoveForm({
       description={m.mod_move_description()}
       submitLabel={m.mod_move_submit()}
       pending={move.isPending}
-      error={move.isError ? moveErrorText(move.error) : null}
+      error={move.isError ? modErrorText(move.error, m.mod_move_deleted_target) : null}
       blocking={targetMissing ? m.mod_move_target_required() : null}
       precheck={precheck}
       onSubmit={submit}

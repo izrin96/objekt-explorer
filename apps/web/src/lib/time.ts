@@ -34,15 +34,12 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 
 const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
-function relativeFormat(locale: string, style: Intl.RelativeTimeFormatStyle) {
-  const key = `${locale}:${style}`;
-  let formatter = relativeFormats.get(key);
-  if (formatter === undefined) {
-    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style });
-    relativeFormats.set(key, formatter);
-  }
-  return formatter;
-}
+const relativeFormat = (locale: string, style: Intl.RelativeTimeFormatStyle) =>
+  cached(
+    relativeFormats,
+    `${locale}:${style}`,
+    () => new Intl.RelativeTimeFormat(locale, { numeric: "auto", style }),
+  );
 
 /** `largest` caps the unit, for a wait that should read "in 23 hours", not "tomorrow" */
 export function relativeTime(

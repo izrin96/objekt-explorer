@@ -15,12 +15,12 @@ import { formatCurrency } from "@/features/settings/use-currency";
 import { intlCached } from "@/lib/intl-cache";
 import { joinList } from "@/lib/text";
 import { relativeTime, untilLabel } from "@/lib/time";
+import { statusTone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { timeLeft } from "./next-step";
 import type { Collections } from "./pick";
-import { statusTone } from "./status-badge";
 
 export const offerNo = (id: number) => `O-${id}`;
 export const tradeNo = (id: number) => `T-${id}`;

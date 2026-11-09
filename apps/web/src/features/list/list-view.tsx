@@ -84,8 +84,6 @@ function ListEntries() {
   const list = useListTarget();
   const isOwner = useListOwned();
   const { data: user } = useCurrentUser();
-  // the owner's column count is ignored while the Objekt Columns setting is removed
-  // const columns = list.gridColumns ?? undefined;
 
   const search = useCompareSearch();
   const compare = isComparing(search) ? search : null;

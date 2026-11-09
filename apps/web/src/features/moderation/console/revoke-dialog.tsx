@@ -7,14 +7,8 @@ import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
+import { modErrorText } from "./error-text";
 import { ReasonDialog, ReasonForm } from "./reason-dialog";
-
-function revokeErrorText(error: unknown) {
-  const { reason } = errorReason(error);
-  if (reason === "staff_target") return m.mod_staff_target();
-  if (reason === "self") return m.mod_error_self();
-  return m.mod_act_error();
-}
 
 /** Revoking lifts a sanction, so it needs a reason for the audit log like any other action. */
 export function RevokeButton({ sanctionId, label }: { sanctionId: number; label: string }) {
@@ -70,7 +64,7 @@ function RevokeForm({
       description={m.mod_revoke_description()}
       submitLabel={m.mod_revoke()}
       pending={revoke.isPending}
-      error={revoke.isError ? revokeErrorText(revoke.error) : null}
+      error={revoke.isError ? modErrorText(revoke.error) : null}
       onSubmit={(reason) => revoke.mutate({ sanctionId, reason })}
     />
   );

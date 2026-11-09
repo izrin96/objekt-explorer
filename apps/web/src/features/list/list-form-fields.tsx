@@ -18,8 +18,9 @@ import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
+import { siteOrigin } from "@/lib/site-origin";
 import { toneChip } from "@/lib/tone";
-import { cn, getBaseURL } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import {
@@ -164,7 +165,7 @@ export function ListUrlField({
         <Label htmlFor={id("url")}>{m.list_edit_url_label()}</Label>
         <div className="border-input flex min-w-0 overflow-hidden rounded-md border">
           <span className="bg-muted text-muted-foreground border-input flex max-w-[60%] shrink-0 items-center border-e px-3 text-sm">
-            <span className="truncate">{`${new URL(getBaseURL()).host}/@${url.nickname}/list/`}</span>
+            <span className="truncate">{`${new URL(siteOrigin()).host}/@${url.nickname}/list/`}</span>
           </span>
           <Input
             id={id("url")}

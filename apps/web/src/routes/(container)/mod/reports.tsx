@@ -36,7 +36,7 @@ function ConsolePending() {
 
 /**
  * The queue lives here, not in a child route, so picking an account swaps the panes beside it
- * and leaves the queue's scroll where it was. Below `lg` the queue and the open account are
+ * and leaves the queue's scroll where it was. Below `xl` the queue and the open account are
  * two steps, and the heading stays for screen readers only while an account is open.
  */
 function ConsoleFrame({

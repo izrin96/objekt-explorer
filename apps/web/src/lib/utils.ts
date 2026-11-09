@@ -36,11 +36,6 @@ export const THEME_COLORS = {
   dark: "#0D0D0E",
 };
 
-/** The origin the user is on, for links they copy out; its callers only run in the browser. */
-export function getBaseURL(): string {
-  return window.location.origin;
-}
-
 /** The objekt artwork's intrinsic pixel size; the band's SVG viewBox. */
 export const OBJEKT_SIZE = {
   height: 1673,
@@ -63,5 +58,5 @@ export function isSafeRedirect(value: string): boolean {
   return /^\/(?![/\\])[^\x00-\x1f\x7f]*$/.test(value);
 }
 
-/** the column counts `profile.edit` accepts */
+/** The column counts the grid's column picker offers. */
 export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] as const;

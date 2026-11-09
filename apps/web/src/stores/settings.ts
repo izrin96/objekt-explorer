@@ -24,14 +24,7 @@ type SettingsState = {
   currency: string;
   /** Trade's Your posts shown or hidden; null until chosen, so it follows its default */
   myPostsShown: boolean | null;
-  set: (
-    patch: Partial<
-      Pick<
-        SettingsState,
-        "theme" | "wide" | "hideLabel" | "hideBanner" | "currency" | "myPostsShown"
-      >
-    >,
-  ) => void;
+  set: (patch: Partial<Omit<SettingsState, "set">>) => void;
 };
 
 /** the website's theme key is a bare string, written by tanstack-theme-kit */
