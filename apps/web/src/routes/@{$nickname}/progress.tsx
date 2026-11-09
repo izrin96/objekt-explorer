@@ -2,22 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { filterSearchSchema } from "@/features/filters/search-schema";
 import { ProgressView } from "@/features/profile/progress/progress-view";
-import { profileQuery } from "@/features/profile/queries";
-import { displayNickname } from "@/lib/address";
-import { generateMetadata } from "@/lib/meta";
+import { loadProfile, profileTabHead } from "@/features/profile/tab-route";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}/progress")({
   validateSearch: filterSearchSchema,
-  loader: ({ params, context: { queryClient } }) =>
-    queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
-  head: ({ loaderData }) =>
-    loaderData
-      ? generateMetadata({
-          title: m.page_titles_profile_progress({
-            nickname: displayNickname(loaderData.address, loaderData.nickname),
-          }),
-        })
-      : {},
+  loader: loadProfile,
+  head: profileTabHead(m.page_titles_profile_progress),
   component: ProgressView,
 });

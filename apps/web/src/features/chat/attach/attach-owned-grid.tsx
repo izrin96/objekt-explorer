@@ -1,5 +1,7 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import type { Attachment } from "@/features/chat/attachment";
@@ -19,15 +21,24 @@ import { m } from "@/paraglide/messages";
 
 import { LoadError } from "./attach-picker-parts";
 
-export function OwnedGrid({
+/**
+ * What a profile holds, one card per copy, for a picker sheet: chat's attach and the Trade
+ * composer each supply the tile and the wording.
+ */
+export function OwnedObjektsGrid({
   address,
   filters,
-  onPick,
+  emptyTitle,
+  noMatchTitle,
+  renderItem,
 }: {
   address: string;
   filters: PickerFacetFilters;
-  onPick: (attachment: Attachment) => void;
+  emptyTitle: string;
+  noMatchTitle: string;
+  renderItem: (objekt: ValidObjekt) => ReactNode;
 }) {
+  // a failed read shows in the sheet, not the page's error boundary
   const query = useInfiniteQuery({ ...ownedCollectionOptions(address), throwOnError: false });
   // the filters run in the browser, so they need every page
   const filtering = pickerFiltered(filters);
@@ -37,11 +48,11 @@ export function OwnedGrid({
   const all = query.data?.pages.flatMap((page) => page.objekts) ?? [];
   if (all.length === 0) {
     if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
-    return <EmptyState icon={CardsThreeIcon} bordered={false} title={m.chat_attach_no_objekts()} />;
+    return <EmptyState icon={CardsThreeIcon} bordered={false} title={emptyTitle} />;
   }
   const objekts = filtering ? filterObjekts(toFilterSearch(filters), all) : all;
   if (objekts.length === 0 && !query.hasNextPage) {
-    return <EmptyState icon={CardsThreeIcon} bordered={false} title={m.chat_attach_no_match()} />;
+    return <EmptyState icon={CardsThreeIcon} bordered={false} title={noMatchTitle} />;
   }
 
   return (
@@ -54,6 +65,26 @@ export function OwnedGrid({
         failed: query.isFetchNextPageError,
         load: () => void query.fetchNextPage({ cancelRefetch: false }),
       }}
+      renderItem={renderItem}
+    />
+  );
+}
+
+export function OwnedGrid({
+  address,
+  filters,
+  onPick,
+}: {
+  address: string;
+  filters: PickerFacetFilters;
+  onPick: (attachment: Attachment) => void;
+}) {
+  return (
+    <OwnedObjektsGrid
+      address={address}
+      filters={filters}
+      emptyTitle={m.chat_attach_no_objekts()}
+      noMatchTitle={m.chat_attach_no_match()}
       renderItem={(objekt) => (
         <ObjektCard
           objekt={objekt}

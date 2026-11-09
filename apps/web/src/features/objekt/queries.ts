@@ -5,7 +5,7 @@ import type { PriceHistoryRange } from "@repo/api/schemas/price-history";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import { client, orpc } from "@/lib/orpc";
+import { orpc } from "@/lib/orpc";
 
 import { collectionsUrl } from "./collections-url";
 import { mapObjektWithTag } from "./objekt-utils";
@@ -41,24 +41,20 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
   });
 
 export const collectionMetadataOptions = (slug: string) =>
-  queryOptions({
-    queryKey: ["objekts", "metadata", slug],
-    queryFn: () => client.collections.metadata({ collectionSlug: slug }),
+  orpc.collections.metadata.queryOptions({
+    input: { collectionSlug: slug },
     staleTime: 1000 * 60,
   });
 
 export const serialListOptions = (slug: string) =>
-  queryOptions({
-    queryKey: ["objekts", "list", slug],
-    queryFn: () => client.collections.serials({ collectionSlug: slug }),
+  orpc.collections.serials.queryOptions({
+    input: { collectionSlug: slug },
     staleTime: 1000 * 60,
   });
 
 export const transfersOptions = (slug: string, serial: number | null) =>
-  queryOptions({
-    queryKey: ["objekts", "transfers", slug, serial],
-    queryFn: () =>
-      client.collections.serialTransfers({ collectionSlug: slug, serial: serial ?? 0 }),
+  orpc.collections.serialTransfers.queryOptions({
+    input: { collectionSlug: slug, serial: serial ?? 0 },
     enabled: serial !== null && serial > 0,
     retry: 1,
     staleTime: 0,

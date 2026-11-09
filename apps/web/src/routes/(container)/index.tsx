@@ -1,7 +1,6 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback } from "react";
 
 import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -98,30 +97,27 @@ function HomePage() {
 
   useClearSelectionOnNavigate();
 
-  const renderObjekt = useCallback(
-    ({ item, rowIndex }: { item: GridObjekt[]; rowIndex: number }) => {
-      const objekt = item[0];
-      if (!objekt) return null;
-      return (
-        <ObjektCard
-          objekt={objekt}
-          selected={ids.has(objekt.id)}
-          onToggleSelect={user ? (value) => toggle(value.id) : undefined}
-          onOpen={open}
-          qty={item.length > 1 ? item.length : undefined}
-          priority={rowIndex < 2}
-          fetchPriority={rowIndex === 0 ? "high" : undefined}
-        >
-          {user ? (
-            <ObjektCardMenu>
-              <AddToListMenuItem objekts={[objekt]} />
-            </ObjektCardMenu>
-          ) : null}
-        </ObjektCard>
-      );
-    },
-    [ids, toggle, user, open],
-  );
+  const renderObjekt = ({ item, rowIndex }: { item: GridObjekt[]; rowIndex: number }) => {
+    const objekt = item[0];
+    if (!objekt) return null;
+    return (
+      <ObjektCard
+        objekt={objekt}
+        selected={ids.has(objekt.id)}
+        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        onOpen={open}
+        qty={item.length > 1 ? item.length : undefined}
+        priority={rowIndex < 2}
+        fetchPriority={rowIndex === 0 ? "high" : undefined}
+      >
+        {user ? (
+          <ObjektCardMenu>
+            <AddToListMenuItem objekts={[objekt]} />
+          </ObjektCardMenu>
+        ) : null}
+      </ObjektCard>
+    );
+  };
 
   return (
     <AddToListProvider>

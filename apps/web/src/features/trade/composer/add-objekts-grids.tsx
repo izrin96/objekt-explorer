@@ -1,9 +1,10 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { OwnedObjektsGrid } from "@/features/chat/attach/attach-owned-grid";
 import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import {
@@ -16,8 +17,6 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionOptions } from "@/features/objekt/queries";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
-import { ownedCollectionOptions } from "@/features/profile/queries";
-import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { activateOnKey } from "@/lib/a11y";
 import { m } from "@/paraglide/messages";
 
@@ -31,37 +30,12 @@ export type GridProps = {
 
 /** What the bound profile holds, one card per copy, keyed by token id. */
 export function OwnedGrid({ address, filters, ticked, onToggle }: GridProps & { address: string }) {
-  // a failed read shows in the sheet, not the page's error boundary
-  const query = useInfiniteQuery({ ...ownedCollectionOptions(address), throwOnError: false });
-  // the filters run in the browser, so they need every page
-  const filtering = pickerFiltered(filters);
-  useLoadAllPages(filtering, query);
-
-  if (query.isPending) return <CardGridSkeleton />;
-  const all = query.data?.pages.flatMap((page) => page.objekts) ?? [];
-  if (all.length === 0) {
-    if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
-    return (
-      <EmptyState
-        icon={CardsThreeIcon}
-        bordered={false}
-        title={m.trade_composer_add_no_objekts()}
-      />
-    );
-  }
-  const rows = filtering ? filterObjekts(toFilterSearch(filters), all) : all;
-  if (rows.length === 0 && !query.hasNextPage) return <NoMatch />;
-
   return (
-    <VirtualCardGrid
-      sections={[{ title: null, items: rows }]}
-      getKey={(objekt) => objekt.id}
-      more={{
-        has: query.hasNextPage,
-        loading: query.isFetchingNextPage,
-        failed: query.isFetchNextPageError,
-        load: () => void query.fetchNextPage({ cancelRefetch: false }),
-      }}
+    <OwnedObjektsGrid
+      address={address}
+      filters={filters}
+      emptyTitle={m.trade_composer_add_no_objekts()}
+      noMatchTitle={m.trade_composer_add_no_match()}
       renderItem={(objekt) => (
         <TickTile
           objekt={objekt}

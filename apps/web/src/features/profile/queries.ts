@@ -1,4 +1,9 @@
-import type { OwnedByFilters, OwnedByOutput, OwnedCopiesOutput } from "@repo/api/schemas/objekts";
+import type {
+  HeldByOutput,
+  OwnedByFilters,
+  OwnedByOutput,
+  OwnedCopiesOutput,
+} from "@repo/api/schemas/objekts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
@@ -23,7 +28,7 @@ export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
 
 export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters) =>
   infiniteQueryOptions({
-    queryKey: ["owned-collections", address, filters],
+    queryKey: orpc.objekts.ownedBy.key({ type: "infinite", input: { ...filters, address } }),
     queryFn: ({ pageParam }) =>
       client.objekts.ownedBy({ ...filters, address, cursor: pageParam }).then((result) => ({
         objekts: result.objekts.map(mapObjektWithTag),
@@ -43,7 +48,8 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters
  */
 export const ownedCopiesOptions = (address: string, filters?: OwnedByFilters) =>
   infiniteQueryOptions({
-    queryKey: ["owned-copies", address, filters],
+    // the first page comes from a preload, so the fetch is ours and only the key is oRPC's
+    queryKey: orpc.objekts.ownedCopies.key({ type: "infinite", input: { ...filters, address } }),
     queryFn: ({ pageParam, signal }) =>
       pageParam === undefined
         ? // the profile layout preloads the first page
@@ -57,14 +63,14 @@ export const ownedCopiesOptions = (address: string, filters?: OwnedByFilters) =>
     throwOnError: true,
   });
 
+// module-level, so the rows are mapped once per response rather than on every render
+const heldRows = (result: HeldByOutput) => result.collections.map(mapObjektWithTag);
+
 /** Today's copies counted per collection, for Spin, whose tokens are too many to list. */
 export const heldCollectionsOptions = (address: string, artist?: OwnedByFilters["artist"]) =>
-  queryOptions({
-    queryKey: ["held-collections", address, artist],
-    queryFn: () =>
-      client.objekts
-        .heldBy({ address, artist })
-        .then((result) => result.collections.map(mapObjektWithTag)),
+  orpc.objekts.heldBy.queryOptions({
+    input: { address, artist },
+    select: heldRows,
     refetchOnWindowFocus: false,
     // the server caches the count for as long
     staleTime: 1000 * 60 * 5,

@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { client } from "@/lib/orpc";
+import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -24,13 +24,15 @@ export function useUserSearch(initialQuery = "") {
   const debounce = useDebouncedCallback(setDebouncedQuery, DEBOUNCE_MS);
   const trimmed = debouncedQuery.trim();
 
-  const { data, error, isFetching } = useQuery({
-    queryKey: ["user-search", trimmed],
-    queryFn: () => client.user.search({ query: trimmed }).then((res) => res.results),
-    // the server refuses a longer query, and no nickname or address is that long
-    enabled: trimmed.length > 0 && trimmed.length <= MAX_USER_SEARCH_LENGTH,
-    retry: false,
-  });
+  const { data, error, isFetching } = useQuery(
+    orpc.user.search.queryOptions({
+      input: { query: trimmed },
+      select: (res) => res.results,
+      // the server refuses a longer query, and no nickname or address is that long
+      enabled: trimmed.length > 0 && trimmed.length <= MAX_USER_SEARCH_LENGTH,
+      retry: false,
+    }),
+  );
 
   // a refusal is an answer, not a blank list
   const serverError = error instanceof ORPCError ? refusalText(error) : null;

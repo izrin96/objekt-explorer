@@ -4,16 +4,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ProfileLists, ProfileListsSkeleton } from "@/features/list/profile-lists";
 import { listPreviewsOptions, profileListsOptions } from "@/features/list/queries";
 import { profileQuery } from "@/features/profile/queries";
-import { displayNickname } from "@/lib/address";
-import { generateMetadata } from "@/lib/meta";
+import { loadProfile, profileTabHead } from "@/features/profile/tab-route";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}/list")({
-  loader: async ({ params, context: { queryClient } }) => {
-    const profile = await queryClient.query({
-      ...profileQuery({ nickname: params.nickname }),
-      staleTime: "static",
-    });
+  loader: async (match) => {
+    const { queryClient } = match.context;
+    const profile = await loadProfile(match);
     const lists = await queryClient.query({
       ...profileListsOptions(profile.address),
       staleTime: "static",
@@ -24,14 +21,7 @@ export const Route = createFileRoute("/@{$nickname}/list")({
       .catch(noop);
     return profile;
   },
-  head: ({ loaderData }) =>
-    loaderData
-      ? generateMetadata({
-          title: m.page_titles_profile_lists({
-            nickname: displayNickname(loaderData.address, loaderData.nickname),
-          }),
-        })
-      : {},
+  head: profileTabHead(m.page_titles_profile_lists),
   component: ProfileListsPage,
   pendingComponent: ProfileListsSkeleton,
 });
