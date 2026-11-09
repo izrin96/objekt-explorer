@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/client";
 import type { Outputs } from "@repo/api";
 import { startForPost } from "@repo/api/schemas/trade-post";
-import { type InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, matchQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
 import { toastManager } from "@/components/ui/toast";
@@ -57,8 +57,19 @@ function useHidePartner() {
           data ? { ...data, pages: data.pages.map((page) => without(page, userId)) } : data,
         );
       },
-      onSettled: () => invalidate(),
+      // the row is already gone: the feed refetches on its next mount, not now, since a refetch
+      // replays every loaded page against the feed's rate limit
+      onSuccess: async () => {
+        const people = orpc.trade.people.key();
+        await queryClient.invalidateQueries({ queryKey: people, refetchType: "none" });
+        await queryClient.invalidateQueries({
+          queryKey: orpc.trade.key(),
+          predicate: (query) => !matchQuery({ queryKey: people }, query),
+        });
+      },
       onError: () => {
+        // puts the row back
+        void invalidate();
         toastManager.add({ type: "error", title: m.trade_hide_error() });
       },
     }),

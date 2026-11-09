@@ -25,6 +25,9 @@ export const peopleOptions = (input: BrowseInput) =>
     initialPageParam: undefined as PeopleCursor | undefined,
     getNextPageParam: (page) => page.nextCursor,
     staleTime: BROWSE_STALE_MS,
+    // a refetch replays every loaded page, each counted by the feed's rate limit
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     placeholderData: keepPreviousData,
     retry: retryUnlessRefused,
   });
