@@ -35,7 +35,7 @@ import { collectionOptions } from "@/features/objekt/queries";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { ownedCollectionOptions } from "@/features/profile/queries";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { useUserProfiles } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { activateOnKey } from "@/lib/a11y";

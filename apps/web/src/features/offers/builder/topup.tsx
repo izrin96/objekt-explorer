@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SegmentedChoice } from "@/features/offers/segmented-choice";
-import { currencyName, formatCurrency, useCurrency } from "@/features/settings/use-currency";
+import { currencyName, formatCurrency } from "@/features/settings/currency-format";
+import { useCurrency } from "@/features/settings/use-currency";
 import { m } from "@/paraglide/messages";
 
 export function Topup({

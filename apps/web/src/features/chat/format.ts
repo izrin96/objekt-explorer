@@ -2,7 +2,7 @@ import type { ChatRefusal, ConversationRow } from "@repo/api/schemas/chat";
 import { CHAT_REFUSALS } from "@repo/api/schemas/chat";
 import { normalizeCurrency } from "@repo/lib/currency";
 
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { intlCached as cached } from "@/lib/intl-cache";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime, untilLabel } from "@/lib/time";

@@ -12,7 +12,7 @@ import { offerNo } from "@/features/offers/format";
 import { ItemLabel } from "@/features/offers/item-label";
 import { pickKey } from "@/features/offers/pick";
 import { groupRows } from "@/features/offers/quantity";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";

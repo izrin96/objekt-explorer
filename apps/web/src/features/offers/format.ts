@@ -11,7 +11,7 @@ import {
 } from "@repo/api/schemas/offer";
 
 import { collectionName } from "@/features/objekt/objekt-label";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { intlCached } from "@/lib/intl-cache";
 import { joinList } from "@/lib/text";
 import { relativeTime, untilLabel } from "@/lib/time";

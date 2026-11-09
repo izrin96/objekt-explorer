@@ -22,7 +22,7 @@ import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-te
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { nearCountText, nearRingText } from "@/lib/near-text";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";

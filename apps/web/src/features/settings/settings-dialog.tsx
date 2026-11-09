@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArtistsSection } from "@/features/settings/artists-menu";
-import { currencyName, useCurrency } from "@/features/settings/use-currency";
+import { currencyName } from "@/features/settings/currency-format";
+import { useCurrency } from "@/features/settings/use-currency";
 import { m } from "@/paraglide/messages";
 import { getLocale, locales, setLocale } from "@/paraglide/runtime";
 import { THEMES, type Theme, useSettings } from "@/stores/settings";

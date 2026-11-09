@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { FOCUS_RING } from "@/lib/a11y";
 import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";

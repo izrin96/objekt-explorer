@@ -1,6 +1,6 @@
 import type { ListObjekt } from "@repo/lib/types/objekt";
 
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency } from "@/features/settings/currency-format";
 import { m } from "@/paraglide/messages";
 
 /** the list's own currency, not the viewer's; an unpriced card nudges the owner to set one */
