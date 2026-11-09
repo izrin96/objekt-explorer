@@ -1,7 +1,24 @@
 @import "tailwindcss";
 @import "@fontsource-variable/google-sans-flex/wght.css";
 @import "@fontsource-variable/instrument-sans/wght.css";
-@import "@fontsource-variable/jetbrains-mono/wght.css";
+
+/*
+ * `font-mono` only sets identifiers, so the mono face is printable ASCII without the code
+ * ligatures (`calt` would turn `--`, `!=` and the `x` of `0x` into other glyphs): 12 KB
+ * instead of fontsource's 40 KB. Rebuild it from the fontsource package with fonttools:
+ *   pyftsubset node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2 \
+ *     --unicodes="U+0020-007E,U+00B7,U+00D7,U+2013,U+2026" --layout-features="ccmp,locl,mark" \
+ *     --flavor=woff2 --output-file=src/styles/fonts/jetbrains-mono-ascii-wght.woff2
+ * Any other character falls back to the next font in `--font-mono`.
+ */
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url(./fonts/jetbrains-mono-ascii-wght.woff2) format("woff2-variations");
+  unicode-range: U+0020-007E, U+00B7, U+00D7, U+2013, U+2026;
+}
 
 @custom-variant dark (&:is(.dark *));
 
