@@ -115,9 +115,10 @@ function resolveSerial(
 
 function EventMarker({ kind }: { kind: EventKind }) {
   return (
-    <span className="flex shrink-0 items-center gap-1.5">
+    <span className="flex shrink-0 items-center">
       <i aria-hidden className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[kind])} />
-      <span className="text-muted-foreground text-xs">{EVENT_LABEL[kind]()}</span>
+      {/* the dot is enough on screen; a screen reader still needs the word */}
+      <span className="sr-only">{EVENT_LABEL[kind]()}</span>
     </span>
   );
 }
