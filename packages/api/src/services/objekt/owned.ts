@@ -53,7 +53,13 @@ export async function fetchOwnedObjekts(
   address: string,
   query: OwnedByFilters,
 ): Promise<OwnedByOutput> {
-  const { rows, nextCursor } = await ownedRows(address, query, getCollectionColumns(), PER_PAGE);
+  const { rows, nextCursor } = await ownedRows(
+    address,
+    query,
+    getColumns(objekts),
+    getCollectionColumns(),
+    PER_PAGE,
+  );
   return {
     nextCursor,
     objekts: rows.map((row) => mapOwnedObjekt(row.objekt, row.collection)),
@@ -71,6 +77,7 @@ export async function fetchOwnedCopies(
   const { rows, nextCursor } = await ownedRows(
     address,
     query,
+    COPY_COLUMNS,
     { slug: collections.slug },
     COPIES_PER_PAGE,
   );
@@ -87,12 +94,19 @@ export async function fetchOwnedCopies(
   };
 }
 
-async function ownedRows<C extends Record<string, AnyPgColumn>>(
-  address: string,
-  query: OwnedByFilters,
-  collectionColumns: C,
-  perPage: number,
-) {
+// only what a copy sends: parsing and mapping the rest cost about half the request's CPU at 40,000 rows
+const COPY_COLUMNS = {
+  id: objekts.id,
+  serial: objekts.serial,
+  receivedAt: objekts.receivedAt,
+  mintedAt: objekts.mintedAt,
+  transferable: objekts.transferable,
+};
+
+async function ownedRows<
+  O extends Pick<typeof objekts._.columns, "id" | "receivedAt"> & Record<string, AnyPgColumn>,
+  C extends Record<string, AnyPgColumn>,
+>(address: string, query: OwnedByFilters, objektColumns: O, collectionColumns: C, perPage: number) {
   const addr = address.toLowerCase();
 
   const collectionFilters = buildCollectionFilters(query);
@@ -119,7 +133,7 @@ async function ownedRows<C extends Record<string, AnyPgColumn>>(
       .with(latest)
       .select({
         objekt: {
-          ...getColumns(objekts),
+          ...objektColumns,
           receivedAt: latest.timestamp,
         },
         collection: collectionColumns,
@@ -136,7 +150,7 @@ async function ownedRows<C extends Record<string, AnyPgColumn>>(
 
   const mainQuery = indexer
     .select({
-      objekt: objekts,
+      objekt: objektColumns,
       collection: collectionColumns,
     })
     .from(objekts)
