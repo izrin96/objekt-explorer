@@ -1,5 +1,5 @@
 import { publishActivity } from "@repo/api/realtime";
-import { enrichTransfers, type TransferData } from "@repo/api/services/activity-batch";
+import { enrichTransfers, type TransferData } from "@repo/api/services/activity/batch";
 import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 
 import { log } from "../lib/log";

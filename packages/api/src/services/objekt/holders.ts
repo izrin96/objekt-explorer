@@ -12,8 +12,8 @@ import type {
   HolderRow,
   HoldersOutput,
   holdersInputSchema,
-} from "../schemas/collections";
-import { getCache } from "./redis";
+} from "../../schemas/collections";
+import { getCache } from "../redis";
 
 // with the client's 60 s staleTime on top, figures stay within five minutes of ownership
 const RANKING_TTL = 4 * 60;

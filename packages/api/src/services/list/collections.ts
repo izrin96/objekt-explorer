@@ -6,7 +6,7 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, inArray } from "drizzle-orm";
 
 import { TOKEN_CHUNK_SIZE } from "../../constants";
-import { getCollectionColumns } from "../collection-columns";
+import { getCollectionColumns } from "../objekt/collection-columns";
 
 export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArtist[]) {
   const uniqueSlugs = new Set(slugs);

@@ -1,5 +1,5 @@
 import { ownedByFiltersSchema } from "@repo/api/schemas/objekts";
-import { fetchHeldObjekts } from "@repo/api/services/owned";
+import { fetchHeldObjekts } from "@repo/api/services/objekt/owned";
 import { createFileRoute } from "@tanstack/react-router";
 
 const heldBySchema = ownedByFiltersSchema.pick({ artist: true });

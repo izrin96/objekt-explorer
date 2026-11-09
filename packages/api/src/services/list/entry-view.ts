@@ -9,7 +9,7 @@ import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { TOKEN_CHUNK_SIZE } from "../../constants";
-import { getCollectionColumns, getPartialCollectionColumns } from "../collection-columns";
+import { getCollectionColumns, getPartialCollectionColumns } from "../objekt/collection-columns";
 import { fetchCollectionsBySlug } from "./collections";
 
 interface ListEntryTransformConfig {

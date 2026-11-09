@@ -1,4 +1,4 @@
-import { fetchSerialTransfers } from "@repo/api/services/collection";
+import { fetchSerialTransfers } from "@repo/api/services/objekt/collection";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$serial")({

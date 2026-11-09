@@ -21,7 +21,7 @@ import type { CollectionFilters } from "../../../schemas/common/filters";
 import { normalizeUserText } from "../../../schemas/common/user-text";
 import { type BrowseFilters } from "../../../schemas/trade";
 import { tradeHandle } from "../../../schemas/trade-person";
-import { getCollectionFilters } from "../../activity-feed";
+import { getCollectionFilters } from "../../activity/feed";
 import { fetchRulesById } from "../../list/rules";
 import { toPublicUser } from "../../profile";
 import { getCache } from "../../redis";

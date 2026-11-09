@@ -2,7 +2,7 @@ import {
   type AddressTransfersFilters,
   addressTransfersFiltersSchema,
 } from "@repo/api/schemas/transfers";
-import { fetchAddressTransfers } from "@repo/api/services/transfers";
+import { fetchAddressTransfers } from "@repo/api/services/activity/transfers";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/transfers/$address")({

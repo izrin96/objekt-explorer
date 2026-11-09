@@ -8,8 +8,8 @@ import { authed, pub } from "../orpc";
 import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
 import { lockedObjektsOutputSchema } from "../schemas/locked-objekts";
-import { fetchLockedObjekts } from "../services/locked-objekts";
-import { ownedTokenIds } from "../services/owned";
+import { fetchLockedObjekts } from "../services/objekt/locked";
+import { ownedTokenIds } from "../services/objekt/owned";
 import { assertProfileOwned } from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
 

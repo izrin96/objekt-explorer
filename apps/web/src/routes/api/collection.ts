@@ -1,6 +1,6 @@
 import { artistsArraySchema } from "@repo/api/schemas/common/artist";
 import { checkpointSchema } from "@repo/api/schemas/common/checkpoint";
-import { fetchCollectionList } from "@repo/api/services/collection";
+import { fetchCollectionList } from "@repo/api/services/objekt/collection";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 

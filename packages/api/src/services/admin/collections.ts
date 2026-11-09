@@ -10,9 +10,9 @@ import { refuse } from "../../lib/refuse";
 import { iso } from "../../lib/time";
 import type { SetCollectionColorsInput } from "../../schemas/admin";
 import { fetchPartners } from "../chat";
-import { bumpCollectionList, collectionListModifiedAt } from "../collection";
 import { audit } from "../moderation/core";
-import { forgetSpinHeld } from "../owned";
+import { bumpCollectionList, collectionListModifiedAt } from "../objekt/collection";
+import { forgetSpinHeld } from "../objekt/owned";
 
 const HISTORY_LIMIT = 50;
 

@@ -2,7 +2,7 @@ import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 
-import type { ActivityItem } from "../schemas/activity";
+import type { ActivityItem } from "../../schemas/activity";
 
 /** One element of the indexer's `transfers` message. */
 export type TransferData = Transfer & {

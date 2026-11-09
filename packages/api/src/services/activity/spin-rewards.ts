@@ -5,8 +5,8 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { pairSpinsInWindows, type SpinEvent, spinNotes, spinWindows } from "@repo/lib/spin-pairing";
 import { eq, inArray, sql } from "drizzle-orm";
 
-import type { TransferItem } from "../schemas/transfers";
-import { getCollectionColumns } from "./collection-columns";
+import type { TransferItem } from "../../schemas/transfers";
+import { getCollectionColumns } from "../objekt/collection-columns";
 
 type PageRow = {
   transfer: { id: string; from: string; to: string; timestamp: string };

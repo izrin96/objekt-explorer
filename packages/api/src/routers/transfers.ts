@@ -1,7 +1,7 @@
 import { pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import { addressTransfersInputSchema, addressTransfersOutputSchema } from "../schemas/transfers";
-import { fetchAddressTransfers } from "../services/transfers";
+import { fetchAddressTransfers } from "../services/activity/transfers";
 
 export const transfersRouter = {
   byAddress: pub

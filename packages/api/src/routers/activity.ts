@@ -1,7 +1,7 @@
 import { pub } from "../orpc";
 import { activityFeedInputSchema, activityFeedOutputSchema } from "../schemas/activity";
 import { documented, errorResponses } from "../schemas/common/documented";
-import { fetchActivityPage } from "../services/activity-feed";
+import { fetchActivityPage } from "../services/activity/feed";
 
 export const activityRouter = {
   feed: pub

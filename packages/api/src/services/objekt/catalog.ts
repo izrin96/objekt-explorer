@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { asc, count, countDistinct, eq, inArray } from "drizzle-orm";
 
-import { getStaleCache } from "./redis";
+import { getStaleCache } from "../redis";
 
 const classOrder: Record<ValidArtist, string[]> = {
   tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],

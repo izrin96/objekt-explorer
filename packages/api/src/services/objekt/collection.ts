@@ -12,18 +12,18 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
 
-import { nextModifiedAt } from "../lib/collection-bump";
-import { type ListShape, type ShapedList, shapeRows } from "../lib/collection-shape";
-import { tokenIdWindow } from "../lib/token-id-window";
+import { nextModifiedAt } from "../../lib/collection-bump";
+import { type ListShape, type ShapedList, shapeRows } from "../../lib/collection-shape";
+import { tokenIdWindow } from "../../lib/token-id-window";
 import type {
   CollectionListInput,
   CollectionMetadataOutput,
   CollectionListOutput,
   SerialTransfersOutput,
   SerialsOutput,
-} from "../schemas/collections";
+} from "../../schemas/collections";
+import { redis, redisFailOpen } from "../redis";
 import { getCollectionColumns } from "./collection-columns";
-import { redis, redisFailOpen } from "./redis";
 
 const MODIFIED_AT_KEY = "collection:modified-at";
 

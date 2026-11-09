@@ -13,7 +13,7 @@ import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profi
 import type { User } from "./account/auth";
 import { isBlockedEither } from "./moderation/core";
 import { isBanned } from "./moderation/safety";
-import { fetchOwnerSummary } from "./objekt";
+import { fetchOwnerSummary } from "./objekt/catalog";
 import { getCache, redis, redisFailOpen } from "./redis";
 import { reputationOf } from "./reputation";
 

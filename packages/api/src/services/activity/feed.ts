@@ -6,9 +6,9 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
-import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
-import type { CollectionFilters } from "../schemas/common/filters";
-import { getCollectionColumns } from "./collection-columns";
+import type { ActivityFeedInput, ActivityFeedOutput } from "../../schemas/activity";
+import type { CollectionFilters } from "../../schemas/common/filters";
+import { getCollectionColumns } from "../objekt/collection-columns";
 import { withSpinRewards } from "./spin-rewards";
 
 const PAGE_SIZE = 300;

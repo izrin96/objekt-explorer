@@ -22,9 +22,9 @@ import {
   fetchLeadCollections,
   fetchSerialList,
   fetchSerialTransfers,
-} from "../services/collection";
-import { fetchHolders } from "../services/holders";
-import { fetchCollectionRarity } from "../services/rarity";
+} from "../services/objekt/collection";
+import { fetchHolders } from "../services/objekt/holders";
+import { fetchCollectionRarity } from "../services/objekt/rarity";
 
 const collectionListOutput = z.union([
   z.object({

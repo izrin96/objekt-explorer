@@ -5,7 +5,7 @@ import { pins } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
-import { TOKEN_CHUNK_SIZE } from "../constants";
+import { TOKEN_CHUNK_SIZE } from "../../constants";
 
 export async function getValidPins(address: string) {
   const allPins = await db

@@ -1,5 +1,5 @@
 import { ownedByFiltersSchema, type OwnedByFilters } from "@repo/api/schemas/objekts";
-import { fetchOwnedObjekts, isCheckpointUnavailable } from "@repo/api/services/owned";
+import { fetchOwnedObjekts, isCheckpointUnavailable } from "@repo/api/services/objekt/owned";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/objekts/owned-by/$address")({

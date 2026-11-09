@@ -1,5 +1,5 @@
 import { type ActivityFeedInput, activityFeedInputSchema } from "@repo/api/schemas/activity";
-import { fetchActivityPage } from "@repo/api/services/activity-feed";
+import { fetchActivityPage } from "@repo/api/services/activity/feed";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/activity")({

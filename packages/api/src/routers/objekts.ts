@@ -13,7 +13,7 @@ import {
   fetchOwnedCopies,
   fetchOwnedObjekts,
   isCheckpointUnavailable,
-} from "../services/owned";
+} from "../services/objekt/owned";
 
 export const objektsRouter = {
   ownedBy: pub

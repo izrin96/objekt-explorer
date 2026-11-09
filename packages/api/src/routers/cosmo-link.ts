@@ -18,7 +18,7 @@ import {
   linkedPreviewsInputSchema,
 } from "../schemas/cosmo-link";
 import { linkVerified, setDefault, unlink } from "../services/account/cosmo-link";
-import { fetchOwnerCounts } from "../services/objekt";
+import { fetchOwnerCounts } from "../services/objekt/catalog";
 import { redis, redisFailOpen, userRateLimited } from "../services/redis";
 import { getAccessToken } from "../services/token";
 

@@ -6,7 +6,7 @@ import { documented } from "../schemas/common/documented";
 import { artistsOutputSchema, filterDataOutputSchema } from "../schemas/config";
 import { getArtists } from "../services/artist";
 import { parseSelectedArtists } from "../services/cookie";
-import { fetchFilterData } from "../services/objekt";
+import { fetchFilterData } from "../services/objekt/catalog";
 
 export const configRouter = {
   getSelectedArtists: pub.handler(parseSelectedArtists),
