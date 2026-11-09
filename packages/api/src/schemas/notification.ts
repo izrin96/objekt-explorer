@@ -139,8 +139,10 @@ export const setPrefInputSchema = z.object({
   type: notificationTypeSchema,
   enabled: z.boolean(),
 });
+export type SetPrefInput = z.infer<typeof setPrefInputSchema>;
 
 export const setAlertMatchInputSchema = z.object({
   type: z.enum(ALERT_TYPES),
   choice: z.enum(["off", ...ALERT_MATCHES]),
 });
+export type SetAlertMatchInput = z.infer<typeof setAlertMatchInputSchema>;

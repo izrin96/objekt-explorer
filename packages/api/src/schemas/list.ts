@@ -195,6 +195,7 @@ export const editListInputSchema = z.object({
   /** a have or want list's "Ratio for all"; omitted keeps the stored one, as a tab from before ratios sends it */
   ratio: tradeRatioSchema.nullable().optional(),
 });
+export type EditListInput = z.infer<typeof editListInputSchema>;
 
 export const slugPreviewInputSchema = z.object({
   slug: z.string(),

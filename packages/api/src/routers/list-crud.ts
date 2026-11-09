@@ -1,7 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
-import { normalizeCurrency } from "@repo/lib/currency";
 import { eq } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
@@ -20,14 +19,12 @@ import {
   slugPreviewOutputSchema,
 } from "../schemas/list";
 import { carriesRatios } from "../schemas/list-copy";
-import { takesRatio } from "../schemas/trade-ratio";
 import { insertCopyRows, planCopy } from "../services/list/copy";
 import { generateProfileSlug, prepareList, writeList } from "../services/list/create";
+import { deleteList, editList } from "../services/list/edit";
 import { fetchList, findOwnedList } from "../services/list/read";
 import { copyRulesTx } from "../services/list/rules";
-import { lockTradeLists, touchList } from "../services/list/shared";
-import { bumpTradeVersions } from "../services/moderation/safety-cache";
-import { assertProfileOwned } from "../services/profile";
+import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
 /** `list.create` and `list.copy` share one budget; each one inserts a list and its rows. */
@@ -124,73 +121,9 @@ export const listCrud = {
       },
     ),
 
-  edit: authed.input(editListInputSchema).handler(
-    async ({
-      input,
-      context: {
-        session: { user },
-      },
-    }) => {
-      const list = await findOwnedList(input.slug, user.id);
-
-      // Validate currency for sale lists
-      if (list.listType === "sale" && !input.currency) {
-        refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
-      }
-      if (input.ratio != null && !takesRatio(list.listType)) {
-        refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
-      }
-
-      // address changes are ignored on a bound list, so only an unbound one is checked
-      if (input.profileAddress && !list.isProfileBind) {
-        await assertProfileOwned(input.profileAddress, user.id);
-      }
-
-      let profileSlug: string | null = null;
-      // For isProfileBind lists, the profileAddress is locked to the
-      // original address — derive the slug from that, not from any
-      // untrusted input the caller may have passed.
-      const effectiveProfileAddress = list.isProfileBind
-        ? list.profileAddress
-        : input.profileAddress;
-      if (effectiveProfileAddress) {
-        const address = effectiveProfileAddress.toLowerCase();
-        // Keep the existing slug unless the user opted to regenerate it or
-        // the list moved to a different profile (slug uniqueness is per address).
-        const keepSlug =
-          !input.regenerateSlug &&
-          list.profileSlug !== null &&
-          list.profileAddress?.toLowerCase() === address;
-        profileSlug = keepSlug
-          ? list.profileSlug
-          : await generateProfileSlug(input.name, list.slug, address, list.id);
-      }
-
-      // no Trade state: every list's is its post's, which `trade.savePost` writes
-      await db
-        .update(lists)
-        .set({
-          name: input.name,
-          gridColumns: input.gridColumns,
-          profileAddress: list.isProfileBind
-            ? undefined
-            : input.profileAddress
-              ? input.profileAddress.toLowerCase()
-              : null,
-          description: input.description,
-          currency:
-            list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
-          profileSlug,
-          hideSerial:
-            ["sale", "have"].includes(list.listType) && list.isProfileBind
-              ? input.hideSerial
-              : false,
-          ratio: takesRatio(list.listType) ? input.ratio : undefined,
-        })
-        .where(eq(lists.id, list.id));
-      await touchList([list.id]);
-    },
-  ),
+  edit: authed
+    .input(editListInputSchema)
+    .handler(({ input, context: { session } }) => editList(session.user.id, input)),
 
   slugPreview: authed
     .input(slugPreviewInputSchema)
@@ -218,28 +151,7 @@ export const listCrud = {
       },
     ),
 
-  delete: authed.input(listSlugInputSchema).handler(
-    async ({
-      input: { slug },
-      context: {
-        session: { user },
-      },
-    }) => {
-      const list = await findOwnedList(slug, user.id);
-
-      const unlinked = await db.transaction(async (tx) => {
-        // ON DELETE SET NULL also locks the partner, so take the shared lock in id order first
-        if (list.listType !== "general") await lockTradeLists(tx, user.id);
-        const partners = await tx
-          .select({ id: lists.id })
-          .from(lists)
-          .where(eq(lists.linkedListId, list.id));
-        await tx.delete(lists).where(eq(lists.id, list.id));
-        return partners.map((partner) => partner.id);
-      });
-      // the partner loses its link through the foreign key, which leaves its updated_at alone
-      if (unlinked.length > 0) await touchList(unlinked);
-      else await bumpTradeVersions([user.id]);
-    },
-  ),
+  delete: authed
+    .input(listSlugInputSchema)
+    .handler(({ input: { slug }, context: { session } }) => deleteList(session.user.id, slug)),
 };

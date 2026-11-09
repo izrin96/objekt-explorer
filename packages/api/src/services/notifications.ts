@@ -6,6 +6,7 @@ import type * as z from "zod";
 import { attachEarlier, GROUPED_TYPES, type RankedNote } from "../lib/notification-groups";
 import { shownCancelReason } from "../lib/offer-rules";
 import { iso } from "../lib/time";
+import { publishNotify } from "../realtime";
 import {
   EARLIER_LIMIT,
   KIND_TYPES,
@@ -23,6 +24,8 @@ import {
   type NotificationType,
   notificationSchema,
   RETENTION_DAYS,
+  type SetAlertMatchInput,
+  type SetPrefInput,
 } from "../schemas/notification";
 import { loadIdentities } from "./account/identities";
 import { fetchCollectionsBySlug } from "./list/collections";
@@ -238,4 +241,53 @@ export async function notificationPrefs(userId: string) {
       ALERT_TYPES.map((type) => [type, stored.get(type)?.match ?? ALERT_MATCH_DEFAULT]),
     ) as Record<AlertType, AlertMatchMode>,
   };
+}
+
+/** Marks the user's own unread rows among `ids` read; other tabs refresh only when one changed. */
+export async function markNotificationsRead(userId: string, ids: number[]) {
+  const updated = await db
+    .update(notification)
+    .set({ readAt: sql`now()` })
+    .where(
+      and(
+        eq(notification.userId, userId),
+        inArray(notification.id, ids),
+        isNull(notification.readAt),
+      ),
+    )
+    .returning({ id: notification.id });
+  if (updated.length > 0) await publishNotify(userId);
+}
+
+/** Account-wide on every tab, like the count beside it. */
+export async function markAllNotificationsRead(userId: string) {
+  const updated = await db
+    .update(notification)
+    .set({ readAt: sql`now()` })
+    .where(and(eq(notification.userId, userId), isNull(notification.readAt)))
+    .returning({ id: notification.id });
+  if (updated.length > 0) await publishNotify(userId);
+}
+
+export async function setNotificationPref(userId: string, { type, enabled }: SetPrefInput) {
+  await db
+    .insert(notificationPref)
+    .values({ userId, type, enabled })
+    .onConflictDoUpdate({
+      target: [notificationPref.userId, notificationPref.type],
+      set: { enabled },
+    });
+}
+
+/** One statement, so a choice never leaves `enabled` and `match` half-written; Off keeps the stored match. */
+export async function setAlertMatch(userId: string, { type, choice }: SetAlertMatchInput) {
+  const enabled = choice !== "off";
+  const match = choice === "off" ? null : choice;
+  await db
+    .insert(notificationPref)
+    .values({ userId, type, enabled, match })
+    .onConflictDoUpdate({
+      target: [notificationPref.userId, notificationPref.type],
+      set: match === null ? { enabled } : { enabled, match },
+    });
 }
