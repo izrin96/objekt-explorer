@@ -127,6 +127,7 @@ Enforced by oxlint (`packages/lint/oxlint.config.ts`) and oxfmt (`oxfmt.config.t
 Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The React Compiler runs in `apps/web`, so `react/set-state-in-effect` and `react/refs` are errors; `react/incompatible-library` stays a warning, since the compiler only skips a component that uses such a library.
 
 - Path alias: `@/*` → `src/`
+- In `packages/lib` and `packages/cosmo`, code that needs the server (the database, Redis, secrets, `process.env`) goes in `src/server/` (`@repo/lib/server/*`, `@repo/cosmo/server/*`); the rest is shared with the browser. The web build refuses a client import of `src/server/`, `packages/db` or `packages/api/src` outside `schemas/` and `constants.ts` (`importProtection` in `apps/web/vite.config.ts`)
 - `import * as z from "zod"` — never `import { z }` (convention only; oxlint's `no-restricted-imports` cannot tell the two apart)
 - Prefer TS type inference from Zod schemas over manual type declarations
 - Await all promises or explicitly void them
