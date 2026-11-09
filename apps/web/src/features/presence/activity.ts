@@ -14,3 +14,16 @@ export function shouldReport(lastReport: number | undefined, now: number) {
 export function failedReportAt(now: number) {
   return now - ACTIVE_REPORT_MS + REPORT_RETRY_MS;
 }
+
+/** The localStorage key holding when some tab of this person last reported, shared by every tab. */
+export const lastReportKey = (userId: string) => `presence:last-report:${userId}`;
+
+/**
+ * The shared last report from its stored value. Garbage or a time ahead of `now` (a clock moved
+ * back) reads as none, so a bad value can never hold reports back.
+ */
+export function storedLastReport(raw: string | null, now: number) {
+  if (!raw) return undefined;
+  const at = Number(raw);
+  return Number.isFinite(at) && at <= now ? at : undefined;
+}

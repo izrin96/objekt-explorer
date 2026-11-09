@@ -81,7 +81,7 @@ export function AppNav() {
 function SignedInActions({ user }: { user: User }) {
   useUserSocket();
   usePresencePoller();
-  useActivityReporter();
+  useActivityReporter(user.id);
   return (
     <div className="flex shrink-0 items-center gap-1 pointer-coarse:gap-2">
       <MessagesIcon />

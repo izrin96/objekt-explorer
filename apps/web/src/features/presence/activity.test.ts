@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { ACTIVE_REPORT_MS, failedReportAt, REPORT_RETRY_MS, shouldReport } from "./activity";
+import {
+  ACTIVE_REPORT_MS,
+  failedReportAt,
+  REPORT_RETRY_MS,
+  shouldReport,
+  storedLastReport,
+} from "./activity";
 
 describe("shouldReport", () => {
   const now = 1_000_000;
@@ -29,5 +35,21 @@ describe("failedReportAt", () => {
 
   test("activity after the retry wait reports again, well inside a minute", () => {
     expect(shouldReport(failedReportAt(now), now + REPORT_RETRY_MS)).toBe(true);
+  });
+});
+
+describe("storedLastReport", () => {
+  const now = 1_000_000;
+
+  test("a stored time at or before now is the last report", () => {
+    expect(storedLastReport(String(now - 5), now)).toBe(now - 5);
+    expect(storedLastReport(String(now), now)).toBe(now);
+  });
+
+  test("nothing stored, garbage or a future time is no report", () => {
+    expect(storedLastReport(null, now)).toBeUndefined();
+    expect(storedLastReport("soon", now)).toBeUndefined();
+    expect(storedLastReport("", now)).toBeUndefined();
+    expect(storedLastReport(String(now + 1), now)).toBeUndefined();
   });
 });
