@@ -25,15 +25,10 @@ import { matchLines, previewTags } from "../post-kind-text";
 import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
-import {
-  AllObjekts,
-  EntryThumb,
-  ListRatioControl,
-  SideAddToList,
-  useSideDialogs,
-} from "./preview-entries";
+import { AllObjekts, EntryThumb, ListRatioControl, SideAddToList } from "./preview-entries";
 import { PreviewRules, type Rule, RuleObjektsSheet } from "./preview-rules";
 import { type PreviewSide, previewSides } from "./preview-sides";
+import { useSideDialogs } from "./use-side-dialogs";
 
 /** thumbnails before "+N", which opens the rest in the side sheet; the Add objekts tile comes first */
 const SHOWN = 22;

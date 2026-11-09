@@ -1,4 +1,4 @@
-import { canBeOnTrade, type PublicList } from "@repo/api/schemas/list";
+import type { PublicList } from "@repo/api/schemas/list";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
@@ -18,17 +18,6 @@ import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
-
-/** Someone else's list on Trade, for a signed-in viewer: the only page with matches to show. */
-export function canShowMatches(list: PublicList, signedIn: boolean, owner: boolean) {
-  return (
-    signedIn &&
-    !owner &&
-    list.discoverable === true &&
-    list.listType !== "general" &&
-    canBeOnTrade(list.listType, list.isProfileBind)
-  );
-}
 
 /** The collections the grid keeps while the toggle is on; the request waits for it. */
 export function useListMatches(list: PublicList, on: boolean) {

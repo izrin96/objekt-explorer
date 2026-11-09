@@ -1,14 +1,10 @@
-import { ArrowClockwiseIcon, CardsThreeIcon } from "@phosphor-icons/react";
 import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { WindowVirtualizer } from "virtua";
 
 import { PendingStatus } from "@/components/router/pending";
-import { EmptyState } from "@/components/shared/empty-state";
-import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useArtistScopeNarrowed, useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -21,19 +17,20 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { useWindowVirtualizerRestore } from "@/hooks/use-window-virtualizer-restore";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { BrowseEmpty } from "./browse-empty";
+import { BrowseFeed, BrowseFeedSkeleton, type FeedRow } from "./browse-feed";
 import { BrowseFilters } from "./browse-filters";
+import { BrowseIntro } from "./browse-intro";
 import {
   type FeedSearch,
   type Surface,
-  forYouFallback,
   matchModeOf,
   postTypeOf,
   toBrowseInput,
 } from "./browse-search";
-import { comparedList, pickOf, scopeOf, tradeListsOf } from "./compare-rule";
+import { comparedList, scopeOf, tradeListsOf } from "./compare-rule";
 import { NEW_POST } from "./composer/link";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
@@ -42,24 +39,13 @@ import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
 import type { NearOpen, ObjektAsk } from "./near";
 import { NearNote } from "./near-note";
-import { NoMatches } from "./no-matches";
 import { ObjektOfferNote } from "./objekt-offer-note";
-import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
-import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
-import { SideCompareContext } from "./side-items-sheet";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";
 
-type FeedRow =
-  | { heading: "mutual" | "oneWay"; person?: undefined }
-  | { person: PersonData; heading?: undefined };
-
 const TYPES: PostType[] = ["all", "wtt", "wtb", "wts"];
-
-/** rows the server draws, and the skeleton's count */
-const SSR_ROWS = 4;
 
 export function BrowseView({ surface, search }: { surface: Surface; search: FeedSearch }) {
   const { data: user } = useCurrentUser();
@@ -151,7 +137,6 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const comparedTrade = forYou
     ? comparedList(search.list, tradeLists, scopeOf(mode, type))
     : undefined;
-  const comparedName = comparedTrade?.name;
   // a person who moved between two pages can come back once more: first place wins
   const people = useMemo(() => {
     const seen = new Set<string>();
@@ -184,27 +169,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   return (
     // a near match's drawer adds the objekt to a sale list from here
     <AddToListProvider>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
-          {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
-        </p>
-        {/* on Browse, New post lives in the Your posts row */}
-        {user && forYou ? (
-          <Button variant="outline" size="sm" onClick={() => openComposer(NEW_POST)}>
-            <CardsThreeIcon />
-            {m.trade_new_post()}
-          </Button>
-        ) : user ? null : (
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link to="/login" search={{ redirect: "/trade" }} />}
-          >
-            <CardsThreeIcon />
-            {m.trade_new_post()}
-          </Button>
-        )}
-      </div>
+      <BrowseIntro forYou={forYou} signedIn={!!user} onNew={() => openComposer(NEW_POST)} />
 
       {user && !forYou ? (
         <MyPosts
@@ -272,140 +237,41 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         </>
       ) : query.isError && people.length === 0 ? (
         <LoadError error={query.error} onRetry={() => void query.refetch()} />
-      ) : people.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={m.trade_browse_no_filter_title()}
-          hint={m.trade_browse_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
-        />
-      ) : people.length === 0 && !query.hasNextPage && mutual ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={
-            comparedName
-              ? m.trade_browse_no_mutual_list_title({ list: comparedName })
-              : m.trade_browse_no_mutual_title()
-          }
-          hint={m.trade_browse_no_mutual_hint()}
-          action={
-            <div className="flex flex-wrap justify-center gap-2">
-              {comparedName ? (
-                <Button variant="outline" size="sm" onClick={() => setSearch({ list: undefined })}>
-                  {m.trade_list_all()}
-                </Button>
-              ) : null}
-              <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
-                {m.trade_browse_show_any()}
-              </Button>
-            </div>
-          }
-        />
-      ) : people.length === 0 && !query.hasNextPage && mode === "any" ? (
-        <NoMatches
-          compared={
-            comparedTrade ? userLists.find((list) => list.slug === comparedTrade.slug) : undefined
-          }
-          counted={
-            comparedTrade
-              ? [comparedTrade, pickOf(comparedTrade, tradeLists).paired].flatMap((list) =>
-                  list ? [list.slug] : [],
-                )
-              : tradeLists.map((list) => list.slug)
-          }
-          showAll={forYouFallback(search)}
-          onAllLists={() => setSearch({ list: undefined })}
-        />
       ) : people.length === 0 && !query.hasNextPage ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={m.trade_browse_empty_title()}
-          hint={
-            filtering
-              ? m.trade_browse_empty_hint()
-              : scopeNarrowed
-                ? user
-                  ? m.trade_browse_scope_empty_hint_menu()
-                  : m.trade_browse_scope_empty_hint_settings()
-                : m.trade_browse_empty_none_hint()
-          }
-          action={
-            filtering ? (
-              <Button variant="outline" size="sm" onClick={reset}>
-                {m.filter_reset_filter()}
-              </Button>
-            ) : undefined
-          }
+        <BrowseEmpty
+          search={search}
+          forYou={forYou}
+          mode={mode}
+          mutual={mutual}
+          collectionFiltering={collectionFiltering}
+          filtering={filtering}
+          scopeNarrowed={scopeNarrowed}
+          signedIn={!!user}
+          comparedTrade={comparedTrade}
+          userLists={userLists}
+          tradeLists={tradeLists}
+          onReset={reset}
+          onSearch={setSearch}
         />
       ) : (
-        <div
-          role="region"
-          aria-label={m.trade_posts_label()}
-          aria-busy={query.isPlaceholderData}
-          className={cn(query.isPlaceholderData && "opacity-60")}
-        >
-          {/* the server draws the first posts, so a full load is not blank until hydration.
-              virtua then keeps drawing only `ssrCount` rows until the first scroll, so the list
-              remounts without it once hydrated: otherwise For you's headings take two of the
-              four rows and the feed looks like it ends after two posts */}
-          <SideCompareContext value={sideCompare}>
-            <WindowVirtualizer
-              key={hydrated ? "live" : "ssr"}
-              ref={virtualizerRef}
-              cache={virtualizerCache}
-              data={rows}
-              ssrCount={hydrated ? undefined : Math.min(SSR_ROWS, rows.length)}
-            >
-              {(row: FeedRow | undefined) =>
-                row?.heading ? (
-                  <h2
-                    key={row.heading}
-                    className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
-                  >
-                    {row.heading === "mutual"
-                      ? m.trade_section_mutual()
-                      : m.trade_section_one_way()}
-                  </h2>
-                ) : row ? (
-                  <div key={row.person.userId}>
-                    <PersonRow
-                      person={row.person}
-                      surface={surface}
-                      own={row.person.userId === user?.user.id}
-                      signedIn={!!user}
-                      collections={collections}
-                      now={now}
-                      onOpen={setActive}
-                    />
-                  </div>
-                ) : (
-                  <div />
-                )
-              }
-            </WindowVirtualizer>
-          </SideCompareContext>
-
-          {query.isFetchNextPageError ? (
-            <div className="flex justify-center py-4">
-              <Button variant="outline" size="sm" onClick={() => void query.fetchNextPage()}>
-                <ArrowClockwiseIcon />
-                {m.common_error_retry()}
-              </Button>
-            </div>
-          ) : (
-            <InfiniteSentinel
-              label={m.infinite_query_load_more_aria()}
-              endLabel={m.trade_browse_end()}
-              hasNextPage={query.hasNextPage}
-              isFetchingNextPage={query.isFetchingNextPage}
-              fetchNextPage={() => void query.fetchNextPage()}
-            />
-          )}
-        </div>
+        <BrowseFeed
+          rows={rows}
+          surface={surface}
+          viewerId={user?.user.id}
+          signedIn={!!user}
+          collections={collections}
+          now={now}
+          onOpen={setActive}
+          sideCompare={sideCompare}
+          hydrated={hydrated}
+          virtualizerRef={virtualizerRef}
+          virtualizerCache={virtualizerCache}
+          isPlaceholderData={query.isPlaceholderData}
+          isFetchNextPageError={query.isFetchNextPageError}
+          hasNextPage={query.hasNextPage}
+          isFetchingNextPage={query.isFetchingNextPage}
+          fetchNextPage={query.fetchNextPage}
+        />
       )}
 
       {/* Browse drops their posts silently, so name the way back */}
@@ -455,15 +321,5 @@ export function BrowsePending() {
       </div>
       <BrowseFeedSkeleton />
     </>
-  );
-}
-
-function BrowseFeedSkeleton() {
-  return (
-    <div>
-      {Array.from({ length: SSR_ROWS }).map((_, index) => (
-        <PersonRowSkeleton key={index} />
-      ))}
-    </div>
   );
 }

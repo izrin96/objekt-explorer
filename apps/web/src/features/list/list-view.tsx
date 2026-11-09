@@ -31,12 +31,8 @@ import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { NearNote } from "@/features/trade/near-note";
-import {
-  canShowMatches,
-  NearMatches,
-  ShowMyMatches,
-  useListMatches,
-} from "@/features/trade/show-my-matches";
+import { canShowMatches } from "@/features/trade/show-matches";
+import { NearMatches, ShowMyMatches, useListMatches } from "@/features/trade/show-my-matches";
 import { useCurrentUser } from "@/features/user/hooks";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";

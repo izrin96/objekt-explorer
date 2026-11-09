@@ -1,37 +1,30 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, type RefObject, memo } from "react";
+import { type ReactNode, memo } from "react";
 
-import { MoreCount } from "@/components/shared/more-count";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
-import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
+import { type RatioSide, ratioName } from "@/features/list/ratio-text";
 import { ObjektCard, QTY_BADGE, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
-import { nearCountText, nearRingText } from "@/lib/near-text";
-import { TONE_INK, toneChip } from "@/lib/tone";
+import { nearRingText } from "@/lib/near-text";
+import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import type { Surface } from "./browse-search";
-import { MatchedListsChip } from "./matched-lists";
 import type { NearOpen, OpenObjekt } from "./near";
-import type { PersonPostData, PostSideData } from "./post-types";
-import { RuleTiles } from "./rule-tile";
-import { SideItemsSheet } from "./side-items-sheet";
+import type { PostSideData } from "./post-types";
 import { fitCount, hiddenCopies } from "./strip-fit";
-import { NEAR_RING, RING, SlugTile, TILE } from "./thumb-grid";
+import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
 
 /** `w-10` and `gap-1.5`, in px */
 const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
 /** top-start, clear of the ratio chip on a tile too narrow for both along the bottom */
 const STACK_COUNT = cn(QTY_BADGE, "pointer-events-none absolute start-0.5 top-0.5");
-
-const STRIP_MORE =
-  "hover:text-foreground focus-visible:ring-ring text-xs outline-none focus-visible:ring-2";
 
 type StripItem = {
   key: string | number;
@@ -46,7 +39,7 @@ type StripItem = {
  * One side of a post or a partner: a label over up to two lines of thumbnails. It draws as many as
  * fit its width and ends in a "+N" tile for the rest, so it never wraps a third line.
  */
-function PostStrip({
+export function PostStrip({
   lead,
   label,
   tone,
@@ -257,7 +250,7 @@ export function SideNotes({ sides }: { sides: readonly PostSideData[] }) {
   );
 }
 
-const SIDE_LINK =
+export const SIDE_LINK =
   "focus-visible:ring-ring rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2";
 
 /** A side with nothing related, under the post's other strip: its role and total, then why. */
@@ -287,204 +280,5 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
         {detail}
       </span>
     </Link>
-  );
-}
-
-const NO_LIST_IDS: readonly number[] = Object.freeze([]);
-
-/** A person's list: its role and name, its own count, its ringed matches; the label links to the list. */
-export function SideStrip({
-  lead,
-  side,
-  count,
-  matchedListIds = NO_LIST_IDS,
-  ruleMatches,
-  narrowed,
-  collections,
-  onOpen,
-  onShowAll,
-  owner = false,
-}: {
-  lead?: ReactNode;
-  side: PostSideData;
-  /** the collections of this list that match the viewer: "14 you want", "2 you have" */
-  count: number;
-  /** the viewer's lists that count was taken against, which the count opens */
-  matchedListIds?: readonly number[];
-  /** what the count matched only through the viewer's rules, named under their lists */
-  ruleMatches?: PersonPostData["ruleMatches"];
-  /** a filter or matching left objekts out, so the side says how many it holds */
-  narrowed: boolean;
-  collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: OpenObjekt;
-  /** the "+N" tile opens the side's whole list, in the sheet the post keeps */
-  onShowAll: () => void;
-  /** the viewer's own post: a ratio reads "You ask" */
-  owner?: boolean;
-}) {
-  const { list } = side;
-  const role = LIST_TYPE_LABEL[side.role]();
-  // a narrowed strip whose label is the count chip, which counts collections
-  const inCollections = narrowed && count > 0;
-  const total = inCollections ? side.collectionCount : side.copyCount + side.others;
-  const near = side.near;
-  const ratioSide = ratioSideOf(side.role);
-  const text = (
-    <>
-      <Link
-        {...getListLinkOption(list)}
-        title={list.name}
-        className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
-      >
-        {/* the match chip carries the list's number, so a second one would only compete with it */}
-        <span className="shrink-0">
-          {narrowed && count === 0 ? `${role} ${side.copyCount}` : role}
-        </span>
-        <span aria-hidden className="text-muted-foreground shrink-0">
-          ·
-        </span>
-        <span className="text-foreground min-w-0 truncate normal-case">{list.name}</span>
-      </Link>
-      {/* beside the link, not in it: it opens the viewer's lists behind it */}
-      {count > 0 ? (
-        <MatchedListsChip
-          listIds={matchedListIds}
-          ruleMatches={ruleMatches}
-          near={near}
-          className={cn(toneChip("success"), "shrink-0 rounded-sm border px-1.5 normal-case")}
-        >
-          {side.role === "want"
-            ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
-            : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) })}
-        </MatchedListsChip>
-      ) : null}
-      {/* never counted: muted, after the count, and the popover's way in when there is none */}
-      {near ? (
-        count > 0 ? (
-          <span className="text-muted-foreground shrink-0 normal-case">
-            <span aria-hidden>· </span>
-            {nearCountText(near.verb, near.count)}
-          </span>
-        ) : (
-          <MatchedListsChip
-            listIds={[]}
-            near={near}
-            className="text-muted-foreground shrink-0 rounded normal-case"
-          >
-            {nearCountText(near.verb, near.count)}
-          </MatchedListsChip>
-        )
-      ) : null}
-    </>
-  );
-
-  return (
-    <>
-      <PostStrip
-        lead={lead}
-        label={text}
-        tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
-        items={side.items.map((item) => ({
-          key: item.entryId,
-          slug: item.slug,
-          qty: item.qty,
-          ringed: item.ringed,
-          near:
-            item.near && near
-              ? { verb: near.verb, role: side.role, theirList: list.name, myListIds: item.near }
-              : undefined,
-          ratio: item.ratio,
-        }))}
-        ratio={ratioSide ? { side: ratioSide, owner } : undefined}
-        hidden={side.more}
-        copies={
-          inCollections
-            ? undefined
-            : side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)
-        }
-        rules={
-          side.rules.length > 0 ? (
-            <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} owner={owner} />
-          ) : undefined
-        }
-        collections={collections}
-        onOpen={onOpen}
-        // the rest of the list in a sheet, so a phone that fits few tiles can still see them all
-        more={(count) => (
-          <button
-            type="button"
-            className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
-            onClick={onShowAll}
-          >
-            <MoreCount count={count} />
-          </button>
-        )}
-        othersLink={
-          narrowed && total > 0 ? (
-            <Link
-              {...getListLinkOption(list)}
-              className={cn(
-                "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap",
-                SIDE_LINK,
-              )}
-            >
-              {m.trade_strip_total({ total })}
-            </Link>
-          ) : undefined
-        }
-      />
-    </>
-  );
-}
-
-/** A side's whole list, as its "+N" tile and the post's Show all open it. */
-export function SideAllDialog({
-  side,
-  narrowed,
-  collections,
-  onOpen,
-  open,
-  onOpenChange,
-  finalFocus,
-  owner = false,
-  actions,
-}: {
-  side: PostSideData;
-  narrowed: boolean;
-  collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: OpenObjekt;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  finalFocus?: RefObject<HTMLElement | null>;
-  /** the viewer's own post: a ratio reads "You ask" */
-  owner?: boolean;
-  /** the sheet footer's Message and Make offer, on another person's post */
-  actions?: ReactNode;
-}) {
-  return (
-    <SideItemsSheet
-      side={side}
-      narrowed={narrowed}
-      open={open}
-      onOpenChange={onOpenChange}
-      onOpen={onOpen}
-      finalFocus={finalFocus}
-      owner={owner}
-      actions={actions}
-      rules={
-        side.rules.length > 0 ? (
-          // the objekt view is a modal of its own, so the sheet gives way to it
-          <RuleTiles
-            tiles={side.rules}
-            collections={collections}
-            onOpen={(objekt) => {
-              onOpenChange(false);
-              onOpen(objekt);
-            }}
-            owner={owner}
-          />
-        ) : undefined
-      }
-    />
   );
 }

@@ -28,8 +28,8 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearOpen, type OpenObjekt, type SideNear } from "./near";
-import type { PostSideData } from "./post-types";
 import { sideItemsOptions } from "./queries";
+import type { SideProps } from "./side-props";
 import { stackPriceText } from "./stack-price";
 import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
 
@@ -132,19 +132,13 @@ export function SideItemsSheet({
   finalFocus,
   owner = false,
   actions,
-}: {
-  side: PostSideData;
-  /** the feed's filters left objekts out of the strip; the sheet shows them all */
-  narrowed: boolean;
+}: SideProps & {
   /** the side's rule tiles, as the strip draws them */
   rules?: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onOpen: OpenObjekt;
   /** where focus goes on close, when what opened it is gone by then (a menu item) */
   finalFocus?: RefObject<HTMLElement | null>;
-  /** the viewer's own post: a ratio reads "You ask" */
-  owner?: boolean;
   /** led by the footer: the post's Message and Make offer, on another person's post */
   actions?: ReactNode;
 }) {
