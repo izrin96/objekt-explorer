@@ -1,28 +1,21 @@
-import { ORPCError } from "@orpc/server";
 import { db, type Tx } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { substituteRefusal } from "../../lib/offer-rules";
 import { forgetReputation } from "../reputation";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
+import { partyTo, receiverLegColumns, receiverOnly } from "./receiver";
 import { publishTouched } from "./state";
 import { countVerified, lockTradeRow } from "./trade-row";
 import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "./verify";
 
-/** NOT_FOUND unless the viewer is a party to the substitute's trade. */
 async function findSubstitute(substituteId: number, me: string) {
   const [row] = await db
     .select({
-      tradeId: trade.id,
-      offerId: trade.offerId,
-      conversationId: offer.conversationId,
-      userA: trade.userA,
-      userB: trade.userB,
+      ...receiverLegColumns,
       legId: tradeLeg.id,
-      giverId: tradeLeg.fromUserId,
-      receiverId: tradeLeg.toUserId,
       askedId: tradeLeg.objektId,
       txHash: tradeSubstitute.txHash,
       objektId: tradeSubstitute.objektId,
@@ -32,10 +25,8 @@ async function findSubstitute(substituteId: number, me: string) {
     .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
     .innerJoin(trade, eq(trade.id, tradeLeg.tradeId))
     .innerJoin(offer, eq(offer.id, trade.offerId))
-    .where(and(eq(tradeSubstitute.id, substituteId), or(eq(trade.userA, me), eq(trade.userB, me))));
-  if (!row) throw new ORPCError("NOT_FOUND");
-  if (row.receiverId !== me) refuseOffer("not_receiver");
-  return row;
+    .where(and(eq(tradeSubstitute.id, substituteId), partyTo(me)));
+  return receiverOnly(row, me);
 }
 
 type Found = Awaited<ReturnType<typeof findSubstitute>>;

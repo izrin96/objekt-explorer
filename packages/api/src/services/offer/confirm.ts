@@ -1,34 +1,23 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { forgetReputation } from "../reputation";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
+import { partyTo, receiverLegColumns, receiverOnly } from "./receiver";
 import { publishTouched } from "./state";
 import { lockTradeRow } from "./trade-row";
 import { finishSettle } from "./verify";
 
-/** NOT_FOUND unless the viewer is a party to the leg's trade. */
 async function findLeg(legId: number, me: string) {
   const [row] = await db
-    .select({
-      tradeId: trade.id,
-      offerId: trade.offerId,
-      conversationId: offer.conversationId,
-      userA: trade.userA,
-      userB: trade.userB,
-      giverId: tradeLeg.fromUserId,
-      receiverId: tradeLeg.toUserId,
-    })
+    .select(receiverLegColumns)
     .from(tradeLeg)
     .innerJoin(trade, eq(trade.id, tradeLeg.tradeId))
     .innerJoin(offer, eq(offer.id, trade.offerId))
-    .where(and(eq(tradeLeg.id, legId), or(eq(trade.userA, me), eq(trade.userB, me))));
-  if (!row) throw new ORPCError("NOT_FOUND");
-  if (row.receiverId !== me) refuseOffer("not_receiver");
-  return row;
+    .where(and(eq(tradeLeg.id, legId), partyTo(me)));
+  return receiverOnly(row, me);
 }
 
 /**
