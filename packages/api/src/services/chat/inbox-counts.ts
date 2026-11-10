@@ -1,8 +1,8 @@
 import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
+import { needsYouSql } from "../../lib/needs-you-sql";
 import { UNREAD_COUNT_CAP } from "../../schemas/chat";
-import { needsYouSql } from "./deal";
 import { hasUnread, lastIncoming, notMuted, visibleIn } from "./inbox-sql";
 
 /** Uncached so it is always exact; the conditions are `countsTowardBadge`'s, in its order. */

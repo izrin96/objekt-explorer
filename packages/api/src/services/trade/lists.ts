@@ -1,6 +1,7 @@
 import { lists } from "@repo/db/schema";
 import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 
+import { column, offersSwapsSql } from "../../lib/trade-sql";
 import { notBlockedEither, notTradeSanctioned, ref, type UserRef } from "../moderation/safety";
 
 /**
@@ -18,19 +19,9 @@ export const matchableList = or(eq(lists.listType, "want"), boundOfferList) as S
 /** A have or sale list put on Trade, idle or not: what an offer may ask another member for. */
 export const askableOnTrade = and(boundOfferList, eq(lists.discoverable, true)) as SQL;
 
-const column = (alias: string | undefined, name: string) =>
-  sql.raw(alias ? `${alias}.${name}` : name);
-
 /** {@link boundOfferList} over a raw `lists` row, aliased or not. */
 export const boundOfferListSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} IN ('have', 'sale') AND ${column(alias, "is_profile_bind")})`;
-
-/**
- * Whether a list's objekts can be swapped for: a have list, or a sale list that takes swaps. The
- * SQL twin of `offersSwaps` (schemas/open-to.ts); the row needs `list_type` and `takes_swaps`.
- */
-export const offersSwapsSql = (alias?: string) =>
-  sql`(${column(alias, "list_type")} = 'have' OR (${column(alias, "list_type")} = 'sale' AND ${column(alias, "takes_swaps")}))`;
 
 /**
  * Whether a have or sale list's entry can match a want list's: a list offering swaps matches a

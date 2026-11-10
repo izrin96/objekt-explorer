@@ -1,27 +1,12 @@
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
-import { type MatchIndex, type PostTag } from "../../../lib/trade-feed";
+import { type MatchIndex } from "../../../lib/trade-feed";
 import { IDLE_DAYS } from "../../../lib/trade-rank";
+import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { offersSwapsSql, matchableListSql } from "../lists";
-
-/**
- * The SQL twin of `tagsOf` (schemas/trade-post.ts): WTT for a have list, a sale list that takes
- * swaps or a want list alone open to swaps, WTB for a want side open to buying (a want list
- * alone, or a have list's partner on Trade), WTS for a sale list. `wtt` reads no partner column,
- * since `excludeWttOf` negates it.
- */
-const TAG_WHERE: Record<PostTag, SQL> = {
-  wtt: sql`(posts.type = 'have' OR (posts.type = 'sale' AND posts.takes_swaps) OR (posts.type = 'want' AND posts.match_have))`,
-  wtb: sql`(
-    (posts.type = 'want' AND (posts.match_sale OR NOT posts.match_have))
-    OR (posts.type IN ('have', 'sale') AND posts.partner_id IS NOT NULL
-      AND (coalesce(posts.partner_match_sale, false) OR NOT coalesce(posts.partner_match_have, true)))
-  )`,
-  wts: sql`posts.type = 'sale'`,
-};
+import { matchableListSql } from "../lists";
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
@@ -95,14 +80,11 @@ const matchesIndex = (index: MatchIndex) =>
       AND (
         (${offersSwapsSql("t")} AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
         OR (t.list_type = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
-        OR (t.list_type = 'want' AND e.collection_slug = ANY(
-          -- the SQL twin of openToOf (schemas/open-to.ts)
-          CASE
-            WHEN NOT t.match_have THEN ${sql.param(index.saleHave)}::text[]
-            WHEN t.match_sale THEN ${sql.param(index.have)}::text[]
-            ELSE ${sql.param(index.tradeHave)}::text[]
-          END
-        ))
+        OR (t.list_type = 'want' AND e.collection_slug = ANY(${byOpenToSql("t", {
+          buying: sql`${sql.param(index.saleHave)}::text[]`,
+          both: sql`${sql.param(index.have)}::text[]`,
+          swaps: sql`${sql.param(index.tradeHave)}::text[]`,
+        })}))
       )
   )`;
 

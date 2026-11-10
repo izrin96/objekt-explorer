@@ -1,6 +1,7 @@
 import { addressesByUser, copyPairsOf, toPartnerIdentity } from "@repo/api/lib/trade-rank";
+import { offersSwapsSql } from "@repo/api/lib/trade-sql";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
-import { offersSwapsSql, matchableListSql } from "@repo/api/services/trade/lists";
+import { matchableListSql } from "@repo/api/services/trade/lists";
 import { fetchHoldings } from "@repo/api/services/trade/matches/holdings";
 import { db } from "@repo/db";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";

@@ -12,7 +12,7 @@ export const DEAL_STATES = [
 ] as const;
 export type DealState = (typeof DEAL_STATES)[number];
 
-/** What the Inbox's Needs you lists; `needsYouSql` (services/chat/deal.ts) is the SQL twin. */
+/** What the Inbox's Needs you lists; `needsYouSql` (lib/needs-you-sql.ts) is the SQL twin. */
 export const NEEDS_YOU_STATES = [
   "waitingYou",
   "theyAskCancel",

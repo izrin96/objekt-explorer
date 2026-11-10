@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 
 import { isMuted, type searchPatterns } from "../../lib/chat-rules";
+import { needsYouSql } from "../../lib/needs-you-sql";
 import type { ChatBox, InboxShow } from "../../schemas/chat";
 import { notBlockedBy } from "../moderation/safety";
-import { needsYouSql } from "./deal";
 
 export const BOX_WHERE: Record<ChatBox, ReturnType<typeof sql>> = {
   inbox: sql`m.archived_at IS NULL AND NOT m.request`,

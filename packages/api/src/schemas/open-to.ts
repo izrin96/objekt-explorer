@@ -46,7 +46,7 @@ export const saleOpenToOf = (list: { takesSwaps?: boolean | null }): SaleOpenTo 
 
 /**
  * Whether a list's objekts can be swapped for: a have list always, a sale list when it takes
- * swaps. The TS twin of `offersSwapsSql` (services/trade/lists.ts).
+ * swaps. The TS twin of `offersSwapsSql` (lib/trade-sql.ts), which `lib/trade-sql.test.ts` locks to it.
  */
 export function offersSwaps(list: { listType: ListType; takesSwaps?: boolean | null }) {
   return list.listType === "have" || (list.listType === "sale" && list.takesSwaps === true);

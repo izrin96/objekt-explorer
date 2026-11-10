@@ -2,9 +2,10 @@ import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
 import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../../lib/trade-rank";
+import { offersSwapsSql } from "../../../lib/trade-sql";
 import type { TradeFilter } from "../../../schemas/trade";
 import { listedCte, postsCte } from "../feed/query";
-import { offerMatchesWantSql, offersSwapsSql, matchableListSql, tradePartnerSql } from "../lists";
+import { offerMatchesWantSql, matchableListSql, tradePartnerSql } from "../lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,

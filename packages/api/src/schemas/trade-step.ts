@@ -1,6 +1,6 @@
 /**
  * A running trade's steps, in the order `tradeStep` tries them. `needsYouSql`
- * (services/chat/deal.ts) is the SQL twin of the steps `NEEDS_YOU_STATES` names.
+ * (lib/needs-you-sql.ts) is the SQL twin of the steps `NEEDS_YOU_STATES` names.
  */
 export const TRADE_STEPS = [
   "theyAskCancel",
