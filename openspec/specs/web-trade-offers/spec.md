@@ -8,7 +8,7 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile and put on Trade (idle or not), at any of the recipient's linked addresses. A bound list kept off Trade SHALL not be asked from. When the recipient has no such list, each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt or any copy. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile and put on Trade (idle or not), at any of the recipient's linked addresses. A bound list kept off Trade SHALL not be asked from. When the recipient has no such list, each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt only, never any copy, since every copy there shows its serial. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
 
 Where an offer starts (a Trade row, a Market listing, a conversation) SHALL not narrow what may be asked for: every offer follows the rule above.
 
@@ -47,8 +47,8 @@ An offer SHALL hold at least one objekt, and at most 50 on each side. On the off
 - **THEN** the counter is sent
 
 #### Scenario: Post offer asks from another list
-- **WHEN** a user makes an offer from rin.trades's post for the have list "doubles", asking for SeoYeon 204Z #537, which is only on rin.trades's sale list "spares"
-- **THEN** the offer is refused as unlisted, naming SeoYeon 204Z #537, and nothing is sent
+- **WHEN** a user makes an offer from rin.trades's post for the have list "doubles", switches You get's list from "doubles" to rin.trades's sale list "spares", and asks for SeoYeon 204Z #537, which is only on "spares"
+- **THEN** the offer is sent: the post only chose the list You get opens on
 
 #### Scenario: Post offer from a want list
 - **WHEN** a user makes an offer from rin.trades's WTB post, whose list is a want list, asking for SeoYeon 204Z #537 from rin.trades's sale list "spares"
@@ -636,7 +636,7 @@ Every Make offer and Counter SHALL open the offer page, `/trade/@<handle>/offer`
 
 #### Scenario: Counter
 - **WHEN** the sender activates Counter on rin.trades's offer O-881 in their conversation
-- **THEN** rin.trades's offer page opens titled as a counter, with O-881's picks, top-up and note, and Send counter-offer
+- **THEN** rin.trades's offer page opens titled as a counter, with O-881's picks and top-up, an empty note (O-881's note stays rin.trades's), and Send counter-offer
 
 #### Scenario: From a Market listing
 - **WHEN** the sender activates Make offer on rin.trades's listing of SeoYeon 204Z #537 from sale list "spares"

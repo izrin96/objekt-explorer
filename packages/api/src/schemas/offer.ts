@@ -161,11 +161,14 @@ export type TopupInput = z.infer<typeof topupInputSchema>;
 const specificIds = (items: { objektId?: string }[]) =>
   items.flatMap((item) => (item.objektId === undefined ? [] : [item.objektId]));
 
-/** Side limits are checked by `validateShape`, so they come back as refusals, not validation errors. */
+/**
+ * `OFFER_SIDE_LIMIT` is checked by `validateShape`, so it comes back as a refusal, not a
+ * validation error; the schema's own cap only bounds the request.
+ */
 export const createOfferInputSchema = addressedSchema
   .extend({
-    give: giveItemInputSchema.array().max(50),
-    get: getItemInputSchema.array().max(50),
+    give: giveItemInputSchema.array().max(OFFER_SIDE_LIMIT * 10),
+    get: getItemInputSchema.array().max(OFFER_SIDE_LIMIT * 10),
     /** the offer a counter answers, as its sender saw it */
     counters: idSchema.optional(),
     topup: topupInputSchema.optional(),
