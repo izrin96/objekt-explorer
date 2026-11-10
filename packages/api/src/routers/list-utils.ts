@@ -1,7 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import * as z from "zod";
 
-import { escapeCSV } from "../lib/csv";
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { errorResponses } from "../schemas/common/documented";
@@ -11,12 +10,12 @@ import {
   setRatioInputSchema,
   updateEntryPricesInputSchema,
 } from "../schemas/list";
-import { ruleLine } from "../schemas/list-rule";
 import { takesRatio } from "../schemas/trade-ratio";
 import { setEntryPrices, setEntryRatio } from "../services/list/entries";
-import { buildListEntries, fetchPartialOwnedListCollections } from "../services/list/entry-view";
-import { fetchListWithEntries, findOwnedList, refuseUnheldProfile } from "../services/list/read";
-import { fetchRuleDefs, ownRuleLines } from "../services/list/rules";
+import { fetchPartialOwnedListCollections } from "../services/list/entry-view";
+import { exportListCsv } from "../services/list/export";
+import { findOwnedList, refuseUnheldProfile } from "../services/list/read";
+import { ownRuleLines } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
 
 export const listUtils = {
@@ -89,71 +88,8 @@ export const listUtils = {
     .input(listEntriesInputSchema)
     .output(z.file().mime("text/csv"))
     .handler(async ({ input: { slug, artist: artists } }) => {
-      const result = await fetchListWithEntries(slug);
-
-      if (!result) throw new ORPCError("NOT_FOUND");
-
-      const [entries, rules] = await Promise.all([
-        buildListEntries(result.entries, result.isProfileBind, {
-          artists,
-          hideSerial: result.hideSerial,
-        }),
-        fetchRuleDefs([result.id]),
-      ]);
-
-      const headers = [
-        "collection_slug",
-        "collection_id",
-        "season",
-        "member",
-        "artist",
-        "class",
-        "collection_no",
-        "on_offline",
-        "serial",
-        "token_id",
-        "transferable",
-        "price",
-        "is_qyop",
-        "note",
-        "rule",
-        // trailing, so a reader that goes by column position still works
-        "ratio",
-      ];
-      const blank = Array.from({ length: headers.length - 2 }, () => "");
-      // what the entry or rule reads: its own ratio, else the list's
-      const ratioOf = (own: number | null) => String(own ?? result.ratio ?? "");
-
-      const csv = [
-        headers.join(","),
-        // a want list's rules first, one row each, named in the last column
-        ...(rules.get(result.id) ?? []).map((rule) =>
-          [...blank, escapeCSV(ruleLine(rule)), ratioOf(rule.ratio)].join(","),
-        ),
-        ...entries.map((e) =>
-          [
-            e.slug,
-            e.collectionId,
-            e.season,
-            e.member,
-            e.artist,
-            e.class,
-            e.collectionNo,
-            e.onOffline,
-            "serial" in e ? e.serial : "",
-            "tokenId" in e ? e.tokenId : "",
-            "transferable" in e ? e.transferable : "",
-            e.price,
-            e.isQyop,
-            e.note ?? "",
-            "",
-            ratioOf(e.ratio),
-          ]
-            .map((v) => escapeCSV(String(v ?? "")))
-            .join(","),
-        ),
-      ].join("\n");
-
-      return new File([csv], `Export - ${result.slug}.csv`, { type: "text/csv" });
+      const exported = await exportListCsv(slug, artists);
+      if (!exported) throw new ORPCError("NOT_FOUND");
+      return new File([exported.csv], `Export - ${exported.slug}.csv`, { type: "text/csv" });
     }),
 };
