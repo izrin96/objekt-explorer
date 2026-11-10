@@ -6,6 +6,10 @@ import type { ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, exists, inArray, sql } from "drizzle-orm";
 
 import { TOKEN_CHUNK_SIZE } from "../constants";
+import { refuse } from "../lib/refuse";
+import type { CompareInput } from "../schemas/compare";
+import { buildListEntries } from "./list/entry-view";
+import { fetchListWithEntries } from "./list/read";
 
 /**
  * One index probe per collection: a large owner such as Spin holds millions
@@ -32,7 +36,7 @@ export async function fetchHeldSlugs(address: string): Promise<Set<string>> {
  * The collection slugs a list holds, or `null` when there is no such list. A
  * list shows only the column its binding uses, so only that column counts.
  */
-export async function fetchListSlugs(slug: string): Promise<Set<string> | null> {
+async function fetchListSlugs(slug: string): Promise<Set<string> | null> {
   const list = await db.query.lists.findFirst({
     columns: { isProfileBind: true },
     with: { entries: { columns: { collectionSlug: true, objektId: true } } },
@@ -57,7 +61,7 @@ export async function fetchListSlugs(slug: string): Promise<Set<string> | null> 
   return new Set(rows.map((row) => row.slug));
 }
 
-export function performComparison(
+function performComparison(
   sourceEntries: ListObjekt[],
   targetCollectionSlugs: ReadonlySet<string>,
   mode: "missing" | "matches",
@@ -68,7 +72,7 @@ export function performComparison(
 }
 
 /** A profile by nickname or address. */
-export function findProfileAddress(identifier: string) {
+function findProfileAddress(identifier: string) {
   return db.query.userAddress.findFirst({
     columns: { address: true },
     where: {
@@ -83,4 +87,46 @@ export function findOwnProfileAddress(address: string, userId: string) {
     columns: { address: true },
     where: { address, userId },
   });
+}
+
+/** The source list's objekts compared against a target list or profile, by `input.mode`. */
+export async function compareLists(input: CompareInput) {
+  async function buildSourceEntries(): Promise<ListObjekt[]> {
+    const sourceList = await fetchListWithEntries(input.sourceId);
+
+    if (!sourceList) refuse("NOT_FOUND", "compare_source_list_not_found", "Source list not found");
+
+    return buildListEntries(sourceList.entries, sourceList.isProfileBind, {
+      artists: input.artist,
+      hideSerial: sourceList.hideSerial,
+    });
+  }
+
+  /** the collection slugs the target holds; the comparison needs nothing else */
+  async function buildTargetSlugs(): Promise<Set<string>> {
+    if (input.targetType === "profile") {
+      const targetProfile = await findProfileAddress(input.targetProfile);
+
+      if (!targetProfile)
+        refuse("NOT_FOUND", "compare_target_profile_not_found", "Target profile not found");
+
+      return fetchHeldSlugs(targetProfile.address);
+    }
+
+    const targetSlugs = await fetchListSlugs(input.targetListId);
+
+    if (!targetSlugs) refuse("NOT_FOUND", "compare_target_list_not_found", "Target list not found");
+
+    return targetSlugs;
+  }
+
+  // allSettled so a target failure never preempts the source NOT_FOUND
+  const [source, target] = await Promise.allSettled([buildSourceEntries(), buildTargetSlugs()]);
+
+  if (source.status === "rejected") throw source.reason;
+  if (target.status === "rejected") throw target.reason;
+
+  return {
+    objekts: performComparison(source.value, target.value, input.mode),
+  };
 }
