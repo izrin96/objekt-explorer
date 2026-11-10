@@ -6,7 +6,7 @@ import {
 } from "@repo/api/schemas/offer";
 
 import { refusalText as chatRefusalText } from "@/features/chat/format";
-import { errorReason } from "@/lib/orpc-error";
+import { errorData, errorReason } from "@/lib/orpc-error";
 import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -16,17 +16,15 @@ export function offerRefusalOf(error: unknown) {
   const { reason: code, retryAt } = errorReason(error);
   const reason = OFFER_REFUSALS.find((item) => item === code);
   if (!reason) return null;
-  const data = (
-    error as { data?: { objektIds?: unknown; collectionSlugs?: unknown; promised?: unknown } }
-  ).data;
+  const { objektIds, collectionSlugs, promised } = errorData(error);
   const strings = (value: unknown) =>
     Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
   return {
     reason,
     retryAt,
-    objektIds: strings(data?.objektIds),
-    collectionSlugs: strings(data?.collectionSlugs),
-    promised: data?.promised === true,
+    objektIds: strings(objektIds),
+    collectionSlugs: strings(collectionSlugs),
+    promised: promised === true,
   };
 }
 

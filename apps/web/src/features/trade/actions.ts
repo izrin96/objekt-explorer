@@ -10,6 +10,7 @@ import { currentUserOptions } from "@/features/user/queries";
 import { addActionToast } from "@/lib/action-toast";
 import { copyWithToast } from "@/lib/clipboard";
 import { orpc } from "@/lib/orpc";
+import { errorData } from "@/lib/orpc-error";
 import { isRefusalError, refusalText } from "@/lib/refusal";
 import { siteOrigin } from "@/lib/site-origin";
 import { relativeTime } from "@/lib/time";
@@ -117,8 +118,8 @@ export function useUnhidePartner() {
 
 function nextBumpOf(error: unknown) {
   if (!(error instanceof ORPCError) || error.code !== "TOO_MANY_REQUESTS") return undefined;
-  const next = (error.data as { nextBumpAt?: unknown } | undefined)?.nextBumpAt;
-  return typeof next === "string" ? next : undefined;
+  const { nextBumpAt } = errorData(error);
+  return typeof nextBumpAt === "string" ? nextBumpAt : undefined;
 }
 
 /** outside the hook: the compiler reads `Date.now` in a hook body as a render-time call */

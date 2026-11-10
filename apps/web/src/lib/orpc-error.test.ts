@@ -5,6 +5,7 @@ import { notFound, redirect } from "@tanstack/react-router";
 
 import {
   SERVER_ERROR_MESSAGE,
+  errorData,
   errorReason,
   isFromServer,
   orpcErrorAdapter,
@@ -113,5 +114,21 @@ describe("serverErrorAdapter", () => {
     const back = serverErrorAdapter.fromSerializable(serverErrorAdapter.toSerializable(original));
     expect(back.message).toBe(SERVER_ERROR_MESSAGE);
     expect(isFromServer(back)).toBe(true);
+  });
+});
+
+describe("errorData", () => {
+  test("reads an oRPC error's data", () => {
+    const error = new ORPCError("BAD_REQUEST", {
+      data: { reason: "not_open", provider: "Discord" },
+    });
+    expect(errorData(error)).toEqual({ reason: "not_open", provider: "Discord" });
+  });
+
+  test("is empty for any other error or an oRPC error without object data", () => {
+    expect(errorData(new Error("boom"))).toEqual({});
+    expect(errorData({ data: { reason: "not_open" } })).toEqual({});
+    expect(errorData(new ORPCError("BAD_REQUEST"))).toEqual({});
+    expect(errorData(new ORPCError("BAD_REQUEST", { data: "text" }))).toEqual({});
   });
 });

@@ -8,7 +8,7 @@ import { PROFILE_REFUSALS } from "@repo/api/schemas/profile";
 import { TRADE_MODE_REFUSALS, TRADE_POST_REFUSALS } from "@repo/api/schemas/trade";
 import { DELETE_REFUSALS, type DeleteRefusal, USER_REFUSALS } from "@repo/api/schemas/user";
 
-import { errorReason } from "@/lib/orpc-error";
+import { errorData, errorReason } from "@/lib/orpc-error";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -161,12 +161,12 @@ export function deleteRefusalText(refusal: DeleteRefusal) {
 }
 
 function providerOf(error: unknown) {
-  const data = (error as { data?: { provider?: unknown } }).data;
-  return typeof data?.provider === "string" ? data.provider : "";
+  const { provider } = errorData(error);
+  return typeof provider === "string" ? provider : "";
 }
 
 function retryAtOf(error: unknown) {
-  const data = (error as { data?: { retryAt?: unknown } }).data;
-  const date = typeof data?.retryAt === "string" ? new Date(data.retryAt) : null;
+  const { retryAt } = errorReason(error);
+  const date = retryAt === null ? null : new Date(retryAt);
   return date && !Number.isNaN(date.getTime()) ? date : null;
 }

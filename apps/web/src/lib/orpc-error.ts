@@ -8,13 +8,23 @@ import {
 export const isNotFound = (error: unknown) =>
   error instanceof ORPCError && error.code === "NOT_FOUND";
 
+/**
+ * A refused oRPC call's `data`, or `{}` for any other error. The server's procedures declare no
+ * error schemas, so each field stays `unknown` until the caller checks its type.
+ */
+export function errorData(error: unknown): Record<string, unknown> {
+  if (!(error instanceof ORPCError) || typeof error.data !== "object" || error.data === null) {
+    return {};
+  }
+  return error.data as Record<string, unknown>;
+}
+
 /** `data.reason` and `data.retryAt` of a refused oRPC call; both null for any other error. */
 export function errorReason(error: unknown) {
-  if (!(error instanceof ORPCError)) return { reason: null, retryAt: null };
-  const data = error.data as { reason?: unknown; retryAt?: unknown } | undefined;
+  const { reason, retryAt } = errorData(error);
   return {
-    reason: typeof data?.reason === "string" ? data.reason : null,
-    retryAt: typeof data?.retryAt === "string" ? data.retryAt : null,
+    reason: typeof reason === "string" ? reason : null,
+    retryAt: typeof retryAt === "string" ? retryAt : null,
   };
 }
 
