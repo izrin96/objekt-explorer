@@ -1,39 +1,25 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    // Type Checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noPropertyAccessFromIndexSignature": false,
-    "types": ["node"],
 
-    // Module Resolution
-    "moduleResolution": "bundler",
-    "module": "esnext",
     "target": "esnext",
     "lib": ["ESNext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "moduleDetection": "force",
-
-    // Emit
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "noEmit": true,
-
-    // Interop
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": false,
+    "esModuleInterop": true,
+    "types": ["node"],
 
-    // Other
+    "noEmit": true,
     "skipLibCheck": true
   },
   "exclude": ["node_modules", "dist", ".turbo"]

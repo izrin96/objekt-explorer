@@ -1,11 +1,5 @@
 {
-  "extends": "@repo/tsconfig/tsconfig.base.json",
+  "extends": "@repo/tsconfig/tsconfig.bun.json",
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", ".turbo"],
-  "compilerOptions": {
-    "types": ["node", "bun"],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  }
+  "exclude": ["node_modules", ".turbo"]
 }

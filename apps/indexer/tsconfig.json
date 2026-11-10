@@ -1,19 +1,15 @@
 {
-  "extends": "@repo/tsconfig/tsconfig.node.json",
+  "extends": "@repo/tsconfig/tsconfig.base.json",
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo", "lib"],
   "compilerOptions": {
+    // tsc emits CommonJS for lib/: the TypeORM models' circular decorator metadata throws under ESM
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": ["bun"],
-
-    // TypeORM decorators
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-    // Build output
-    "declaration": false,
     "sourceMap": true,
-
-    // Path aliases
     "paths": {
       "@/*": ["./src/*"]
     }
