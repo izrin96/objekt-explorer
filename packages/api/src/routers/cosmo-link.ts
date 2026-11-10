@@ -1,10 +1,6 @@
-import crypto from "node:crypto";
-
 import { ORPCError } from "@orpc/server";
-import { fetchUserProfile } from "@repo/cosmo/server/user";
 import * as z from "zod";
 
-import { serverEnv } from "../env";
 import { refuse } from "../lib/refuse";
 import { authed } from "../orpc";
 import { addressSchema } from "../schemas/common/address";
@@ -12,22 +8,11 @@ import { generateCodeInputSchema, linkedPreviewsInputSchema } from "../schemas/c
 import {
   assertAddressNotLinked,
   fetchLinkedPreviews,
-  linkVerified,
   setDefault,
   unlink,
 } from "../services/account/cosmo-link";
-import {
-  clearVerification,
-  readVerification,
-  storeVerification,
-} from "../services/account/cosmo-verify";
+import { completeVerification, issueVerification } from "../services/account/cosmo-verify";
 import { userRateLimited } from "../services/redis";
-import { getAccessToken } from "../services/token";
-
-function generateCode() {
-  const hex = crypto.randomBytes(3).toString("hex");
-  return `verify-${hex}`;
-}
 
 export const cosmoLinkRouter = {
   // check if address is already linked
@@ -74,22 +59,14 @@ export const cosmoLinkRouter = {
       // re-check link status server-side
       await assertAddressNotLinked(input.address, session.user.id);
 
-      const code = generateCode();
-
-      // a code that was never stored could only fail at verify, so no code is handed out
-      const stored = await storeVerification(session.user.id, {
-        code,
+      const issued = await issueVerification(session.user.id, {
         cosmoId: input.cosmoId,
         artistId: input.artistId,
         nickname: input.nickname,
         address: input.address,
       });
-      if (!stored) throw new ORPCError("SERVICE_UNAVAILABLE");
-
-      return {
-        code,
-        expiresInMs: 120_000,
-      };
+      if (!issued) throw new ORPCError("SERVICE_UNAVAILABLE");
+      return issued;
     }),
 
   // verify bio contains the code and link the account
@@ -112,54 +89,14 @@ export const cosmoLinkRouter = {
         );
       }
 
-      const read = await readVerification(session.user.id, address);
-      if (read === "unavailable") throw new ORPCError("SERVICE_UNAVAILABLE");
-      if (read === "expired") {
+      const linked = await completeVerification(session.user.id, address);
+      if (linked === "unavailable") throw new ORPCError("SERVICE_UNAVAILABLE");
+      if (linked === "expired") {
         throw errors.VERIFICATION_EXPIRED({
           message: "Verification expired, start over",
           data: { reason: "cosmo_link_verification_expired" },
         });
       }
-
-      const data = read;
-
-      const { accessToken } = await getAccessToken();
-
-      const profile = await fetchUserProfile(
-        accessToken,
-        data.cosmoId,
-        data.artistId,
-        serverEnv.COSMO_KEY,
-      );
-
-      // the bio code proves control of the profile, not of the address the
-      // client sent, so the address must be the profile's own
-      if (
-        profile.nickname.toLowerCase() !== data.nickname.toLowerCase() ||
-        profile.address.toLowerCase() !== data.address.toLowerCase()
-      ) {
-        refuse("BAD_REQUEST", "cosmo_link_profile_mismatch", "Profile data mismatch, start over");
-      }
-
-      if (!profile.statusMessage || !profile.statusMessage.toLowerCase().includes(data.code)) {
-        refuse(
-          "BAD_REQUEST",
-          "cosmo_link_code_not_found",
-          "Verification code not found in the profile bio",
-        );
-      }
-
-      await linkVerified(session.user.id, {
-        address: data.address,
-        nickname: data.nickname,
-        cosmoId: data.cosmoId,
-      });
-
-      await clearVerification(session.user.id, address);
-
-      return {
-        nickname: data.nickname,
-        address: data.address,
-      };
+      return linked;
     }),
 };

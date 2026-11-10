@@ -61,3 +61,22 @@ export function moveRefusal({
   if (inOpenTrade) return "address_in_trade";
   return null;
 }
+
+/**
+ * Whether a Cosmo profile proves a pending link. The bio code proves control of the profile, not
+ * of the address the client sent, so the profile's own nickname and address must match the claim.
+ */
+export function verifyRefusal(
+  profile: { nickname: string; address: string; statusMessage: string | null },
+  claim: { nickname: string; address: string; code: string },
+): "cosmo_link_profile_mismatch" | "cosmo_link_code_not_found" | null {
+  if (
+    profile.nickname.toLowerCase() !== claim.nickname.toLowerCase() ||
+    profile.address.toLowerCase() !== claim.address.toLowerCase()
+  ) {
+    return "cosmo_link_profile_mismatch";
+  }
+  if (!profile.statusMessage?.toLowerCase().includes(claim.code))
+    return "cosmo_link_code_not_found";
+  return null;
+}

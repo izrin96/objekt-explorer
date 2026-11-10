@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { COOLDOWN_DAYS, linkRefusal, moveRefusal, unlinkRefusal } from "./link-rules";
+import {
+  COOLDOWN_DAYS,
+  linkRefusal,
+  moveRefusal,
+  unlinkRefusal,
+  verifyRefusal,
+} from "./link-rules";
 
 const DAY = 24 * 60 * 60 * 1000;
 const LEFT = new Date("2026-10-01T00:00:00Z");
@@ -115,5 +121,32 @@ describe("moveRefusal", () => {
   test("a staff unlink never gets same_account", () => {
     expect(moveRefusal({ ...ok, toId: undefined })).toBeNull();
     expect(moveRefusal({ ...ok, toId: undefined, holderNow: "x" })).toBe("address_changed");
+  });
+});
+
+describe("verifyRefusal", () => {
+  const claim = { nickname: "Yooyeon", address: "0xAbC", code: "verify-a1b2c3" };
+  const profile = { nickname: "yooyeon", address: "0xabc", statusMessage: "hi VERIFY-A1B2C3" };
+
+  test("a profile with the code in its bio proves the claim, in any letter case", () => {
+    expect(verifyRefusal(profile, claim)).toBeNull();
+  });
+
+  test("another nickname or address is a mismatch, even with the code in the bio", () => {
+    expect(verifyRefusal({ ...profile, nickname: "other" }, claim)).toBe(
+      "cosmo_link_profile_mismatch",
+    );
+    expect(verifyRefusal({ ...profile, address: "0xdef" }, claim)).toBe(
+      "cosmo_link_profile_mismatch",
+    );
+  });
+
+  test("a bio without the code, or no bio, does not prove it", () => {
+    expect(verifyRefusal({ ...profile, statusMessage: "hi" }, claim)).toBe(
+      "cosmo_link_code_not_found",
+    );
+    expect(verifyRefusal({ ...profile, statusMessage: null }, claim)).toBe(
+      "cosmo_link_code_not_found",
+    );
   });
 });
