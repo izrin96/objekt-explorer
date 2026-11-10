@@ -7,6 +7,7 @@ import { truncateAddress } from "@repo/lib/address";
 import { formatUtcDay } from "@/features/market/format-utc-day";
 import type { HistoryPoint } from "@/features/market/price-history-rows";
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import {
   floorTrend,
@@ -19,9 +20,6 @@ import {
   sellerOf,
   trackingText,
 } from "./market-listing";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const ADDRESS = "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01";
 

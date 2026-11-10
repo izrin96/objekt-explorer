@@ -9,6 +9,7 @@ import {
 import { displayNickname } from "@/lib/address";
 import { zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import {
   bindNote,
@@ -26,9 +27,6 @@ import {
   toCreateInput,
   toEditInput,
 } from "./list-draft";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const ADDRESS = "0x1234567890abcdef1234567890abcdef12345678";
 const A = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

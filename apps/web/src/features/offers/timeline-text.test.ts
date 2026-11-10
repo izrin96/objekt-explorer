@@ -1,11 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "bun:test";
+
+import { check } from "@/test/check";
 
 import { cancelAnswerText, label } from "./timeline-text";
 import type { TimelineRow } from "./trade-clock";
 import { copy, leg, trade } from "./trade-fixture";
 
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 const AT = "2026-10-20T12:00:00.000Z";
 const t = trade();
 const text = (row: TimelineRow) => label(row, t, "Mina", {});

@@ -1,7 +1,9 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "bun:test";
 
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 import { fromPartial } from "@total-typescript/shoehorn";
+
+import { check } from "@/test/check";
 
 import { type Deadline, type Leg, type NextStep, type StepKind, nextStep } from "./next-step";
 import {
@@ -14,8 +16,6 @@ import {
 } from "./next-step-text";
 import { ACCEPTED, DAY, leg, trade } from "./trade-fixture";
 
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 const NOW = new Date(ACCEPTED).getTime() + 4 * DAY;
 const FORMAT = {
   left: (iso: string) => `L(${iso})`,

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
+import { check } from "@/test/check";
+
 import { trade } from "./trade-fixture";
 import { tradeMenuItems } from "./trade-menu-items";
 
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 const keys = (t: ReturnType<typeof trade>) => tradeMenuItems(t, true).map((item) => item.key);
 
 describe("tradeMenuItems", () => {

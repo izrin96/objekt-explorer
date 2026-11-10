@@ -1,11 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "bun:test";
 
 import type { PostKind } from "@repo/api/schemas/trade-post";
 
-import { matchLines, previewTags, rowNote, unpairText } from "./post-kind-text";
+import { check } from "@/test/check";
 
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
+import { matchLines, previewTags, rowNote, unpairText } from "./post-kind-text";
 
 const NONE = { have: false, want: false, sale: false, alsoPay: false, alsoSwap: false };
 const picks = (kind: PostKind, over: Partial<typeof NONE> = {}) => ({ kind, ...NONE, ...over });

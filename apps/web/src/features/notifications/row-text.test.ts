@@ -4,6 +4,7 @@ import type { AlertMatch } from "@repo/api/schemas/notification";
 import { fromAny } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import { PARTNER_TOKEN, splitAround } from "./headline";
 import {
@@ -14,9 +15,6 @@ import {
   updatesLabel,
 } from "./row-text";
 import type { RowAction } from "./sections";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const objektName = (slug: string) => `name:${slug}`;
 const until = (iso: string) => `until ${iso}`;

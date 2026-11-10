@@ -1,10 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import { addLabel, pickerDescription, sourceOf } from "./get-source";
-
-const check = (actual: unknown) => expect(actual);
 
 describe("sourceOf", () => {
   test("only partnerLists === false is the collection", () => {

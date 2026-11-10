@@ -10,6 +10,7 @@ import {
 import type { ValidArtist } from "@repo/cosmo/types/common";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import {
   ANY,
@@ -31,9 +32,6 @@ import {
   toInput,
   togglePrio,
 } from "./rule-draft";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const ARTISTS: ValidArtist[] = ["tripleS", "artms", "idntt"];
 

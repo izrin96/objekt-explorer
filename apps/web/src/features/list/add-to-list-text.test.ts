@@ -6,12 +6,10 @@ import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { fromPartial } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import type { AddableObjekt, AddTarget } from "./add-to-list-source";
 import { addedToast, addHint, profileLabel } from "./add-to-list-text";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const ADDRESS = "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01";
 

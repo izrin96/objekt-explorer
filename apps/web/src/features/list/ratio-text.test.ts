@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { check } from "@/test/check";
+
 import {
   appliedRatio,
   groupRatio,
@@ -9,9 +11,6 @@ import {
   ratioTargets,
   ratioText,
 } from "./ratio-text";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 describe("appliedRatio", () => {
   test("the entry's own wins over the list's", () => {

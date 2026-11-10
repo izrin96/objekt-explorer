@@ -3,10 +3,10 @@ import { describe, expect, test } from "bun:test";
 import { fromPartial } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import { type OfferPick, anyKey, blockedReason, pickKey, toPick } from "./pick";
 
-const check = (actual: unknown) => expect(actual);
 type Candidate = Parameters<typeof toPick>[0];
 const candidate = (extra: Partial<Candidate> = {}) =>
   fromPartial<Candidate>({

@@ -10,10 +10,10 @@ import {
 
 import { refusalText as chatRefusalText } from "@/features/chat/format";
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import { type OfferRefusalInfo, offerRefusalOf, offerRefusalText, refusedKeys } from "./refusal";
 
-const check = (actual: unknown) => expect(actual);
 const refused = (data: Record<string, unknown>) => new ORPCError("BAD_REQUEST", { data });
 const info = (reason: OfferRefusal, extra: Partial<OfferRefusalInfo> = {}): OfferRefusalInfo => ({
   reason,

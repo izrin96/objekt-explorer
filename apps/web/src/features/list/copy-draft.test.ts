@@ -1,12 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import { m } from "@/paraglide/messages";
+import { check } from "@/test/check";
 
 import { type CopySource, toCopyDraft } from "./copy-draft";
 import { EMPTY_DRAFT } from "./list-draft";
-
-// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
-const check = (actual: unknown) => expect(actual);
 
 const A = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const B = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
