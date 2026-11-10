@@ -59,7 +59,7 @@ if (!tokenRefresh) workerLog.info("WORKER_TOKEN_REFRESH=false: Cosmo token refre
 
 // Crons and signal handlers are registered before any first run, so a slow startup run never
 // delays a schedule or a SIGTERM. Only the access-token run is awaited: the other first runs read
-// that token.
+// that token. They start STARTUP_GAP_MS apart, so a restart's cold reads don't arrive at once.
 const startupRuns: Array<() => Promise<void>> = [];
 
 // refresh the Cosmo access token proactively so the website never races
@@ -136,7 +136,7 @@ if (indexerWrites) {
   // process collection images - download, convert to WebP, upload to S3
   const runImages = safeRun("images", processCollectionImages);
   startupRuns.push(runImages);
-  crons.push(cron("*/10 * * * *", runImages));
+  crons.push(cron("4-59/10 * * * *", runImages));
 }
 
 // weekly safety-net full scan for stale entries the outbox drain missed
@@ -152,7 +152,7 @@ crons.push(cron("7 * * * *", runRarity));
 // member avatars and artist logos into the bucket; touches the bucket and Valkey, never the indexer
 const runArtistImages = safeRun("artist-images", mirrorArtistImages);
 startupRuns.push(runArtistImages);
-crons.push(cron("*/10 * * * *", runArtistImages));
+crons.push(cron("6-59/10 * * * *", runArtistImages));
 
 // update currency exchange rates daily at 1 AM
 const runRates = safeRun("rates", updateCurrencyRates);
@@ -173,7 +173,7 @@ crons.push(cron("1-59/5 * * * *", runWantAlerts));
 // indexer, writes the app database only
 const runListRules = safeRun("refresh-list-rules", refreshListRules);
 startupRuns.push(runListRules);
-crons.push(cron("*/10 * * * *", runListRules));
+crons.push(cron("9-59/10 * * * *", runListRules));
 
 // no startup run: retention is not urgent
 crons.push(cron("0 5 * * 1", safeRun("prune-notifications", pruneNotifications)));
@@ -181,19 +181,23 @@ crons.push(cron("0 5 * * 1", safeRun("prune-notifications", pruneNotifications))
 // verifies trade legs from indexer transfers and keeps offers current; the rescan is the
 // source of truth, and the `transfers` and accept subscriptions only make a run sooner
 const runVerifier = safeRun("verifier", runTradeVerifier, { lock: false });
-startupRuns.push(runVerifier);
+startupRuns.unshift(runVerifier);
 crons.push(cron("*/2 * * * *", runVerifier));
 
 // assigned below, once the subscriptions are up; a signal before that finds them null
 let stopVerifierTriggers: (() => void) | null = null;
 let stopTransfersRelay: (() => void) | null = null;
 let stopActivityRelay: (() => Promise<void> | void) | null = null;
+// declared above `shutdown`: a signal during the awaited access-token run would hit a const
+// still in its temporal dead zone
+let startupTimers: ReturnType<typeof setTimeout>[] = [];
 
 async function shutdown(signal: NodeJS.Signals) {
   workerLog.info(`Received ${signal}, stopping cron jobs`);
   for (const cron of crons) {
     cron.stop();
   }
+  for (const timer of startupTimers) clearTimeout(timer);
   stopVerifierTriggers?.();
   stopTransfersRelay?.();
   await stopActivityRelay?.();
@@ -209,7 +213,9 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 
 if (tokenRefresh) await runAccessToken();
 
-for (const run of startupRuns) void run();
+// timers, not a chain, so one hung run (an image fetch has no timeout) never holds back the rest
+const STARTUP_GAP_MS = 10_000;
+startupTimers = startupRuns.map((run, i) => setTimeout(() => void run(), i * STARTUP_GAP_MS));
 
 stopVerifierTriggers = await watchVerifierTriggers((error) =>
   verifierLog.error("Job failed:", error),
