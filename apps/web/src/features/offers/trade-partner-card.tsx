@@ -9,6 +9,7 @@ import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { nicknameParam } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -74,12 +75,12 @@ function Figures({ reputation }: { reputation: Reputation }) {
     {
       key: "verified",
       label: m.offer_rep_verified(),
-      value: reputation.verified.toLocaleString(locale),
+      value: formatCount(reputation.verified, locale),
     },
     {
       key: "unfinished",
       label: m.offer_rep_unfinished(),
-      value: reputation.unfinished.toLocaleString(locale),
+      value: formatCount(reputation.unfinished, locale),
       warn: reputation.unfinished > 0,
     },
     {

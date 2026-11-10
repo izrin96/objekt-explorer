@@ -87,9 +87,9 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
     : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
   const scope = await collectionScope(query);
-  if (scope === null) return [];
+  if (scope.kind === "none") return [];
 
-  if (scope) {
+  if (scope.kind === "some") {
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ transfer: { id: transfers.id, timestamp: transfers.timestamp } })

@@ -57,21 +57,27 @@ export function getCollectionFilters(query: CollectionFilters): SQL[] {
 }
 
 /**
- * The collections a query's collection filters pick, as `{ ids }`, a subquery for `inArray`:
- * `undefined` with no filters, `null` when no collection matches.
+ * The collections a query's collection filters pick: `all` with no filters, `none` when no
+ * collection matches, else `some` with `ids`, a subquery for `inArray`.
  */
 export async function collectionScope(query: CollectionFilters) {
   const filters = getCollectionFilters(query);
-  if (filters.length === 0) return undefined;
+  if (filters.length === 0) return { kind: "all" } as const;
   // a subquery lets PostgreSQL plan the join instead of the client sending hundreds of UUIDs
   const scope = indexer
     .select({ id: collections.id })
     .from(collections)
     .where(and(...filters));
-  // run it once first: with no match, the transfer read would scan every transfer for nothing
-  const matching = await scope;
-  // wrapped: a query builder is a thenable, so returning it bare would hand back its rows
-  return matching.length === 0 ? null : { ids: scope };
+  // checked first: with no match, the transfer read would scan every transfer for nothing. A
+  // probe of its own, since a limit on `scope` would also cut the subquery
+  const [any] = await indexer
+    .select({ id: collections.id })
+    .from(collections)
+    .where(and(...filters))
+    .limit(1);
+  // `ids` sits in an object: a query builder is a thenable, so returning it bare would hand back
+  // its rows
+  return any === undefined ? ({ kind: "none" } as const) : ({ kind: "some", ids: scope } as const);
 }
 
 const transferSelect = {
@@ -107,9 +113,9 @@ async function fetchTransfers(query: ActivityFeedInput) {
     : [];
 
   const scope = await collectionScope(query);
-  if (scope === null) return [];
+  if (scope.kind === "none") return [];
 
-  if (scope) {
+  if (scope.kind === "some") {
     // Step 1: IDs only — subquery lets planner use collection index first,
     // then nested-loop into transfer indexes
     const ids = await indexer
