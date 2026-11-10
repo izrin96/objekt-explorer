@@ -36,4 +36,5 @@ COPY --from=installer /app/apps/indexer/package.json ./package.json
 COPY --from=prod-deps /app/apps/indexer/node_modules ./node_modules
 COPY --from=prod-deps /app/node_modules/.bun /app/node_modules/.bun
 COPY --from=installer /app/packages /app/packages
+USER bun
 CMD ["bun", "run", "--bun", "start"]
