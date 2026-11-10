@@ -56,6 +56,24 @@ export function getCollectionFilters(query: CollectionFilters): SQL[] {
   return filters;
 }
 
+/**
+ * The collections a query's collection filters pick, as `{ ids }`, a subquery for `inArray`:
+ * `undefined` with no filters, `null` when no collection matches.
+ */
+export async function collectionScope(query: CollectionFilters) {
+  const filters = getCollectionFilters(query);
+  if (filters.length === 0) return undefined;
+  // a subquery lets PostgreSQL plan the join instead of the client sending hundreds of UUIDs
+  const scope = indexer
+    .select({ id: collections.id })
+    .from(collections)
+    .where(and(...filters));
+  // run it once first: with no match, the transfer read would scan every transfer for nothing
+  const matching = await scope;
+  // wrapped: a query builder is a thenable, so returning it bare would hand back its rows
+  return matching.length === 0 ? null : { ids: scope };
+}
+
 const transferSelect = {
   transfer: {
     id: transfers.id,
@@ -88,30 +106,16 @@ async function fetchTransfers(query: ActivityFeedInput) {
       ]
     : [];
 
-  const collectionFilters = getCollectionFilters(query);
+  const scope = await collectionScope(query);
+  if (scope === null) return [];
 
-  // When collection filters are present, use a subquery to let PostgreSQL
-  // optimize the join instead of materializing hundreds of UUIDs client-side.
-  if (collectionFilters.length > 0) {
-    const collectionSubquery = indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(...collectionFilters));
-
-    // Run the collection query first to check if any match,
-    // avoids a full scan of transfers when no collections match the filters.
-    const matchingCollections = await collectionSubquery;
-
-    if (matchingCollections.length === 0) return [];
-
+  if (scope) {
     // Step 1: IDs only — subquery lets planner use collection index first,
     // then nested-loop into transfer indexes
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
-      .where(
-        and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, collectionSubquery)),
-      )
+      .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, scope.ids)))
       .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
 

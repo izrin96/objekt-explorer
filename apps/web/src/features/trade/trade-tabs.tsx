@@ -4,8 +4,8 @@ import { useEffect } from "react";
 
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/features/user/hooks";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { tabCountsOptions } from "./queries";
 
@@ -53,7 +53,7 @@ export function TradeTabs() {
       >
         {items.map((item, i) => {
           const count = item === MINE ? (counts?.mine ?? 0) : 0;
-          const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count.toLocaleString(getLocale());
+          const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : formatCount(count);
           return (
             <TabsTab
               key={item.to}

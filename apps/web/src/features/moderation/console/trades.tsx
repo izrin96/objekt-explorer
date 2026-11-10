@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { serialText, tradeNo, tradeStatusText } from "@/features/offers/format";
 import { ItemLabel } from "@/features/offers/item-label";
 import type { Collections } from "@/features/offers/pick";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { type Account, sectionTitle } from "./shared";
 import { When } from "./when";
@@ -101,7 +101,7 @@ export function AttachedTrades({
   return (
     <section aria-labelledby="mod-trades" className="flex flex-col gap-3">
       <h2 id="mod-trades" className={sectionTitle}>
-        {m.mod_trades_heading({ count: trades.length.toLocaleString(getLocale()) })}
+        {m.mod_trades_heading({ count: formatCount(trades.length) })}
       </h2>
       <ul className="flex flex-col gap-3">
         {trades.map((trade) => {

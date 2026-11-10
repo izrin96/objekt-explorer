@@ -13,11 +13,11 @@ import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { type RatioSide } from "@/features/list/ratio-text";
 import { RuleForm, SHEET_PARTS } from "@/features/list/rules/rule-dialog";
 import { TagBadges } from "@/features/list/tag-label";
+import { formatCount } from "@/lib/number";
 import { joinSentences } from "@/lib/text";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { PostInput } from "../composer-choice";
 import { LoadError } from "../load-error";
@@ -242,7 +242,7 @@ function PickedSide({
               </span>
               {entries.data ? (
                 <span className="text-muted-foreground shrink-0 tabular-nums">
-                  {total.toLocaleString(getLocale())}
+                  {formatCount(total)}
                 </span>
               ) : null}
             </SideHeading>
@@ -350,7 +350,7 @@ function PickedSide({
               : unshownCount === 1
                 ? m.trade_composer_unshown_one()
                 : m.trade_composer_unshown_some({
-                    count: unshownCount.toLocaleString(getLocale()),
+                    count: formatCount(unshownCount),
                   })}
           </p>
         ) : null}

@@ -8,10 +8,10 @@ import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { displayNickname, nicknameParam } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
 
 import { BannerThumb } from "./banner-thumb";
@@ -156,11 +156,11 @@ function CardBody({ address, nickname }: Payload) {
             data.counts && (
               <span className="text-muted-foreground truncate text-xs">
                 <span className="text-foreground font-semibold">
-                  {data.counts.objekts.toLocaleString(getLocale())}
+                  {formatCount(data.counts.objekts)}
                 </span>{" "}
                 {m.profile_stats_owned()} ·{" "}
                 <span className="text-foreground font-semibold">
-                  {data.counts.collections.toLocaleString(getLocale())}
+                  {formatCount(data.counts.collections)}
                 </span>{" "}
                 {m.profile_stats_collections()}
               </span>

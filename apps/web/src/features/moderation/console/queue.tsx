@@ -19,8 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FLAG_LABEL, REASON_LABEL } from "@/features/moderation/labels";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { queueOptions } from "./queries";
 import { When } from "./when";
@@ -82,8 +82,8 @@ export function ModQueue() {
     <div className="flex flex-col gap-3">
       <p className="text-muted-foreground text-xs">
         {m.mod_queue_summary({
-          reports: openReports.toLocaleString(getLocale()),
-          accounts: query.data.length.toLocaleString(getLocale()),
+          reports: formatCount(openReports),
+          accounts: formatCount(query.data.length),
         })}
       </p>
       {/* single choice, so pressing the active filter again (an empty group) is ignored */}
@@ -150,12 +150,9 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
           <span className="truncate font-semibold">{name}</span>
           <span className="text-muted-foreground flex flex-wrap gap-x-1.5 text-xs">
             <span>
-              {m.mod_queue_open({ count: row.openReports.toLocaleString(getLocale()) })}
+              {m.mod_queue_open({ count: formatCount(row.openReports) })}
               {row.sharedExcerpts > 0 ? (
-                <>
-                  {" "}
-                  · {m.mod_queue_shared({ count: row.sharedExcerpts.toLocaleString(getLocale()) })}
-                </>
+                <> · {m.mod_queue_shared({ count: formatCount(row.sharedExcerpts) })}</>
               ) : null}
             </span>
             <When iso={row.latestAt} />
@@ -170,13 +167,13 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
               <Badge variant="warning" size="sm">
                 {m.mod_flag_count({
                   label: FLAG_LABEL[flag](),
-                  count: row.flags[flag].toLocaleString(getLocale()),
+                  count: formatCount(row.flags[flag]),
                 })}
               </Badge>
             ) : null}
             {more > 0 ? (
               <span className="text-muted-foreground text-xs">
-                {m.mod_queue_more({ count: more.toLocaleString(getLocale()) })}
+                {m.mod_queue_more({ count: formatCount(more) })}
               </span>
             ) : null}
           </span>

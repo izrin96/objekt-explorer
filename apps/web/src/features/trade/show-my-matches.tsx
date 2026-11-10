@@ -13,11 +13,11 @@ import type { SideNear } from "@/features/trade/near";
 import { listMatchesOptions } from "@/features/trade/queries";
 import { NEAR_RING } from "@/features/trade/thumb-grid";
 import { nearCountText, nearRingText } from "@/lib/near-text";
+import { formatCount } from "@/lib/number";
 import { refusalText } from "@/lib/refusal";
 import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 /** The collections the grid keeps while the toggle is on; the request waits for it. */
 export function useListMatches(list: PublicList, on: boolean) {
@@ -101,8 +101,8 @@ export function ShowMyMatches({
           className={cn(toneChip("success"), "h-6 shrink-0 rounded-sm border px-1.5 text-xs")}
         >
           {matching === "have"
-            ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
-            : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) })}
+            ? m.trade_list_count_you_have({ count: formatCount(count) })
+            : m.trade_list_count_you_want({ count: formatCount(count) })}
         </MatchedListsChip>
       ) : null}
       {on && near ? (
@@ -155,7 +155,7 @@ export function NearMatches<T extends GridObjekt>({
       />
       {rest > 0 ? (
         <p className="text-muted-foreground text-xs">
-          {m.trade_more_count({ count: rest.toLocaleString(getLocale()) })}
+          {m.trade_more_count({ count: formatCount(rest) })}
         </p>
       ) : null}
     </section>

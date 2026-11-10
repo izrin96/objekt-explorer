@@ -20,9 +20,9 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { TagBadges } from "@/features/list/tag-label";
+import { formatCount } from "@/lib/number";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
@@ -110,13 +110,11 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
               {m.trade_my_posts_title()}
             </h2>
             {/* each " · " travels with the item after it, so a wrapped line never ends on one */}
-            <MetaItem>
-              {m.trade_my_posts_listed({ count: summary.listed.toLocaleString(getLocale()) })}
-            </MetaItem>
+            <MetaItem>{m.trade_my_posts_listed({ count: formatCount(summary.listed) })}</MetaItem>
             {summary.idle > 0 ? (
               <MetaItem>
                 <Badge variant="outline" size="sm">
-                  {m.trade_my_posts_idle({ count: summary.idle.toLocaleString(getLocale()) })}
+                  {m.trade_my_posts_idle({ count: formatCount(summary.idle) })}
                 </Badge>
               </MetaItem>
             ) : null}

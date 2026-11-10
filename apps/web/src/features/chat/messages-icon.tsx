@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 
 import { UnreadBadge } from "@/components/shared/unread-badge";
 import { Button } from "@/components/ui/button";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { useRequestsUnseen } from "./actions";
@@ -18,10 +18,10 @@ export function MessagesIcon() {
   const unseen = useRequestsUnseen();
   const label = unseen
     ? unread > 0
-      ? m.chat_icon_label_unread_requests({ count: unread.toLocaleString(getLocale()) })
+      ? m.chat_icon_label_unread_requests({ count: formatCount(unread) })
       : m.chat_icon_label_requests()
     : unread > 0
-      ? m.chat_icon_label_unread({ count: unread.toLocaleString(getLocale()) })
+      ? m.chat_icon_label_unread({ count: formatCount(unread) })
       : m.chat_icon_label();
 
   return (

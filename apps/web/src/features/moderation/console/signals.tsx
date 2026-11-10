@@ -10,9 +10,9 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { FLAG_LABEL, SANCTION_LABEL } from "@/features/moderation/labels";
 import { StatRow } from "@/features/objekt/drawer/stat-row";
 import { displayNickname } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { MoveAddressDialog } from "./move-address-dialog";
 import { type Account, personName, sectionTitle } from "./shared";
@@ -33,16 +33,16 @@ export function AccountStats({ data }: { data: Account }) {
         },
         {
           label: m.mod_signal_verified(),
-          value: (data.reputation?.verified ?? 0).toLocaleString(getLocale()),
+          value: formatCount(data.reputation?.verified ?? 0),
         },
         {
           label: m.mod_signal_unfinished(),
-          value: (data.reputation?.unfinished ?? 0).toLocaleString(getLocale()),
+          value: formatCount(data.reputation?.unfinished ?? 0),
         },
-        { label: m.mod_signal_starts(), value: data.startsLast24h.toLocaleString(getLocale()) },
+        { label: m.mod_signal_starts(), value: formatCount(data.startsLast24h) },
         ...FLAG_CATEGORIES.map((category) => ({
           label: FLAG_LABEL[category](),
-          value: data.flags[category].toLocaleString(getLocale()),
+          value: formatCount(data.flags[category]),
         })),
       ]}
     />

@@ -1,11 +1,4 @@
-import {
-  CaretDownIcon,
-  DotsThreeIcon,
-  EyeIcon,
-  ListBulletsIcon,
-  PencilSimpleIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { CaretDownIcon, DotsThreeIcon, ListBulletsIcon } from "@phosphor-icons/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { WindowVirtualizer } from "virtua";
@@ -13,16 +6,16 @@ import { WindowVirtualizer } from "virtua";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Spinner } from "@/components/ui/spinner";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
+import { formatCount } from "@/lib/number";
 import type { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { useListTarget } from "../list-provider";
 import { RatioChip } from "../ratio-chip";
@@ -32,6 +25,7 @@ import { ConfirmRule } from "./confirm-rule";
 import { ruleObjektsOptions, useListRules } from "./queries";
 import { RuleDialog } from "./rule-dialog";
 import { mergeRulePages, ruleColumns, ruleRows } from "./rule-layout";
+import { RuleMenuItems } from "./rule-menu-items";
 import { ruleText, shortNo } from "./words";
 
 type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
@@ -52,8 +46,8 @@ export function RulesStrip() {
         <span className="text-sm font-semibold">{m.rules_heading()}</span>
         <span className="text-muted-foreground text-sm">
           {m.rules_summary({
-            count: rules.length.toLocaleString(getLocale()),
-            canMatch: canMatch.toLocaleString(getLocale()),
+            count: formatCount(rules.length),
+            canMatch: formatCount(canMatch),
           })}
         </span>
         <CaretDownIcon
@@ -95,8 +89,8 @@ function RuleRow({ rule }: { rule: Rule }) {
       ? rule.owned > 0
         ? // the count is the list owner's holdings, so only the owner reads "you"
           isOwner
-          ? m.rule_skips_owned({ count: rule.owned.toLocaleString(getLocale()) })
-          : m.rule_skips_owned_theirs({ count: rule.owned.toLocaleString(getLocale()) })
+          ? m.rule_skips_owned({ count: formatCount(rule.owned) })
+          : m.rule_skips_owned_theirs({ count: formatCount(rule.owned) })
         : null
       : isOwner
         ? m.rule_includes_owned()
@@ -143,9 +137,7 @@ function RuleRow({ rule }: { rule: Rule }) {
             ) : null}
           </span>
           <span className="flex shrink-0 flex-col items-end">
-            <span className="text-sm font-semibold tabular-nums">
-              {rule.canMatch.toLocaleString(getLocale())}
-            </span>
+            <span className="text-sm font-semibold tabular-nums">{formatCount(rule.canMatch)}</span>
             <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
           </span>
         </CollapsibleTrigger>
@@ -163,27 +155,13 @@ function RuleRow({ rule }: { rule: Rule }) {
               <DotsThreeIcon weight="bold" />
             </MenuTrigger>
             <MenuPopup align="end" className="min-w-44">
-              <MenuItem onClick={() => setExpanded((value) => !value)}>
-                <EyeIcon />
-                {expanded
-                  ? m.rule_hide_objekts()
-                  : rule.covers === 1
-                    ? m.rule_see_objekts_one()
-                    : m.rule_see_objekts({ count: rule.covers.toLocaleString(getLocale()) })}
-              </MenuItem>
-              <MenuItem onClick={() => setEditOpen(true)}>
-                <PencilSimpleIcon />
-                {m.rule_edit()}
-              </MenuItem>
-              <MenuItem onClick={() => setConfirm("detach")}>
-                <ListBulletsIcon />
-                {m.rule_detach()}
-              </MenuItem>
-              <MenuSeparator />
-              <MenuItem variant="destructive" onClick={() => setConfirm("delete")}>
-                <TrashIcon />
-                {m.rule_delete()}
-              </MenuItem>
+              <RuleMenuItems
+                covers={rule.covers}
+                expanded={expanded}
+                onSeeObjekts={() => setExpanded((value) => !value)}
+                onEdit={() => setEditOpen(true)}
+                onConfirm={setConfirm}
+              />
             </MenuPopup>
           </Menu>
         ) : null}
@@ -282,7 +260,7 @@ function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boole
                   {shortNo(row.group.season, row.group.collectionNo)}
                 </span>
                 {" · "}
-                {m.rule_can_match({ count: row.group.canMatch.toLocaleString(getLocale()) })}
+                {m.rule_can_match({ count: formatCount(row.group.canMatch) })}
               </h4>
             ) : (
               <ul

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { countMarkup, MessageMarkup } from "./message-markup";
 
@@ -9,7 +9,7 @@ import { countMarkup, MessageMarkup } from "./message-markup";
 export function TotalCount({ count }: { count: number }) {
   return (
     <MessageMarkup
-      parts={m.common_count_total.parts({ count: count.toLocaleString(getLocale()) })}
+      parts={m.common_count_total.parts({ count: formatCount(count) })}
       markup={countMarkup}
     />
   );

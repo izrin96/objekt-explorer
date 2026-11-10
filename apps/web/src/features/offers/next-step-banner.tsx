@@ -18,12 +18,12 @@ import { useId, type ReactNode } from "react";
 import { rich } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { formatCount } from "@/lib/number";
 import { sentenceGap } from "@/lib/text";
 import { untilLabel } from "@/lib/time";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { AnswerCancelActions, WithdrawCancel } from "./cancel-trade";
 import { itemLabel, leftLabel, shortDate } from "./format";
@@ -292,7 +292,7 @@ export function NextStepBanner({
                 <Button variant="outline" size="sm" onClick={onShowNeeds}>
                   {needsYou === 1
                     ? m.offer_show_needs_you_one()
-                    : m.offer_show_needs_you({ count: needsYou.toLocaleString(getLocale()) })}
+                    : m.offer_show_needs_you({ count: formatCount(needsYou) })}
                 </Button>
               ) : null}
               {view.actions}

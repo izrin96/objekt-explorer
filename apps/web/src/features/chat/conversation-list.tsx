@@ -26,8 +26,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TogglePrimitive } from "@/components/ui/toggle";
 import { ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { useSeeRequests } from "./actions";
 import { useDraftThread, useFocusAfterLeave, useKeptOpenRow } from "./conversation-list-hooks";
@@ -84,7 +84,7 @@ export function ConversationList({
       : rows.length === 0
         ? m.chat_search_none()
         : m.chat_search_results({
-            count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
+            count: `${formatCount(rows.length)}${query.hasNextPage ? "+" : ""}`,
           });
 
   return (
@@ -263,9 +263,7 @@ function WaitingRequests() {
   if (!count) return null;
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className="text-sm">
-        {m.chat_empty_inbox_requests({ count: count.toLocaleString(getLocale()) })}
-      </p>
+      <p className="text-sm">{m.chat_empty_inbox_requests({ count: formatCount(count) })}</p>
       <Button
         variant="outline"
         size="sm"

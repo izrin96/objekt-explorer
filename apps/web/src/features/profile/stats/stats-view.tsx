@@ -5,7 +5,6 @@ import { Pie, PieChart } from "recharts";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -17,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { useMemberColor } from "@/features/filters/member-colors";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
@@ -186,11 +186,7 @@ export function StatsView() {
           icon={ChartPieSliceIcon}
           title={m.stats_empty_title()}
           hint={m.stats_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
+          action={<EmptyStateReset onReset={reset} />}
         />
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,520px),1fr))] gap-4">

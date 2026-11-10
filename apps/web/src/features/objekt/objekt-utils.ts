@@ -1,3 +1,4 @@
+import { isCombinedMember } from "@repo/cosmo/member";
 import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { GridObjekt, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
@@ -5,12 +6,6 @@ import { joinList } from "@/lib/text";
 
 function getMemberShortKeys(value: string) {
   return shortKeysByMember.get(value) ?? [];
-}
-
-// unit collections carry a combined name ("id1 X id2") alongside the individual
-// members
-function isCombinedMember(value: string) {
-  return value.toLowerCase().includes(" x ");
 }
 
 const seasonShortNames: Record<string, string> = {

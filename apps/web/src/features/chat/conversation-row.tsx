@@ -9,11 +9,11 @@ import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNo } from "@/features/offers/format";
 import { OfferThumb } from "@/features/offers/offer-item";
 import { OnlineAvatar } from "@/features/presence/online-avatar";
+import { formatCount } from "@/lib/number";
 import { relativeTime } from "@/lib/time";
 import { TONE_INK, TONE_SOLID } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { Draft } from "./conversation-list-hooks";
 import { ConversationMenu } from "./conversation-menu";
@@ -197,13 +197,13 @@ function UnreadMark({ count, muted }: { count: number; muted: boolean }) {
         muted ? "bg-muted text-muted-foreground" : "bg-foreground text-background",
       )}
     >
-      <span aria-hidden>{over ? "99+" : count.toLocaleString(getLocale())}</span>
+      <span aria-hidden>{over ? "99+" : formatCount(count)}</span>
       <span className="sr-only">
         {over
           ? m.chat_unread_count_over()
           : count === 1
             ? m.chat_unread_count_one()
-            : m.chat_unread_count({ count: count.toLocaleString(getLocale()) })}
+            : m.chat_unread_count({ count: formatCount(count) })}
       </span>
     </span>
   );

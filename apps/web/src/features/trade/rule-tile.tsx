@@ -6,9 +6,9 @@ import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/component
 import { RatioChip } from "@/features/list/ratio-chip";
 import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { PostSideData } from "./post-types";
 import { SlugTile } from "./thumb-grid";
@@ -69,7 +69,7 @@ function RuleTile({
         <span
           className={cn("text-xs", ringed ? "text-success-foreground" : "text-muted-foreground")}
         >
-          {m.trade_list_count_you_have({ count: tile.matched.toLocaleString(getLocale()) })}
+          {m.trade_list_count_you_have({ count: formatCount(tile.matched) })}
         </span>
       ) : null}
     </>
@@ -114,7 +114,7 @@ function RuleTile({
         {(tile.matched ?? 0) > tile.matchedSlugs.length ? (
           <p className="text-muted-foreground mt-2 text-xs">
             {m.trade_more_count({
-              count: ((tile.matched ?? 0) - tile.matchedSlugs.length).toLocaleString(getLocale()),
+              count: formatCount((tile.matched ?? 0) - tile.matchedSlugs.length),
             })}
           </p>
         ) : null}

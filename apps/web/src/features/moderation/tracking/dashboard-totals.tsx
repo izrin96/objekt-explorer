@@ -3,12 +3,13 @@ import type { TradeTotals } from "@repo/api/schemas/staff-totals";
 import type { ReactNode } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { sharePercent, spanText } from "./format";
 import { OFFER_CANCEL_LABEL, TRADE_END_LABEL } from "./labels";
-import { count, DayBars, LabelledBars, Stat } from "./parts";
+import { DayBars, LabelledBars, Stat } from "./parts";
 
 function Tile({ children }: { children: ReactNode }) {
   return <div className="flex min-w-0 flex-col rounded-lg border p-3">{children}</div>;
@@ -23,12 +24,12 @@ export function Totals({ totals }: { totals: TradeTotals }) {
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Tile>
-          <Stat label={m.mod_trades_offers_sent()} value={count(offers.created)} />
+          <Stat label={m.mod_trades_offers_sent()} value={formatCount(offers.created)} />
         </Tile>
         <Tile>
           <Stat
             label={m.mod_trades_accepted()}
-            value={count(offers.accepted)}
+            value={formatCount(offers.accepted)}
             hint={(() => {
               const percent = sharePercent(offers.accepted, offers.created, locale);
               return percent === null ? undefined : m.mod_trades_accepted_share({ percent });
@@ -36,13 +37,13 @@ export function Totals({ totals }: { totals: TradeTotals }) {
           />
         </Tile>
         <Tile>
-          <Stat label={m.mod_trades_completed()} value={count(trades.completed)} />
+          <Stat label={m.mod_trades_completed()} value={formatCount(trades.completed)} />
         </Tile>
         <Tile>
-          <Stat label={m.mod_trades_cancelled()} value={count(trades.cancelled)} />
+          <Stat label={m.mod_trades_cancelled()} value={formatCount(trades.cancelled)} />
         </Tile>
         <Tile>
-          <Stat label={m.mod_trades_failed()} value={count(trades.failed)} />
+          <Stat label={m.mod_trades_failed()} value={formatCount(trades.failed)} />
         </Tile>
         <Tile>
           <Stat
@@ -57,7 +58,7 @@ export function Totals({ totals }: { totals: TradeTotals }) {
                 ? undefined
                 : `${m.mod_trades_time_median()} · ${m.mod_trades_time_p90({
                     time: spanText(time.p90Seconds, locale),
-                    count: count(time.count),
+                    count: formatCount(time.count),
                   })}`
             }
           />

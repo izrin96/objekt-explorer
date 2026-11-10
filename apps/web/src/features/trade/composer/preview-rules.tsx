@@ -1,17 +1,10 @@
-import {
-  DotsThreeIcon,
-  EyeIcon,
-  ListBulletsIcon,
-  PencilSimpleIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { DotsThreeIcon, PlusIcon } from "@phosphor-icons/react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,15 +16,16 @@ import { ConfirmRule } from "@/features/list/rules/confirm-rule";
 import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "@/features/list/rules/queries";
 import { ruleInputOf } from "@/features/list/rules/rule-draft";
 import { mergeRulePages } from "@/features/list/rules/rule-layout";
+import { RuleMenuItems } from "@/features/list/rules/rule-menu-items";
 import { ruleText, shortNo } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { LoadError } from "@/features/trade/load-error";
+import { formatCount } from "@/lib/number";
 import { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 export type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
 
@@ -157,25 +151,12 @@ function RuleMenu({
         <DotsThreeIcon weight="bold" />
       </MenuTrigger>
       <MenuPopup align="end" className="min-w-44">
-        <MenuItem onClick={() => onSeeObjekts(rule, trigger.current)}>
-          <EyeIcon />
-          {rule.covers === 1
-            ? m.rule_see_objekts_one()
-            : m.rule_see_objekts({ count: rule.covers.toLocaleString(getLocale()) })}
-        </MenuItem>
-        <MenuItem onClick={() => onEditRule(rule, trigger.current)}>
-          <PencilSimpleIcon />
-          {m.rule_edit()}
-        </MenuItem>
-        <MenuItem onClick={() => onConfirm("detach")}>
-          <ListBulletsIcon />
-          {m.rule_detach()}
-        </MenuItem>
-        <MenuSeparator />
-        <MenuItem variant="destructive" onClick={() => onConfirm("delete")}>
-          <TrashIcon />
-          {m.rule_delete()}
-        </MenuItem>
+        <RuleMenuItems
+          covers={rule.covers}
+          onSeeObjekts={() => onSeeObjekts(rule, trigger.current)}
+          onEdit={() => onEditRule(rule, trigger.current)}
+          onConfirm={onConfirm}
+        />
       </MenuPopup>
     </Menu>
   );
@@ -192,7 +173,7 @@ export function RuleObjektsSheet({ slug, rule }: { slug: string; rule: Rule }) {
   const sections = headed
     ? groups.map((group) => ({
         title: `${shortNo(group.season, group.collectionNo)} · ${m.rule_can_match({
-          count: group.canMatch.toLocaleString(getLocale()),
+          count: formatCount(group.canMatch),
         })}`,
         items: group.objekts,
       }))

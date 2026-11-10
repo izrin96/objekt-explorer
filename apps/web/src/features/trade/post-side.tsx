@@ -9,10 +9,10 @@ import { type RatioSide, ratioName } from "@/features/list/ratio-text";
 import { ObjektCard, QTY_BADGE, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { nearRingText } from "@/lib/near-text";
+import { formatCount } from "@/lib/number";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { Surface } from "./browse-search";
 import type { NearOpen, OpenObjekt } from "./near";
@@ -152,8 +152,8 @@ const StripTile = memo(function StripTile({
     ? nearRingText(near.verb, qty)
     : stacked
       ? ringed
-        ? m.trade_stack_copies_ring({ count: qty.toLocaleString(getLocale()) })
-        : m.trade_stack_copies({ count: qty.toLocaleString(getLocale()) })
+        ? m.trade_stack_copies_ring({ count: formatCount(qty) })
+        : m.trade_stack_copies({ count: formatCount(qty) })
       : ringed
         ? m.trade_match_ring()
         : undefined;
@@ -263,7 +263,7 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
       : side.others === 1
         ? m.trade_strip_side_count_one({ none: wording.none })
         : m.trade_strip_side_count({
-            count: side.others.toLocaleString(getLocale()),
+            count: formatCount(side.others),
             none: wording.none,
           });
   return (

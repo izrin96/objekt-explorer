@@ -1,7 +1,7 @@
 import type { TradeView as Trade } from "@repo/api/schemas/offer";
 
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { itemLabel, serialText, tradeStatusText } from "./format";
 import type { Collections } from "./pick";
@@ -23,8 +23,8 @@ export function label(row: TimelineRow, trade: Trade, name: string, collections:
         : m.offer_clock_you_confirmed({ objekt: itemLabel(row.leg, collections) });
     case "sentGroup": {
       const counts = {
-        count: row.legs.length.toLocaleString(getLocale()),
-        total: row.total.toLocaleString(getLocale()),
+        count: formatCount(row.legs.length),
+        total: formatCount(row.total),
       };
       return row.fromYou
         ? m.offer_clock_you_sent_many(counts)

@@ -1,7 +1,7 @@
 import { handleName } from "@repo/api/schemas/trade-person";
 
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { PersonPostData, PostTag } from "./post-types";
 
@@ -15,8 +15,6 @@ const tagsText = (tags: Iterable<PostTag>, separator: string) => {
     .map((tag) => tag.toUpperCase())
     .join(separator);
 };
-
-const count = (value: number) => value.toLocaleString(getLocale());
 
 export type SharePreview = { title: string; description: string };
 
@@ -38,15 +36,15 @@ export function sharePreview(
     const description =
       posts.length === 1
         ? m.trade_share_person_description_one({ tags })
-        : m.trade_share_person_description({ count: count(posts.length), tags });
+        : m.trade_share_person_description({ count: formatCount(posts.length), tags });
     return { title: m.trade_share_person_title({ name }), description };
   }
 
   const description = post.sides
     .map((side) =>
       side.role === "want"
-        ? m.trade_share_post_wants({ count: count(side.copyCount) })
-        : m.trade_share_post_has({ count: count(side.copyCount) }),
+        ? m.trade_share_post_wants({ count: formatCount(side.copyCount) })
+        : m.trade_share_post_has({ count: formatCount(side.copyCount) }),
     )
     .join(" · ");
   return { title: m.trade_share_post_title({ name, tags: tagsText(post.tags, "/") }), description };

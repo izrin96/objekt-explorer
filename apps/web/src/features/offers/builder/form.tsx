@@ -16,10 +16,10 @@ import { putBack, takeOut, takeOutAdded, takeOutAll } from "@/features/offers/qu
 import { myCopyOptions, myObjektsOptions, theirCandidatesOptions } from "@/features/offers/queries";
 import { offerRefusalOf } from "@/features/offers/refusal";
 import { useCurrency } from "@/features/settings/use-currency";
+import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { type NearGroup, withNear } from "../near-picks";
 import {
@@ -357,8 +357,8 @@ export function BuilderForm({
                 )}
               >
                 {m.chat_counter({
-                  count: noteLength.toLocaleString(getLocale()),
-                  max: OFFER_NOTE_MAX_LENGTH.toLocaleString(getLocale()),
+                  count: formatCount(noteLength),
+                  max: formatCount(OFFER_NOTE_MAX_LENGTH),
                 })}
               </p>
             </div>

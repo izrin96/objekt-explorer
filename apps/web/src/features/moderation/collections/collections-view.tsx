@@ -13,11 +13,11 @@ import { toastManager } from "@/components/ui/toast";
 import { Toggle } from "@/components/ui/toggle";
 import { When } from "@/features/moderation/console/when";
 import { COLLECTIONS_KEY, collectionOptions } from "@/features/objekt/queries";
+import { formatCount } from "@/lib/number";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { matchesSearch, rowColors } from "./colors";
 import { type Draft, EditRow } from "./edit-row";
@@ -201,9 +201,7 @@ export function CollectionsView() {
           {m.mod_collections_overrides_only()}
         </Toggle>
         <span className="text-muted-foreground text-xs" aria-live="polite">
-          {collections
-            ? m.mod_collections_count({ count: rows.length.toLocaleString(getLocale()) })
-            : null}
+          {collections ? m.mod_collections_count({ count: formatCount(rows.length) }) : null}
         </span>
       </div>
 

@@ -3,8 +3,8 @@ import type { ObjektPreview } from "@repo/api/schemas/objekts";
 
 import { PendingStatus } from "@/components/router/pending";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 /** The card frame; `relative` anchors the stretched link. */
 export const previewCardClass =
@@ -28,7 +28,7 @@ export function ObjektPreviewCount({
         ? m.objekt_count_none()
         : preview.count === 1
           ? m.objekt_count_single()
-          : m.objekt_count_multiple({ count: preview.count.toLocaleString(getLocale()) })}
+          : m.objekt_count_multiple({ count: formatCount(preview.count) })}
     </span>
   );
 }

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactElement, useEffect, useId, useRef, useState } from "react";
 
+import { DialogLoadPanel } from "@/components/shared/dialog-load-panel";
 import { MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { BannerField, useBannerPick } from "@/features/link/banner-field";
@@ -29,10 +29,10 @@ import {
 } from "@/features/link/banner-upload";
 import { PROFILE_QUERY_KEY, invalidateLinkChange, profileOptions } from "@/features/link/queries";
 import { displayNickname } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
 
@@ -87,15 +87,7 @@ export function EditCosmoDialog({
           />
         ) : (
           <>
-            <DialogPanel>
-              {error ? (
-                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
-              ) : (
-                <div className="flex justify-center py-6">
-                  <Spinner className="size-5" />
-                </div>
-              )}
-            </DialogPanel>
+            <DialogLoadPanel error={error} />
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_cancel()}
@@ -229,8 +221,8 @@ function EditForm({
             <p aria-live="polite" className="text-muted-foreground shrink-0 text-xs tabular-nums">
               {bio.length >= BIO_MAX_LENGTH - 30
                 ? m.chat_counter({
-                    count: bio.length.toLocaleString(getLocale()),
-                    max: BIO_MAX_LENGTH.toLocaleString(getLocale()),
+                    count: formatCount(bio.length),
+                    max: formatCount(BIO_MAX_LENGTH),
                   })
                 : null}
             </p>

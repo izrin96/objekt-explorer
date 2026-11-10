@@ -9,8 +9,8 @@ import {
 import type { NearVerb } from "@repo/api/schemas/trade";
 
 import type { OfferAddress } from "@/features/offers/queries";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { GetSource } from "../get-source";
 import { nearPayer } from "../near-picks";
@@ -274,8 +274,7 @@ export function pickProblem(
   const spare = ctx.live.get(pick.key)?.copies ?? pick.flags?.copies;
   if (side === "get" && pick.objektId === null && spare != null) {
     const left = copiesLeft(ctx.get, pick.collectionSlug, spare);
-    if (countOf(pick) > left)
-      return m.offer_flag_too_many({ count: left.toLocaleString(getLocale()) });
+    if (countOf(pick) > left) return m.offer_flag_too_many({ count: formatCount(left) });
   }
   return blockedReason(pickFlags(pick, ctx.live));
 }
@@ -302,7 +301,7 @@ export function sendGate(d: {
     : amount === null || amount <= 0
       ? m.offer_topup_amount_required()
       : amount > TOPUP_MAX
-        ? m.offer_topup_amount_max({ max: TOPUP_MAX.toLocaleString(getLocale()) })
+        ? m.offer_topup_amount_max({ max: formatCount(TOPUP_MAX) })
         : null;
   const noCurrency = on && currency === "" && topupError === null;
   const hint = empty

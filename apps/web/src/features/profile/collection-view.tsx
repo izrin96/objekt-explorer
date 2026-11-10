@@ -27,8 +27,8 @@ import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { profileMatchesOptions } from "@/features/trade/queries";
 import { ShowMyMatches } from "@/features/trade/show-my-matches";
 import { useCurrentUser } from "@/features/user/hooks";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { CheckpointPopover } from "./checkpoint-popover";
@@ -337,8 +337,8 @@ export function CollectionView() {
             <p className="text-muted-foreground text-xs">
               <MessageMarkup
                 parts={m.profile_count_summary.parts({
-                  shown: `${copiesIn(filtered).toLocaleString(getLocale())}${hasNextPage ? "+" : ""}`,
-                  unique: uniqueCount.toLocaleString(getLocale()),
+                  shown: `${formatCount(copiesIn(filtered))}${hasNextPage ? "+" : ""}`,
+                  unique: formatCount(uniqueCount),
                 })}
                 markup={countMarkup}
               />

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type RefObject, useState } from "react";
 
+import { DialogLoadPanel } from "@/components/shared/dialog-load-panel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,14 +16,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { Spinner } from "@/components/ui/spinner";
 import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { usePlanLists } from "@/features/trade/post-plan";
 import { TradeLine } from "@/features/trade/trade-line";
 import { useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress, nicknameParam } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
-import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { useEditList } from "./actions";
@@ -70,15 +69,7 @@ export function EditListDialog({
               <DialogTitle className="font-display">{m.list_edit_title()}</DialogTitle>
               <DialogDescription>{m.list_edit_description()}</DialogDescription>
             </DialogHeader>
-            <DialogPanel>
-              {error ? (
-                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
-              ) : (
-                <div className="flex justify-center py-6">
-                  <Spinner className="size-5" />
-                </div>
-              )}
-            </DialogPanel>
+            <DialogLoadPanel error={error} />
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_close()}

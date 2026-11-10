@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { MessageMarkup } from "@/components/shared/message-markup";
 import { Meter, MeterIndicator, MeterTrack } from "@/components/ui/meter";
 import { FOCUS_RING } from "@/lib/a11y";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { MemberProgress, Tally } from "./shape-progress";
 
@@ -37,8 +37,7 @@ export function ProgressSummary({
         <div aria-hidden className="text-3xl leading-none font-semibold tracking-tight">
           {totals.pct.toFixed(1)}
           <small className="text-muted-foreground text-sm font-medium tracking-normal">
-            % · {totals.owned.toLocaleString(getLocale())} /{" "}
-            {totals.total.toLocaleString(getLocale())}
+            % · {formatCount(totals.owned)} / {formatCount(totals.total)}
           </small>
         </div>
         {/* min-w-1 keeps a sliver showing at 0% */}
@@ -46,7 +45,7 @@ export function ProgressSummary({
           value={totals.pct}
           aria-label={m.progress_overall()}
           getAriaValueText={() =>
-            `${totals.pct.toFixed(1)}%, ${totals.owned.toLocaleString(getLocale())} / ${totals.total.toLocaleString(getLocale())}`
+            `${totals.pct.toFixed(1)}%, ${formatCount(totals.owned)} / ${formatCount(totals.total)}`
           }
           className="mt-2.5"
         >
@@ -85,7 +84,7 @@ export function ProgressSummary({
                 <span className="text-muted-foreground ml-auto flex-none text-xs tabular-nums">
                   <MessageMarkup
                     parts={m.progress_to_go.parts({
-                      count: (row.total - row.owned).toLocaleString(getLocale()),
+                      count: formatCount(row.total - row.owned),
                     })}
                     markup={{ b: (children) => <b className="text-foreground">{children}</b> }}
                   />

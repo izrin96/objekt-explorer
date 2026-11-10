@@ -13,12 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
 import { FLAG_LABEL, REASON_LABEL, SANCTION_LABEL } from "../labels";
 import {
   type BarTone,
-  count,
   CountedAt,
   DayBars,
   LoadFailed,
@@ -69,7 +69,7 @@ function Totals({ totals }: { totals: MessageTotals }) {
     const shown = rows.filter((row) => row.count > 0);
     return shown.length === 0
       ? undefined
-      : shown.map((row) => `${row.label} ${count(row.count)}`).join(" · ");
+      : shown.map((row) => `${row.label} ${formatCount(row.count)}`).join(" · ");
   };
   const measures: { key: Key; label: string; tone: BarTone; hint?: string }[] = [
     { key: "messages", label: m.mod_messages_messages(), tone: "neutral" },
@@ -104,7 +104,7 @@ function Totals({ totals }: { totals: MessageTotals }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {measures.map((measure) => (
           <section key={measure.key} className="flex min-w-0 flex-col gap-2 rounded-lg border p-3">
-            <Stat label={measure.label} value={count(sum[measure.key])} hint={measure.hint} />
+            <Stat label={measure.label} value={formatCount(sum[measure.key])} hint={measure.hint} />
             <DayBars
               title={measure.label}
               days={series(measure.key)}
@@ -121,7 +121,9 @@ function Totals({ totals }: { totals: MessageTotals }) {
             {FLAG_CATEGORIES.map((category) => (
               <div key={category} className="flex justify-between gap-2">
                 <dt>{FLAG_LABEL[category]()}</dt>
-                <dd className="font-semibold tabular-nums">{count(sum[`flag_${category}`])}</dd>
+                <dd className="font-semibold tabular-nums">
+                  {formatCount(sum[`flag_${category}`])}
+                </dd>
               </div>
             ))}
           </dl>
@@ -155,11 +157,11 @@ function Totals({ totals }: { totals: MessageTotals }) {
                     </TableCell>
                     {FLAG_CATEGORIES.map((category) => (
                       <TableCell key={category} className="text-end tabular-nums">
-                        {count(row.counts[category])}
+                        {formatCount(row.counts[category])}
                       </TableCell>
                     ))}
                     <TableCell className="text-end font-medium tabular-nums">
-                      {count(row.total)}
+                      {formatCount(row.total)}
                     </TableCell>
                   </TableRow>
                 ))}

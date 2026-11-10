@@ -11,15 +11,9 @@ import {
   overPromisedCopies,
 } from "../../lib/offer-rules";
 import { transferKey } from "../../lib/trade-match";
+import { copyKey } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
-import {
-  copyKey,
-  fetchCopies,
-  fetchObjekts,
-  openAnyCopyLegs,
-  refuseOffer,
-  reservedIds,
-} from "./core";
+import { fetchCopies, fetchObjekts, openAnyCopyLegs, refuseOffer, reservedIds } from "./core";
 import { usedTransfers } from "./verify";
 
 export type Side = "give" | "get";

@@ -22,10 +22,10 @@ import { PopoverTitle } from "@/components/ui/popover";
 import { SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { formatCount } from "@/lib/number";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { NotificationRow } from "./notification-items";
 import { notificationKeys, notificationPrefsOptions, notificationsOptions } from "./queries";
@@ -122,7 +122,7 @@ export function NotificationPanel({
           )}
           {unread > 0 ? (
             <span className="text-muted-foreground text-xs">
-              {m.notification_new_count({ count: unread.toLocaleString(getLocale()) })}
+              {m.notification_new_count({ count: formatCount(unread) })}
             </span>
           ) : null}
         </div>

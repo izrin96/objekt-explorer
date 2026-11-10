@@ -13,11 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { tradeNo } from "@/features/offers/format";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
 import { When } from "../console/when";
 import { ATTENTION_BADGE, ATTENTION_DETAIL, ATTENTION_LABEL } from "./labels";
-import { count, LoadFailed, PersonLink, Slotted, TableFrame } from "./parts";
+import { LoadFailed, PersonLink, Slotted, TableFrame } from "./parts";
 import { tradeAttentionOptions } from "./queries";
 
 export function Attention({ days }: { days: StaffDays }) {
@@ -30,7 +31,7 @@ export function Attention({ days }: { days: StaffDays }) {
       <section aria-labelledby="mod-attention" className="flex flex-col gap-2">
         <h2 id="mod-attention" className="text-sm font-semibold">
           {m.mod_trades_attention_title()}{" "}
-          <span className="text-muted-foreground font-normal">{count(total)}</span>
+          <span className="text-muted-foreground font-normal">{formatCount(total)}</span>
         </h2>
         {rows.length === 0 ? (
           <p className="text-muted-foreground rounded-lg border border-dashed py-8 text-center text-sm">
@@ -41,7 +42,10 @@ export function Attention({ days }: { days: StaffDays }) {
         )}
         {total > rows.length ? (
           <p className="text-muted-foreground text-xs">
-            {m.mod_trades_attention_capped({ shown: count(rows.length), total: count(total) })}
+            {m.mod_trades_attention_capped({
+              shown: formatCount(rows.length),
+              total: formatCount(total),
+            })}
           </p>
         ) : null}
       </section>
@@ -57,7 +61,7 @@ export function Attention({ days }: { days: StaffDays }) {
               <li key={row.person.userId} className="flex items-center gap-2">
                 <PersonLink person={row.person} />
                 <span className="text-muted-foreground">
-                  {m.mod_trades_breakers_count({ count: count(row.failed) })}
+                  {m.mod_trades_breakers_count({ count: formatCount(row.failed) })}
                 </span>
               </li>
             ))}
@@ -129,8 +133,8 @@ function AttentionTable({ rows }: { rows: TradeAttention["rows"] }) {
               </TableCell>
               <TableCell className="tabular-nums">
                 {m.offer_trade_step_progress({
-                  verified: count(row.legsDone),
-                  total: count(row.legsTotal),
+                  verified: formatCount(row.legsDone),
+                  total: formatCount(row.legsTotal),
                 })}
               </TableCell>
             </TableRow>

@@ -9,9 +9,9 @@ import {
   ComboboxPrimitive,
 } from "@/components/ui/combobox";
 import { FOCUS_RING } from "@/lib/a11y";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { toolbarTrigger } from "./toolbar-trigger";
 
@@ -91,9 +91,7 @@ export function FilterCollection({
 
         {value.length > 0 && (
           <div className="text-muted-foreground flex items-center justify-between border-t px-2.5 py-1.5 text-xs">
-            <span>
-              {m.filter_picked_count({ count: value.length.toLocaleString(getLocale()) })}
-            </span>
+            <span>{m.filter_picked_count({ count: formatCount(value.length) })}</span>
             <button
               type="button"
               onClick={() => onChange([])}

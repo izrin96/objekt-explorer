@@ -23,8 +23,8 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { REASON_LABEL } from "./labels";
 
@@ -184,8 +184,8 @@ function ReportForm({
           <p aria-live="polite" className="text-muted-foreground self-end text-xs tabular-nums">
             {note.length >= NOTE_MAX - 50
               ? m.chat_counter({
-                  count: note.length.toLocaleString(getLocale()),
-                  max: NOTE_MAX.toLocaleString(getLocale()),
+                  count: formatCount(note.length),
+                  max: formatCount(NOTE_MAX),
                 })
               : null}
           </p>

@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { TransferableToggle } from "@/features/filters/filter-toggle";
 import { LONG_TAIL } from "@/features/filters/long-tail";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -101,11 +101,7 @@ export function ProgressView() {
             icon={ChartBarIcon}
             title={m.progress_empty_title()}
             hint={m.progress_empty_hint()}
-            action={
-              <Button variant="outline" size="sm" onClick={reset}>
-                {m.filter_reset_filter()}
-              </Button>
-            }
+            action={<EmptyStateReset onReset={reset} />}
           />
         )
       ) : (
@@ -154,15 +150,7 @@ export function ProgressView() {
               icon={ChartBarIcon}
               title={m.progress_empty_title()}
               hint={m.progress_empty_hint()}
-              action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFilters({ member: undefined })}
-                >
-                  {m.filter_reset_filter()}
-                </Button>
-              }
+              action={<EmptyStateReset onReset={() => setFilters({ member: undefined })} />}
             />
           )}
         </div>

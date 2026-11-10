@@ -5,8 +5,8 @@ import { useId, useState } from "react";
 
 import { MoreCount } from "@/components/shared/more-count";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { itemLabel } from "./format";
 import { ItemLabel } from "./item-label";
@@ -38,14 +38,14 @@ export function OfferSideList({
   const shown = rows.length > SIDE_TILES ? rows.slice(0, SIDE_TILES - 1) : rows;
   const more = rows.length - shown.length;
   const showAll = m.offer_side_all({
-    count: items.length.toLocaleString(getLocale()),
+    count: formatCount(items.length),
     side: label,
   });
   const sent = (item: OfferItemView) => open && item.sentAt !== null;
   const tileLabel = (item: OfferItemView, count: number) =>
     [
       itemLabel(item, collections),
-      count > 1 ? m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) }) : null,
+      count > 1 ? m.offer_any_copy_times({ count: formatCount(count) }) : null,
       sent(item) ? m.offer_item_sent() : null,
     ]
       .filter(Boolean)
@@ -61,7 +61,7 @@ export function OfferSideList({
             onClick={() => setSheetOpen(true)}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm tracking-wide uppercase outline-none focus-visible:ring-2"
           >
-            {label} · <span>{items.length.toLocaleString(getLocale())}</span>
+            {label} · <span>{formatCount(items.length)}</span>
           </button>
         ) : (
           <span className="text-muted-foreground tracking-wide uppercase">{label}</span>
@@ -107,7 +107,7 @@ export function OfferSideList({
         <SheetPopup>
           <SheetHeader>
             <SheetTitle className="text-base">
-              {label} · <span>{items.length.toLocaleString(getLocale())}</span>
+              {label} · <span>{formatCount(items.length)}</span>
             </SheetTitle>
           </SheetHeader>
           <SheetPanel>
@@ -128,7 +128,7 @@ export function OfferSideList({
                     {count > 1 ? (
                       <span className="text-muted-foreground">
                         {" "}
-                        {m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) })}
+                        {m.offer_any_copy_times({ count: formatCount(count) })}
                       </span>
                     ) : null}
                     {sent(item) ? (

@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
+import { formatCount } from "@/lib/number";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { RULE_KEYS } from "./queries";
 import { ruleText } from "./words";
@@ -53,7 +53,7 @@ export function ConfirmRule({
             ? m.rule_deleted()
             : rule.canMatch === 1
               ? m.rule_detached_one()
-              : m.rule_detached({ count: rule.canMatch.toLocaleString(getLocale()) }),
+              : m.rule_detached({ count: formatCount(rule.canMatch) }),
       });
       await Promise.all(
         [...RULE_KEYS, orpc.list.key()].map((queryKey) =>
@@ -92,7 +92,7 @@ export function ConfirmRule({
                     : (p) =>
                         m.rule_detach_desc({
                           ...p,
-                          count: rule.canMatch.toLocaleString(getLocale()),
+                          count: formatCount(rule.canMatch),
                         }),
                   { rule: ruleName },
                 )

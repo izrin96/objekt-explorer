@@ -12,17 +12,17 @@ import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { countOf, totalOf } from "@/features/offers/quantity";
 import { AnySerial } from "@/features/offers/wrong-copy";
+import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
 import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 /** A clean pick's lines under its tile: how many copies an ask covers, and the open offers it is in. */
 function notesOf(side: OfferSide, pick: OfferPick, flags: OfferPick["flags"]) {
   const notes: TileNote[] = [];
   if (pick.objektId === null && flags?.copies != null) {
-    const count = flags.copies.toLocaleString(getLocale());
+    const count = formatCount(flags.copies);
     notes.push({
       text:
         side === "get" ? m.offer_any_copy_ask_count({ count }) : m.offer_any_copy_count({ count }),
@@ -90,7 +90,7 @@ export function SideColumn({
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
         <span className="text-muted-foreground text-xs font-normal">
           {m.offer_side_count({
-            count: totalOf(picks).toLocaleString(getLocale()),
+            count: formatCount(totalOf(picks)),
             max: OFFER_SIDE_LIMIT,
           })}
         </span>
@@ -117,7 +117,7 @@ export function SideColumn({
           >
             <p className="min-w-0 flex-1 text-xs text-pretty">
               <span className="text-destructive-foreground font-medium">
-                {m.offer_blocked_banner({ count: blockedPicks.length.toLocaleString(getLocale()) })}
+                {m.offer_blocked_banner({ count: formatCount(blockedPicks.length) })}
               </span>
               <span className="text-muted-foreground block">{blockedReasons.join(" · ")}</span>
             </p>

@@ -19,6 +19,7 @@ import { FilterBar } from "@/features/filters/filter-bar";
 import { CombineDupsToggle } from "@/features/filters/filter-toggle";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import { LONG_TAIL } from "@/features/filters/long-tail";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
@@ -337,11 +338,7 @@ function ListEntries() {
           icon={MagnifyingGlassIcon}
           title={m.home_empty_title()}
           hint={m.list_filtered_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
+          action={<EmptyStateReset onReset={reset} />}
         />
       ) : (
         <>

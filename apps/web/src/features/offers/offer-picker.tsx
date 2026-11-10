@@ -12,8 +12,8 @@ import {
   SheetPopup,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { PickerSelectionContext } from "./candidate-grid";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
@@ -157,7 +157,7 @@ function PickerBody({
       <SheetFooter className="flex-row items-center">
         <p className="text-muted-foreground me-auto text-xs" aria-live="polite">
           {m.offer_picker_count({
-            count: total.toLocaleString(getLocale()),
+            count: formatCount(total),
             max: OFFER_SIDE_LIMIT,
           })}
           {full ? (

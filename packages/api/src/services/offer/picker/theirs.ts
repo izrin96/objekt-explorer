@@ -5,6 +5,7 @@ import { lists } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
+import { copyKey } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import type { CollectionFilters } from "../../../schemas/common/filters";
 import {
@@ -21,7 +22,6 @@ import {
   type IndexedObjekt,
   allowedEntries,
   collectionAddresses,
-  copyKey,
   fetchCopies,
   fetchObjekts,
   linkedAddresses,

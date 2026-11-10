@@ -17,11 +17,11 @@ import { DeletionBlockers } from "@/features/account/deletion-blockers";
 import { deletionCheckOptions } from "@/features/account/queries";
 import { forgetSession } from "@/features/auth/forget-session";
 import { authClient } from "@/lib/auth-client";
+import { formatCount } from "@/lib/number";
 import { client } from "@/lib/orpc";
 import { deleteRefusalText, refusalText } from "@/lib/refusal";
 import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 async function requestDeletion(step: Exclude<DeletionStep, "sign-in-again">) {
   let token: string | undefined;
@@ -147,7 +147,7 @@ function DeletionAction({
             title={m.auth_account_delete_account()}
             description={joinSentences([
               m.auth_account_delete_confirm_offers({
-                count: openOffers.toLocaleString(getLocale()),
+                count: formatCount(openOffers),
               }),
               m.auth_account_delete_confirm_keeps(),
               m.auth_account_delete_confirm_unlinks(),

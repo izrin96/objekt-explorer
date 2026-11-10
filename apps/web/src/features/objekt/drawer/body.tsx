@@ -11,10 +11,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { formatCount } from "@/lib/number";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { useSelection } from "@/stores/selection";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -206,7 +206,7 @@ export function DrawerBody({
                   <TabsTab value="owned">
                     {ownedCopies.length > 1
                       ? m.objekt_owned_count({
-                          count: ownedCopies.length.toLocaleString(getLocale()),
+                          count: formatCount(ownedCopies.length),
                         })
                       : m.objekt_owned()}
                   </TabsTab>

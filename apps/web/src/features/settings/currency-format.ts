@@ -1,6 +1,7 @@
 import { normalizeCurrency } from "@repo/lib/currency";
 
 import { intlCached } from "@/lib/intl-cache";
+import { formatCount } from "@/lib/number";
 import { getLocale } from "@/paraglide/runtime";
 
 /** keyed by locale and currency; a code the runtime rejects is never stored */
@@ -19,7 +20,7 @@ export function formatCurrency(amount: number, code: string): string {
     }
     return formatter.format(amount);
   } catch {
-    return `${amount.toLocaleString(getLocale())} ${currency}`;
+    return `${formatCount(amount)} ${currency}`;
   }
 }
 

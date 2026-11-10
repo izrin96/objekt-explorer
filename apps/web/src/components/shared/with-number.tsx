@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
-import { getLocale } from "@/paraglide/runtime";
 
 /** stands where a message puts a number, so each number can be styled whatever its position */
 const mark = (index: number) => `${index}`;
@@ -23,6 +23,10 @@ export function WithNumbers<K extends string>({
   const entries = Object.entries(numbers) as [K, number][];
   const marks = Object.fromEntries(entries.map(([name], index) => [name, mark(index)]));
   const parts = render(marks as Record<K, string>).split(MARKS);
+  const numberAt = (part: string) => {
+    const value = entries[Number(part)]?.[1];
+    return value === undefined ? null : formatCount(value);
+  };
   return (
     <>
       {parts.map((part, index) =>
@@ -30,7 +34,7 @@ export function WithNumbers<K extends string>({
           <Fragment key={index}>{part}</Fragment>
         ) : (
           <b key={index} className={cn("font-semibold", className)}>
-            {entries[Number(part)]?.[1]?.toLocaleString(getLocale())}
+            {numberAt(part)}
           </b>
         ),
       )}

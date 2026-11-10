@@ -1,6 +1,7 @@
 import type { Reputation } from "@repo/api/schemas/reputation";
 
 import { intlCached } from "@/lib/intl-cache";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -46,7 +47,7 @@ export function TrustLine({
       </span>
     );
   }
-  const count = unfinished.toLocaleString(getLocale());
+  const count = formatCount(unfinished);
   const hint = m.trust_unfinished_hint();
   return (
     // a span, so it can sit inside a button's phrasing content (the For you row)
@@ -65,7 +66,7 @@ export function TrustLine({
         <>
           {/* each " · " segment stays whole, so a wrapping line breaks only between them */}
           <span className="whitespace-nowrap">
-            {m.trust_verified({ count: reputation.verified.toLocaleString(getLocale()) })}
+            {m.trust_verified({ count: formatCount(reputation.verified) })}
           </span>
           {unfinished > 0 ? (
             <>

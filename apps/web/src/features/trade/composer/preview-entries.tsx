@@ -30,8 +30,8 @@ import { SelectedMark } from "@/features/objekt/selected-mark";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { LoadError } from "@/features/trade/load-error";
 import { activateOnKey } from "@/lib/a11y";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { selectIsSelecting, useSelection } from "@/stores/selection";
 
 import { useSideDialogs } from "./use-side-dialogs";
@@ -241,7 +241,7 @@ export function AllObjekts({
     fallback: title,
   });
   const listRatio = stored?.ratio ?? null;
-  const count = (entries?.length ?? 0).toLocaleString(getLocale());
+  const count = formatCount(entries?.length ?? 0);
 
   const ids = useSelection((s) => s.ids);
   const selecting = useSelection(selectIsSelecting);

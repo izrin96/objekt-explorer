@@ -1,8 +1,8 @@
 import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
 
+import { formatCount } from "@/lib/number";
 import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { Deadline, Leg, NextStep, Note, StepKind } from "./next-step";
 
@@ -121,7 +121,7 @@ export function yourTurnText(
       objekts:
         step.legs.length === 1 && only
           ? nameOf(only)
-          : m.offer_next_objekts_multiple({ count: step.legs.length.toLocaleString(getLocale()) }),
+          : m.offer_next_objekts_multiple({ count: formatCount(step.legs.length) }),
       name,
     }),
     body: sendBody(step, name),

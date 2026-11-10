@@ -30,8 +30,8 @@ import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { mutualCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
 import { copyWithToast } from "@/lib/clipboard";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -270,7 +270,7 @@ function TradeMatchesLink({
           ? undefined
           : shown === 1
             ? m.trade_matches_link_label_one()
-            : m.trade_matches_link_label({ count: shown.toLocaleString(getLocale()) })
+            : m.trade_matches_link_label({ count: formatCount(shown) })
       }
       render={
         <Link to="/trade/for-you" search={{ match: mutual ? "mutual" : "any", list: slug }} />
@@ -280,7 +280,7 @@ function TradeMatchesLink({
       {m.nav_trade_matches()}
       {shown === undefined ? null : (
         <Badge variant="secondary" size="sm">
-          {shown.toLocaleString(getLocale())}
+          {formatCount(shown)}
         </Badge>
       )}
     </Button>

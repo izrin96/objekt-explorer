@@ -2,7 +2,13 @@ import { describe, expect, test } from "bun:test";
 
 import { MAX_FILE_SIZE } from "@repo/api/constants";
 
-import { bannerPlan, MAX_MOVING_PICK_SIZE, MAX_STILL_PICK_SIZE, uploadCheck } from "./banner-rules";
+import {
+  bannerPlan,
+  hasTransparency,
+  MAX_MOVING_PICK_SIZE,
+  MAX_STILL_PICK_SIZE,
+  uploadCheck,
+} from "./banner-rules";
 
 const MB = 1024 * 1024;
 const file = (type: string, size: number) => ({ type, size });
@@ -54,5 +60,19 @@ describe("uploadCheck", () => {
   test("refuses over 10 MB", () => {
     expect(uploadCheck(file("video/mp4", MAX_FILE_SIZE))).toBe(true);
     expect(uploadCheck(file("video/mp4", MAX_FILE_SIZE + 1))).toBe(false);
+  });
+});
+
+describe("hasTransparency", () => {
+  test("fully opaque pixels have none", () => {
+    expect(hasTransparency(new Uint8ClampedArray([1, 2, 3, 255, 4, 5, 6, 255]))).toBe(false);
+  });
+
+  test("one pixel below full alpha is enough", () => {
+    expect(hasTransparency(new Uint8ClampedArray([1, 2, 3, 255, 4, 5, 6, 254]))).toBe(true);
+  });
+
+  test("a colour channel at 0 is not alpha", () => {
+    expect(hasTransparency(new Uint8ClampedArray([0, 0, 0, 255]))).toBe(false);
   });
 });

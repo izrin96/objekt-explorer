@@ -16,6 +16,7 @@ import {
   WEBM,
 } from "mediabunny";
 
+import { hasTransparency } from "@/features/link/banner-rules";
 import { reportError } from "@/lib/error-tracking";
 
 type ConvertOptions = { signal: AbortSignal; onProgress: (progress: number) => void };
@@ -105,17 +106,6 @@ async function transcode(input: Input, { signal, onProgress }: ConvertOptions) {
   return output.target.buffer;
 }
 
-function hasTransparency(
-  context: OffscreenCanvasRenderingContext2D,
-  size: BannerGeometry["output"],
-) {
-  const { data } = context.getImageData(0, 0, size.width, size.height);
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] !== 255) return true;
-  }
-  return false;
-}
-
 /** Browsers play GIF delays under 20 ms at 100 ms. */
 function frameSeconds(microseconds: number | null) {
   const ms = (microseconds ?? 100_000) / 1000;
@@ -170,7 +160,7 @@ async function convertGif(file: File, { signal, onProgress }: ConvertOptions) {
           size.width,
           size.height,
         );
-        if (hasTransparency(context, size)) {
+        if (hasTransparency(context.getImageData(0, 0, size.width, size.height).data)) {
           image.close();
           await output.cancel();
           return null;

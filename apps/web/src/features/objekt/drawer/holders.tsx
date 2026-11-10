@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { isSameAddress } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -78,25 +79,25 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
   const figures: Stat[] = [
     {
       label: m.objekt_holders(),
-      value: summary ? summary.holders.toLocaleString(getLocale()) : null,
+      value: summary ? formatCount(summary.holders) : null,
       detail: summary
         ? (physical
             ? m.objekt_holders_scanned_detail
             : summary.copies === 1
               ? m.objekt_holders_copies_detail_one
               : m.objekt_holders_copies_detail)({
-            count: summary.copies.toLocaleString(getLocale()),
+            count: formatCount(summary.copies),
           })
         : undefined,
     },
     {
       label: m.objekt_holders_own_one(),
-      value: single ? single.holders.toLocaleString(getLocale()) : null,
+      value: single ? formatCount(single.holders) : null,
       detail: summary && single ? percent(single.holders, summary.holders) : undefined,
     },
     {
       label: m.objekt_holders_own_ten(),
-      value: tenPlus ? tenPlus.holders.toLocaleString(getLocale()) : null,
+      value: tenPlus ? formatCount(tenPlus.holders) : null,
       detail:
         summary && tenPlus
           ? m.objekt_holders_own_ten_detail({ share: percent(tenPlus.copies, summary.copies) })
@@ -212,7 +213,7 @@ function SpreadChart({ summary }: { summary: Summary }) {
           <span key={b.key} className="inline-flex items-center gap-1.5">
             <span className={cn("size-2 rounded-xs", BUCKETS[b.key].color)} />
             {BUCKETS[b.key].label()}
-            <span>{b.holders.toLocaleString(getLocale())}</span>
+            <span>{formatCount(b.holders)}</span>
           </span>
         ))}
       </figcaption>
@@ -266,9 +267,7 @@ function HolderTableRow({ row, copies }: { row: HolderRow; copies: number }) {
         {row.lowestSerial === null ? "—" : `#${row.lowestSerial}`}
       </td>
       <td className="px-3 py-1.5 text-right tabular-nums">{percent(row.copies, copies)}</td>
-      <td className="px-3 py-1.5 text-right font-medium tabular-nums">
-        {row.copies.toLocaleString(getLocale())}
-      </td>
+      <td className="px-3 py-1.5 text-right font-medium tabular-nums">{formatCount(row.copies)}</td>
     </tr>
   );
 }

@@ -3,6 +3,7 @@ import { copyMode } from "@repo/api/schemas/list-copy";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { DialogLoadPanel } from "@/components/shared/dialog-load-panel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,14 +16,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { Spinner } from "@/components/ui/spinner";
 import { useUserProfiles } from "@/features/user/hooks";
 import { type FieldErrors, zodErrors } from "@/lib/form";
+import { formatCount } from "@/lib/number";
 import type { client } from "@/lib/orpc";
 import { orpc } from "@/lib/orpc";
-import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyList } from "./actions";
 import { toCopyDraft } from "./copy-draft";
@@ -54,15 +53,7 @@ export function CopyListDialog({
           <CopyListForm key={slug} list={data} onDone={() => onOpenChange(false)} />
         ) : (
           <>
-            <DialogPanel>
-              {error ? (
-                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
-              ) : (
-                <div className="flex justify-center py-6">
-                  <Spinner className="size-5" />
-                </div>
-              )}
-            </DialogPanel>
+            <DialogLoadPanel error={error} />
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_close()}
@@ -139,8 +130,8 @@ export function CopyListForm({
                 ? (preview.unit === "copies"
                     ? m.list_copy_hint_copies
                     : m.list_copy_hint_collections)({
-                    carried: preview.carried.toLocaleString(getLocale()),
-                    leftOut: preview.leftOut.toLocaleString(getLocale()),
+                    carried: formatCount(preview.carried),
+                    leftOut: formatCount(preview.leftOut),
                   })
                 : null}
             </p>

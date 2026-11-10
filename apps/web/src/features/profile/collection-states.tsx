@@ -7,8 +7,8 @@ import {
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
@@ -53,11 +53,7 @@ export function CollectionEmpty({ filtering }: { filtering: boolean }) {
         icon={MagnifyingGlassIcon}
         title={m.home_empty_title()}
         hint={m.profile_no_match_hint()}
-        action={
-          <Button variant="outline" size="sm" onClick={reset}>
-            {m.filter_reset_filter()}
-          </Button>
-        }
+        action={<EmptyStateReset onReset={reset} />}
       />
     );
   }

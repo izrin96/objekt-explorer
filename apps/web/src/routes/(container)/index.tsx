@@ -5,10 +5,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { MemberChips } from "@/features/filters/member-chips";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { filterSearchSchema, pickFilters } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
@@ -144,11 +144,7 @@ function HomePage() {
           icon={MagnifyingGlassIcon}
           title={m.home_empty_title()}
           hint={m.home_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
+          action={<EmptyStateReset onReset={reset} />}
         />
       ) : (
         <ObjektVirtualGrid

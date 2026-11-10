@@ -14,7 +14,6 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -30,14 +29,15 @@ import { foldSpinRows } from "@/features/activity/spin-rows";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/long-tail";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { canReset, isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
 import { isSameAddress } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { CheckpointPopover } from "../checkpoint-popover";
 import { ProfileCell } from "../profile-hover-card";
@@ -204,11 +204,7 @@ export function TradesView() {
           title={m.trades_empty()}
           hint={m.trades_empty_hint()}
           action={
-            isFiltering(filters) || type !== "all" ? (
-              <Button variant="outline" size="sm" onClick={reset}>
-                {m.filter_reset_filter()}
-              </Button>
-            ) : undefined
+            isFiltering(filters) || type !== "all" ? <EmptyStateReset onReset={reset} /> : undefined
           }
         />
       ) : (
@@ -217,7 +213,7 @@ export function TradesView() {
             {rows.length === 1 && !query.hasNextPage
               ? m.trades_count_one()
               : m.trades_count({
-                  count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
+                  count: `${formatCount(rows.length)}${query.hasNextPage ? "+" : ""}`,
                 })}
           </p>
 

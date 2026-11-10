@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
 import {
@@ -22,7 +21,7 @@ import {
 import { useScopedFacets } from "@/features/filters/facets";
 import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
-import { ResetButton } from "@/features/filters/reset-button";
+import { EmptyStateReset, ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useSetFacet, useSetFilters } from "@/features/filters/use-filters";
@@ -160,11 +159,7 @@ export function ActivityView() {
           icon={PulseIcon}
           title={m.activity_empty()}
           hint={m.activity_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
+          action={<EmptyStateReset onReset={reset} />}
         />
       ) : (
         <>

@@ -15,10 +15,10 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { activateOnKey } from "@/lib/a11y";
+import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { offerNo } from "./format";
 import { blockedReason } from "./pick";
@@ -64,7 +64,7 @@ export function CandidateTile({
     blocked !== null || (!selected && (full || (item.objektId === null && copies === 0)));
   const detail =
     item.objektId === null ? (
-      m.offer_any_copy_ask_count({ count: copies.toLocaleString(getLocale()) })
+      m.offer_any_copy_ask_count({ count: formatCount(copies) })
     ) : item.serial !== null ? (
       <SerialNo serial={item.serial} estimated={item.serialEstimated} />
     ) : null;

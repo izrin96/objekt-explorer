@@ -7,10 +7,10 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { ratioSideOf } from "@/features/list/ratio-text";
 import { nearCountText } from "@/lib/near-text";
+import { formatCount } from "@/lib/number";
 import { TONE_INK, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { MatchedListsChip } from "./matched-lists";
 import { PostStrip, SIDE_LINK } from "./post-side";
@@ -81,8 +81,8 @@ export function SideStrip({
           className={cn(toneChip("success"), "shrink-0 rounded-sm border px-1.5 normal-case")}
         >
           {side.role === "want"
-            ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
-            : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) })}
+            ? m.trade_list_count_you_have({ count: formatCount(count) })
+            : m.trade_list_count_you_want({ count: formatCount(count) })}
         </MatchedListsChip>
       ) : null}
       {/* never counted: muted, after the count, and the popover's way in when there is none */}

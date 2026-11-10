@@ -16,6 +16,7 @@ import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { MemberChips } from "@/features/filters/member-chips";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
@@ -29,8 +30,8 @@ import { useCurrency } from "@/features/settings/use-currency";
 import { marketMatchesOptions } from "@/features/trade/queries";
 import { ShowMyMatches } from "@/features/trade/show-my-matches";
 import { useCurrentUser } from "@/features/user/hooks";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { FloorPriceFilter } from "./filter-floor-price";
@@ -154,7 +155,7 @@ export function MarketView() {
               ? m.market_listing_count_one
               : m.market_listing_count
             ).parts({
-              count: totalListings.toLocaleString(getLocale()),
+              count: formatCount(totalListings),
             })}
             markup={countMarkup}
           />
@@ -185,11 +186,7 @@ export function MarketView() {
           icon={StorefrontIcon}
           title={m.market_empty()}
           hint={m.market_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
-            </Button>
-          }
+          action={<EmptyStateReset onReset={reset} />}
         />
       ) : (
         <ObjektVirtualGrid

@@ -24,8 +24,8 @@ import { ObjektCard, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { formatCurrency } from "@/features/settings/currency-format";
 import { nearCountText, nearRingText } from "@/lib/near-text";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { type NearOpen, type OpenObjekt, type SideNear } from "./near";
 import { sideItemsOptions } from "./queries";
@@ -175,8 +175,8 @@ export function SideItemsSheet({
       : undefined;
   const matchLabel = (count: number) =>
     side.role === "want"
-      ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
-      : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) });
+      ? m.trade_list_count_you_have({ count: formatCount(count) })
+      : m.trade_list_count_you_want({ count: formatCount(count) });
   const more = (has: boolean) => ({
     has,
     loading: query.isFetchingNextPage,
@@ -250,7 +250,7 @@ export function SideItemsSheet({
                   <TabsTab value="matched">{matchLabel(first.matched)}</TabsTab>
                   <TabsTab value="all">
                     {m.trade_side_all({
-                      count: (first.items.length + first.more).toLocaleString(getLocale()),
+                      count: formatCount(first.items.length + first.more),
                     })}
                   </TabsTab>
                 </TabsList>

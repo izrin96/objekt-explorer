@@ -1,5 +1,6 @@
 import { ofetch } from "ofetch";
 
+import { isCombinedMember } from "../member";
 import type { IndexedArtist } from "../types/common";
 import type {
   CosmoObjektMetadataV1,
@@ -20,14 +21,6 @@ export async function fetchMetadataV3(tokenId: string) {
 
 function isUnitMetadata(metadata: CosmoObjektMetadataV3) {
   return metadata.attributes.some((a) => a.trait_type === "Class" && a.value === "Unit");
-}
-
-/**
- * Unit collections carry a combined "Member" trait (e.g. "id4 X id8") alongside
- * one trait per individual member.
- */
-function isCombinedMember(value: string) {
-  return value.toLowerCase().includes(" x ");
 }
 
 /**

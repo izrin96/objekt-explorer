@@ -26,9 +26,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ObjektPreviewCount } from "@/features/objekt/objekt-preview-strip";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { TONE_INK } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -91,9 +91,7 @@ export function ListSection({
       <h2 id={headingId} className="flex items-baseline gap-2 text-sm font-semibold">
         <span className={TONE_INK[LIST_TYPE_TONE[tone]]}>{title}</span>
         <span className="sr-only">: </span>
-        <span className="text-muted-foreground text-xs font-normal">
-          {count.toLocaleString(getLocale())}
-        </span>
+        <span className="text-muted-foreground text-xs font-normal">{formatCount(count)}</span>
       </h2>
       {children}
     </section>

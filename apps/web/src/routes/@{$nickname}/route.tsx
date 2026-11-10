@@ -12,8 +12,8 @@ import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
 import { locksOptions, pinsOptions, profileQuery } from "@/features/profile/queries";
 import { useProfileSummary } from "@/features/profile/use-profile-objekts";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 export const Route = createFileRoute("/@{$nickname}")({
   loader: async ({ params, cause, context: { queryClient } }) => {
@@ -66,7 +66,7 @@ function ProfileBody({ nickname }: { nickname: string }) {
 function ProfileSummary() {
   const summary = useProfileSummary();
   const count = (value: number) =>
-    summary.isPending ? "—" : `${value.toLocaleString(getLocale())}${summary.partial ? "+" : ""}`;
+    summary.isPending ? "—" : `${formatCount(value)}${summary.partial ? "+" : ""}`;
 
   return (
     <ProfileStats
@@ -77,8 +77,8 @@ function ProfileSummary() {
           unit: m.profile_stats_unique(),
           label: m.profile_stats_collections(),
         },
-        { value: summary.pins.toLocaleString(getLocale()), label: m.profile_stats_pinned() },
-        { value: summary.locks.toLocaleString(getLocale()), label: m.profile_stats_locked() },
+        { value: formatCount(summary.pins), label: m.profile_stats_pinned() },
+        { value: formatCount(summary.locks), label: m.profile_stats_locked() },
       ]}
     />
   );

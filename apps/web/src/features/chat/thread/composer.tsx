@@ -21,10 +21,10 @@ import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { currentQuote, quoteText } from "@/features/chat/reply";
 import { SendingAs } from "@/features/link/shown-as";
 import { useStartGate } from "@/features/user/start-gate";
+import { formatCount } from "@/lib/number";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 import {
   dropDraftSendId,
   restoreDraft,
@@ -303,10 +303,10 @@ export function Composer({
           {over === 1
             ? m.chat_too_long_one()
             : over > 1
-              ? m.chat_too_long({ count: over.toLocaleString(getLocale()) })
+              ? m.chat_too_long({ count: formatCount(over) })
               : m.chat_counter({
-                  count: length.toLocaleString(getLocale()),
-                  max: MESSAGE_MAX_LENGTH.toLocaleString(getLocale()),
+                  count: formatCount(length),
+                  max: formatCount(MESSAGE_MAX_LENGTH),
                 })}
         </p>
       ) : null}

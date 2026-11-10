@@ -2,13 +2,14 @@ import type { TrackerHealth } from "@repo/api/schemas/staff-totals";
 import { useQuery } from "@tanstack/react-query";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { When } from "../console/when";
 import { spanText } from "./format";
-import { count, LoadFailed, Slotted } from "./parts";
+import { LoadFailed, Slotted } from "./parts";
 import { trackerHealthOptions } from "./queries";
 
 export function HealthStrip() {
@@ -76,10 +77,10 @@ function HealthLine({ health }: { health: TrackerHealth }) {
         </span>
         <span>
           {m.mod_trades_health_open({
-            legs: count(health.open.legs),
-            away: count(health.open.away),
-            stuck: count(health.open.stuck),
-            copies: count(health.open.copies),
+            legs: formatCount(health.open.legs),
+            away: formatCount(health.open.away),
+            stuck: formatCount(health.open.stuck),
+            copies: formatCount(health.open.copies),
           })}
         </span>
         {behind ? <span>{m.mod_trades_health_behind_hint()}</span> : null}

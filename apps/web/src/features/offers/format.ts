@@ -13,6 +13,7 @@ import {
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/currency-format";
 import { intlCached } from "@/lib/intl-cache";
+import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
 import { relativeTime, untilLabel } from "@/lib/time";
 import { statusTone } from "@/lib/tone";
@@ -284,8 +285,8 @@ export function leftLabel(iso: string, now: number) {
 }
 
 export function progressText(verified: number, total: number) {
-  const done = verified.toLocaleString(getLocale());
+  const done = formatCount(verified);
   return total === 1
     ? m.offer_progress_one({ verified: done })
-    : m.offer_progress({ verified: done, total: total.toLocaleString(getLocale()) });
+    : m.offer_progress({ verified: done, total: formatCount(total) });
 }

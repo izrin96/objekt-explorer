@@ -8,7 +8,7 @@ import {
 } from "@repo/lib/media";
 import type { CropperRef } from "react-advanced-cropper";
 
-import { bannerPlan, uploadCheck } from "@/features/link/banner-rules";
+import { bannerPlan, hasTransparency, uploadCheck } from "@/features/link/banner-rules";
 import { m } from "@/paraglide/messages";
 
 export const BANNER_ACCEPT = acceptedFileMimeTypes.join(",");
@@ -36,14 +36,10 @@ function toBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
   });
 }
 
-function hasTransparency(canvas: HTMLCanvasElement): boolean {
+function canvasHasTransparency(canvas: HTMLCanvasElement): boolean {
   const context = canvas.getContext("2d");
   if (!context) return true;
-  const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] !== 255) return true;
-  }
-  return false;
+  return hasTransparency(context.getImageData(0, 0, canvas.width, canvas.height).data);
 }
 
 /**
@@ -57,7 +53,7 @@ async function cropToBanner(cropper: CropperRef | null, file: File): Promise<Fil
 
   const webp = await toBlob(canvas, "image/webp");
   const blob =
-    webp.type === "image/webp" || hasTransparency(canvas)
+    webp.type === "image/webp" || canvasHasTransparency(canvas)
       ? webp
       : await toBlob(canvas, "image/jpeg");
 

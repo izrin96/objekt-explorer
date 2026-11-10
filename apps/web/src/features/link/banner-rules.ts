@@ -40,3 +40,11 @@ export function bannerPlan(file: Picked): BannerPlan {
 export function uploadCheck(file: Picked): boolean {
   return file.size <= MAX_FILE_SIZE;
 }
+
+/** Whether any pixel of RGBA data (`ImageData.data`) is less than fully opaque. */
+export function hasTransparency(rgba: Uint8ClampedArray) {
+  for (let i = 3; i < rgba.length; i += 4) {
+    if (rgba[i] !== 255) return true;
+  }
+  return false;
+}

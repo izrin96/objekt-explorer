@@ -3,12 +3,12 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { type SQL, and, asc, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 
 import { mergeSortedTransfers } from "../../lib/transfer-merge";
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../../schemas/transfers";
 import { getCollectionColumns } from "../objekt/collection-columns";
-import { getCollectionFilters } from "./feed";
+import { collectionScope } from "./feed";
 import { withSpinRewards } from "./spin-rewards";
 
 const PER_PAGE = 150;
@@ -76,33 +76,20 @@ function getTypeFilters(type: AddressTransfersFilters["type"], addr: string): SQ
 async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
   const typeFilters = getTypeFilters(query.type, addr);
   const { order } = query;
-  const past = order === "desc" ? lt : gt;
   const sortBy = order === "desc" ? desc : asc;
+  // a row comparison, so the (address, timestamp, id) indexes seek to the cursor; the same test
+  // spelled with OR is only a filter, and a deep page walked every row before it
+  const past = order === "desc" ? sql`<` : sql`>`;
   const cursorFilter = query.cursor
     ? [
-        or(
-          past(transfers.timestamp, query.cursor.timestamp),
-          and(eq(transfers.timestamp, query.cursor.timestamp), past(transfers.id, query.cursor.id)),
-        ),
+        sql`(${transfers.timestamp}, ${transfers.id}) ${past} (${query.cursor.timestamp}::timestamptz, ${query.cursor.id}::uuid)`,
       ]
     : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
-  const collectionFilters = getCollectionFilters(query);
+  const scope = await collectionScope(query);
+  if (scope === null) return [];
 
-  // When collection filters are present, use a subquery to let PostgreSQL
-  // optimize the join instead of materializing hundreds of UUIDs client-side.
-  if (collectionFilters.length > 0) {
-    const collectionSubquery = indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(...collectionFilters));
-
-    // Run the collection query first to check if any match,
-    // avoids a full scan of transfers when no collections match the filters.
-    const matchingCollections = await collectionSubquery;
-
-    if (matchingCollections.length === 0) return [];
-
+  if (scope) {
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ transfer: { id: transfers.id, timestamp: transfers.timestamp } })
@@ -112,7 +99,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
             ...addressFilters,
             ...cursorFilter,
             ...tsFilter,
-            inArray(transfers.collectionId, collectionSubquery),
+            inArray(transfers.collectionId, scope.ids),
           ),
         )
         .orderBy(sortBy(transfers.timestamp), sortBy(transfers.id))

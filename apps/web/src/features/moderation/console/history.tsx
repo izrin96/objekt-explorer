@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { SANCTION_LABEL, auditActionLabel, roleLabel } from "@/features/moderation/labels";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { RevokeButton } from "./revoke-dialog";
 import { type Account, personName, sectionTitle } from "./shared";
@@ -75,7 +75,7 @@ export function History({
                     <span className="text-muted-foreground text-xs">
                       {days === 1
                         ? m.mod_act_one_day()
-                        : m.mod_act_days({ count: days.toLocaleString(getLocale()) })}
+                        : m.mod_act_days({ count: formatCount(days) })}
                     </span>
                   ) : null}
                   <span className="text-muted-foreground">

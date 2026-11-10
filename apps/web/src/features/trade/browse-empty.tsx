@@ -2,6 +2,7 @@ import { CardsThreeIcon } from "@phosphor-icons/react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
+import { EmptyStateReset } from "@/features/filters/reset-button";
 import { tagText } from "@/features/list/tag-label";
 import type { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
@@ -46,11 +47,7 @@ export function BrowseEmpty({
       icon={CardsThreeIcon}
       title={m.trade_browse_no_filter_title()}
       hint={m.trade_browse_empty_hint()}
-      action={
-        <Button variant="outline" size="sm" onClick={onReset}>
-          {m.filter_reset_filter()}
-        </Button>
-      }
+      action={<EmptyStateReset onReset={onReset} />}
     />
   ) : mutual ? (
     <EmptyState
@@ -107,13 +104,7 @@ export function BrowseEmpty({
               : m.trade_browse_scope_empty_hint_settings()
             : m.trade_browse_empty_none_hint()
       }
-      action={
-        filtering ? (
-          <Button variant="outline" size="sm" onClick={onReset}>
-            {m.filter_reset_filter()}
-          </Button>
-        ) : undefined
-      }
+      action={filtering ? <EmptyStateReset onReset={onReset} /> : undefined}
     />
   );
 }

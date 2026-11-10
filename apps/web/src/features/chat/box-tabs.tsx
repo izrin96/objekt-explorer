@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { requestCountOptions } from "./queries";
 
@@ -57,7 +57,7 @@ export function BoxTabs({ box }: { box: ChatBox }) {
                   {requests > 99 ? "99+" : requests}
                 </span>
                 <span className="sr-only">
-                  {m.chat_box_requests_count({ count: requests.toLocaleString(getLocale()) })}
+                  {m.chat_box_requests_count({ count: formatCount(requests) })}
                 </span>
               </>
             ) : null}

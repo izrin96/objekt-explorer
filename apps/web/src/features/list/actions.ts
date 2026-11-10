@@ -3,10 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { toastManager } from "@/components/ui/toast";
 import { currentUserOptions } from "@/features/user/queries";
+import { formatCount } from "@/lib/number";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { LIST_QUERY_KEY } from "./queries";
 
@@ -97,8 +97,8 @@ export function useCopyList({ opensCopy = true }: { opensCopy?: boolean } = {}) 
     orpc.list.copy.mutationOptions({
       onSuccess: async ({ slug, carried, leftOut, unit }) => {
         const counts = {
-          carried: carried.toLocaleString(getLocale()),
-          leftOut: leftOut.toLocaleString(getLocale()),
+          carried: formatCount(carried),
+          leftOut: formatCount(leftOut),
         };
         toastManager.add({
           type: "success",
@@ -218,7 +218,7 @@ export function useRemoveObjektsFromList() {
             removed === 1
               ? m.actions_remove_from_list_success_one()
               : m.actions_remove_from_list_success_multiple({
-                  count: removed.toLocaleString(getLocale()),
+                  count: formatCount(removed),
                 }),
         });
         await invalidate(slug);

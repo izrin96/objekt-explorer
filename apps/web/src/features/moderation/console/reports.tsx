@@ -13,9 +13,9 @@ import { ItemLabel } from "@/features/offers/item-label";
 import { pickKey } from "@/features/offers/pick";
 import { groupRows } from "@/features/offers/quantity";
 import { formatCurrency } from "@/features/settings/currency-format";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { ReportPost } from "./report-post";
 import { type Account, personName, sectionTitle } from "./shared";
@@ -175,9 +175,9 @@ function Excerpt({
   return (
     <details open={open} className="group rounded-md border">
       <summary className="text-muted-foreground hover:text-foreground cursor-pointer px-3 py-2 text-xs font-medium">
-        {m.mod_excerpt_summary({ count: entries.length.toLocaleString(getLocale()) })}
+        {m.mod_excerpt_summary({ count: formatCount(entries.length) })}
         {flaggedCount > 0 ? (
-          <> · {m.mod_excerpt_flagged_count({ count: flaggedCount.toLocaleString(getLocale()) })}</>
+          <> · {m.mod_excerpt_flagged_count({ count: formatCount(flaggedCount) })}</>
         ) : null}
       </summary>
       <ol className="flex max-h-128 flex-col overflow-y-auto overscroll-contain border-t px-3 py-3">
@@ -301,9 +301,7 @@ function ExcerptOfferView({
               {groupRows(side.items, pickKey).map(({ key, item, count }) => (
                 <li key={key} className="break-words">
                   <ItemLabel item={item} collections={collections} />
-                  {count > 1 ? (
-                    <> {m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) })}</>
-                  ) : null}
+                  {count > 1 ? <> {m.offer_any_copy_times({ count: formatCount(count) })}</> : null}
                 </li>
               ))}
             </ul>

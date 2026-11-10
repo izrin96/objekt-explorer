@@ -21,3 +21,12 @@ export function ResetButton({ onReset, disabled }: { onReset: () => void; disabl
     </Button>
   );
 }
+
+/** The Reset filters action of an empty state that filters emptied. */
+export function EmptyStateReset({ onReset }: { onReset: () => void }) {
+  return (
+    <Button variant="outline" size="sm" onClick={onReset}>
+      {m.filter_reset_filter()}
+    </Button>
+  );
+}

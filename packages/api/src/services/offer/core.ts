@@ -15,7 +15,7 @@ import { type SQL, and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { holdsMessage, pairKey, startFactsOf, startVerdict } from "../../lib/chat-rules";
 import { type ListEntryRef, type OpenOfferHolder, safetyRefusal } from "../../lib/offer-rules";
-import { addressesByUser } from "../../lib/trade-rank";
+import { addressesByUser, copyKey } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type ChatTarget } from "../../schemas/chat";
 import { type OfferRefusal } from "../../schemas/offer";
@@ -245,8 +245,6 @@ export async function openAnyCopyLegs(
   for (const row of rows) counts.set(copyKey(row.userId, row.slug), row.n);
   return counts;
 }
-
-export const copyKey = (userId: string, slug: string) => `${userId}:${slug}`;
 
 /** The open offers `me` is a party to that hold each of `ids`. */
 export async function openOfferHolders(ids: string[], me: string) {

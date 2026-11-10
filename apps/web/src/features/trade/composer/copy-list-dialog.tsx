@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { type RefObject, useId, useState } from "react";
 
+import { DialogLoadPanel } from "@/components/shared/dialog-load-panel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogPanel,
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,12 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { CopyListForm } from "@/features/list/copy-list-dialog";
 import { ListLabel } from "@/features/list/list-option";
 import { listFindOptions } from "@/features/list/queries";
 import { useUserLists } from "@/features/user/hooks";
-import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import type { Slot } from "../post-kind-text";
@@ -97,17 +95,7 @@ export function ComposerCopyDialog({
           />
         ) : (
           <>
-            {slug !== null ? (
-              <DialogPanel>
-                {error ? (
-                  <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
-                ) : (
-                  <div className="flex justify-center py-6">
-                    <Spinner className="size-5" />
-                  </div>
-                )}
-              </DialogPanel>
-            ) : null}
+            {slug !== null ? <DialogLoadPanel error={error} /> : null}
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_cancel()}

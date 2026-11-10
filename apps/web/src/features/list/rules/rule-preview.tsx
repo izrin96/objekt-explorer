@@ -1,7 +1,7 @@
 import { type ListRuleInput, ruleDef } from "@repo/api/schemas/list-rule";
 
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { ruleText } from "./words";
 
@@ -40,14 +40,14 @@ export function RulePreview({
             <>
               <span className="text-muted-foreground text-xs">
                 {counts.covers === 1
-                  ? m.rule_preview_counts_one({ owned: counts.owned.toLocaleString(getLocale()) })
+                  ? m.rule_preview_counts_one({ owned: formatCount(counts.owned) })
                   : m.rule_preview_counts({
-                      covers: counts.covers.toLocaleString(getLocale()),
-                      owned: counts.owned.toLocaleString(getLocale()),
+                      covers: formatCount(counts.covers),
+                      owned: formatCount(counts.owned),
                     })}{" "}
                 ·{" "}
                 <span className="text-foreground font-medium">
-                  {m.rule_can_match({ count: counts.canMatch.toLocaleString(getLocale()) })}
+                  {m.rule_can_match({ count: formatCount(counts.canMatch) })}
                 </span>
               </span>
               {counts.problem === "nothing_to_match" ? (

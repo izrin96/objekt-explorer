@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./member": "./src/member.ts",
     "./types/*": "./src/types/*.ts",
     "./server/*": "./src/server/*.ts"
   },

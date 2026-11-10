@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { type Stat, StatRow } from "./stat-row";
 
@@ -228,16 +228,16 @@ function SerialStats({
   const stats: Stat[] = [
     {
       label: physical ? m.objekt_scanned_copies() : m.objekt_copies(),
-      value: data ? data.total.toLocaleString(getLocale()) : null,
+      value: data ? formatCount(data.total) : null,
     },
     ...(showEstimate ? [{ label: m.objekt_max_serial_estimate(), value: serialEstimate }] : []),
     {
       label: m.objekt_event_spun(),
-      value: data ? data.spin.toLocaleString(getLocale()) : null,
+      value: data ? formatCount(data.spin) : null,
     },
     {
       label: m.objekt_non_spin(),
-      value: data ? (data.total - data.spin).toLocaleString(getLocale()) : null,
+      value: data ? formatCount(data.total - data.spin) : null,
     },
     {
       label: m.objekt_transferable(),
@@ -246,7 +246,7 @@ function SerialStats({
           ? `${((data.transferable / data.total) * 100).toFixed(2)}%`
           : "—"
         : null,
-      detail: data?.transferable.toLocaleString(getLocale()),
+      detail: data ? formatCount(data.transferable) : undefined,
     },
   ];
 
@@ -267,8 +267,7 @@ function SerialStats({
 /** "≈ 1,350", "1,300–1,400", or "≥ 1,300" when only the low end is known. */
 function serialEstimateText(estimate: CollectionMetadataOutput["serialEstimate"]) {
   if (estimate === null) return null;
-  const n = (v: number) => v.toLocaleString(getLocale());
-  if (estimate.max === null) return `≥ ${n(estimate.min)}`;
-  if (estimate.max === estimate.min) return `≈ ${n(estimate.min)}`;
-  return `${n(estimate.min)}–${n(estimate.max)}`;
+  if (estimate.max === null) return `≥ ${formatCount(estimate.min)}`;
+  if (estimate.max === estimate.min) return `≈ ${formatCount(estimate.min)}`;
+  return `${formatCount(estimate.min)}–${formatCount(estimate.max)}`;
 }

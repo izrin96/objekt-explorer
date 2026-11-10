@@ -15,9 +15,9 @@ import { Frame, FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
+import { formatCount } from "@/lib/number";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyTradeLink, useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
@@ -113,7 +113,7 @@ export const PersonRow = memo(function PersonRow({
   const lists =
     keptLists === 1
       ? m.trade_person_lists_one()
-      : m.trade_person_lists({ count: keptLists.toLocaleString(getLocale()) });
+      : m.trade_person_lists({ count: formatCount(keptLists) });
 
   // the row's matches are added (the Can swap pair, else the bigger side), its near matches
   // offered; a post page adds those through its one post, as that post's own Make offer does
@@ -292,7 +292,7 @@ export const PersonRow = memo(function PersonRow({
           {rest.length === 1
             ? m.trade_person_more_one({ name: pageName })
             : m.trade_person_more({
-                count: rest.length.toLocaleString(getLocale()),
+                count: formatCount(rest.length),
                 name: pageName,
               })}
         </Button>

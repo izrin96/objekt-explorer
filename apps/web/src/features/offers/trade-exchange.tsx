@@ -14,10 +14,10 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { TogglePrimitive } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem, ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { FOCUS_RING } from "@/lib/a11y";
+import { formatCount } from "@/lib/number";
 import { TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { EstimatedSerialNote } from "./estimated-serial-note";
 import { type ExchangeFilter, decideCount, exchangeGroups, filterCounts } from "./exchange";
@@ -222,7 +222,7 @@ export function TradeExchange({
                 {toDecide > 0 ? (
                   <>
                     {" · "}
-                    {m.offer_exchange_to_decide({ count: toDecide.toLocaleString(getLocale()) })}
+                    {m.offer_exchange_to_decide({ count: formatCount(toDecide) })}
                   </>
                 ) : null}
               </>

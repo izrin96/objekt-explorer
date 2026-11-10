@@ -1,8 +1,8 @@
 import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { Toggle } from "@/components/ui/toggle";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import type { previewRows } from "./add-to-list-source";
 
@@ -32,8 +32,8 @@ export function PreviewSection({
         {copyCount && (
           <span className="text-muted-foreground text-xs">
             {m.list_add_copies_count({
-              picked: copyCount.picked.toLocaleString(getLocale()),
-              total: copyCount.total.toLocaleString(getLocale()),
+              picked: formatCount(copyCount.picked),
+              total: formatCount(copyCount.total),
             })}
           </span>
         )}
@@ -68,7 +68,7 @@ export function PreviewSection({
           ))}
           {hidden > 0 && (
             <li className="text-muted-foreground text-xs">
-              {m.list_add_more_rows({ count: hidden.toLocaleString(getLocale()) })}
+              {m.list_add_more_rows({ count: formatCount(hidden) })}
             </li>
           )}
         </ul>

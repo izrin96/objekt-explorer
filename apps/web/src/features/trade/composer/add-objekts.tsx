@@ -25,9 +25,9 @@ import { collectionName } from "@/features/objekt/objekt-label";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { formatCurrency } from "@/features/settings/currency-format";
 import { useUserProfiles } from "@/features/user/hooks";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { CollectionGrid, OwnedGrid, type Ticked } from "./add-objekts-grids";
 import { addObjektsRequest, addSourceOf } from "./add-objekts-request";
@@ -126,7 +126,7 @@ function AddObjektsBody({
     <Button className="flex-1" disabled={count === 0} loading={add.isPending} onClick={submit}>
       {count === 0
         ? m.list_manage_objekt_add_button()
-        : m.trade_composer_add_button({ count: count.toLocaleString(getLocale()) })}
+        : m.trade_composer_add_button({ count: formatCount(count) })}
     </Button>
   );
 
@@ -184,7 +184,7 @@ function AddObjektsBody({
             <PopoverTrigger render={<Button variant="outline" className="shrink-0" />}>
               <CardsThreeIcon aria-hidden />
               <span className="sr-only">{m.trade_composer_add_ticked()}</span>
-              <span>{count.toLocaleString(getLocale())}</span>
+              <span>{formatCount(count)}</span>
               <CaretUpIcon aria-hidden className="size-3.5 opacity-60" />
             </PopoverTrigger>
             <PopoverPopup side="top" align="start" className="w-80 max-w-full">
@@ -260,7 +260,7 @@ function Tray({
         <span ref={heading} tabIndex={-1} className="text-sm font-medium outline-none">
           {m.trade_composer_add_ticked()}
         </span>
-        <Badge variant="outline">{count.toLocaleString(getLocale())}</Badge>
+        <Badge variant="outline">{formatCount(count)}</Badge>
         <Button
           variant="ghost"
           size="xs"

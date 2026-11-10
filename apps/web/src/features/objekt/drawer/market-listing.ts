@@ -11,8 +11,8 @@ import { formatUtcDay } from "@/features/market/format-utc-day";
 import { type HistoryPoint, toRows } from "@/features/market/price-history-rows";
 import type { OfferStart } from "@/features/offers/offer-link";
 import { isSameAddress } from "@/lib/address";
+import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 const TREND_MIN_RECORDS = 7;
 
@@ -84,12 +84,8 @@ export const onTradeText = (counts: { have: number; want: number }) =>
     ? null
     : [
         m.objekt_market_on_trade(),
-        counts.have > 0
-          ? m.objekt_market_on_trade_have({ count: counts.have.toLocaleString(getLocale()) })
-          : null,
-        counts.want > 0
-          ? m.objekt_market_on_trade_want({ count: counts.want.toLocaleString(getLocale()) })
-          : null,
+        counts.have > 0 ? m.objekt_market_on_trade_have({ count: formatCount(counts.have) }) : null,
+        counts.want > 0 ? m.objekt_market_on_trade_want({ count: formatCount(counts.want) }) : null,
       ]
         .filter((part) => part !== null)
         .join(" · ");

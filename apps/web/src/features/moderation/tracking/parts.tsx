@@ -13,6 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { formatCount } from "@/lib/number";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -33,8 +34,6 @@ export function Slotted({ text, node }: { text: (slot: string) => string; node: 
     </>
   );
 }
-
-export const count = (value: number) => value.toLocaleString(getLocale());
 
 /** The range as links, so it lives in the URL and a reload keeps it. */
 export function RangeControl({
@@ -60,7 +59,7 @@ export function RangeControl({
             />
           }
         >
-          {m.mod_totals_range_days({ days: count(option) })}
+          {m.mod_totals_range_days({ days: formatCount(option) })}
         </Button>
       ))}
     </nav>
@@ -157,9 +156,9 @@ export function DayBars({
           {days.map((d, i) => (
             <tr key={d.day}>
               <th scope="row">{data[i]!.label}</th>
-              <td>{count(d.count)}</td>
+              <td>{formatCount(d.count)}</td>
               {more.map((column) => (
-                <td key={column.label}>{count(column.counts[i] ?? 0)}</td>
+                <td key={column.label}>{formatCount(column.counts[i] ?? 0)}</td>
               ))}
             </tr>
           ))}
@@ -199,7 +198,7 @@ export function LabelledBars({
                 }}
               />
             </span>
-            <span className="text-end tabular-nums">{count(row.count)}</span>
+            <span className="text-end tabular-nums">{formatCount(row.count)}</span>
           </li>
         ))}
       </ul>
