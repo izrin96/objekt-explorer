@@ -36,7 +36,19 @@ async function within<T>(promise: Promise<T>, ms: number) {
 
 async function take(key: string, token: string, ttlMs: number) {
   if (closing) return false;
-  const reply = await within(redis.send("SET", [key, token, "NX", "PX", String(ttlMs)]), CALL_MS);
+  const setting = redis.send("SET", [key, token, "NX", "PX", String(ttlMs)]);
+  let reply: unknown;
+  try {
+    reply = await within(setting, CALL_MS);
+  } catch (error) {
+    // the SET is still queued and may land after we gave up, holding the key for a token no
+    // one refreshes or frees
+    void setting.then(
+      (late) => (late === "OK" ? release(key, token) : undefined),
+      () => {},
+    );
+    throw error;
+  }
   if (reply !== "OK") return false;
   held.set(key, token);
   return true;
