@@ -24,15 +24,50 @@ describe("pairSpins", () => {
     expect(pairSpins([ev("s", sec(0))], [ev("m", sec(15))])).toEqual(new Map([["s", "m"]]));
   });
 
-  test("a spin sent before the last reward landed takes the next one, first in first out", () => {
+  test("a spin sent before the last reward landed costs at most a swap of the two", () => {
     const pairs = pairSpins(
       [ev("a", sec(0)), ev("b", sec(5))],
       [ev("ra", sec(20)), ev("rb", sec(31))],
     );
     expect(pairs).toEqual(
       new Map([
-        ["a", "ra"],
-        ["b", "rb"],
+        ["b", "ra"],
+        ["a", "rb"],
+      ]),
+    );
+  });
+
+  test("a broke spin does not take the next spin's reward", () => {
+    const pairs = pairSpins([ev("broke", sec(0)), ev("next", sec(40))], [ev("reward", sec(56))]);
+    expect(pairs).toEqual(new Map([["next", "reward"]]));
+  });
+
+  test("a run of quick spins with breaks pairs each reward with the spin just before it", () => {
+    // prod, 2026-11-10 10:40-10:46: oldest-first left DaHyun 105Z broke and gave
+    // its Nien 102Z to a broke spin three minutes earlier
+    const at = (hms: string) => Date.parse(`2026-11-10T${hms}Z`);
+    const pairs = pairSpins(
+      [
+        ev("jiyeon-1", at("10:40:56")),
+        ev("jiyeon-2", at("10:41:30")),
+        ev("sullin", at("10:42:44")),
+        ev("dahyun", at("10:43:49")),
+        ev("seoah", at("10:44:21")),
+        ev("nien", at("10:45:35")),
+      ],
+      [
+        ev("m-sullin", at("10:41:09")),
+        ev("m-dahyun", at("10:41:57")),
+        ev("m-seoah", at("10:43:06")),
+        ev("m-nien", at("10:44:05")),
+      ],
+    );
+    expect(pairs).toEqual(
+      new Map([
+        ["jiyeon-1", "m-sullin"],
+        ["jiyeon-2", "m-dahyun"],
+        ["sullin", "m-seoah"],
+        ["dahyun", "m-nien"],
       ]),
     );
   });
@@ -166,7 +201,7 @@ describe("spinWindows", () => {
   });
 
   test("the page-edge chain pairs the same from either page", () => {
-    // spins S0 0:00, S1 2:00; mints Ma 6:00, M 11:30. A page holding only M must still see S0.
+    // spins S0 0:00, S1 2:00; mints Ma 6:00, M 11:30. A page holding only M reads S0 and S1 too.
     const min = (m: number) => T0 + m * 60_000;
     const [window] = spinWindows([{ from: Addresses.NULL, to: "0xabc", at: min(11.5) }]);
     expect(window!.from).toBeLessThanOrEqual(min(0));
@@ -174,7 +209,7 @@ describe("spinWindows", () => {
       [ev("S0", min(0)), ev("S1", min(2))],
       [ev("Ma", min(6)), ev("M", min(11.5))],
     );
-    expect(pairs.get("S1")).toBe("M");
+    expect(pairs).toEqual(new Map([["S1", "Ma"]]));
   });
 
   test("a page with no spin or mint reads nothing", () => {

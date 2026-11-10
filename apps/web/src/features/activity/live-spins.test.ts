@@ -82,7 +82,7 @@ describe("live spin rewards", () => {
     const twice = pairLiveRewards(once, KEY, [mint("m", 15)], []);
     expect(twice).toBe(once);
     expect(twice.rewards.size).toBe(1);
-    expect(twice.rewards.get("a")?.transfer.id).toBe("m");
+    expect(twice.rewards.get("b")?.transfer.id).toBe("m");
   });
 
   test("a mint the server already paired stays with its spin", () => {

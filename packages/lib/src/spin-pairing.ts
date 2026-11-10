@@ -16,11 +16,12 @@ export type SpinEvent = {
 };
 
 /**
- * Pairs each spin with its reward, first in first out per spinner: a mint goes
- * to the oldest unclaimed spin of the same artist at or before it, within the
- * window. Spinners often send the next spin before the last reward lands, so
- * "the nearest mint after the spin" would hand one reward to two spins.
- * Returns spin id → mint id.
+ * Pairs each spin with its reward per spinner: a mint goes to the newest
+ * unclaimed spin of the same artist at or before it, within the window. A spin
+ * that broke never claims a mint, so under oldest-first it stayed open for the
+ * whole window and took the next spin's reward, shifting every pair after it;
+ * newest-first lets a spin sent before the last reward landed swap with it at
+ * worst. Returns spin id → mint id.
  */
 export function pairSpins(spins: SpinEvent[], mints: SpinEvent[]): Map<string, string> {
   const byAddress = new Map<string, { spins: SpinEvent[]; mints: SpinEvent[] }>();
@@ -43,7 +44,7 @@ export function pairSpins(spins: SpinEvent[], mints: SpinEvent[]): Map<string, s
     for (const mint of [...entry.mints].sort(byTime)) {
       while (next < ordered.length && ordered[next]!.at <= mint.at) open.push(ordered[next++]!);
       const artist = mint.artist.toLowerCase();
-      const index = open.findIndex(
+      const index = open.findLastIndex(
         (spin) =>
           mint.at - spin.at <= SPIN_REWARD_WINDOW_MS && spin.artist.toLowerCase() === artist,
       );
@@ -74,8 +75,8 @@ export type SpinWindow = { address: string; from: number; to: number };
 /**
  * The spans to read a spinner's spins and mints over, so each spin and mint on a
  * page pairs as it would against the whole chain. A spin's reward lands up to a
- * window after it; a mint's spin sits up to a window before, and that spin's
- * claim hangs on the spins before it, hence two windows back. One span per row,
+ * window after it; a mint's spin sits up to a window before. Two windows back
+ * is one more than newest-first pairing needs, kept as a margin. One span per row,
  * merged where they touch: a span per address would read a filtered page's
  * months of history.
  */
