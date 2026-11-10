@@ -32,6 +32,8 @@ export async function refreshListRules() {
   const changedOwners = new Set<string>();
   let rules = 0;
   let changed = 0;
+  let failed = 0;
+  let firstError: unknown = null;
   let after = 0;
 
   try {
@@ -65,17 +67,25 @@ export async function refreshListRules() {
         if (!collections.has(key)) collections.set(key, ruleCollections(def));
         if (!addresses.has(userId)) addresses.set(userId, linkedAddresses(userId));
 
-        const reading = await readRule(
-          def,
-          await addresses.get(userId)!,
-          await collections.get(key)!,
-        );
         rules += 1;
-        if (await syncRuleEntries(id, reading.slugs, updatedAt)) {
-          changed += 1;
-          changedLists.add(listId);
-          changedOwners.add(userId);
-          refreshLog.debug(`rule ${id}: ${reading.canMatch} can match`);
+        try {
+          // together, so a rejection of either is handled before the other settles
+          const [owned, described] = await Promise.all([
+            addresses.get(userId)!,
+            collections.get(key)!,
+          ]);
+          const reading = await readRule(def, owned, described);
+          if (await syncRuleEntries(id, reading.slugs, updatedAt)) {
+            changed += 1;
+            changedLists.add(listId);
+            changedOwners.add(userId);
+            refreshLog.debug(`rule ${id}: ${reading.canMatch} can match`);
+          }
+        } catch (error) {
+          // one rule must not stop the rest, run after run
+          failed += 1;
+          firstError ??= error;
+          refreshLog.debug(`rule ${id}: refresh failed: ${String(error)}`);
         }
       }
       if (page.length < PAGE_SIZE) break;
@@ -85,8 +95,12 @@ export async function refreshListRules() {
     // one, so it must not keep an idle post listed or show it as updated
     await bumpTradeVersion(redis, changedOwners);
     refreshBeat.count("rules", rules);
+    refreshBeat.count("failed", failed);
     if (changed > 0) {
       refreshLog.info(`${changed} of ${rules} rules changed entries on ${changedLists.size} lists`);
+    }
+    if (failed > 0) {
+      refreshLog.warn(`${failed} of ${rules} rules not refreshed; first error:`, firstError);
     }
   } finally {
     refreshBeat.flush();
