@@ -5,6 +5,20 @@
  */
 export const CHANGELOG = [
   {
+    date: "2026-11-05 - 2026-11-11",
+    items: [
+      "New offer settings in Account › General: Only offers with what I want, Let people ask from more than one post, and Let people ask for anything I hold.",
+      "If you have no have or sale list on Trade, people can no longer ask for objekts in your collection unless you turn on Let people ask for anything I hold.",
+      "Offers show which post they're on, and objekts not on your wants are marked.",
+      "Hide a single post on Trade without hiding its owner.",
+      "The post composer can edit or copy a list, select several objekts, and Add to list.",
+      "Activity shows what each spin returned.",
+      "Better serial estimates for offline objekts.",
+      "Resend the verification email from Account › Email.",
+      "The old /api read routes are gone. Use /api/v1.",
+    ],
+  },
+  {
     date: "2026-10-26 - 2026-11-04",
     items: [
       "Trade people and posts have their own shareable pages.",
