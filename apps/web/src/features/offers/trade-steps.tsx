@@ -13,17 +13,16 @@ import type { StepKind } from "./next-step";
 type Mark = "done" | "todo" | Tone;
 
 /** The marks of Proposed, Accepted, Transfers and Complete, and the step reached last. */
-function marks(status: TradeView["status"], kind: StepKind) {
+function marks(status: TradeView["status"], kind: StepKind): { marks: Mark[]; current: number } {
   switch (status) {
-    case "in_progress": {
-      return { marks: ["done", "done", STEP_TONE[kind], "todo"] as Mark[], current: 2 };
-    }
+    case "in_progress":
+      return { marks: ["done", "done", STEP_TONE[kind], "todo"], current: 2 };
     case "completed":
-      return { marks: ["success", "success", "success", "success"] as Mark[], current: 3 };
+      return { marks: ["success", "success", "success", "success"], current: 3 };
     case "failed":
-      return { marks: ["done", "done", "destructive", "todo"] as Mark[], current: 2 };
+      return { marks: ["done", "done", "destructive", "todo"], current: 2 };
     case "cancelled":
-      return { marks: ["done", "done", "todo", "todo"] as Mark[], current: 1 };
+      return { marks: ["done", "done", "todo", "todo"], current: 1 };
   }
 }
 

@@ -158,9 +158,12 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     return out;
   }, [people]);
   const collections = useMemo(
-    () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
+    () =>
+      Object.fromEntries(
+        (query.data?.pages ?? []).flatMap((page) => Object.entries(page.collections)),
+      ),
     [query.data],
-  ) as Record<string, ValidObjekt | undefined>;
+  );
   const { ref: virtualizerRef, cache: virtualizerCache } = useWindowVirtualizerRestore({
     count: rows.length,
     enabled: hydrated && rows.length > 0,

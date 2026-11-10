@@ -86,7 +86,7 @@ export function PersonPageView({
   // the previous person's row stands in while another loads; it must never show as this one's
   const current = query.isPlaceholderData ? undefined : query.data?.pages[0];
   const row = current?.people.find((person) => person.userId === userId) ?? null;
-  const collections = (current?.collections ?? {}) as Record<string, ValidObjekt | undefined>;
+  const collections = current?.collections ?? {};
   // from the page's user, not the row: with no row the owner still sees their own empty state
   const own = !!user && userId === user.user.id;
   const myPosts = useQuery({ ...myPostsOptions(), enabled: own });
