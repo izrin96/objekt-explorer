@@ -6,15 +6,19 @@ Pairs each COSMO Spin transfer with the objekt it produced, so every surface tha
 ## Requirements
 
 ### Requirement: Spin reward pairing
-A spin is a transfer to the Spin address. Its reward SHALL be the earliest mint (a transfer from the null address) to the spinner that is at or after the spin, within 10 minutes of it, of the same artist as the spun objekt, and not already the reward of an earlier spin by the same spinner. Spins SHALL claim rewards in time order per spinner, first in first out, and a mint SHALL be the reward of at most one spin.
+A spin is a transfer to the Spin address. Mints (transfers from the null address) to a spinner SHALL be taken in time order, and each SHALL be the reward of the newest spin by that spinner that is at or before it, within 10 minutes of it, of the same artist as the mint, and not already paired. A mint SHALL be the reward of at most one spin. Newest first keeps a spin that broke from taking the reward of a spin after it; a spin sent before the previous reward landed may swap rewards with that spin.
 
 #### Scenario: Single spin
 - **WHEN** an address spins an objekt at 11:33:18 and receives a mint of the same artist at 11:33:33
 - **THEN** that mint is the spin's reward
 
+#### Scenario: A broke spin before the next one
+- **WHEN** an address spins A at 10:40:01 and B at 10:40:04, then receives one mint at 10:40:10 and none after
+- **THEN** the mint is B's reward, and A turns `broke` once it is older than 10 minutes
+
 #### Scenario: Next spin sent before the reward lands
 - **WHEN** an address spins A at 12:00:00 and B at 12:00:05, then receives mints at 12:00:20 and 12:00:31
-- **THEN** A's reward is the 12:00:20 mint and B's reward is the 12:00:31 mint
+- **THEN** B's reward is the 12:00:20 mint and A's reward is the 12:00:31 mint
 
 #### Scenario: Chained spin
 - **WHEN** an address spins A, receives reward R, then spins R
