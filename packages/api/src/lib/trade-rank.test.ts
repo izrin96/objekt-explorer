@@ -130,7 +130,7 @@ describe("rankPartners", () => {
       theyHaveIWant: [...matches("h", 1), ...matches("s", 4, false)],
     };
     const ranked = toRanked(both);
-    expect(ranked.counts).toMatchObject({ theyHave: 5, tradeTheyHave: 1 });
+    expect(ranked.counts).toMatchObject({ theyHave: 5, swap: 1 });
     expect(mutualRankOf(ranked).mutual).toBe(1);
   });
 
@@ -830,8 +830,6 @@ describe("mutualOrder", () => {
     counts: {
       theyHave,
       youHave,
-      tradeTheyHave: theyHave,
-      tradeYouHave: youHave,
       swap: Math.min(theyHave, youHave),
       swapTheyHave: theyHave,
       swapPair: null,
@@ -857,8 +855,6 @@ describe("mutualPeople", () => {
     counts: {
       theyHave,
       youHave,
-      tradeTheyHave: theyHave,
-      tradeYouHave: youHave,
       swap: Math.min(theyHave, youHave),
       swapTheyHave: theyHave,
       swapPair: null,
@@ -895,8 +891,6 @@ describe("oneWayPeople", () => {
     counts: {
       theyHave,
       youHave,
-      tradeTheyHave: theyHave,
-      tradeYouHave: youHave,
       swap: Math.min(theyHave, youHave),
       swapTheyHave: theyHave,
       swapPair: null,

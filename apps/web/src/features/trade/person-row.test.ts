@@ -49,8 +49,6 @@ describe("matchBand", () => {
   const swaps = (theyHave: number, youHave: number) => ({
     theyHave,
     youHave,
-    tradeTheyHave: theyHave,
-    tradeYouHave: youHave,
     swap: Math.min(theyHave, youHave),
     swapTheyHave: theyHave,
     swapPair: Math.min(theyHave, youHave) > 0 ? { myListIds: [1, 2], theirPostId: 10 } : null,
@@ -73,8 +71,6 @@ describe("matchBand", () => {
     const counts = {
       theyHave: 5,
       youHave: 2,
-      tradeTheyHave: 1,
-      tradeYouHave: 2,
       swap: 1,
       swapTheyHave: 1,
       swapPair: { myListIds: [1, 2], theirPostId: 10 },
@@ -85,8 +81,6 @@ describe("matchBand", () => {
   test("both ways through sale lists is one way with no chip", () => {
     const sale = {
       ...swaps(3, 1),
-      tradeTheyHave: 0,
-      tradeYouHave: 0,
       swap: 0,
       swapTheyHave: 0,
       swapPair: null,
@@ -95,7 +89,7 @@ describe("matchBand", () => {
   });
 
   test("a swap one way and a sale the other is one way with no chip", () => {
-    const half = { ...swaps(3, 1), tradeYouHave: 0, swap: 0, swapTheyHave: 0, swapPair: null };
+    const half = { ...swaps(3, 1), swap: 0, swapTheyHave: 0, swapPair: null };
     expect(matchBand(half)).toEqual({ kind: "oneWay", theyHave: 3, youHave: 1 });
   });
 
@@ -163,13 +157,11 @@ describe("ruleCountsOf", () => {
 describe("swapThroughRules", () => {
   // the swap runs between the viewer's post (have 1, want 2) and the person's post 10
   const PAIR = { myListIds: [1, 2], theirPostId: 10 };
-  const counts = (tradeTheyHave: number, tradeYouHave: number) => ({
-    theyHave: tradeTheyHave,
-    youHave: tradeYouHave,
-    tradeTheyHave,
-    tradeYouHave,
-    swap: Math.min(tradeTheyHave, tradeYouHave),
-    swapTheyHave: tradeTheyHave,
+  const counts = (theyHave: number, youHave: number) => ({
+    theyHave,
+    youHave,
+    swap: Math.min(theyHave, youHave),
+    swapTheyHave: theyHave,
     swapPair: PAIR,
   });
   /** rule matches of the viewer's want list `listId` on the person's post `id` */

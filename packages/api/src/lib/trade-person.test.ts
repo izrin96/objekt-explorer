@@ -16,8 +16,6 @@ const ONE_POST = { mine: { 1: 1, 2: 1 }, theirs: { 10: 10 } };
 const counts = (over: Partial<MatchCounts>): MatchCounts => ({
   theyHave: 0,
   youHave: 0,
-  tradeTheyHave: 0,
-  tradeYouHave: 0,
   swap: 0,
   swapTheyHave: 0,
   swapPair: null,
@@ -34,15 +32,13 @@ describe("matchCounts", () => {
     expect(result).toEqual({
       theyHave: 2,
       youHave: 1,
-      tradeTheyHave: 1,
-      tradeYouHave: 1,
       swap: 1,
       swapTheyHave: 1,
       swapPair: { myListIds: [1, 2], theirPostId: 10 },
     });
   });
 
-  test("trade counts come only from trade matches", () => {
+  test("every match counts toward the one-way counts", () => {
     const result = matchCounts({
       theyHaveIWant: [match("a", false), match("b", false)],
       iHaveTheyWant: [match("c", false)],
@@ -190,8 +186,8 @@ describe("swapScore", () => {
 
 describe("mutual", () => {
   test("is the per-post swap score, not the pooled one", () => {
-    expect(mutualOf(counts({ tradeTheyHave: 2, tradeYouHave: 1, swap: 0 }))).toBe(0);
-    expect(mutualOf(counts({ tradeTheyHave: 3, tradeYouHave: 2, swap: 1 }))).toBe(1);
+    expect(mutualOf(counts({ theyHave: 2, youHave: 1, swap: 0 }))).toBe(0);
+    expect(mutualOf(counts({ theyHave: 3, youHave: 2, swap: 1 }))).toBe(1);
   });
 
   test("a sale list answered by a buying want list is not mutual", () => {
@@ -199,7 +195,7 @@ describe("mutual", () => {
   });
 
   test("swaps across posts are not mutual", () => {
-    const crossPost = counts({ theyHave: 2, youHave: 1, tradeTheyHave: 2, tradeYouHave: 1 });
+    const crossPost = counts({ theyHave: 2, youHave: 1 });
     expect(countsFit("mutual", crossPost)).toBe(false);
     expect(countsFit("all", crossPost)).toBe(true);
   });

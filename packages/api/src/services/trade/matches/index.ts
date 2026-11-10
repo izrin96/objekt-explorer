@@ -29,16 +29,20 @@ const bySlug = (a: { slug: string }, b: { slug: string }) => a.slug.localeCompar
 export async function personMatch(userId: string, personId: string) {
   const sides = await resolveCompareSides(userId, undefined, false);
   const scope = await tradeCacheScope(userId);
-  return getCache(`trade:person:9:${userId}:${scope}:${personId}`, PERSON_TTL_SECONDS, async () => {
-    if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return null;
-    const { recounted } = await recountPartners(userId, sides, "all", { ownerIds: [personId] });
-    const [ranked] = rankPartners(recounted, "all", new Date());
-    if (!ranked) return null;
-    const { partner } = ranked;
-    return {
-      counts: matchCounts(partner),
-      theyHaveIWant: partner.theyHaveIWant.toSorted(bySlug),
-      iHaveTheyWant: partner.iHaveTheyWant.toSorted(bySlug),
-    };
-  });
+  return getCache(
+    `trade:person:10:${userId}:${scope}:${personId}`,
+    PERSON_TTL_SECONDS,
+    async () => {
+      if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return null;
+      const { recounted } = await recountPartners(userId, sides, "all", { ownerIds: [personId] });
+      const [ranked] = rankPartners(recounted, "all", new Date());
+      if (!ranked) return null;
+      const { partner } = ranked;
+      return {
+        counts: matchCounts(partner),
+        theyHaveIWant: partner.theyHaveIWant.toSorted(bySlug),
+        iHaveTheyWant: partner.iHaveTheyWant.toSorted(bySlug),
+      };
+    },
+  );
 }

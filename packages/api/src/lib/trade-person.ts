@@ -80,15 +80,12 @@ export function swapScore({
   };
 }
 
-/** Distinct collections per direction, those a trade list answers, and the per-post swap score. */
+/** Distinct collections per direction, and the per-post swap score. */
 export function matchCounts(matched: Matched): MatchCounts {
-  const count = (matches: Direction, trade: boolean) =>
-    new Set(matches.filter((match) => match.trade || !trade).map((match) => match.slug)).size;
+  const count = (matches: Direction) => new Set(matches.map((match) => match.slug)).size;
   return {
-    theyHave: count(matched.theyHaveIWant, false),
-    youHave: count(matched.iHaveTheyWant, false),
-    tradeTheyHave: count(matched.theyHaveIWant, true),
-    tradeYouHave: count(matched.iHaveTheyWant, true),
+    theyHave: count(matched.theyHaveIWant),
+    youHave: count(matched.iHaveTheyWant),
     ...swapScore(matched),
   };
 }

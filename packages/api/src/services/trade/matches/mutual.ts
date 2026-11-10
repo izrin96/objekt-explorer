@@ -16,7 +16,7 @@ const PEOPLE_TTL_SECONDS = 300;
 export async function getMutualPeople(userId: string, sides: Sides) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:mutual-people:9:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:mutual-people:10:${userId}:${scope}:${sides.listId ?? "all"}`,
     PEOPLE_TTL_SECONDS,
     async () => {
       const { recounted } = await recountPartners(userId, sides, "mutual", {
