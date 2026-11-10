@@ -300,7 +300,19 @@ export type Viewer = {
   saleWant: SlugIndex;
   /** the collections the viewer wants only through a rule, none by hand: the rule and its list */
   ruleWant?: ReadonlyMap<string, readonly RuleWant[]>;
+  /** every rule match, wanted by hand too, so a narrowed viewer can work `ruleWant` out again */
+  ruleRows?: ReadonlyMap<string, readonly RuleWant[]>;
+  /** the collections wanted by hand, by the lists that hold them */
+  handWant?: SlugIndex;
 };
+
+/** `rules` less the collections wanted by hand: what is wanted only through a rule. */
+export function ruleOnlyWant(
+  rules: ReadonlyMap<string, readonly RuleWant[]>,
+  hand: SlugIndex,
+): Map<string, readonly RuleWant[]> {
+  return new Map([...rules].filter(([slug]) => !hand.has(slug)));
+}
 
 export type RuleWant = { ruleId: number; listId: number };
 
@@ -536,13 +548,21 @@ export function narrowViewer(
     want: narrowIndex(viewer.want, keepWant),
     tradeWant: narrowIndex(viewer.tradeWant, keepWant),
     saleWant: narrowIndex(viewer.saleWant, keepWant),
-    ruleWant: viewer.ruleWant && narrowRuleWant(viewer.ruleWant, keepWant),
+    // wanted by hand means on a compared list: a hand entry elsewhere no longer hides the rule
+    ...(viewer.ruleRows && viewer.handWant
+      ? (() => {
+          const ruleRows = narrowRuleWant(viewer.ruleRows, keepWant);
+          const handWant = narrowIndex(viewer.handWant, keepWant);
+          return { ruleRows, handWant, ruleWant: ruleOnlyWant(ruleRows, handWant) };
+        })()
+      : { ruleWant: viewer.ruleWant && narrowRuleWant(viewer.ruleWant, keepWant) }),
   };
 }
 
 /**
- * The poster's collections the viewer wants only through a rule, once each, in the sides' order:
- * For you names them under the strips. `swap` is a have list's, which counts toward Can swap.
+ * The poster's collections the viewer wants only through a rule, once per want list that matched,
+ * in the sides' order: For you names them under the strips, and a list's popover its own. `swap`
+ * is a have list's, which counts toward Can swap.
  */
 export function ruleMatchesOf(
   sides: {
@@ -558,13 +578,17 @@ export function ruleMatchesOf(
   const found = new Map<string, RuleWant & { slug: string; swap: boolean }>();
   for (const { role, swaps = role === "have", entries, index } of sides) {
     for (const entry of entries) {
-      // the rule of a want list this side actually matched
+      // each want list this side actually matched names its rule, so a list outside the counted
+      // pair never hides the one inside it
       const matchedLists = index.get(entry.slug);
-      const rule = ruleWant.get(entry.slug)?.find((r) => matchedLists?.includes(r.listId));
-      if (!rule || !matchedLists) continue;
-      const seen = found.get(entry.slug);
-      if (!seen) found.set(entry.slug, { slug: entry.slug, ...rule, swap: swaps });
-      else if (swaps) seen.swap = true;
+      if (!matchedLists) continue;
+      for (const rule of ruleWant.get(entry.slug) ?? []) {
+        if (!matchedLists.includes(rule.listId)) continue;
+        const key = `${entry.slug}:${rule.listId}`;
+        const seen = found.get(key);
+        if (!seen) found.set(key, { slug: entry.slug, ...rule, swap: swaps });
+        else if (swaps) seen.swap = true;
+      }
     }
   }
   return [...found.values()];

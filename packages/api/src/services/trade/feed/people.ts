@@ -256,7 +256,14 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const opened = await openOrder(ctx, mode, query, lead, filters);
   const { order, token, built } = opened;
 
-  const ranked = order.people.flatMap((entry) => (entry.section ? [entry.id] : []));
+  // the order the client has been reading holds its tail too: one who dropped below the keyset
+  // since (a post taken down or gone idle) would otherwise be listed again past it. An order
+  // rebuilt under a cursor past its end has a tail the client never read, which may sit below
+  // the cursor, so only its sections are left out there
+  const rebuiltPastEnd = built && opened.start > order.people.length;
+  const excluded = order.people.flatMap((entry) =>
+    rebuiltPastEnd && !entry.section ? [] : [entry.id],
+  );
   const reader = orderReader(
     order,
     opened.start,
@@ -265,7 +272,7 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
       const found = await fetchBumpPeople(query, {
         limit,
         cursor: after,
-        excludeOwners: lead ? [...ranked, lead] : ranked,
+        excludeOwners: lead ? [...excluded, lead] : excluded,
       });
       return found.map((row) => ({ bumpedAt: iso(row.cursor_at)!, userId: row.user_id }));
     },

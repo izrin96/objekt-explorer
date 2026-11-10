@@ -33,6 +33,7 @@ import {
   untradeableKey,
   type Viewer,
   ruleMatchesOf,
+  ruleOnlyWant,
   ruleTiles,
 } from "./trade-feed";
 
@@ -913,6 +914,98 @@ describe("Sell or swap posts", () => {
     const sale = list({ id: 1, listType: "sale", linkedListId: 2 });
     const want = list({ id: 2, listType: "want", matchSale: false, linkedListId: 1 });
     expect(pairPosts([sale, want]).map((post) => post.tags)).toEqual([["wts"], ["wtt"]]);
+  });
+});
+
+describe("ruleMatchesOf names every list that matched", () => {
+  test("two want lists want a slug through rules; each list names its own", () => {
+    const ruleWant = new Map([
+      [
+        "x",
+        [
+          { ruleId: 1, listId: 10 },
+          { ruleId: 2, listId: 20 },
+        ],
+      ],
+    ]);
+    const side = { role: "have" as const, entries: [{ id: 1, slug: "x", objektId: null }] };
+    expect(ruleMatchesOf([{ ...side, index: new Map([["x", [10, 20]]]) }], ruleWant)).toEqual([
+      { slug: "x", ruleId: 1, listId: 10, swap: true },
+      { slug: "x", ruleId: 2, listId: 20, swap: true },
+    ]);
+  });
+});
+
+describe("ruleMatchesOf keys rule matches per list", () => {
+  test("two rules on one list matching a slug give one entry", () => {
+    const ruleWant = new Map([
+      [
+        "x",
+        [
+          { ruleId: 1, listId: 10 },
+          { ruleId: 2, listId: 10 },
+        ],
+      ],
+    ]);
+    const side = { role: "have" as const, entries: [{ id: 1, slug: "x", objektId: null }] };
+    expect(ruleMatchesOf([{ ...side, index: new Map([["x", [10]]]) }], ruleWant)).toEqual([
+      { slug: "x", ruleId: 1, listId: 10, swap: true },
+    ]);
+  });
+});
+
+describe("ruleOnlyWant", () => {
+  test("a slug wanted by hand, on the same list or another, is no rule's", () => {
+    const rules = new Map([
+      ["x", [{ ruleId: 1, listId: 10 }]],
+      ["y", [{ ruleId: 2, listId: 10 }]],
+    ]);
+    expect(ruleOnlyWant(rules, new Map([["x", [10]]]))).toEqual(
+      new Map([["y", [{ ruleId: 2, listId: 10 }]]]),
+    );
+  });
+});
+
+describe("narrowViewer works out rule-only wants within the compared lists", () => {
+  const index = new Map<string, readonly number[]>();
+  const viewer = {
+    have: index,
+    want: new Map([["x", [10, 20]]]),
+    tradeHave: index,
+    saleHave: index,
+    tradeWant: new Map([["x", [10, 20]]]),
+    saleWant: index,
+    // list 10 wants x through a rule, list 20 by hand
+    ruleRows: new Map([["x", [{ ruleId: 1, listId: 10 }]]]),
+    handWant: new Map([["x", [20]]]),
+    ruleWant: new Map(),
+  };
+
+  test("all lists: x is wanted by hand, so no rule names it", () => {
+    expect(narrowViewer(viewer, { haveListIds: [], wantListIds: [10, 20] }).ruleWant).toEqual(
+      new Map(),
+    );
+  });
+
+  test("narrowing twice gives what narrowing once does", () => {
+    const once = narrowViewer(viewer, { haveListIds: [], wantListIds: [10] });
+    expect(narrowViewer(once, { haveListIds: [], wantListIds: [10] }).ruleWant).toEqual(
+      once.ruleWant,
+    );
+  });
+
+  test("a viewer without rule rows narrows its rule-only wants as before", () => {
+    const { ruleRows: _r, handWant: _h, ...plain } = viewer;
+    const withRules = { ...plain, ruleWant: new Map([["x", [{ ruleId: 1, listId: 10 }]]]) };
+    expect(narrowViewer(withRules, { haveListIds: [], wantListIds: [20] }).ruleWant).toEqual(
+      new Map(),
+    );
+  });
+
+  test("comparing list 10 only: the hand entry on list 20 no longer hides its rule", () => {
+    expect(narrowViewer(viewer, { haveListIds: [], wantListIds: [10] }).ruleWant).toEqual(
+      new Map([["x", [{ ruleId: 1, listId: 10 }]]]),
+    );
   });
 });
 

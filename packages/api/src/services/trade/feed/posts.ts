@@ -147,7 +147,9 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
     const ruleDefs = await fetchRulesById(
       unique([
         ...[...entriesOf.values()].flat().flatMap((entry) => entry.ruleId ?? []),
-        ...[...(viewer?.ruleWant?.values() ?? [])].flat().map((rule) => rule.ruleId),
+        ...[...((viewer?.ruleRows ?? viewer?.ruleWant)?.values() ?? [])]
+          .flat()
+          .map((rule) => rule.ruleId),
       ]),
     );
 

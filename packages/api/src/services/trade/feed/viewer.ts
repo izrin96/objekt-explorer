@@ -3,7 +3,7 @@ import { listEntries, lists } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import { and, eq, isNotNull } from "drizzle-orm";
 
-import { narrowIndex, type RuleWant, type Viewer } from "../../../lib/trade-feed";
+import { narrowIndex, type RuleWant, ruleOnlyWant, type Viewer } from "../../../lib/trade-feed";
 import {
   addressesByUser,
   collectionVerdict,
@@ -98,14 +98,18 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
     if (!listIds) want.set(row.slug!, [row.listId]);
     else if (!listIds.includes(row.listId)) listIds.push(row.listId);
   }
-  // a slug wanted by hand anywhere is no rule's match
-  const byHand = new Set(wantRows.flatMap((row) => (row.ruleId === null ? [row.slug!] : [])));
-  const ruleWant = new Map<string, RuleWant[]>();
+  const handWant = new Map<string, number[]>();
+  const ruleRows = new Map<string, RuleWant[]>();
   for (const row of wantRows) {
-    if (row.ruleId === null || byHand.has(row.slug!)) continue;
-    const rules = ruleWant.get(row.slug!) ?? [];
+    if (row.ruleId === null) {
+      const listIds = handWant.get(row.slug!) ?? [];
+      if (!listIds.includes(row.listId)) listIds.push(row.listId);
+      handWant.set(row.slug!, listIds);
+      continue;
+    }
+    const rules = ruleRows.get(row.slug!) ?? [];
     rules.push({ ruleId: row.ruleId, listId: row.listId });
-    ruleWant.set(row.slug!, rules);
+    ruleRows.set(row.slug!, rules);
   }
   const have = new Map(haveIndex);
   const saleIds = new Set(saleLists.map((list) => list.id));
@@ -120,6 +124,9 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
     saleHave: narrowIndex(have, (id) => saleIds.has(id)),
     tradeWant: narrowIndex(want, (id) => !noHaveIds.has(id)),
     saleWant: narrowIndex(want, (id) => !noSaleIds.has(id)),
-    ruleWant,
+    // a slug wanted by hand on any of the lists is no rule's match
+    ruleWant: ruleOnlyWant(ruleRows, handWant),
+    ruleRows,
+    handWant,
   };
 }
