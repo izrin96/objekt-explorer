@@ -1,0 +1,1 @@
+CREATE INDEX "offer_post_list_id_idx" ON "offer" ("post_list_id") WHERE post_list_id IS NOT NULL;

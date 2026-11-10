@@ -76,6 +76,20 @@ describe("offerRefusalText", () => {
     );
   });
 
+  test("a recipient rule names the objekts it refused", () => {
+    expect(offerRefusalText(info("not_wanted"), "YooYeon C2 105Z")).toBe(
+      m.offer_refused_not_wanted({ objekts: "YooYeon C2 105Z" }),
+    );
+    expect(offerRefusalText(info("other_post"), "JiWoo D333Z #76")).toBe(
+      m.offer_refused_other_post({ objekts: "JiWoo D333Z #76" }),
+    );
+  });
+
+  test("the refused picks of a recipient rule are found by id", () => {
+    const keys = refusedKeys(info("not_wanted", { objektIds: ["88"] }));
+    expect(keys.has("88")).toBe(true);
+  });
+
   test("too_many names the side limit", () => {
     check(offerRefusalText(info("too_many"), "")).toBe(
       m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT }),

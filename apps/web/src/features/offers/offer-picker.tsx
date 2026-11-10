@@ -22,6 +22,15 @@ import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } fro
 import { copiesLeft, countOf, totalOf, withCount } from "./quantity";
 import type { OfferAddress } from "./queries";
 
+/** The partner's offer rules the pickers follow. */
+export type PickerRules = {
+  wantedOnly: boolean;
+  /** the post's own want list, which You give's picker keeps to under `wantedOnly` */
+  wantList?: string;
+  /** the post the offer is on, the one You get's picker shows */
+  post?: { slug: string; name: string };
+};
+
 export function OfferPicker({
   open,
   onOpenChange,
@@ -31,6 +40,7 @@ export function OfferPicker({
   source,
   theirLists,
   startList,
+  rules,
   picked,
   onDone,
 }: {
@@ -42,6 +52,7 @@ export function OfferPicker({
   source: GetSource;
   theirLists: PartnerList[];
   startList?: string;
+  rules?: PickerRules;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -62,6 +73,7 @@ export function OfferPicker({
           source={source}
           theirLists={theirLists}
           startList={startList}
+          rules={rules}
           picked={picked}
           onDone={onDone}
         />
@@ -77,6 +89,7 @@ function PickerBody({
   source,
   theirLists,
   startList,
+  rules,
   picked,
   onDone,
 }: {
@@ -86,6 +99,7 @@ function PickerBody({
   source: GetSource;
   theirLists: PartnerList[];
   startList?: string;
+  rules?: PickerRules;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -140,18 +154,26 @@ function PickerBody({
   return (
     <PickerSelectionContext value={selected}>
       <SheetHeader>
-        <SheetTitle className="font-display pe-8">{addLabel(side, source, name)}</SheetTitle>
+        <SheetTitle className="font-display pe-8">
+          {addLabel(side, source, name, rules?.post?.name)}
+        </SheetTitle>
         <SheetDescription className="max-sm:sr-only">
           {pickerDescription(side, source, name)}
         </SheetDescription>
       </SheetHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
-          <MineGrid to={to} name={name} />
+          <MineGrid to={to} name={name} wantedOnly={rules?.wantedOnly} wantList={rules?.wantList} />
         ) : source === "collection" ? (
           <TheirCollectionGrid to={to} name={name} />
         ) : (
-          <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} />
+          <TheirsGrid
+            to={to}
+            name={name}
+            lists={theirLists}
+            startList={startList}
+            post={rules?.post?.slug}
+          />
         )}
       </div>
       <SheetFooter className="flex-row items-center">

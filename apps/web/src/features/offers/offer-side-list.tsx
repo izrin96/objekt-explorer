@@ -6,6 +6,7 @@ import { useId, useState } from "react";
 import { MoreCount } from "@/components/shared/more-count";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { formatCount } from "@/lib/number";
+import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 import { itemLabel } from "./format";
@@ -42,14 +43,19 @@ export function OfferSideList({
     side: label,
   });
   const sent = (item: OfferItemView) => open && item.sentAt !== null;
+  const labelsOf = (item: OfferItemView) => (item.notWanted ? [m.offer_label_not_wanted()] : []);
   const tileLabel = (item: OfferItemView, count: number) =>
     [
       itemLabel(item, collections),
       count > 1 ? m.offer_any_copy_times({ count: formatCount(count) }) : null,
       sent(item) ? m.offer_item_sent() : null,
+      ...labelsOf(item),
     ]
       .filter(Boolean)
       .join(" · ");
+  const labelled = (pick: (item: OfferItemView) => boolean) =>
+    joinList(rows.filter(({ item }) => pick(item)).map(({ item }) => itemLabel(item, collections)));
+  const notWanted = labelled((item) => item.notWanted);
 
   return (
     <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-1.5">
@@ -103,6 +109,11 @@ export function OfferSideList({
           ) : null}
         </ul>
       )}
+      {notWanted ? (
+        <p className="text-warning-foreground text-xs text-pretty">
+          {m.offer_label_not_wanted_line({ objekts: notWanted })}
+        </p>
+      ) : null}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetPopup>
           <SheetHeader>
@@ -136,6 +147,11 @@ export function OfferSideList({
                         {m.offer_item_sent()}
                       </span>
                     ) : null}
+                    {labelsOf(item).map((text) => (
+                      <span key={text} className="text-muted-foreground block text-xs">
+                        {text}
+                      </span>
+                    ))}
                   </span>
                 </li>
               ))}

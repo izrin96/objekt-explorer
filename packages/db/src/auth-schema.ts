@@ -21,6 +21,9 @@ export const user = pgTable("user", {
   showSocial: boolean("show_social").notNull().default(false),
   showOnline: boolean("show_online").notNull().default(true),
   removeImage: boolean("remove_image").notNull().default(false),
+  onlyWantedOffers: boolean("only_wanted_offers").notNull().default(false),
+  allowCollectionAsks: boolean("allow_collection_asks").notNull().default(false),
+  multiPostAsks: boolean("multi_post_asks").notNull().default(true),
   // a deleted account keeps its row, scrubbed, so its trades and ratings stay in others' history
   deletedAt: timestamp("deleted_at"),
   // admin plugin

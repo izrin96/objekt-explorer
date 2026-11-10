@@ -540,14 +540,20 @@ export type ListEntryRef = {
 /** The token an entry offers by serial: none on a list that hides serials, which offers any copy. */
 export const entryObjektId = (entry: ListEntryRef) => (entry.hideSerial ? null : entry.objektId);
 
+/** Every entry an ask may come through, in `entries`' order. */
+export function entriesFitting<E extends ListEntryRef>(item: GetItemInput, entries: E[]): E[] {
+  return entries.filter(
+    (entry) =>
+      entry.collectionSlug === item.collectionSlug &&
+      (item.objektId === undefined
+        ? entryObjektId(entry) === null
+        : !entry.hideSerial && (entry.objektId === null || entry.objektId === item.objektId)),
+  );
+}
+
 /** The entry a get item comes from: its own token, else a collection entry; the named list first. */
 export function matchEntry<E extends ListEntryRef>(item: GetItemInput, entries: E[]): E | null {
-  const fits = (entry: E) =>
-    entry.collectionSlug === item.collectionSlug &&
-    (item.objektId === undefined
-      ? entryObjektId(entry) === null
-      : !entry.hideSerial && (entry.objektId === null || entry.objektId === item.objektId));
-  const candidates = entries.filter(fits);
+  const candidates = entriesFitting(item, entries);
   return candidates.find((entry) => entry.listSlug === item.listSlug) ?? candidates[0] ?? null;
 }
 

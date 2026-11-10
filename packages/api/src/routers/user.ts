@@ -13,6 +13,7 @@ import {
   MAX_USER_SEARCH_LENGTH,
   providerIdSchema,
   providersMap,
+  offerRulesInputSchema,
   updateAccountInputSchema,
   userSearchInputSchema,
   userSearchOutputSchema,
@@ -20,7 +21,7 @@ import {
 import { auth, findProviderAccount, refreshProviderProfile } from "../services/account/auth";
 import { deletionCheck } from "../services/account/delete";
 import { loadIdentities } from "../services/account/identities";
-import { getCurrentUser, updateAccount } from "../services/account/user";
+import { getCurrentUser, setOfferRules, updateAccount } from "../services/account/user";
 import { searchUsers } from "../services/user-search";
 
 const DELETION_TOKEN_MINUTES = 5;
@@ -129,5 +130,12 @@ export const userRouter = {
     .input(updateAccountInputSchema)
     .handler(async ({ input, context: { session } }) => {
       await updateAccount(session.user.id, input);
+    }),
+
+  /** One offer rule switched outside the General form: the decline nudge and the Messages notice. */
+  setOfferRules: authed
+    .input(offerRulesInputSchema)
+    .handler(async ({ input, context: { session } }) => {
+      await setOfferRules(session.user.id, input);
     }),
 };

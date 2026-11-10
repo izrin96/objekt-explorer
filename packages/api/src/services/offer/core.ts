@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db, type Tx } from "@repo/db";
+import { user } from "@repo/db/auth-schema";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import {
@@ -31,6 +32,8 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   too_many: "BAD_REQUEST",
   invalid_topup: "BAD_REQUEST",
   not_listed: "BAD_REQUEST",
+  not_wanted: "BAD_REQUEST",
+  other_post: "BAD_REQUEST",
   self: "BAD_REQUEST",
   not_owned: "CONFLICT",
   not_transferable: "CONFLICT",
@@ -401,4 +404,27 @@ export async function collectionAddresses(partnerId: string): Promise<string[]> 
     .from(userAddress)
     .where(eq(userAddress.userId, partnerId));
   return rows.map((row) => row.address.toLowerCase());
+}
+
+/** The recipient's offer rules (`web-trade-offers`), all off for a missing row. */
+export async function offerRulesOf(userId: string) {
+  const [row] = await db
+    .select({
+      onlyWantedOffers: user.onlyWantedOffers,
+      allowCollectionAsks: user.allowCollectionAsks,
+      multiPostAsks: user.multiPostAsks,
+    })
+    .from(user)
+    .where(eq(user.id, userId));
+  return row ?? { onlyWantedOffers: false, allowCollectionAsks: false, multiPostAsks: true };
+}
+
+/** The partner's have or sale list on Trade a `post` slug names, else null: a post never refuses. */
+export async function resolvePostList(partnerId: string, slug: string | undefined) {
+  if (slug === undefined) return null;
+  const [row] = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(and(eq(lists.userId, partnerId), eq(lists.slug, slug), askableOnTrade));
+  return row?.id ?? null;
 }

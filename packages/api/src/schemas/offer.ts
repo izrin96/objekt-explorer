@@ -123,6 +123,8 @@ export const OFFER_REFUSALS = [
   "message_limit",
   "muted",
   "offer_changed",
+  "not_wanted",
+  "other_post",
 ] as const;
 export type OfferRefusal = (typeof OFFER_REFUSALS)[number];
 
@@ -171,6 +173,8 @@ export const createOfferInputSchema = addressedSchema
     get: getItemInputSchema.array().max(OFFER_SIDE_LIMIT * 10),
     /** the offer a counter answers, as its sender saw it */
     counters: idSchema.optional(),
+    /** the partner's post (a have or sale list) the builder started on; never narrows asks alone */
+    post: z.string().min(1).max(12).optional(),
     topup: topupInputSchema.optional(),
     note: z
       .string()
@@ -207,6 +211,8 @@ export const suggestInputSchema = z.object({
   mutual: z.boolean().optional(),
   /** one of the partner's lists: only that post's matches */
   post: z.string().min(1).optional(),
+  /** the row's lead post, which wins a tie under Only asks from one post */
+  lead: z.string().min(1).optional(),
 });
 
 export type CandidateCursor = z.infer<typeof receivedAtCursorSchema>;
@@ -269,8 +275,14 @@ const candidateItemSchema = z.object({
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
 
-/** One of the partner's have or sale lists on Trade, as the You get picker's From choice names it. */
-export type PartnerList = { slug: string; name: string; type: "have" | "sale" };
+/** One of the partner's have or sale lists on Trade: a post the offer can be on. */
+export type PartnerList = {
+  slug: string;
+  name: string;
+  type: "have" | "sale";
+  /** the post's own want list on Trade, which Only offers with what I want checks gives against */
+  want: string | null;
+};
 
 const progressSchema = z.object({ verified: z.number(), total: z.number() });
 export type Progress = z.infer<typeof progressSchema>;
@@ -283,6 +295,8 @@ const offerItemViewSchema = z.object({
   listSlug: z.string().nullable(),
   /** the giver already sent it to the other party, while the offer is open */
   sentAt: z.string().nullable(),
+  /** recipient only: a give on none of their want lists */
+  notWanted: z.boolean().default(false),
 });
 export type OfferItemView = z.infer<typeof offerItemViewSchema>;
 
@@ -318,6 +332,10 @@ const offerViewSchema = z.object({
   tradeProgress: progressSchema.nullable(),
   /** no newer offer exists in the conversation */
   latest: z.boolean(),
+  /** the partner's post the offer is on, shown to both people */
+  post: z.object({ slug: z.string(), name: z.string() }).nullable().default(null),
+  /** recipient only: a decline may offer Only offers with what I want */
+  suggestWantedOnly: z.boolean().optional(),
   createdAt: z.string(),
   expiresAt: z.string(),
   respondedAt: z.string().nullable(),

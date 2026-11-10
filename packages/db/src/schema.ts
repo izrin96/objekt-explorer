@@ -445,6 +445,8 @@ export const offer = pgTable(
       .notNull()
       .default(sql`now() + interval '7 days'`),
     respondedAt: timestamp("responded_at", { mode: "string", withTimezone: true }),
+    /** the recipient's have or sale post every ask came from; null for an offer that asks nothing */
+    postListId: integer("post_list_id").references(() => lists.id, { onDelete: "set null" }),
   },
   (t) => [
     uniqueIndex("offer_one_open")
@@ -456,6 +458,9 @@ export const offer = pgTable(
     index("offer_parent_id_idx")
       .on(t.parentId)
       .where(sql`parent_id IS NOT NULL`),
+    index("offer_post_list_id_idx")
+      .on(t.postListId)
+      .where(sql`post_list_id IS NOT NULL`),
     check(
       "offer_status",
       sql`${t.status} IN ('open', 'accepted', 'declined', 'withdrawn', 'countered', 'cancelled', 'expired')`,

@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ed4eccdf-2e16-4eb1-b2c1-2c106081e776",
+  "prevIds": [
+    "0f9f09cd-e828-4c20-9eb0-28d6314d7c86"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "multi_post_asks"
+      ],
+      "writes": [
+        "s|col|public.user.multi_post_asks",
+        "n|col|public.user.multi_post_asks",
+        "e|col|public.user.multi_post_asks"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "multi_post_asks",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

@@ -143,7 +143,10 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
 
   const all = [...needsYou, ...waiting, ...inProgress, ...historyPage];
   const [offers, progressOf] = await Promise.all([
-    fetchOffers(all.map((entry) => entry.offerId)),
+    fetchOffers(
+      all.map((entry) => entry.offerId),
+      me,
+    ),
     fetchProgress(all.flatMap((entry) => (entry.kind === "trade" ? [entry.id] : []))),
   ]);
   const [partners, { serial: serialOf, collections }] = await Promise.all([

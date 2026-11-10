@@ -13,6 +13,7 @@ import {
   nearGroups,
   type PartnerEntry,
 } from "../../../lib/offer-prefill";
+import { rowPost } from "../../../lib/offer-recipient-rules";
 import { itemFlags } from "../../../lib/offer-rules";
 import { matchCounts } from "../../../lib/trade-person";
 import type { Match } from "../../../lib/trade-rank";
@@ -26,7 +27,7 @@ import {
 import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
 import { personNear } from "../../trade/feed/near";
-import { matchableList } from "../../trade/lists";
+import { askableOnTrade, matchableList } from "../../trade/lists";
 import { recountPartners, resolveCompareSides } from "../../trade/matches";
 import {
   type Addressed,
@@ -34,13 +35,22 @@ import {
   fetchCopies,
   fetchObjekts,
   linkedAddresses,
+  offerRulesOf,
   openOfferHolders,
+  partnerHasLists,
   refuseOffer,
   reservedIds,
   resolveAddressed,
 } from "../core";
 import { mineCandidates } from "./mine";
-import { type CandidatesPage, collectionsOf, toCandidate } from "./shared";
+import {
+  type CandidatesPage,
+  type PartnerRules,
+  candidatesPage,
+  collectionsOf,
+  toCandidate,
+  wantedAmong,
+} from "./shared";
 import {
   partnerListChoices,
   theirCandidates,
@@ -66,6 +76,26 @@ export async function offerCandidates(
     const safety = addressed.start?.safety ?? (await chatSafety(me, addressed.partnerId));
     if (safety.blocked || safety.partnerTradeBlocked) refuseOffer("not_accepting");
   }
+  if (input.side === "theirs-collection") {
+    // a closed collection offers nothing to ask for, and a stale tab can't page through it; a
+    // partner with lists is refused in `theirCollectionPage`
+    const { allowCollectionAsks } = await offerRulesOf(addressed.partnerId);
+    if (!allowCollectionAsks) return candidatesPage({ listed: false });
+  }
+  // only the builder's whole theirs list reads the rules, not every scroll page
+  const withRules = input.side === "theirs" && input.offset === undefined;
+  const [page, partnerRules] = await Promise.all([
+    sidePage(me, addressed, input),
+    withRules ? partnerRulesOf(addressed.partnerId) : undefined,
+  ]);
+  return partnerRules ? { ...page, partnerRules } : page;
+}
+
+async function sidePage(
+  me: string,
+  addressed: Addressed,
+  input: Parameters<typeof offerCandidates>[2],
+): Promise<CandidatesPage> {
   if (input.side === "mine") return mineCandidates(me, addressed, input.cursor, input);
   if (input.side === "theirs-collection") {
     return theirCollectionPage(me, addressed, input.cursor, input);
@@ -79,7 +109,28 @@ export async function offerCandidates(
   return { ...page, lists };
 }
 
-type SuggestInput = { partnerId: string; list?: string; mutual?: boolean; post?: string };
+/** Each rule only where it would filter something, as `createOffer` applies them. */
+async function partnerRulesOf(partnerId: string): Promise<PartnerRules> {
+  const [rules, hasLists, wants] = await Promise.all([
+    offerRulesOf(partnerId),
+    partnerHasLists(partnerId),
+    wantedAmong(partnerId, []),
+  ]);
+  return {
+    wantedOnly: rules.onlyWantedOffers,
+    wantsOnTrade: wants !== null,
+    onePost: hasLists && !rules.multiPostAsks,
+    asksClosed: !hasLists && !rules.allowCollectionAsks,
+  };
+}
+
+type SuggestInput = {
+  partnerId: string;
+  list?: string;
+  mutual?: boolean;
+  post?: string;
+  lead?: string;
+};
 
 /**
  * The matches the partner's Trade row counts, filled by `fillMatches` (the Can swap pair, else
@@ -87,7 +138,10 @@ type SuggestInput = { partnerId: string; list?: string; mutual?: boolean; post?:
  * them to one post's lists: its have or sale list for the get side, its want list for the give
  * side.
  */
-export async function suggestOffer(me: string, { partnerId, list, mutual, post }: SuggestInput) {
+export async function suggestOffer(
+  me: string,
+  { partnerId, list, mutual, post, lead }: SuggestInput,
+): Promise<Suggestion> {
   if (partnerId === me) refuseOffer("self");
   const empty = {
     give: [] as CandidateItem[],
@@ -95,6 +149,7 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
     matched: { give: 0, get: 0 },
     near: [] as SuggestedNear[],
     postName: null as string | null,
+    postSlug: null as string | null,
     collections: {},
   };
   const safety = await chatSafety(me, partnerId);
@@ -128,9 +183,25 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
   ]);
   // a person with near matches only still gets them
   const partner = recounted.find((row) => row.userId === partnerId);
-  const { get: getMatches, give: giveMatches } = partner
-    ? fillMatches(partner, matchCounts(partner).swapPair, postLists ?? undefined)
+  const swapPair = partner ? matchCounts(partner).swapPair : null;
+  const filled = partner
+    ? fillMatches(partner, swapPair, postLists ?? undefined)
     : { get: [], give: [] };
+  // a row's You get matches outside a Can swap pair come from one post, when the partner asks that
+  const leadPost =
+    post === undefined && !swapPair && filled.get.length > 0
+      ? await onePostOf(partnerId, filled.get, lead)
+      : null;
+  const onPostGet = leadPost
+    ? filled.get.filter((match) => match.partnerListIds.includes(leadPost.id))
+    : filled.get;
+  // cut to one post, You get may hold fewer than You give would: the bigger side wins again
+  const giveAll = leadPost ? matchesThrough(partner?.iHaveTheyWant ?? [], undefined) : [];
+  const giveWins = giveAll.length > onPostGet.length;
+  const onePost = giveWins ? null : leadPost;
+  const getMatches = giveWins ? [] : onPostGet;
+  const giveMatches = giveWins ? giveAll : filled.give;
+  const offerIds = onePost ? new Set([onePost.id]) : postLists?.offerIds;
 
   const addressed: Addressed = {
     partnerId,
@@ -154,6 +225,14 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
   ]);
 
   const theirItems = theirs?.items ?? [];
+  // a Can swap pair asks from one post already: its key is that post's have or sale list
+  const [pairPost] =
+    !onePost && !postLists && swapPair && getMatches.length > 0
+      ? await db
+          .select({ slug: lists.slug, name: lists.name })
+          .from(lists)
+          .where(and(eq(lists.id, swapPair.theirPostId), eq(lists.userId, partnerId)))
+      : [];
   // near matches skip every match through the post, the side left unfilled too
   const near = await nearPicks(me, addressed, nearLists, {
     give: new Set(
@@ -174,20 +253,57 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
         theirItems,
         offered,
         match.slug,
-        new Set(match.partnerListIds.filter((id) => !postLists || postLists.offerIds.has(id))),
+        new Set(match.partnerListIds.filter((id) => !offerIds || offerIds.has(id))),
       ),
     })),
   );
   return {
     ...picks,
     near,
-    postName: postLists?.name ?? null,
+    postName: onePost?.name ?? pairPost?.name ?? postLists?.name ?? null,
+    postSlug: onePost?.slug ?? pairPost?.slug ?? (postLists ? post! : null),
     collections: await collectionsOf(
       [...picks.give, ...picks.get, ...near.flatMap((group) => group.items)].map(
         (item) => item.collectionSlug,
       ),
     ),
   };
+}
+
+type Suggestion = {
+  give: CandidateItem[];
+  get: CandidateItem[];
+  matched: { give: number; get: number };
+  near: SuggestedNear[];
+  postName: string | null;
+  postSlug: string | null;
+  collections: Awaited<ReturnType<typeof collectionsOf>>;
+};
+
+/** The one post a row's get matches come from when the partner takes asks from one post, else null. */
+async function onePostOf(
+  partnerId: string,
+  getMatches: readonly { partnerListIds: readonly number[] }[],
+  lead: string | undefined,
+) {
+  const rules = await offerRulesOf(partnerId);
+  if (rules.multiPostAsks) return null;
+  const counts = new Map<number, number>();
+  for (const match of getMatches) {
+    for (const id of new Set(match.partnerListIds)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  const rows = await db
+    .select({ id: lists.id, slug: lists.slug, name: lists.name })
+    .from(lists)
+    .where(and(eq(lists.userId, partnerId), inArray(lists.id, [...counts.keys()]), askableOnTrade))
+    .orderBy(lists.id);
+  const leadId = rows.find((row) => row.slug === lead)?.id ?? null;
+  const chosen = rowPost(
+    counts,
+    rows.map((row) => row.id),
+    leadId,
+  );
+  return rows.find((row) => row.id === chosen) ?? null;
 }
 
 /** Near matches the builder offers to add, one group per side and verb, picked as matches are. */

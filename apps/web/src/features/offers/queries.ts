@@ -72,6 +72,7 @@ const cursorOptions = (
   to: OfferAddress,
   filters: PickerFilters,
   fromList?: string,
+  wantList?: string,
 ) =>
   orpc.offer.candidates.infiniteOptions({
     input: (cursor: CandidateCursor | undefined) => ({
@@ -79,6 +80,7 @@ const cursorOptions = (
       side,
       cursor,
       fromList,
+      wantList,
       ...toInput(filters),
     }),
     initialPageParam: undefined as CandidateCursor | undefined,
@@ -87,8 +89,12 @@ const cursorOptions = (
     retry: retryUnlessRefused,
   });
 
-export const myCandidatesOptions = (to: OfferAddress, filters: PickerFilters, fromList?: string) =>
-  cursorOptions("mine", to, filters, fromList);
+export const myCandidatesOptions = (
+  to: OfferAddress,
+  filters: PickerFilters,
+  fromList?: string,
+  wantList?: string,
+) => cursorOptions("mine", to, filters, fromList, wantList);
 
 /** What a partner with no lists holds at addresses they show. */
 export const theirCollectionOptions = (to: OfferAddress, filters: PickerFilters) =>

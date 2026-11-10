@@ -131,6 +131,7 @@ function MatchesBuilder({
                   keys: { give: data.give.map(pickKey), get: data.get.map(pickKey) },
                   matched: data.matched,
                   postName: data.postName,
+                  postSlug: data.postSlug,
                   near: left,
                   nearKeys: {
                     give: give.added.map((pick) => pick.key),

@@ -15,7 +15,14 @@ export type OfferPrefill = {
 };
 
 /** Ask for the swap matches with the partner, as their Trade row counts them, or one post's. */
-export type OfferMatches = { partnerId: string; list?: string; mutual?: boolean; post?: string };
+export type OfferMatches = {
+  partnerId: string;
+  list?: string;
+  mutual?: boolean;
+  post?: string;
+  /** a row's lead post, which wins a tie when the partner takes asks from one post */
+  lead?: string;
+};
 
 /** What the matches added when the builder opened, fixed from then on. */
 export type AddedMatches = {
@@ -24,6 +31,8 @@ export type AddedMatches = {
   matched: { give: number; get: number };
   /** the post's own list, when the matches are one post's */
   postName: string | null;
+  /** that list's slug: the post the offer is on */
+  postSlug: string | null;
   /** near matches still waiting on their lines, never added on their own */
   near: NearGroup[];
   /** near picks added at open, by Make offer with it: Remove matches takes them out too */

@@ -11,6 +11,7 @@ const item = (overrides: Partial<OfferItemView> = {}): OfferItemView => ({
   serialEstimated: false,
   listSlug: null,
   sentAt: "2026-10-26T01:06:00.000Z",
+  notWanted: false,
   ...overrides,
 });
 

@@ -1,0 +1,35 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "0f9f09cd-e828-4c20-9eb0-28d6314d7c86",
+  "prevIds": [
+    "5fd90888-dd5f-4299-b86a-91d3232f9b31"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "one_post_offers"
+      ],
+      "writes": [
+        "s|col|public.user.one_post_offers",
+        "n|col|public.user.one_post_offers",
+        "e|col|public.user.one_post_offers"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"user\",\"one_post_offers\"]"
+    }
+  ]
+}

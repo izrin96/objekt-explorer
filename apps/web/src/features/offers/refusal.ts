@@ -44,6 +44,10 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_reserved({ objekts: named });
     case "not_listed":
       return m.offer_refused_not_listed();
+    case "not_wanted":
+      return m.offer_refused_not_wanted({ objekts: named });
+    case "other_post":
+      return m.offer_refused_other_post({ objekts: named });
     case "empty":
       return m.offer_refused_empty();
     case "too_many":

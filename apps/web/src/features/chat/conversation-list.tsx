@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TogglePrimitive } from "@/components/ui/toggle";
 import { ToggleGroupPrimitive } from "@/components/ui/toggle-group";
+import { WantedRuleNotice } from "@/features/offers/wanted-rule-notice";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
@@ -97,6 +98,7 @@ export function ConversationList({
       <p role="status" className="sr-only">
         {announcement}
       </p>
+      {box === "inbox" && q === undefined ? <WantedRuleNotice /> : null}
       {box === "inbox" ? <ShowChips show={show} onPick={() => setPicks((n) => n + 1)} /> : null}
       <ConversationListBody query={query} rows={rows} box={box} q={q} show={show} now={now} />
     </div>

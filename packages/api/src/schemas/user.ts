@@ -43,7 +43,14 @@ export const MAX_USER_SEARCH_LENGTH = 50;
 
 export const userSearchInputSchema = z.object({ query: z.string().default("") });
 
-export const updateAccountInputSchema = z.object({
+/** The recipient's offer rules; each absent field keeps the stored value. */
+export const offerRulesInputSchema = z.object({
+  onlyWantedOffers: z.boolean().optional(),
+  allowCollectionAsks: z.boolean().optional(),
+  multiPostAsks: z.boolean().optional(),
+});
+
+export const updateAccountInputSchema = offerRulesInputSchema.extend({
   name: z.string().min(1).max(256),
   showSocial: z.boolean(),
   // absent from tabs loaded before it existed; their Save leaves the column as it was

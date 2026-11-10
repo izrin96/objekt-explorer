@@ -72,7 +72,10 @@ export async function toChatMessages(
   limits: ActorLimits = {},
 ) {
   const cards = rows.map((row) => (row.unsentAt ? null : parseCard(row.card)));
-  const offers = await fetchOffers(rows.flatMap((row) => (row.offerId ? [row.offerId] : [])));
+  const offers = await fetchOffers(
+    rows.flatMap((row) => (row.offerId ? [row.offerId] : [])),
+    viewerId,
+  );
   const split = splitCards(cards);
   const replies = rows.flatMap((row) =>
     row.replyToId && !row.unsentAt ? [{ id: row.id, replyToId: row.replyToId }] : [],

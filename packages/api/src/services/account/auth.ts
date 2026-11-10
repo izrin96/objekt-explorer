@@ -155,6 +155,27 @@ export const auth = betterAuth({
         returned: true,
         input: false,
       },
+      onlyWantedOffers: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        returned: true,
+        input: false,
+      },
+      allowCollectionAsks: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        returned: true,
+        input: false,
+      },
+      multiPostAsks: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+        returned: true,
+        input: false,
+      },
     },
     deleteUser: {
       enabled: true,

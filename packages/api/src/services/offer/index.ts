@@ -4,15 +4,22 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
 import {
+  closedCollectionAsks,
+  onePostVerdict,
+  unwantedGives,
+} from "../../lib/offer-recipient-rules";
+import {
   type ActorLimits,
   anyCopyScope,
   createEffect,
   effectiveStatus,
+  entriesFitting,
   matchEntry,
   openOffersOf,
   validateShape,
 } from "../../lib/offer-rules";
 import { scanMessage } from "../../lib/scam-patterns";
+import { unique } from "../../lib/unique";
 import { publishNotify } from "../../realtime";
 import { type FlagCategory } from "../../schemas/chat";
 import { type CreateOfferInput, type OfferRefusal, OPEN_OFFER_LIMIT } from "../../schemas/offer";
@@ -41,11 +48,13 @@ import {
   resolveAddressed,
   allowedEntries,
   collectionAddresses,
+  offerRulesOf,
   partnerHasLists,
+  resolvePostList,
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
 import { partyNames, writeNotes } from "./notes";
-import { counteredGives } from "./picker/shared";
+import { counteredAsks, counteredGives, postWantedAmong, wantedAmong } from "./picker/shared";
 import {
   type OfferRow,
   findOffer,
@@ -125,13 +134,15 @@ export async function createOffer(
   if (myAddresses.size === 0) refuseOffer("no_address");
   refuseUnsafe("send", safety);
 
-  const [entries, kept, hasLists] = await Promise.all([
+  const [entries, kept, hasLists, rules, postListId] = await Promise.all([
     allowedEntries(
       addressed,
       input.get.map((item) => item.collectionSlug),
     ),
     counteredGives(addressed.conversationId, me),
     partnerHasLists(partnerId),
+    offerRulesOf(partnerId),
+    resolvePostList(partnerId, input.post),
   ]);
   // before the get side is checked: a stale counter's kept items would read as unlisted
   if (input.counters !== undefined && kept?.offerId !== input.counters) {
@@ -139,6 +150,9 @@ export async function createOffer(
       await staleCounterReason(db, input.counters, addressed.conversationId, me, kept !== null),
     );
   }
+  // a listed objekt the partner offered still counts as kept, so key it by id, not by a list
+  const keptObjekt = (item: { objektId?: string; collectionSlug: string }) =>
+    item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
   const getRows = input.get.map((item) => {
     const entry = matchEntry(item, entries);
     if (entry) {
@@ -146,13 +160,79 @@ export async function createOffer(
       const byCollection = item.objektId !== undefined && entry.objektId === null;
       return { item, listId: entry.listId, kept: false, byCollection };
     }
-    const keeps =
-      item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
+    const keeps = keptObjekt(item);
     if (!keeps && hasLists) {
       refuseOffer("not_listed", item.objektId ? { objektIds: [item.objektId] } : {});
     }
     return { item, listId: null, kept: keeps, byCollection: false };
   });
+  // every recipient rule refuses before `checkMessageRate`, which spends a send slot
+  const closed = closedCollectionAsks(
+    getRows.map((row) => ({ item: row.item, kept: row.kept })),
+    { hasLists, allowCollectionAsks: rules.allowCollectionAsks },
+  );
+  if (closed.length > 0) {
+    refuseOffer("not_listed", {
+      objektIds: closed.flatMap((item) => (item.objektId ? [item.objektId] : [])),
+      collectionSlugs: closed.flatMap((item) =>
+        item.objektId === undefined ? [item.collectionSlug] : [],
+      ),
+    });
+  }
+  // one post per offer, for a recipient with a list on Trade and Let people ask from more than
+  // one post off (web-trade-offers); with it on, an offer across posts is on no one post
+  let onPost = postListId;
+  // the list every ask comes through, once one post per offer has chosen it
+  let chosen: number | null = null;
+  if (hasLists) {
+    const listIdOf = new Map(entries.map((entry) => [entry.listSlug, entry.listId]));
+    const asks = getRows.map((row) => ({
+      item: row,
+      kept: keptObjekt(row.item),
+      candidates: unique(entriesFitting(row.item, entries).map((entry) => entry.listId)),
+      preferred: row.item.listSlug === undefined ? undefined : listIdOf.get(row.item.listSlug),
+    }));
+    let verdict = onePostVerdict(asks, postListId);
+    if (!verdict.ok && rules.multiPostAsks && postListId !== null) {
+      // asks across posts are allowed, so a named post they don't fit only loses its say
+      onPost = null;
+      verdict = onePostVerdict(asks, null);
+    }
+    if (!verdict.ok && rules.multiPostAsks) {
+      onPost = null;
+    } else if (!verdict.ok) {
+      refuseOffer("other_post", {
+        objektIds: verdict.refused.flatMap((row) => (row.item.objektId ? [row.item.objektId] : [])),
+        collectionSlugs: verdict.refused.flatMap((row) =>
+          row.item.objektId === undefined ? [row.item.collectionSlug] : [],
+        ),
+      });
+    }
+    chosen = verdict.ok ? verdict.listId : null;
+    const onChosen = entries.filter((entry) => entry.listId === chosen);
+    for (const row of getRows) {
+      // a kept objekt stays on its own list: the recipient offered it, wherever it sits
+      if (chosen !== null && row.listId !== null && !keptObjekt(row.item)) {
+        row.listId = chosen;
+        // reached the way the chosen post offers it, not the first list that fits
+        row.byCollection =
+          row.item.objektId !== undefined && matchEntry(row.item, onChosen)?.objektId === null;
+      }
+    }
+    onPost ??= chosen;
+  }
+  if (rules.onlyWantedOffers) {
+    const slugs = input.give.map((item) => item.collectionSlug);
+    // on a post, its own want list; a post without one takes anything; no post, every want list
+    const [wanted, asked] = await Promise.all([
+      onPost !== null ? postWantedAmong(onPost, slugs) : wantedAmong(partnerId, slugs),
+      counteredAsks(addressed.conversationId, me),
+    ]);
+    const unwanted = unwantedGives(input.give, wanted, asked);
+    if (unwanted.length > 0) {
+      refuseOffer("not_wanted", { objektIds: unwanted.map((item) => item.objektId) });
+    }
+  }
   const collectionAddrs = hasLists ? null : await collectionAddresses(partnerId);
   const byCollection = getRows.filter((row) => row.byCollection).map((row) => row.item);
   if (byCollection.length > 0) {
@@ -218,7 +298,10 @@ export async function createOffer(
       return collectionAddrs && keptIds.size === 0 ? new Set(collectionAddrs) : partnerAddresses;
     },
     copyHolders: (side) => (side === "give" ? myAddresses : partnerAddresses),
-    getScope: collectionAddrs ? undefined : anyCopyScope(entries),
+    // an any-copy ask takes only a copy the chosen post offers
+    getScope: collectionAddrs
+      ? undefined
+      : anyCopyScope(chosen === null ? entries : entries.filter((e) => e.listId === chosen)),
   });
 
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
@@ -329,6 +412,8 @@ export async function createOffer(
           topupPayer: shape.topup?.payer ?? null,
           note,
           caution: caution.length ? caution : null,
+          // an offer that asks for nothing is on no post, though its post chose the wants above
+          postListId: getRows.some((row) => !keptObjekt(row.item)) ? onPost : null,
         })
         .returning({ id: offer.id });
       const offerId = inserted!.id;
@@ -456,7 +541,7 @@ async function actorLimits(me: string): Promise<ActorLimits> {
  * the viewer is a party to, others dropped silently. Hydrated as the thread hydrates them.
  */
 export async function offerViews(me: string, ids: number[]) {
-  const [found, limits] = await Promise.all([fetchOffers(ids), actorLimits(me)]);
+  const [found, limits] = await Promise.all([fetchOffers(ids, me), actorLimits(me)]);
   const mine = [...found.values()].filter(
     (row) => row.from_user_id === me || row.to_user_id === me,
   );

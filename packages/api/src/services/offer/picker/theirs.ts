@@ -1,8 +1,9 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { lists } from "@repo/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { listEntries, lists } from "@repo/db/schema";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
 import { copyKey } from "../../../lib/trade-rank";
@@ -143,9 +144,20 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
 
 /** The partner's lists on Trade, for the picker's List choice. */
 export async function partnerListChoices(addressed: Addressed): Promise<PartnerList[]> {
+  const wantHalf = alias(lists, "want_half");
   const rows = await db
-    .select({ slug: lists.slug, name: lists.name, type: lists.listType })
+    .select({ slug: lists.slug, name: lists.name, type: lists.listType, want: wantHalf.slug })
     .from(lists)
+    .leftJoin(
+      wantHalf,
+      and(
+        eq(wantHalf.id, lists.linkedListId),
+        eq(wantHalf.listType, "want"),
+        eq(wantHalf.discoverable, true),
+        // an empty want list takes anything, as `postWantedAmong` reads it
+        sql`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${wantHalf.id})`,
+      ),
+    )
     .where(and(eq(lists.userId, addressed.partnerId), askableOnTrade))
     .orderBy(lists.id);
   return rows.flatMap((row) =>

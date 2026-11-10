@@ -1,6 +1,7 @@
 import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
+import { notWanted } from "../../lib/offer-recipient-rules";
 import {
   type ActorLimits,
   allowedActions,
@@ -40,18 +41,35 @@ type HydratedOffer = {
   trade_status: TradeStatus | null;
   trade_progress: { verified: number; total: number } | null;
   latest: boolean;
+  post_list_id: number | null;
+  post_slug: string | null;
+  post_name: string | null;
+  /** the recipient's Only offers with what I want is off and they have a want list on Trade */
+  rule_suggestable: boolean;
   items: [
     side: "give" | "get",
     slug: string,
     objektId: string | null,
     listSlug: string | null,
     sentAt: string | null,
+    /** give: on one of the recipient's want lists, on Trade or not */
+    wanted: boolean,
+    /** give: the recipient asked for it in the offer this one counters */
+    asked: boolean,
   ][];
 };
 
-/** Offers with their items, trade and whether a newer offer exists, in one read. */
-export async function fetchOffers(offerIds: number[]): Promise<Map<number, HydratedOffer>> {
+/**
+ * Offers with their items, trade and whether a newer offer exists, in one read. The want-list
+ * checks behind the recipient's labels and nudge run only for offers sent to `reader`: only the
+ * recipient sees them, and they cost a lookup per give.
+ */
+export async function fetchOffers(
+  offerIds: number[],
+  reader: string | null,
+): Promise<Map<number, HydratedOffer>> {
   if (offerIds.length === 0) return new Map();
+  const forReader = reader === null ? sql`false` : sql`o.to_user_id = ${reader}`;
   const result = await db.execute<HydratedOffer>(sql`
     SELECT o.id, o.conversation_id, o.from_user_id, o.to_user_id, o.parent_id, o.status,
       o.cancel_reason, o.topup_amount::text AS topup_amount, o.topup_currency, o.topup_payer,
@@ -65,9 +83,27 @@ export async function fetchOffers(offerIds: number[]): Promise<Map<number, Hydra
       NOT EXISTS (
         SELECT 1 FROM offer n WHERE n.conversation_id = o.conversation_id AND n.id > o.id
       ) AS latest,
+      o.post_list_id, pl.slug AS post_slug, pl.name AS post_name,
+      (${forReader} AND NOT ru.only_wanted_offers AND EXISTS (
+        SELECT 1 FROM lists wl
+        WHERE wl.user_id = o.to_user_id AND wl.list_type = 'want' AND wl.discoverable
+      )) AS rule_suggestable,
       coalesce((
         SELECT json_agg(
-          json_build_array(i.side, i.collection_slug, i.objekt_id, l.slug, i.sent_at::text)
+          json_build_array(
+            i.side, i.collection_slug, i.objekt_id, l.slug, i.sent_at::text,
+            ${forReader} AND i.side = 'give' AND EXISTS (
+              SELECT 1 FROM list_entries we JOIN lists wl ON wl.id = we.list_id
+              WHERE wl.user_id = o.to_user_id AND wl.list_type = 'want'
+                AND we.collection_slug = i.collection_slug
+            ),
+            ${forReader} AND i.side = 'give' AND EXISTS (
+              SELECT 1 FROM offer p JOIN offer_item pi ON pi.offer_id = p.id AND pi.side = 'get'
+              WHERE p.id = o.parent_id AND p.from_user_id = o.to_user_id
+                AND (pi.objekt_id = i.objekt_id
+                  OR (pi.objekt_id IS NULL AND pi.collection_slug = i.collection_slug))
+            )
+          )
           ORDER BY i.id
         )
         FROM offer_item i LEFT JOIN lists l ON l.id = i.list_id
@@ -75,6 +111,8 @@ export async function fetchOffers(offerIds: number[]): Promise<Map<number, Hydra
       ), '[]') AS items
     FROM offer o
     LEFT JOIN trade t ON t.offer_id = o.id
+    LEFT JOIN lists pl ON pl.id = o.post_list_id
+    JOIN "user" ru ON ru.id = o.to_user_id
     WHERE o.id = ANY(${sql.param(unique(offerIds))}::int[])
   `);
   return new Map(result.rows.map((row) => [row.id, row]));
@@ -100,26 +138,38 @@ export function topupView(row: HydratedOffer, viewerIsSender: boolean) {
   };
 }
 
+/** The decline nudge's condition, read for the recipient only. */
+function suggestsWantedOnly(row: HydratedOffer) {
+  return (
+    row.rule_suggestable &&
+    row.items.some(([side, , , , , wanted, asked]) => side === "give" && !wanted && !asked)
+  );
+}
+
 export function itemViews(
   row: HydratedOffer,
   viewerId: string,
   serialOf: (id: string) => ShownSerial,
 ) {
-  const items = row.items.map(([side, collectionSlug, objektId, listSlug, sentAt]) => {
-    const { serial, estimated } =
-      objektId === null ? { serial: null, estimated: false } : serialOf(objektId);
-    return {
-      side,
-      view: {
-        collectionSlug,
-        objektId,
-        serial,
-        serialEstimated: estimated,
-        listSlug,
-        sentAt: iso(sentAt),
-      },
-    };
-  });
+  const viewerIsRecipient = row.to_user_id === viewerId;
+  const items = row.items.map(
+    ([side, collectionSlug, objektId, listSlug, sentAt, wanted, asked]) => {
+      const { serial, estimated } =
+        objektId === null ? { serial: null, estimated: false } : serialOf(objektId);
+      return {
+        side,
+        view: {
+          collectionSlug,
+          objektId,
+          serial,
+          serialEstimated: estimated,
+          listSlug,
+          sentAt: iso(sentAt),
+          notWanted: notWanted({ side, viewerIsRecipient, wanted, asked }),
+        },
+      };
+    },
+  );
   const { give, get } = offerSummary(items, row.from_user_id === viewerId);
   return { give: give.map((i) => i.view), get: get.map((i) => i.view) };
 }
@@ -154,6 +204,8 @@ export function toOfferView(
     tradeStatus: row.trade_status,
     tradeProgress: row.trade_progress,
     latest: row.latest,
+    post: row.post_slug && row.post_name ? { slug: row.post_slug, name: row.post_name } : null,
+    ...(row.to_user_id === viewerId && { suggestWantedOnly: suggestsWantedOnly(row) }),
     createdAt: iso(row.created_at)!,
     expiresAt: iso(row.expires_at)!,
     respondedAt: iso(row.responded_at),

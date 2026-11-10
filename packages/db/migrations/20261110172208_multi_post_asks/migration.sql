@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "multi_post_asks" boolean DEFAULT true NOT NULL;

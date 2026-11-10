@@ -1,0 +1,192 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "9bf3664f-f14b-4c50-a06e-6c8845c5d56c",
+  "prevIds": [
+    "0d2422b6-1751-4c6f-8ce1-722f7181cfc1"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "offer",
+        "post_list_id"
+      ],
+      "writes": [
+        "s|col|public.offer.post_list_id",
+        "n|col|public.offer.post_list_id",
+        "e|col|public.offer.post_list_id"
+      ],
+      "reads": [
+        "n|tbl|public.offer",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "only_wanted_offers"
+      ],
+      "writes": [
+        "s|col|public.user.only_wanted_offers",
+        "n|col|public.user.only_wanted_offers",
+        "e|col|public.user.only_wanted_offers"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "one_post_offers"
+      ],
+      "writes": [
+        "s|col|public.user.one_post_offers",
+        "n|col|public.user.one_post_offers",
+        "e|col|public.user.one_post_offers"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "allow_collection_asks"
+      ],
+      "writes": [
+        "s|col|public.user.allow_collection_asks",
+        "n|col|public.user.allow_collection_asks",
+        "e|col|public.user.allow_collection_asks"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "offer"
+      ],
+      "writes": [
+        "s|fk|public.offer.offer_post_list_id_lists_id_fkey",
+        "n|fk|public.offer.offer_post_list_id_lists_id_fkey",
+        "e|fk|public.offer.offer_post_list_id_lists_id_fkey",
+        "n|con|public.offer.offer_post_list_id_lists_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.offer",
+        "n|sch|public",
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "n|col|public.offer.post_list_id",
+        "n|col|public.lists.id",
+        "e|uniqueness|public.lists.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "offer",
+        "name": "post_list_id",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "only_wanted_offers",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "one_post_offers",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "allow_collection_asks",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "offer",
+        "name": "offer_post_list_id_lists_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "post_list_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "lists",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    }
+  ]
+}

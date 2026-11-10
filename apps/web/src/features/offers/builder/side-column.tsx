@@ -1,4 +1,4 @@
-import { PlusIcon, XIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useId, useRef } from "react";
 import { flushSync } from "react-dom";
@@ -44,6 +44,10 @@ export function SideColumn({
   estimatedOf,
   reasonOf,
   refused,
+  refusedLabel,
+  rule,
+  post,
+  closed = false,
   loading,
   source,
   onAdd,
@@ -58,6 +62,14 @@ export function SideColumn({
   estimatedOf: (pick: OfferPick) => boolean;
   reasonOf: (pick: OfferPick) => string | null;
   refused: ReadonlySet<string>;
+  /** what a refused pick reads, when the refusal has a reason of its own */
+  refusedLabel?: string | null;
+  /** the partner's offer rule for this side, said above the picks */
+  rule?: string | null;
+  /** You get: the name of the post the offer is on, which its Add button asks from */
+  post?: string | null;
+  /** the partner takes no asks, or the offer is on no post: no Add button */
+  closed?: boolean;
   /** asks still looking for a copy of the sender's own: not blocked yet */
   loading?: ReadonlySet<string>;
   /** You get's source; unknown while the partner's lists load */
@@ -74,7 +86,8 @@ export function SideColumn({
   const problemOf = (pick: OfferPick) =>
     loading?.has(pick.key)
       ? null
-      : (reasonOf(pick) ?? (refused.has(pick.key) ? m.offer_flag_refused() : null));
+      : (reasonOf(pick) ??
+        (refused.has(pick.key) ? (refusedLabel ?? m.offer_flag_refused()) : null));
   const problems = new Map(picks.map((pick) => [pick.key, problemOf(pick)]));
   const blockedPicks = picks.filter((pick) => problems.get(pick.key) !== null);
   const blockedReasons = [...new Set(blockedPicks.map((pick) => problems.get(pick.key)))];
@@ -95,17 +108,31 @@ export function SideColumn({
           })}
         </span>
       </h2>
-      <Button
-        ref={addRef}
-        variant="outline"
-        size="sm"
-        className="max-w-full self-start"
-        disabled={side === "get" && source === undefined}
-        onClick={onAdd}
-      >
-        <PlusIcon />
-        <span className="truncate">{addLabel(side, source, name)}</span>
-      </Button>
+      {closed ? null : (
+        <Button
+          ref={addRef}
+          variant="outline"
+          size="sm"
+          className="max-w-full self-start"
+          disabled={side === "get" && source === undefined}
+          onClick={onAdd}
+        >
+          <PlusIcon />
+          <span className="truncate">{addLabel(side, source, name, post)}</span>
+        </Button>
+      )}
+      {rule ? (
+        <p
+          className={cn(
+            "flex items-start gap-1.5 rounded-lg border px-3 py-2 text-xs text-pretty",
+            TONE_FILL.neutral,
+            TONE_EDGE.neutral,
+          )}
+        >
+          <InfoIcon aria-hidden className="mt-px size-3.5 shrink-0" />
+          {rule}
+        </p>
+      ) : null}
       <div role="status" className="empty:sr-only">
         {blockedPicks.length > 0 ? (
           <div

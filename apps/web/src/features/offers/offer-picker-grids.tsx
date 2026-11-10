@@ -46,11 +46,12 @@ function narrowedEmpty(
   filters: Filters,
   onFilters: (filters: Filters) => void,
   matchTitle: string,
+  matchLocked = false,
 ) {
   if (filters.matchOnly && !pickerFiltered(filters)) {
     return {
       title: matchTitle,
-      action: (
+      action: matchLocked ? undefined : (
         <Button
           variant="outline"
           size="sm"
@@ -69,15 +70,18 @@ function MatchSwitch({
   checked,
   onChange,
   label,
+  locked = false,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
+  /** the partner only takes what they want: on, and it stays on */
+  locked?: boolean;
 }) {
   const id = useId();
   return (
     <span className="flex items-center gap-2">
-      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+      <Switch id={id} checked={checked} disabled={locked} onCheckedChange={onChange} />
       <Label htmlFor={id} className="text-sm">
         {label}
       </Label>
@@ -133,6 +137,7 @@ function PickerGrid({
   source,
   sourceActive = false,
   matchLabel,
+  matchLocked = false,
   suggestedTitle,
   allTitle,
   empty,
@@ -144,6 +149,7 @@ function PickerGrid({
   /** a List other than All is picked, for the folded filters' count on phones */
   sourceActive?: boolean;
   matchLabel: string;
+  matchLocked?: boolean;
   suggestedTitle?: string;
   allTitle?: string;
   empty: { title: string; hint?: string };
@@ -169,6 +175,7 @@ function PickerGrid({
           checked={filters.matchOnly}
           onChange={(matchOnly) => onFilters({ ...filters, matchOnly })}
           label={matchLabel}
+          locked={matchLocked}
         />
       </PickerFilterBar>
       <CandidateGrid
@@ -188,13 +195,27 @@ function PickerGrid({
   );
 }
 
-export function MineGrid({ to, name }: GridProps & { name: string }) {
-  const [filters, setFilters] = useState(NO_FILTERS);
+export function MineGrid({
+  to,
+  name,
+  wantedOnly = false,
+  wantList,
+}: GridProps & {
+  name: string;
+  wantedOnly?: boolean;
+  /** with `wantedOnly`: the post's own want list, the only one the gives may come from */
+  wantList?: string;
+}) {
+  const [chosen, setFilters] = useState(NO_FILTERS);
+  // derived, not seeded: the partner's rules may land after the picker opens
+  const filters = wantedOnly ? { ...chosen, matchOnly: true } : chosen;
   const lists = useUserLists().flatMap((list) =>
     list.listType === "want" ? [] : [{ slug: list.slug, name: list.name, type: list.listType }],
   );
   const [fromList, setList] = useListChoice(lists);
-  const query = useInfiniteQuery(myCandidatesOptions(to, filters, fromList));
+  const query = useInfiniteQuery(
+    myCandidatesOptions(to, filters, fromList, wantedOnly ? wantList : undefined),
+  );
 
   return (
     <PickerGrid
@@ -213,11 +234,17 @@ export function MineGrid({ to, name }: GridProps & { name: string }) {
         ) : null
       }
       matchLabel={m.offer_picker_only_they_want()}
+      matchLocked={wantedOnly}
       suggestedTitle={m.offer_picker_suggested()}
       allTitle={m.offer_picker_all_mine()}
       empty={
         narrowed(filters)
-          ? narrowedEmpty(filters, setFilters, m.offer_picker_mine_none_wanted({ name }))
+          ? narrowedEmpty(
+              filters,
+              setFilters,
+              m.offer_picker_mine_none_wanted({ name }),
+              wantedOnly,
+            )
           : fromList
             ? { title: m.offer_picker_list_empty() }
             : { title: m.offer_picker_mine_empty() }
@@ -255,9 +282,17 @@ export function TheirsGrid({
   name,
   lists,
   startList,
-}: GridProps & { name: string; lists: PartnerList[]; startList?: string }) {
+  post,
+}: GridProps & {
+  name: string;
+  lists: PartnerList[];
+  startList?: string;
+  /** the post the offer is on: the picker shows only it, with no List choice */
+  post?: string;
+}) {
   const [filters, setFilters] = useState(NO_FILTERS);
-  const [fromList, setList] = useListChoice(lists, startList);
+  const [picked, setList] = useListChoice(lists, startList);
+  const fromList = post ?? picked;
   const query = useInfiniteQuery(theirPickerOptions(to, filters, fromList));
   const listed = query.data?.pages[0]?.listed ?? true;
 
@@ -268,7 +303,7 @@ export function TheirsGrid({
       onFilters={setFilters}
       sourceActive={fromList !== undefined}
       source={
-        lists.length > 0 ? (
+        lists.length > 0 && post === undefined ? (
           <PickerListSelect
             lists={lists}
             allLabel={m.offer_picker_list_all_theirs()}

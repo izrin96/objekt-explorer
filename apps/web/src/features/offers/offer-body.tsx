@@ -6,6 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
 import { useRef } from "react";
 import { flushSync } from "react-dom";
@@ -33,6 +34,7 @@ import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
 import { type Collections, pickKey } from "./pick";
 import { allSent } from "./sent";
+import { nudgeWantedRule } from "./wanted-rule";
 
 export function OfferBody({
   offer,
@@ -49,6 +51,7 @@ export function OfferBody({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hydrated = useHydrated();
+  const queryClient = useQueryClient();
   const now = useMinuteClock();
   const actions = useOfferActions(offer.conversationId, (keys) =>
     joinList(
@@ -66,14 +69,21 @@ export function OfferBody({
     const input = { offerId: offer.id };
     flushSync(() =>
       holdOfferAction(offer.id, action, {
-        send: () =>
-          action === "decline" ? actions.decline.mutate(input) : actions.withdraw.mutate(input),
+        send: () => (action === "decline" ? decline(input) : actions.withdraw.mutate(input)),
         // after the restored button has rendered; with the thread gone the ref is null and this does nothing
         onUndo: () => requestAnimationFrame(() => origin.current?.focus()),
       }),
     );
     undoRef.current?.focus();
   };
+  // a promise, not the mutation's per-call onSuccess, so the nudge survives the thread unmounting
+  const decline = (input: { offerId: number }) =>
+    void actions.decline
+      .mutateAsync(input)
+      .then(() => {
+        if (offer.suggestWantedOnly) nudgeWantedRule(queryClient);
+      })
+      .catch(() => {});
   const busy = actions.accept.isPending || actions.decline.isPending || actions.withdraw.isPending;
   const open = offer.status === "open";
   const reason = offer.status === "cancelled" ? cancelReasonText(offer.cancelReason) : null;
@@ -91,6 +101,11 @@ export function OfferBody({
         <p className="flex min-w-0 flex-col">
           <span className="text-sm font-medium break-words">{title}</span>
           <Mono className="text-muted-foreground text-xs">{offerNo(offer.id)}</Mono>
+          {offer.post ? (
+            <span className="text-muted-foreground text-xs break-words">
+              {m.offer_on_post({ post: offer.post.name })}
+            </span>
+          ) : null}
         </p>
         <Badge variant={open && !offer.mine ? "secondary" : "outline"} className="shrink-0">
           {offerStatusText(offer)}

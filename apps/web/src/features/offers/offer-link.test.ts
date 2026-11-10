@@ -38,7 +38,8 @@ describe("offerLink and requestOf", () => {
     expect(request).toEqual({
       to: { target: { kind: "list", slug: "doubles01" } },
       name: "rin.trades",
-      matches: { partnerId: "u-rin", list: "mywants1", mutual: true },
+      // the row's lead post, which breaks a tie under Only asks from one post
+      matches: { partnerId: "u-rin", list: "mywants1", mutual: true, lead: "doubles01" },
     });
   });
 

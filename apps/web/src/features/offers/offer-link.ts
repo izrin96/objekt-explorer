@@ -125,6 +125,7 @@ export function requestOf(
         ...(search.list !== undefined && { list: search.list }),
         ...(search.mutual && { mutual: true }),
         ...(post !== undefined && { post }),
+        ...(post === undefined && search.to !== undefined && { lead: search.to }),
       },
     }),
     ...(search.near !== undefined && { addNear: search.near }),

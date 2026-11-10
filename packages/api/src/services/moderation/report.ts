@@ -24,7 +24,8 @@ const REPORTS_PER_DAY = 20;
 
 /** The offers behind shared messages, as they stand now, so the report keeps what was offered. */
 async function excerptOffers(offerIds: number[], targetUserId: string, now: Date) {
-  const offers = [...(await fetchOffers(offerIds)).values()];
+  // a report keeps what was offered, not the recipient's labels
+  const offers = [...(await fetchOffers(offerIds, null)).values()];
   const objektIds = [
     ...new Set(offers.flatMap((o) => o.items.flatMap(([, , objektId]) => objektId ?? []))),
   ];

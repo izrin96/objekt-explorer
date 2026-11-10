@@ -6,7 +6,9 @@ import { createPortal, flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SingleSelect } from "@/features/filters/single-select";
 import { SendingAs } from "@/features/link/shown-as";
+import { listOption } from "@/features/list/list-option";
 import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemName } from "@/features/offers/format";
 import { type GetSource, sourceOf } from "@/features/offers/get-source";
@@ -44,11 +46,22 @@ import {
 import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
+import {
+  chosenPostOf,
+  giveRule,
+  openPostOf,
+  postProblem,
+  startedPostOf,
+  wantPostOf,
+} from "./post-choice";
 import { BuilderRefused, SendError } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
 import type { AddedMatches, OfferRequest } from "./types";
 import { useSendOffer } from "./use-send-offer";
+
+// no list slug holds a space
+const NO_POST = " ";
 
 export function BuilderForm({
   request,
@@ -97,8 +110,34 @@ export function BuilderForm({
   const hintId = useId();
 
   const theirs = useQuery(theirCandidatesOptions(to));
+  const rules = theirs.data?.partnerRules;
+  const theirLists = theirs.data?.lists ?? [];
   // unknown until the partner's lists have loaded; an error leaves it on lists, which refuse alone
   const source: GetSource | undefined = theirs.isPending ? undefined : sourceOf(theirs.data ?? {});
+  // the partner's lists on Trade are the posts an offer can be on
+  const posts = source === "lists" ? theirLists : [];
+  // a partner who takes asks from one post: the sender chooses it under Offer on
+  const onePost = rules?.onePost === true;
+  const choices = onePost ? posts : [];
+  const openPost = openPostOf(choices, {
+    startList: request.startList,
+    matchesPost: request.matches?.post,
+    addedPost: added?.postSlug,
+    lead: "target" in to && to.target.kind === "list" ? to.target.slug : undefined,
+    get: prefill?.get,
+  });
+  // undefined until the sender chooses; null is No post
+  const [chosenPost, setChosenPost] = useState<string | null | undefined>(undefined);
+  const postSlug = onePost
+    ? chosenPostOf(posts, chosenPost, openPost)
+    : startedPostOf(posts, {
+        startList: request.startList,
+        matchesPost: request.matches?.post,
+        addedPost: added?.postSlug,
+      });
+  const listName = (slug: string | null) => theirLists.find((list) => list.slug === slug)?.name;
+  const postName = listName(postSlug) ?? null;
+  const noPost = choices.length > 0 && postSlug === null;
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
@@ -133,7 +172,19 @@ export function BuilderForm({
       : [],
   );
 
+  const postReason = (pick: OfferPick) => {
+    const problem = postProblem(pick, choices.length > 0, postSlug);
+    if (problem === "no_post") return m.offer_flag_no_post();
+    return problem === "other_post"
+      ? m.offer_flag_not_on_post({ list: postName ?? postSlug! })
+      : null;
+  };
+  // Only offers with what I want: the want list You give is held to, if any, on the post the
+  // server will read the offer as on
+  const givesPost = onePost ? postSlug : wantPostOf(postSlug, getShown);
+  const gives = giveRule(rules, posts.find((list) => list.slug === givesPost) ?? null);
   const reasonOf = (side: OfferSide, pick: OfferPick) =>
+    (side === "get" ? postReason(pick) : null) ??
     pickProblem(side, pick, {
       get: getShown,
       live: side === "give" ? myFlags : theirFlags,
@@ -211,6 +262,7 @@ export function BuilderForm({
     send: sendOffer,
     error,
     refused,
+    refusedBy,
     clearFailure,
   } = useSendOffer({
     onSent,
@@ -242,10 +294,22 @@ export function BuilderForm({
     sendOffer({
       ...offerInput(to, { give: giveShown, get: getShown, topup: topupNow, note }),
       counters: request.counter,
+      ...(postSlug !== null && { post: postSlug }),
     });
   };
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
+  const ruleLine = (side: OfferSide) => {
+    if (side === "give") {
+      if (gives === null) return null;
+      return gives === "all"
+        ? m.offer_rule_wanted_only({ name })
+        : m.offer_rule_wanted_post({ name, post: listName(givesPost) ?? givesPost! });
+    }
+    if (rules?.asksClosed && source === "collection") return m.offer_rule_asks_closed({ name });
+    if (choices.length === 0) return null;
+    return noPost ? m.offer_rule_no_post() : m.offer_rule_one_post();
+  };
   const shown = { give: giveShown, get: getShown };
 
   // a target the sender may not reach is refused before anything can be picked
@@ -290,6 +354,23 @@ export function BuilderForm({
         status={region !== undefined}
         sides={
           <>
+            {choices.length > 0 ? (
+              <div className="flex">
+                <SingleSelect
+                  label={m.offer_post_label()}
+                  options={[
+                    ...choices.map(listOption),
+                    { value: NO_POST, label: m.offer_post_none() },
+                  ]}
+                  value={postSlug ?? NO_POST}
+                  defaultValue={openPost ?? NO_POST}
+                  showValue
+                  onChange={(next) => setChosenPost(next === NO_POST ? null : next)}
+                />
+              </div>
+            ) : postName ? (
+              <p className="text-muted-foreground text-sm">{m.offer_on_post({ post: postName })}</p>
+            ) : null}
             <div className="grid min-w-0 gap-6 md:grid-cols-2">
               {(["give", "get"] as const).map((side) => {
                 const [picks, setPicks] = sides[side];
@@ -304,6 +385,19 @@ export function BuilderForm({
                     estimatedOf={estimatedOf}
                     reasonOf={(pick) => reasonOf(side, pick)}
                     refused={refused}
+                    refusedLabel={
+                      refusedBy === "not_wanted"
+                        ? m.offer_flag_not_wanted()
+                        : refusedBy === "other_post" && postSlug !== null
+                          ? m.offer_flag_not_on_post({ list: postName ?? postSlug })
+                          : null
+                    }
+                    rule={ruleLine(side)}
+                    post={side === "get" && onePost ? postName : null}
+                    closed={
+                      side === "get" &&
+                      ((rules?.asksClosed === true && source === "collection") || noPost)
+                    }
                     loading={side === "give" ? loadingAsks : loadingGet}
                     source={source}
                     onAdd={() => setPicking(side)}
@@ -404,6 +498,12 @@ export function BuilderForm({
               source={source ?? "lists"}
               theirLists={theirs.data?.lists ?? []}
               startList={request.startList}
+              rules={{
+                wantedOnly: gives !== null,
+                ...(gives !== null && gives !== "all" && { wantList: gives.want }),
+                ...(onePost &&
+                  postSlug !== null && { post: { slug: postSlug, name: postName ?? postSlug } }),
+              }}
               // the side as shown, so a copy standing in for an ask can be swapped for another
               picked={shown[picking]}
               onDone={(picks, found) => {

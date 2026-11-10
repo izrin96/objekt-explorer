@@ -1,4 +1,4 @@
-import type { CreateOfferInput } from "@repo/api/schemas/offer";
+import type { CreateOfferInput, OfferRefusal } from "@repo/api/schemas/offer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -33,6 +33,8 @@ export function useSendOffer({
   const queryClient = useQueryClient();
   const [error, setError] = useState<SendFailure | null>(null);
   const [refused, setRefused] = useState<ReadonlySet<string>>(new Set());
+  // a recipient rule names its own reason under each refused pick
+  const [refusedBy, setRefusedBy] = useState<OfferRefusal | null>(null);
   const mounted = useMountedRef();
   const create = useMutation(
     orpc.offer.create.mutationOptions({
@@ -64,6 +66,7 @@ export function useSendOffer({
         .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
     );
     setRefused(keys);
+    setRefusedBy(refusal.reason);
     const text = offerRefusalText(refusal, named || m.offer_refused_some()) ?? m.offer_send_error();
     // here the way out is taking the named objekts out of the offer
     setError({ text, remove: named !== "", link: refusal.reason === "no_address" });
@@ -84,7 +87,8 @@ export function useSendOffer({
   const clearFailure = () => {
     setError(null);
     setRefused(new Set());
+    setRefusedBy(null);
   };
 
-  return { create, send, error, refused, clearFailure };
+  return { create, send, error, refused, refusedBy, clearFailure };
 }

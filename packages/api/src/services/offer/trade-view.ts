@@ -78,7 +78,7 @@ export async function fetchTrade(me: string, tradeId: number) {
     profiles,
     cancelRows,
   ] = await Promise.all([
-    fetchOffers([row.offerId]),
+    fetchOffers([row.offerId], me),
     db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
     db
       .select({
