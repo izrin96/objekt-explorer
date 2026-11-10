@@ -11,7 +11,7 @@ Live at **[objekt.top](https://objekt.top)**.
 - Time travel: view any profile's collection as it was on a past date
 - Trade lists (have/want) with matching between profiles
 - Market listings and price tracking
-- Live activity feed over WebSockets
+- Live activity feed, chat and notifications (Centrifugo)
 
 ## Stack
 
@@ -22,30 +22,31 @@ Live at **[objekt.top](https://objekt.top)**.
 | API         | ORPC (type-safe RPC) with Zod                        |
 | Database    | PostgreSQL 18, Drizzle ORM                           |
 | Auth        | Better Auth                                          |
-| Real-time   | WebSockets, Valkey pub-sub                           |
+| Real-time   | Centrifugo (self-hosted), centrifuge-js              |
 | i18n        | Inlang (Paraglide)                                   |
 | Indexer     | Subsquid (EVM processor)                             |
 | Lint/Format | oxlint, oxfmt                                        |
 
 ## Repository layout
 
-| Path                | Package          | Purpose                                              |
-| ------------------- | ---------------- | ---------------------------------------------------- |
-| `apps/web`          | `web`            | Frontend, with an embedded WebSocket activity server |
-| `apps/worker`       | `worker`         | Background jobs (Croner)                             |
-| `apps/indexer`      | `indexer`        | On-chain NFT metadata indexer (Subsquid)             |
-| `packages/api`      | `@repo/api`      | ORPC routers and services shared by the server       |
-| `packages/db`       | `@repo/db`       | Drizzle schema and migrations for both databases     |
-| `packages/lib`      | `@repo/lib`      | Shared utilities and types                           |
-| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                            |
-| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                 |
-| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                            |
+| Path                | Package          | Purpose                                          |
+| ------------------- | ---------------- | ------------------------------------------------ |
+| `apps/web`          | `web`            | Frontend (TanStack React Start)                  |
+| `apps/worker`       | `worker`         | Background jobs (`Bun.cron`)                     |
+| `apps/indexer`      | `indexer`        | On-chain NFT metadata indexer (Subsquid)         |
+| `packages/api`      | `@repo/api`      | ORPC routers and services shared by the server   |
+| `packages/db`       | `@repo/db`       | Drizzle schema and migrations for both databases |
+| `packages/lib`      | `@repo/lib`      | Shared utilities and types                       |
+| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                        |
+| `packages/email`    | `@repo/email`    | Auth email templates (jsx-email)                 |
+| `packages/lint`     | `@repo/lint`     | Shared oxlint config                             |
+| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                        |
 
 Bun workspaces manage the packages, Turbo runs the tasks.
 
 ## Getting started
 
-Requirements: [Bun](https://bun.sh) 1.4+, PostgreSQL 18 and a Valkey/Redis instance. `docker-compose.yml` provides all of them if you'd rather not install them locally.
+Requirements: [Bun](https://bun.sh) 1.4+, PostgreSQL 18, a Valkey/Redis instance and [Centrifugo](https://centrifugal.dev) for real-time. `docker-compose.yml` provides all of them if you'd rather not install them locally.
 
 ```bash
 bun install
@@ -54,25 +55,28 @@ cp .env.example .env   # then fill it in
 
 All apps read the same root `.env`, so there is nothing to configure per package. The essential variables:
 
-| Variable               | Purpose                              |
-| ---------------------- | ------------------------------------ |
-| `DATABASE_URL`         | Main PostgreSQL connection           |
-| `INDEXER_DATABASE_URL` | Indexer PostgreSQL connection        |
-| `REDIS_URL`            | Valkey (Redis-compatible) connection |
-| `BETTER_AUTH_SECRET`   | Auth encryption key                  |
-| `VITE_SITE_URL`        | Public site URL                      |
-| `COSMO_KEY`            | Encrypted API key for the Cosmo SDK  |
+| Variable                  | Purpose                                     |
+| ------------------------- | ------------------------------------------- |
+| `DATABASE_URL`            | Main PostgreSQL connection                  |
+| `INDEXER_DATABASE_URL`    | Indexer PostgreSQL connection               |
+| `REDIS_URL`               | Valkey (Redis-compatible) connection        |
+| `BETTER_AUTH_SECRET`      | Auth encryption key                         |
+| `SITE_URL`                | Public origin, read at runtime              |
+| `CENTRIFUGO_URL`          | Centrifugo server API URL                   |
+| `CENTRIFUGO_API_KEY`      | Centrifugo server API key                   |
+| `CENTRIFUGO_TOKEN_SECRET` | Secret that signs browser connection tokens |
+| `COSMO_KEY`               | Encrypted API key for the Cosmo SDK         |
 
 See `.env.example` for the full list, including S3 storage, SES mail, OAuth providers and indexer RPC settings.
 
-Push the schema and start everything:
+Apply the migrations and start everything:
 
 ```bash
-bun run --filter=@repo/db db:push
+bun run --filter=@repo/db db:migrate
 bun run dev
 ```
 
-The web app is then served on <http://localhost:3000>.
+The web app is then served on <http://localhost:3200>.
 
 ## Commands
 
@@ -85,6 +89,8 @@ bun run build                      # build everything
 bun run lint                       # oxlint across the monorepo
 bun run lint:fix                   # lint and auto-fix
 bun run typecheck                  # type-check everything
+bun run test                       # bun test across the monorepo
+bun run check                      # lint, typecheck and test in one run, as CI does
 bun run format                     # oxfmt across the monorepo
 ```
 
@@ -98,7 +104,7 @@ bun run --filter=@repo/db db:studio     # open Drizzle Studio
 
 ## Docker
 
-`docker-compose.yml` brings up the full stack: web, worker, indexer processor, both PostgreSQL instances with pgbouncer in front, and Valkey.
+`docker-compose.yml` brings up the full stack: web, worker, indexer processor, both PostgreSQL instances with pgbouncer in front, Valkey and Centrifugo.
 
 ```bash
 docker compose up -d
@@ -106,7 +112,7 @@ docker compose up -d
 
 ## Contributing
 
-Before opening a pull request, make sure `bun run lint`, `bun run typecheck` and `bun run format` are clean. CI runs the same checks and builds Docker images for any affected service.
+Before opening a pull request, make sure `bun run check` and `bunx oxfmt --check` are clean. CI runs the same checks and builds the web Docker image; the worker and indexer images are built on deploy.
 
 ## Credit/Acknowledgment
 
