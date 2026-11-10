@@ -1,6 +1,6 @@
 import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
+import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
 import type { List } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
@@ -20,6 +20,7 @@ import {
 } from "../../schemas/list-copy";
 import { assertProfileOwned } from "../profile";
 import { type PreparedList, writeList } from "./create";
+import { ownedCopiesOf } from "./entries";
 import { copyRulesTx } from "./rules";
 
 type CopyTarget = Pick<
@@ -73,13 +74,7 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
       owned = new Set(found.map((row) => row.id));
     } else {
       const slugs = Array.from(new Set(entries.flatMap((entry) => entry.collectionSlug ?? [])));
-      const copies = await chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
-        indexer
-          .select({ id: objekts.id, slug: collections.slug, serial: objekts.serial })
-          .from(objekts)
-          .innerJoin(collections, eq(collections.id, objekts.collectionId))
-          .where(and(inArray(collections.slug, batch), eq(objekts.owner, owner))),
-      );
+      const copies = await ownedCopiesOf(owner, slugs);
       const bySlug = new Map<string, OwnedCopy[]>();
       for (const copy of copies) {
         const held = bySlug.get(copy.slug);

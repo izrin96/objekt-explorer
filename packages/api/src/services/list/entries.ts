@@ -25,6 +25,17 @@ type EntryPricing = { price: number | null; isQyop: boolean; note: string | null
  * Of the requested items that added nothing, `unowned` counts those the bound
  * list's profile holds no copy of, and `skipped` the rest, already in the list.
  */
+/** Every copy `owner` holds of the collections named by `slugs`, with its slug and serial. */
+export function ownedCopiesOf(owner: string, slugs: string[]) {
+  return chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({ id: objekts.id, slug: collections.slug, serial: objekts.serial })
+      .from(objekts)
+      .innerJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(and(inArray(collections.slug, batch), eq(objekts.owner, owner))),
+  );
+}
+
 export async function addEntries(
   list: AddableList,
   from: AddSource,
@@ -36,13 +47,7 @@ export async function addEntries(
   if (owner) {
     if (from.type === "collections") {
       const slugs = Array.from(new Set(from.slugs));
-      const copies = await chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
-        indexer
-          .select({ id: objekts.id, slug: collections.slug, serial: objekts.serial })
-          .from(objekts)
-          .innerJoin(collections, eq(collections.id, objekts.collectionId))
-          .where(and(inArray(collections.slug, batch), eq(objekts.owner, owner))),
-      );
+      const copies = await ownedCopiesOf(owner, slugs);
       const order = new Map(slugs.map((slug, i) => [slug, i]));
       const rows = await insertTokens(
         list.id,
