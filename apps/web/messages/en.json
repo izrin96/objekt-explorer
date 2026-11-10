@@ -1644,6 +1644,8 @@
   "offer_page_back": "Back to {name}",
   "offer_page_cant_counter": "This offer can't be countered",
   "offer_page_cant_counter_hint": "It was answered, withdrawn or has expired, or it isn't an offer to you.",
+  "offer_page_cant_counter_muted": "You can't send messages right now, so you can't counter it. You can still accept or decline it.",
+  "offer_page_cant_counter_trade_blocked": "Your account can't trade right now, so you can't counter it. You can still decline it.",
   "offer_builder_empty_hint": "Add at least one objekt to either side.",
   "offer_builder_blocked_hint": "Remove the objekts that can't be offered.",
   "offer_builder_note_hint": "Shorten the note to send the offer.",

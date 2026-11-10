@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { threadOptions } from "@/features/chat/queries";
 import { threadPartner } from "@/features/chat/thread-cache";
+import { counterBlockOf } from "@/features/offers/counter-block";
 import { hasForeignList, hasOtherOwner } from "@/features/offers/offer-ownership";
 import { orpc } from "@/lib/orpc";
 import { isBadRequest, isClientError, isNotFound } from "@/lib/orpc-error";
@@ -27,6 +28,7 @@ export async function loadOfferPage({
   const none = {
     counter: null,
     unavailable: null,
+    counterBlock: null as ReturnType<typeof counterBlockOf>,
     foreign: false,
     refused: false,
     refusal: null as string | null,
@@ -57,7 +59,12 @@ export async function loadOfferPage({
       ) {
         return { ...none, name, counter: { offer, collections: views.collections } };
       }
-      return { ...none, name, unavailable: "counter" as const };
+      return {
+        ...none,
+        name,
+        unavailable: "counter" as const,
+        counterBlock: offer ? counterBlockOf(offer) : null,
+      };
     }
     if (deps.conversation !== undefined && (await partnerOf(deps.conversation)) !== person.userId) {
       return { ...none, name, unavailable: "conversation" as const };

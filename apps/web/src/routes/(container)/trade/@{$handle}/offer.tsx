@@ -48,7 +48,7 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
 function OfferRoute() {
   const { person, refusal: lookupRefusal } = Route.useRouteContext();
   const search = Route.useSearch();
-  const { counter, unavailable, foreign, refused, refusal } = Route.useLoaderData();
+  const { counter, unavailable, counterBlock, foreign, refused, refusal } = Route.useLoaderData();
   if (!person || refused) return <PersonPageRefused refusal={refusal ?? lookupRefusal} />;
   const name = handleName(person.handle);
   const back = backPath(search.from, person.handle);
@@ -58,7 +58,15 @@ function OfferRoute() {
         bordered={false}
         icon={unavailable === "counter" ? HandshakeIcon : ChatsCircleIcon}
         title={unavailable === "counter" ? m.offer_page_cant_counter() : m.chat_not_found()}
-        hint={unavailable === "counter" ? m.offer_page_cant_counter_hint() : undefined}
+        hint={
+          unavailable !== "counter"
+            ? undefined
+            : counterBlock === "muted"
+              ? m.offer_page_cant_counter_muted()
+              : counterBlock === "trade_blocked"
+                ? m.offer_page_cant_counter_trade_blocked()
+                : m.offer_page_cant_counter_hint()
+        }
         action={<BackButton href={back} label={m.offer_page_back({ name })} />}
       />
     );
