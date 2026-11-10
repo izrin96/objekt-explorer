@@ -1754,6 +1754,7 @@
   "offer_refused_not_open": "이 제안에는 이미 응답했습니다.",
   "offer_refused_offer_changed": "답하는 동안 이 제안이 바뀌었습니다. 새로 고쳐 새 제안을 확인해 주세요.",
   "offer_refused_not_owned": "소유자가 더 이상 보유하지 않음: {objekts}",
+  "offer_refused_promised": "진행 중인 거래에 이미 약속됨: {objekts}",
   "offer_refused_not_transferable": "전송 불가: {objekts}",
   "offer_refused_reserved": "이미 진행 중인 거래에 포함됨: {objekts}",
   "offer_refused_some": "일부 오브젝트",

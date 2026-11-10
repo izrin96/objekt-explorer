@@ -62,7 +62,13 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   message_limit: "TOO_MANY_REQUESTS",
 };
 
-type RefusalDetail = { retryAt?: Date; objektIds?: string[]; collectionSlugs?: string[] };
+type RefusalDetail = {
+  retryAt?: Date;
+  objektIds?: string[];
+  collectionSlugs?: string[];
+  /** not_owned: the named objekts are held, but open any-copy trades already count on them */
+  promised?: boolean;
+};
 
 export function refuseOffer(reason: OfferRefusal, detail: RefusalDetail = {}): never {
   throw new ORPCError(REFUSAL_STATUS[reason], {
@@ -71,6 +77,7 @@ export function refuseOffer(reason: OfferRefusal, detail: RefusalDetail = {}): n
       ...(detail.retryAt ? { retryAt: detail.retryAt.toISOString() } : {}),
       ...(detail.objektIds?.length ? { objektIds: detail.objektIds } : {}),
       ...(detail.collectionSlugs?.length ? { collectionSlugs: detail.collectionSlugs } : {}),
+      ...(detail.promised ? { promised: true } : {}),
     },
   });
 }

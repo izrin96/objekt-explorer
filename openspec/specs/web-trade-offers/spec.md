@@ -86,6 +86,10 @@ An offer that fails any of these checks SHALL be refused, naming the objekt. An 
 - **WHEN** the user adds an objekt that is part of an accepted trade in progress
 - **THEN** the offer is refused for that objekt
 
+#### Scenario: Promised to a trade asking for any copy
+- **WHEN** the user holds JiWoo D333Z #76 and #80, an accepted trade in progress asks them for any copy of D333Z, and they add both to an offer
+- **THEN** the offer is refused naming #80, the last added, as already promised to a trade in progress; with #80 taken out, #76 can be sent
+
 ### Requirement: Offer lifecycle
 A conversation SHALL hold at most one open offer:
 - **Counter**: when the recipient of the open offer sends one, it replaces that offer, which becomes Countered.

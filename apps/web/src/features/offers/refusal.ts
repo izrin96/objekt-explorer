@@ -16,7 +16,9 @@ export function offerRefusalOf(error: unknown) {
   const { reason: code, retryAt } = errorReason(error);
   const reason = OFFER_REFUSALS.find((item) => item === code);
   if (!reason) return null;
-  const data = (error as { data?: { objektIds?: unknown; collectionSlugs?: unknown } }).data;
+  const data = (
+    error as { data?: { objektIds?: unknown; collectionSlugs?: unknown; promised?: unknown } }
+  ).data;
   const strings = (value: unknown) =>
     Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
   return {
@@ -24,6 +26,7 @@ export function offerRefusalOf(error: unknown) {
     retryAt,
     objektIds: strings(data?.objektIds),
     collectionSlugs: strings(data?.collectionSlugs),
+    promised: data?.promised === true,
   };
 }
 
@@ -34,7 +37,9 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
   const reason: OfferRefusal = refusal.reason;
   switch (reason) {
     case "not_owned":
-      return m.offer_refused_not_owned({ objekts: named });
+      return refusal.promised
+        ? m.offer_refused_promised({ objekts: named })
+        : m.offer_refused_not_owned({ objekts: named });
     case "not_transferable":
       return m.offer_refused_not_transferable({ objekts: named });
     case "reserved":

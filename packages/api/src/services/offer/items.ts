@@ -233,6 +233,11 @@ export async function refuseCopyShortfall(
     objektIds.push(...overPromisedCopies(need.named, left));
   }
   if (collectionSlugs.length + objektIds.length > 0) {
-    refuseOffer("not_owned", { collectionSlugs: unique(collectionSlugs), objektIds });
+    refuseOffer("not_owned", {
+      collectionSlugs: unique(collectionSlugs),
+      objektIds,
+      // a flag, not a reason of its own, so a tab from before it still reads not_owned
+      promised: collectionSlugs.length === 0,
+    });
   }
 }
