@@ -2,7 +2,7 @@
 
 `Bun.cron` jobs registered in `src/index.ts` (`job/`), plus one-off maintenance scripts in `src/script/`. Scripts run against the production `.env`, and only some are dry runs by default (`APPLY=1` to write), so read a script before running it. Pure logic goes in `src/lib/` beside its test (`serial-math.ts` is the model).
 
-From `@repo/api`, import only modules whose import chain stays clear of `env.ts`. `env.ts` validates the web app's whole `serverEnv` (Discord, S3, SES and more) as it loads, and the worker container has none of those, so the worker dies on start. `services/redis` imports it, and so does every module that imports `services/redis`, such as `services/market/currency-rates`. Before importing an `@repo/api` service, follow its imports. Read such tables directly with `db`, as `update-currency-rates` and `snapshot-price-history` do.
+From `@repo/api`, import only modules whose import chain stays clear of `env.ts`. `env.ts` validates the web app's whole `serverEnv` (Discord, S3, SES and more) as it loads, and the worker container has none of those, so the worker dies on start. `services/redis` imports it, and so does every module that imports `services/redis`, such as `services/market/currency-rates`. Before importing an `@repo/api` service, follow its imports. Read such tables directly with `db`, as `update-currency-rates` and `snapshot-price-history` do. `src/import-boundary.test.ts` fails when the bundle reaches `env.ts` or `services/redis`.
 
 ## One run at a time
 
@@ -66,4 +66,4 @@ Each alert type is Off, Any or Can swap (`notification_pref.match`, null reading
 
 ## Want-list rules
 
-`job/refresh-list-rules.ts` runs every 10 minutes and on startup. It re-expands every rule against the indexer's collections and its owner's holdings through `@repo/api/services/list/rules/expand` (env-free; keep it so), reading each described collection set and each owner's addresses once per run, and `bumpTradeVersion` the owners whose entries changed. It never touches `lists.updated_at`: the feed reads that as the owner's edit, so a refresh would keep an idle post listed and show it as updated. Unchanged rules write nothing.
+`job/refresh-list-rules.ts` runs every 10 minutes and on startup. It re-expands every rule against the indexer's collections and its owner's holdings through `@repo/api/services/list/rules/expand` (env-free; keep it so), reading each described collection set and each owner's addresses once per run, and `bumpTradeVersion` the owners whose entries changed. It never touches `lists.updated_at`: the feed reads that as the owner's edit, so a refresh would keep an idle post listed and show it as updated. Unchanged rules take no lock and write nothing.

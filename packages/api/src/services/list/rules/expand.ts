@@ -107,6 +107,19 @@ export async function syncRuleEntries(ruleId: number, slugs: readonly string[], 
   return db.transaction((tx) => syncRuleEntriesTx(tx, ruleId, slugs, readAt));
 }
 
+/**
+ * Whether a rule's entries differ from `slugs`, read without a lock. A refresh calls
+ * `syncRuleEntries` only when they do, so an unchanged rule takes no row lock.
+ */
+export async function ruleEntriesDiffer(ruleId: number, slugs: readonly string[]) {
+  const current = await db
+    .select({ id: listEntries.id, slug: listEntries.collectionSlug })
+    .from(listEntries)
+    .where(eq(listEntries.ruleId, ruleId));
+  const { stale, missing } = ruleEntryDiff(current, slugs);
+  return stale.length > 0 || missing.length > 0;
+}
+
 /** Rows per write: an insert binds three parameters a row. */
 const WRITE_BATCH = 5000;
 

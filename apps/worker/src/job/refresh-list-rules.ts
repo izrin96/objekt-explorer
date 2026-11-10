@@ -4,6 +4,7 @@ import {
   linkedAddresses,
   readRule,
   ruleCollections,
+  ruleEntriesDiffer,
   syncRuleEntries,
 } from "@repo/api/services/list/rules/expand";
 import { db } from "@repo/db";
@@ -21,7 +22,7 @@ const refreshBeat = heartbeat(refreshLog);
 
 /**
  * Re-expands every want-list rule against new collections and the owners' holdings.
- * `syncRuleEntries` diffs, so an unchanged rule writes nothing and keeps its entry ids. A change
+ * An unchanged rule is read without a lock and writes nothing, so it keeps its entry ids. A change
  * drops the owner's cached trade matches but leaves `lists.updated_at`, which means an edit.
  */
 export async function refreshListRules() {
@@ -75,7 +76,10 @@ export async function refreshListRules() {
             collections.get(key)!,
           ]);
           const reading = await readRule(def, owned, described);
-          if (await syncRuleEntries(id, reading.slugs, updatedAt)) {
+          if (
+            (await ruleEntriesDiffer(id, reading.slugs)) &&
+            (await syncRuleEntries(id, reading.slugs, updatedAt))
+          ) {
             changed += 1;
             changedLists.add(listId);
             changedOwners.add(userId);
