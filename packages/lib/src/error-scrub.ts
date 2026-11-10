@@ -45,6 +45,27 @@ const DB_VALUES: ReadonlyArray<[RegExp, string]> = [
 const PRIVATE_KEY =
   /^(authorization|cookies?|set-cookie|password|secret|token|access_?token|refresh_?token|id_?token|email|body|note|notes|text|input|data|query_string|headers|vars)$/i;
 
+// words people write; dropped only in `extra` and the app's own contexts, since the SDK's
+// own keys reuse these names (`event.message`, `sdk.name`, `contexts.os.name`, span `description`)
+const USER_TEXT_KEY = /^(reason|description|bio|excerpt|message|name|nickname|title)$/i;
+
+// contexts the SDKs fill themselves; any other context name is the app's
+const SDK_CONTEXTS = new Set([
+  "app",
+  "browser",
+  "cloud_resource",
+  "culture",
+  "device",
+  "os",
+  "runtime",
+  "trace",
+  "response",
+  "react",
+  "state",
+  "profile",
+  "flags",
+]);
+
 const MAX_DEPTH = 10;
 
 export function scrubText(text: string) {
@@ -62,14 +83,15 @@ export function scrubUrl(url: string) {
   return scrubText(url.split(/[?#]/, 1)[0] ?? "");
 }
 
-function scrubValue(value: unknown, depth: number): unknown {
+function scrubValue(value: unknown, depth: number, userData = false): unknown {
   if (typeof value === "string") return scrubText(value);
   if (value === null || typeof value !== "object") return value;
   if (depth >= MAX_DEPTH) return "[depth]";
-  if (Array.isArray(value)) return value.map((item) => scrubValue(item, depth + 1));
+  if (Array.isArray(value)) return value.map((item) => scrubValue(item, depth + 1, userData));
   const out: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
-    if (!PRIVATE_KEY.test(key)) out[key] = scrubValue(item, depth + 1);
+    if (PRIVATE_KEY.test(key) || (userData && USER_TEXT_KEY.test(key))) continue;
+    out[key] = scrubValue(item, depth + 1, userData);
   }
   return out;
 }
@@ -110,9 +132,19 @@ export function scrubEvent<T extends Event>(event: T): T {
     sdkProcessingMetadata,
     debug_meta,
     release,
+    extra,
+    contexts,
     ...rest
   } = event;
   const out = scrubValue(rest, 0) as T;
+  if (extra) out.extra = scrubValue(extra, 1, true) as T["extra"];
+  if (contexts) {
+    out.contexts = Object.fromEntries(
+      Object.entries(contexts).flatMap(([name, context]) =>
+        PRIVATE_KEY.test(name) ? [] : [[name, scrubValue(context, 2, !SDK_CONTEXTS.has(name))]],
+      ),
+    ) as T["contexts"];
+  }
   // SDK-internal data and build ids (a release may be a 40-hex git sha), never user content
   if (sdkProcessingMetadata) out.sdkProcessingMetadata = sdkProcessingMetadata;
   if (debug_meta) out.debug_meta = debug_meta;

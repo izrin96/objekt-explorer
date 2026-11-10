@@ -184,6 +184,32 @@ describe("scrubEvent", () => {
     expect(out.contexts).toEqual({ chat: { conversationId: 7 } });
   });
 
+  test("drops free-text keys in extra and the app's own contexts, not the SDK's", () => {
+    const out = scrubEvent(
+      event({
+        message: "worker failed",
+        sdk: { name: "sentry.javascript.bun" },
+        extra: {
+          report: { id: 1, reason: "scam", description: "x" },
+          list: { name: "My haves", bio: "hi" },
+        },
+        contexts: {
+          offer: { id: 2, message: "meet at 5", nickname: "kim" },
+          os: { name: "macOS" },
+          runtime: { name: "bun" },
+        },
+      }),
+    );
+    expect(out.extra).toEqual({ report: { id: 1 }, list: {} });
+    expect(out.contexts).toEqual({
+      offer: { id: 2 },
+      os: { name: "macOS" },
+      runtime: { name: "bun" },
+    });
+    expect(out.message).toBe("worker failed");
+    expect(out.sdk).toEqual({ name: "sentry.javascript.bun" });
+  });
+
   test("keeps the release and scrubs the procedure tag", () => {
     const sha = "a".repeat(40);
     const out = scrubEvent(event({ release: sha, tags: { procedure: "/api/v1/@kim/lists" } }));
