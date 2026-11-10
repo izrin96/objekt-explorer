@@ -21,8 +21,11 @@
       "cache": false,
       "persistent": true
     },
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts", "oxlint.config.mts"],
       "outputs": [],
       "cache": true
@@ -33,12 +36,13 @@
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"],
       "outputs": [],
       "cache": true
     },
     "test": {
+      "dependsOn": ["transit"],
       "outputs": [],
       "cache": true
     },
