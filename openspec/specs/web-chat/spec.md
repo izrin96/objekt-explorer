@@ -166,7 +166,7 @@ The request bar SHALL say that declining moves the conversation to Archived with
 - **THEN** the conversation goes straight to kaede.k's Inbox
 
 #### Scenario: Offer touching none of their lists
-- **WHEN** rin.trades has no lists, and a user's first message to him is an offer asking for SeoYeon 204Z #537 from his collection and giving an objekt on none of his want lists
+- **WHEN** rin.trades has no lists and lets people ask for anything he holds, and a user's first message to him is an offer asking for SeoYeon 204Z #537 from his collection and giving an objekt on none of his want lists
 - **THEN** the offer is sent, and the conversation appears under Requests for rin.trades
 
 #### Scenario: The other side writes first
