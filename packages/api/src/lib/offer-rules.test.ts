@@ -7,7 +7,7 @@ import {
   anyCopyScope,
   anyCopyShortfall,
   collectionAskAllowed,
-  specificCopyShortfall,
+  overPromisedCopies,
   atFault,
   cancelAnswerRefusal,
   cancelAskWait,
@@ -254,11 +254,41 @@ describe("item checks", () => {
   });
 
   test("a named copy is refused when open any-copy legs already count on the giver's copies", () => {
+    const x = { id: "x", slug: "c" };
     // B holds X and a spare of "c", with one any-copy leg open: the spare covers it
-    expect(specificCopyShortfall(["c"], new Map([["c", 0]]))).toEqual([]);
+    expect(overPromisedCopies([x], new Map([["c", 0]]))).toEqual([]);
     // B holds only X, and an open any-copy leg counts on it: naming X again promises it twice
-    expect(specificCopyShortfall(["c"], new Map([["c", -1]]))).toEqual(["c"]);
-    expect(specificCopyShortfall(["c"], new Map())).toEqual([]);
+    expect(overPromisedCopies([x], new Map([["c", -1]]))).toEqual(["x"]);
+    expect(overPromisedCopies([x], new Map())).toEqual([]);
+  });
+
+  test("only as many named copies as are short, the last picked first", () => {
+    const named = [
+      { id: "x", slug: "c" },
+      { id: "y", slug: "c" },
+      { id: "z", slug: "d" },
+    ];
+    // taking Y out makes it a spare for the open leg, and X then goes through
+    expect(
+      overPromisedCopies(
+        named,
+        new Map([
+          ["c", -1],
+          ["d", 0],
+        ]),
+      ),
+    ).toEqual(["y"]);
+    expect(
+      overPromisedCopies(
+        named,
+        new Map([
+          ["c", -2],
+          ["d", -1],
+        ]),
+      ),
+    ).toEqual(["x", "y", "z"]);
+    // more legs than named copies: every named one, never more
+    expect(overPromisedCopies(named, new Map([["c", -5]]))).toEqual(["x", "y"]);
   });
 
   test("any copy needs as many spare copies as asked for", () => {

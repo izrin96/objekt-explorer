@@ -8,7 +8,7 @@ import {
   firstItemRefusal,
   inAnyCopyScope,
   itemVerdict,
-  specificCopyShortfall,
+  overPromisedCopies,
 } from "../../lib/offer-rules";
 import { transferKey } from "../../lib/trade-match";
 import { unique } from "../../lib/unique";
@@ -85,6 +85,8 @@ type CopyNeed = {
   held: Map<string, number>;
   /** collections the side names a specific objekt in, which open any-copy legs must leave a copy for */
   specificSlugs: string[];
+  /** those specific objekts, so a shortfall names the cards to take out */
+  named: { id: string; slug: string }[];
   /** the copies behind `held`, so accept can drop the ones another accept reserved since */
   counted: { id: string; slug: string }[];
 };
@@ -157,6 +159,11 @@ export async function checkItems(
       giverId: parties.giverId(side),
       held: countCopies(counted).held,
       specificSlugs: specificSlugsOf(side),
+      named: specific.flatMap((item) =>
+        item.side === side && !early.has(item.objektId!)
+          ? [{ id: item.objektId!, slug: item.collectionSlug }]
+          : [],
+      ),
       counted,
     };
   });
@@ -208,18 +215,24 @@ export async function refuseCopyShortfall(
     needs.map((need) => ({ userId: need.giverId, slugs: slugsOf(need) })),
     tx,
   );
-  const short = needs.flatMap((need) => {
-    const leftOf = (counts: ReadonlyMap<string, number>) =>
-      new Map(
-        slugsOf(need).map((slug) => [
-          slug,
-          (counts.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
-        ]),
-      );
-    return anyCopyShortfall(
-      anyCopy.filter((item) => item.side === need.side),
-      leftOf(need.held),
-    ).concat(specificCopyShortfall(need.specificSlugs, leftOf(need.held)));
-  });
-  if (short.length > 0) refuseOffer("not_owned", { collectionSlugs: unique(short) });
+  const collectionSlugs: string[] = [];
+  const objektIds: string[] = [];
+  for (const need of needs) {
+    const left = new Map(
+      slugsOf(need).map((slug) => [
+        slug,
+        (need.held.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
+      ]),
+    );
+    collectionSlugs.push(
+      ...anyCopyShortfall(
+        anyCopy.filter((item) => item.side === need.side),
+        left,
+      ),
+    );
+    objektIds.push(...overPromisedCopies(need.named, left));
+  }
+  if (collectionSlugs.length + objektIds.length > 0) {
+    refuseOffer("not_owned", { collectionSlugs: unique(collectionSlugs), objektIds });
+  }
 }

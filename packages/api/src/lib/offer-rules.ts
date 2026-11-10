@@ -198,15 +198,20 @@ export function anyCopyShortfall(
 }
 
 /**
- * Slugs where the giver's open any-copy legs already claim more copies than they hold beyond
- * the specific objekts named: a named copy would be promised twice. `left` is the unreserved
- * copies the giver holds, without the named ones, minus those legs.
+ * The named copies to take out where the giver's open any-copy legs already claim more copies
+ * than they hold beyond the ones named: a named copy would be promised twice. `left` is the
+ * unreserved copies held, without the named ones, minus those legs. Each copy taken out counts
+ * as a spare again, so a collection names only as many as `left` falls below zero, the last
+ * picked first.
  */
-export function specificCopyShortfall(
-  slugs: readonly string[],
+export function overPromisedCopies(
+  named: readonly { id: string; slug: string }[],
   left: ReadonlyMap<string, number>,
 ): string[] {
-  return slugs.filter((slug) => (left.get(slug) ?? 0) < 0);
+  return [...Map.groupBy(named, (copy) => copy.slug)].flatMap(([slug, copies]) => {
+    const short = -(left.get(slug) ?? 0);
+    return short > 0 ? copies.slice(-short).map((copy) => copy.id) : [];
+  });
 }
 
 /** The first refusal among item verdicts, in the order a user fixes them, with the objekts it names. */
