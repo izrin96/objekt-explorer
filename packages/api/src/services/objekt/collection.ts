@@ -22,7 +22,7 @@ import type {
   SerialTransfersOutput,
   SerialsOutput,
 } from "../../schemas/collections";
-import { redis, redisFailOpen } from "../redis";
+import { getCache, redis, redisFailOpen } from "../redis";
 import { getCollectionColumns } from "./collection-columns";
 
 const MODIFIED_AT_KEY = "collection:modified-at";
@@ -211,7 +211,16 @@ export async function collectionListModifiedAt() {
   return ms > 0 ? new Date(ms).toISOString() : null;
 }
 
-export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
+// with the client's 60 s staleTime on top, figures stay within two minutes of the indexer
+const DRAWER_TTL_SECONDS = 60;
+
+export function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
+  return getCache(`collection-metadata:1:${slug}`, DRAWER_TTL_SECONDS, () =>
+    readCollectionMetadata(slug),
+  );
+}
+
+async function readCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
   const [[result], [row]] = await Promise.all([
     indexer
       .select({
@@ -306,7 +315,11 @@ async function ceilingAbove(collectionId: string, end: number) {
   return next && next.collectionId !== collectionId ? parseInt(next.id) : null;
 }
 
-export async function fetchSerialList(slug: string): Promise<SerialsOutput> {
+export function fetchSerialList(slug: string): Promise<SerialsOutput> {
+  return getCache(`collection-serials:1:${slug}`, DRAWER_TTL_SECONDS, () => readSerialList(slug));
+}
+
+async function readSerialList(slug: string): Promise<SerialsOutput> {
   const results = await indexer
     .select({
       serial: objekts.serial,
