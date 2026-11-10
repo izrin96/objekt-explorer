@@ -126,6 +126,13 @@ export function PersonPageView({
           </>
         ) : !row && own && myPosts.data ? (
           <OwnEmpty kind={ownEmptyKind(myPosts.data)} />
+        ) : !row && own && myPosts.isError ? (
+          <LoadError error={myPosts.error} onRetry={() => void myPosts.refetch()} />
+        ) : !row && own ? (
+          <>
+            <PendingStatus />
+            <PersonRowSkeleton />
+          </>
         ) : !row ? (
           <EmptyState
             icon={CardsThreeIcon}

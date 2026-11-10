@@ -55,18 +55,24 @@ export const personSearch = (userId: string): FeedSearch => ({ person: userId })
  * doesn't show them to this viewer, or `undefined` when the read failed, which the view retries.
  */
 export async function loadPersonRow(args: { queryClient: QueryClient; userId: string }) {
-  const options = await personRowOptions(args);
-  const feed = await args.queryClient
-    .infiniteQuery({ ...options, staleTime: "static" })
-    .catch(() => undefined);
+  const { options, own } = await personRowOptions(args);
+  const [feed] = await Promise.all([
+    args.queryClient.infiniteQuery({ ...options, staleTime: "static" }).catch(() => undefined),
+    loadOwnPosts(args.queryClient, own),
+  ]);
   return feed && rowOf(feed, args.userId);
 }
 
 /** `loadPersonRow` for a caller that tells a refusal from a failure: the feed's error is thrown. */
 export async function readPersonRow(args: { queryClient: QueryClient; userId: string }) {
-  const options = await personRowOptions(args);
+  const { options } = await personRowOptions(args);
   const feed = await args.queryClient.infiniteQuery({ ...options, staleTime: "static" });
   return rowOf(feed, args.userId);
+}
+
+/** The owner's own page reads Your posts for its empty state, so the first paint isn't a visitor's. */
+async function loadOwnPosts(queryClient: QueryClient, own: boolean) {
+  if (own) await queryClient.query({ ...myPostsOptions(), staleTime: "static" }).catch(noop);
 }
 
 async function personRowOptions({
@@ -81,7 +87,7 @@ async function personRowOptions({
     queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
     queryClient.query({ ...currentUserOptions, staleTime: "static" }),
   ]);
-  return peopleOptions(
+  const options = peopleOptions(
     toBrowseInput(
       personSearch(userId),
       artists,
@@ -90,6 +96,7 @@ async function personRowOptions({
       tradeListsOf(user?.lists ?? []),
     ),
   );
+  return { options, own: user?.user.id === userId };
 }
 
 function rowOf(feed: InfiniteData<Outputs["trade"]["people"]>, userId: string) {
