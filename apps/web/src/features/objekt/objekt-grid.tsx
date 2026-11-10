@@ -11,11 +11,11 @@ import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET, cn } from "@/li
  * `@container` its `cqi` reads. `--gutter` is also for the virtual grid, whose
  * rows are each their own grid and so space themselves with padding.
  */
-const VIEWPORT_COLUMNS = {
+const VIEWPORT_COLUMNS: CSSProperties = {
   "--cols-sm": GRID_COLUMNS_MOBILE,
   "--cols-md": GRID_COLUMNS_TABLET,
   "--cols-lg": GRID_COLUMNS,
-} as CSSProperties;
+};
 
 export function ObjektGrid({
   columns,
@@ -31,7 +31,7 @@ export function ObjektGrid({
   return (
     <div className="@container">
       <div
-        style={viewport ? VIEWPORT_COLUMNS : ({ "--cols": columns } as CSSProperties)}
+        style={viewport ? VIEWPORT_COLUMNS : { "--cols": columns }}
         className={cn(
           "grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-(--gutter) [--gutter:clamp(--spacing(1.5),6.5cqi/var(--cols),--spacing(3))]",
           viewport &&

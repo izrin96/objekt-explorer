@@ -86,7 +86,7 @@ function BreakdownPie({ data, label }: { data: Slice[]; label: string }) {
                         an edge of its own, so every swatch is ringed */}
                     <div
                       className="ring-foreground/15 size-2.5 shrink-0 rounded-full bg-(--swatch) ring-1"
-                      style={{ "--swatch": row.fill } as React.CSSProperties}
+                      style={{ "--swatch": row.fill }}
                     />
                     <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                       <span className="text-foreground">{row.name}</span>

@@ -2,7 +2,7 @@ import { ArrowClockwiseIcon, VideoCameraSlashIcon, WarningIcon } from "@phosphor
 import type { LiveSession } from "@repo/cosmo/types/live";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { type CSSProperties, useState } from "react";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -146,7 +146,7 @@ export function LiveAvatar({ live, className }: { live: LiveSession; className?:
   return (
     <Avatar
       className={`outline-(--channel) ${className ?? ""}`}
-      style={{ "--channel": live.channel.primaryColorHex } as CSSProperties}
+      style={{ "--channel": live.channel.primaryColorHex }}
     >
       <AvatarImage src={live.channel.profileImageUrl} alt={live.channel.name} />
       <AvatarFallback

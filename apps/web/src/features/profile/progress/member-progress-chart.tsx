@@ -131,7 +131,7 @@ export function MemberProgressChart({
                         light theme the swatch is the tooltip's own surface */}
                     <div
                       className="ring-foreground/15 w-1 shrink-0 rounded-xs bg-(--swatch) ring-1"
-                      style={{ "--swatch": row.fill } as React.CSSProperties}
+                      style={{ "--swatch": row.fill }}
                     />
                     <div className="flex flex-1 items-center justify-between leading-none">
                       <div className="grid gap-1.5">

@@ -1,14 +1,6 @@
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import type { ValidArtist } from "@repo/cosmo/types/common";
-import {
-  Fragment,
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { Fragment, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TogglePrimitive } from "@/components/ui/toggle";
@@ -111,10 +103,7 @@ function ScrollButton({ direction, onClick }: { direction: -1 | 1; onClick: () =
  */
 function MemberAvatar({ src, color }: { src: string | undefined; color: string }) {
   return (
-    <Avatar
-      className="relative size-5.5 border-2 border-(--member)"
-      style={{ "--member": color } as CSSProperties}
-    >
+    <Avatar className="relative size-5.5 border-2 border-(--member)" style={{ "--member": color }}>
       {/* keepMounted: without it Base UI preloads every src through a detached
           Image, which ignores `loading="lazy"` and waits for hydration, so the
           visible chips queue behind ~50 full-size photos */}
