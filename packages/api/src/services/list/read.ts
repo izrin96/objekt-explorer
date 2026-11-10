@@ -40,6 +40,27 @@ async function ownerTradeHandle(userId: string | null | undefined) {
   return userId ? tradeHandle(await fetchAddresses([userId])) : null;
 }
 
+const ownerAddress = { columns: { address: true, nickname: true } } as const;
+
+/** The linked half of a pair, partial: its link, and what the header's post tags read. */
+const linkedListWith = {
+  columns: {
+    id: true,
+    slug: true,
+    name: true,
+    listType: true,
+    isProfileBind: true,
+    profileSlug: true,
+    profileAddress: true,
+    currency: true,
+    discoverable: true,
+    matchSale: true,
+    matchHave: true,
+    takesSwaps: true,
+  },
+  with: { userAddress: ownerAddress },
+} as const;
+
 export async function fetchList(
   lookup: { slug: string } | { profileSlug: string; profileAddress: string },
 ): Promise<PublicList | null> {
@@ -47,38 +68,8 @@ export async function fetchList(
     // load full
     with: {
       user: true,
-      userAddress: {
-        columns: {
-          address: true,
-          nickname: true,
-        },
-      },
-      linkedList: {
-        columns: {
-          // partial
-          id: true,
-          slug: true,
-          name: true,
-          listType: true,
-          isProfileBind: true,
-          profileSlug: true,
-          profileAddress: true,
-          currency: true,
-          // what the header's post tags read
-          discoverable: true,
-          matchSale: true,
-          matchHave: true,
-          takesSwaps: true,
-        },
-        with: {
-          userAddress: {
-            columns: {
-              address: true,
-              nickname: true,
-            },
-          },
-        },
-      },
+      userAddress: ownerAddress,
+      linkedList: linkedListWith,
     },
     where:
       "profileAddress" in lookup
@@ -166,33 +157,8 @@ export async function fetchOwnedLists(
       ...(ownerId === undefined ? {} : { userId: ownerId }),
     },
     with: {
-      userAddress: {
-        columns: {
-          address: true,
-          nickname: true,
-        },
-      },
-      linkedList: {
-        columns: {
-          // partial
-          id: true,
-          slug: true,
-          name: true,
-          listType: true,
-          isProfileBind: true,
-          profileSlug: true,
-          profileAddress: true,
-          currency: true,
-          // what the header's post tags read
-          discoverable: true,
-          matchSale: true,
-          matchHave: true,
-          takesSwaps: true,
-        },
-        with: {
-          userAddress: { columns: { address: true, nickname: true } },
-        },
-      },
+      userAddress: ownerAddress,
+      linkedList: linkedListWith,
     },
     orderBy: { id: "desc" },
   });
