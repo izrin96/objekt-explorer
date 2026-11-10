@@ -314,6 +314,9 @@ export const TRADE_MODE_REFUSALS = [
   "trade_mode_want_to_have",
 ] as const;
 
+/** `data.reason` on a refused `trade.bump`; `data.retryAt` is when the next bump opens. */
+export const TRADE_BUMP_REFUSALS = ["trade_bump_too_soon"] as const;
+
 /** `data.reason` on a refused `trade.savePost`. */
 export const TRADE_POST_REFUSALS = [
   "trade_post_list_in_post",

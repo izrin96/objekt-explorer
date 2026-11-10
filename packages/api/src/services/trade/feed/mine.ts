@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
+import { refuse } from "../../../lib/refuse";
 import { iso } from "../../../lib/time";
 import {
   BUMP_COOLDOWN_HOURS,
@@ -108,5 +109,9 @@ export async function bumpPerson(userId: string) {
 
   const next = nextBumpAt(await lastBumpOf(userId), now);
   if (next === null) throw new ORPCError("NOT_FOUND");
-  throw new ORPCError("TOO_MANY_REQUESTS", { data: { nextBumpAt: next } });
+  // `nextBumpAt` too, for tabs from before the reason
+  refuse("TOO_MANY_REQUESTS", "trade_bump_too_soon", "One bump a day", {
+    retryAt: next,
+    nextBumpAt: next,
+  });
 }

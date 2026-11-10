@@ -5,17 +5,22 @@ import { COSMO_LINK_REFUSALS } from "@repo/api/schemas/cosmo-link";
 import { LIST_REFUSALS } from "@repo/api/schemas/list";
 import { OBJEKT_REFUSALS } from "@repo/api/schemas/objekts";
 import { PROFILE_REFUSALS } from "@repo/api/schemas/profile";
-import { TRADE_MODE_REFUSALS, TRADE_POST_REFUSALS } from "@repo/api/schemas/trade";
+import {
+  TRADE_BUMP_REFUSALS,
+  TRADE_MODE_REFUSALS,
+  TRADE_POST_REFUSALS,
+} from "@repo/api/schemas/trade";
 import { DELETE_REFUSALS, type DeleteRefusal, USER_REFUSALS } from "@repo/api/schemas/user";
 
 import { errorData, errorReason } from "@/lib/orpc-error";
-import { formatTimestamp } from "@/lib/time";
+import { formatTimestamp, relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 const REFUSALS: readonly string[] = [
   ...LIST_REFUSALS,
   ...TRADE_MODE_REFUSALS,
   ...TRADE_POST_REFUSALS,
+  ...TRADE_BUMP_REFUSALS,
   ...COMPARE_REFUSALS,
   ...COSMO_LINK_REFUSALS,
   ...PROFILE_REFUSALS,
@@ -128,6 +133,12 @@ export function refusalText(error: unknown) {
       return m.api_errors_user_rate_limit();
     case "user_not_linked_provider":
       return m.api_errors_user_not_linked_provider();
+    case "trade_bump_too_soon": {
+      const retryAt = retryAtOf(error);
+      return retryAt
+        ? m.trade_bump_too_soon({ time: relativeTime(retryAt.getTime(), Date.now(), "hour") })
+        : m.trade_bump_error();
+    }
     case "user_failed_get_info":
       return m.api_errors_user_failed_get_info({ provider: providerOf(error) });
     case "objekt_checkpoint_unavailable":

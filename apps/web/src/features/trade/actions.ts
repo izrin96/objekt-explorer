@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/client";
 import type { Outputs } from "@repo/api";
 import { startForPost } from "@repo/api/schemas/trade-post";
 import { type InfiniteData, matchQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,10 +9,8 @@ import { currentUserOptions } from "@/features/user/queries";
 import { addActionToast } from "@/lib/action-toast";
 import { copyWithToast } from "@/lib/clipboard";
 import { orpc } from "@/lib/orpc";
-import { errorData } from "@/lib/orpc-error";
 import { isRefusalError, refusalText } from "@/lib/refusal";
 import { siteOrigin } from "@/lib/site-origin";
-import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { postInput } from "./composer-choice";
@@ -116,19 +113,6 @@ export function useUnhidePartner() {
   );
 }
 
-function nextBumpOf(error: unknown) {
-  if (!(error instanceof ORPCError) || error.code !== "TOO_MANY_REQUESTS") return undefined;
-  const { nextBumpAt } = errorData(error);
-  return typeof nextBumpAt === "string" ? nextBumpAt : undefined;
-}
-
-/** outside the hook: the compiler reads `Date.now` in a hook body as a render-time call */
-function bumpTooSoon(next: string) {
-  return m.trade_bump_too_soon({
-    time: relativeTime(new Date(next).getTime(), Date.now(), "hour"),
-  });
-}
-
 export function useBumpPost() {
   const invalidate = useTradeInvalidation();
 
@@ -136,12 +120,10 @@ export function useBumpPost() {
     orpc.trade.bump.mutationOptions({
       onSuccess: () => toastManager.add({ type: "success", title: m.trade_bump_success() }),
       onError: (error) => {
-        const next = nextBumpOf(error);
-        toastManager.add(
-          next
-            ? { type: "error", title: bumpTooSoon(next) }
-            : { type: "error", title: m.trade_bump_error() },
-        );
+        toastManager.add({
+          type: "error",
+          title: isRefusalError(error) ? refusalText(error) : m.trade_bump_error(),
+        });
       },
       onSettled: () => invalidate(),
     }),
