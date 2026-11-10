@@ -23,6 +23,8 @@ The web writes staff colours onto `collection` (`text_color`, `background_color`
 
 `START_BLOCK` (`src/env.ts`) sits tens of millions of blocks behind the tip, and early 2025 is dense (566,500 mints in one day). A from-scratch resync takes about a day; budget for that and read the current `START_BLOCK` rather than an earlier estimate.
 
+Stop the worker, or its verifier, for a resync, restore or switch of the database it reads: its offer upkeep cancels offers whose objekts the indexer has not reached, and those cancels are final.
+
 ## Production database
 
 Postgres 18 on a Dokploy swarm service with its data on a named volume: **Reload** is safe, **Rebuild** is not. `pg_stat_statements` is installed; read it before any index decision. Build production indexes `CONCURRENTLY` by hand, then record the same change in `packages/db/indexer-migrations/` as `CREATE INDEX IF NOT EXISTS` or `DROP INDEX IF EXISTS`, so it is a no-op there and a fresh database gets the same index set (`20261104000000_match_prod_indexes` holds those made before).
