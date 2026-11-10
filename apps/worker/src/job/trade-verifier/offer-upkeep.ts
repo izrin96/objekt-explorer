@@ -196,7 +196,10 @@ async function cancelOffers(ids: number[], reason: "token_moved" | "not_transfer
       .where(and(inArray(offer.id, ids), eq(offer.status, "open")))
       .returning(offerRef);
     cancelled = rows.length;
-    const name = await partyNames(rows.flatMap((o) => [o.fromUserId, o.toUserId]));
+    const name = await partyNames(
+      rows.flatMap((o) => [o.fromUserId, o.toUserId]),
+      tx,
+    );
     return toPublish(rows, await writeNotes(tx, offerNotes(rows, "cancelled", reason, name)));
   });
   return { publishes: [publish], cancelled };

@@ -42,7 +42,7 @@ export async function expireStalls(seenUntil: string | null, skips: RunSkips): P
         const { userA, userB, conversationId } = settled;
 
         const parties = [userA, userB];
-        const name = await partyNames(parties);
+        const name = await partyNames(parties, tx);
         const { open, askedOf, progress: before } = await readLegs(tx, id);
         const accepted = await acceptPicked(
           tx,
