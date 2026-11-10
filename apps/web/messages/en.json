@@ -1095,6 +1095,8 @@
   "trade_browse_no_matches_list_empty_hint": "{list} has no objekts yet, so nothing can match it. Add some, or compare all your lists.",
   "trade_browse_no_matches_title": "No posts match your lists",
   "trade_browse_no_matches_hint": "Nobody on Trade has what your want lists ask for, or wants what your have lists offer.",
+  "trade_browse_no_matches_type_hint": "No {type} post matches your lists. Other post types might.",
+  "trade_browse_all_types": "All post types",
   "trade_browse_show_all_posts": "Show all posts",
   "trade_browse_matches_sign_in": "Sign in to see posts that match your lists in For you.",
   "trade_browse_end": "No more posts",

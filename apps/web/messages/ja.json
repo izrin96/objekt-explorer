@@ -1095,6 +1095,8 @@
   "trade_browse_no_matches_list_empty_hint": "{list}にまだObjektがないため、マッチするものがありません。追加するか、すべてのリストと比較してください。",
   "trade_browse_no_matches_title": "リストに合う投稿はありません",
   "trade_browse_no_matches_hint": "希望リストのObjektを持つ人も、所持リストのObjektを希望する人もいません。",
+  "trade_browse_no_matches_type_hint": "あなたのリストに合う{type}の投稿はありません。ほかの種類の投稿なら合うかもしれません。",
+  "trade_browse_all_types": "すべての投稿の種類",
   "trade_browse_show_all_posts": "すべての投稿を表示",
   "trade_browse_matches_sign_in": "ログインすると、自分のリストに合う投稿が「おすすめ」に表示されます。",
   "trade_browse_end": "これ以上投稿はありません",

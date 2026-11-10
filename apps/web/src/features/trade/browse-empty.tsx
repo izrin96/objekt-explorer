@@ -2,6 +2,7 @@ import { CardsThreeIcon } from "@phosphor-icons/react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
+import { tagText } from "@/features/list/tag-label";
 import type { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
@@ -87,6 +88,11 @@ export function BrowseEmpty({
       }
       showAll={forYouFallback(search)}
       onAllLists={() => onSearch({ list: undefined })}
+      type={
+        search.type
+          ? { name: tagText(search.type), onAll: () => onSearch({ type: undefined }) }
+          : undefined
+      }
     />
   ) : (
     <EmptyState

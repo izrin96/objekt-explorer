@@ -22,6 +22,7 @@ export function NoMatches({
   counted,
   showAll,
   onAllLists,
+  type,
 }: {
   /** the list Compare with names, if any */
   compared: PublicList | undefined;
@@ -29,6 +30,8 @@ export function NoMatches({
   counted: string[];
   showAll: LinkComponentProps["search"];
   onAllLists: () => void;
+  /** the post type narrowing the feed, and the way back to every type */
+  type?: { name: string; onAll: () => void };
 }) {
   const { data: previews } = useQuery(listPreviewsOptions(counted));
   const lists = useUserLists();
@@ -55,10 +58,17 @@ export function NoMatches({
           ? compared
             ? m.trade_browse_no_matches_list_empty_hint({ list: compared.name })
             : m.trade_browse_no_matches_empty_hint()
-          : m.trade_browse_no_matches_hint()
+          : type
+            ? m.trade_browse_no_matches_type_hint({ type: type.name })
+            : m.trade_browse_no_matches_hint()
       }
       action={
         <div className="flex flex-wrap justify-center gap-2">
+          {type ? (
+            <Button variant="outline" size="sm" onClick={type.onAll}>
+              {m.trade_browse_all_types()}
+            </Button>
+          ) : null}
           {compared ? (
             <>
               <Button variant="outline" size="sm" onClick={onAllLists}>

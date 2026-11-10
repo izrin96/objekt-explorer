@@ -1095,6 +1095,8 @@
   "trade_browse_no_matches_list_empty_hint": "{list}에 아직 오브젝트가 없어 매칭되는 것이 없습니다. 오브젝트를 추가하거나 모든 목록과 비교하세요.",
   "trade_browse_no_matches_title": "내 목록과 맞는 게시물이 없습니다",
   "trade_browse_no_matches_hint": "희망 목록의 Objekt를 가진 사람도, 보유 목록의 Objekt를 원하는 사람도 없습니다.",
+  "trade_browse_no_matches_type_hint": "내 목록과 맞는 {type} 게시물이 없습니다. 다른 종류의 게시물은 맞을 수도 있습니다.",
+  "trade_browse_all_types": "모든 게시물 종류",
   "trade_browse_show_all_posts": "모든 게시물 보기",
   "trade_browse_matches_sign_in": "로그인하면 내 목록과 맞는 게시물을 추천에서 볼 수 있습니다.",
   "trade_browse_end": "더 이상 게시물이 없습니다",
