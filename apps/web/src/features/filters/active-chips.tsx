@@ -37,9 +37,16 @@ function without<T>(values: readonly T[], value: T): T[] | undefined {
   return next.length > 0 ? next : undefined;
 }
 
-/** `listed` filters only the market grid, so other surfaces don't chip a stray `?listed=` */
-export function useActiveChips({ listed = false }: { listed?: boolean } = {}): ActiveChip[] {
-  const filters = useCanonicalFilters();
+/**
+ * `listed` filters only the market grid, so other surfaces don't chip a stray `?listed=`. `only`
+ * names the filters a surface reads, so a shared link's other filters draw no chip there.
+ */
+export function useActiveChips({
+  listed = false,
+  only,
+}: { listed?: boolean; only?: readonly (keyof FilterSearch)[] } = {}): ActiveChip[] {
+  const all = useCanonicalFilters();
+  const filters: FilterSearch = only ? Object.fromEntries(only.map((key) => [key, all[key]])) : all;
   const memberColor = useMemberColor();
   const { formatUsd } = useCurrency();
   const { getArtist } = useCosmoArtist();
