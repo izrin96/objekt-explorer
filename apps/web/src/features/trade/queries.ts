@@ -16,6 +16,9 @@ export const tabCountsOptions = (enabled: boolean) =>
 export const hiddenPartnersOptions = (enabled: boolean) =>
   orpc.trade.hiddenPartners.queryOptions({ staleTime: 0, enabled });
 
+export const hiddenPostsOptions = (enabled: boolean) =>
+  orpc.trade.hiddenPosts.queryOptions({ staleTime: 0, enabled });
+
 /** a fresh document always refetches; this only spares the request right after hydration */
 const BROWSE_STALE_MS = 30_000;
 

@@ -41,7 +41,7 @@ import type { NearOpen, ObjektAsk } from "./near";
 import { NearNote } from "./near-note";
 import { ObjektOfferNote } from "./objekt-offer-note";
 import { usePlanLists } from "./post-plan";
-import { hiddenPartnersOptions, peopleOptions } from "./queries";
+import { hiddenPartnersOptions, hiddenPostsOptions, peopleOptions } from "./queries";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";
 
@@ -68,6 +68,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     [input.list, input.match],
   );
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
+  const hiddenPosts = useQuery(hiddenPostsOptions(Boolean(user)));
+  const anyHidden = (hidden.data?.length ?? 0) + (hiddenPosts.data?.length ?? 0) > 0;
   const navigate = useNavigate();
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
   const [opened, setOpened] = useState<{
@@ -278,11 +280,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
       )}
 
       {/* Browse drops their posts silently, so name the way back */}
-      {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
+      {anyHidden && query.isSuccess && !query.hasNextPage ? (
         <p className="text-muted-foreground text-center text-sm text-pretty">
           {m.trade_browse_hidden_note()}{" "}
           <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setHiddenOpen(true)}>
-            {m.trade_hidden_partners()}
+            {m.trade_hidden()}
           </Button>
         </p>
       ) : null}

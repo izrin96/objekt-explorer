@@ -97,10 +97,12 @@ export type LoadContext = {
   match: FeedMatch | null;
   slugs: string[] | null;
   input: Pick<BrowseFilters, "slug">;
+  /** false on the person and post pages, which keep and count the posts the viewer hid */
+  skipHiddenPosts: boolean;
 };
 
 export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number) {
-  const { viewerId, viewer, input, match, slugs } = ctx;
+  const { viewerId, viewer, input, match, slugs, skipHiddenPosts } = ctx;
   const listIds = rows.flatMap((row) => (row.partner_id ? [row.id, row.partner_id] : [row.id]));
   const feedLists = await db.select(feedListColumns).from(lists).where(inArray(lists.id, listIds));
   const listById = new Map(feedLists.map((list) => [list.id, list]));
@@ -112,7 +114,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
     reputationOf(ownerIds),
     viewerId === null
       ? new Map<string, PersonMatch>()
-      : personMatches(viewerId, ownerIds, match?.sides),
+      : personMatches(viewerId, ownerIds, match?.sides, { skipHiddenPosts }),
   ]);
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -179,6 +181,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
         id: post.anchor.id,
         tags: post.tags,
         narrowed,
+        hidden: row.hidden,
         userId: account.id,
         user: toPublicUser(account),
         reputation: reputations.get(account.id) ?? null,

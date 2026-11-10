@@ -73,6 +73,9 @@ export const tabCountsOutputSchema = z.object({ mine: z.number().int() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
+/** A post, by its lead list (the feed post's `id`). */
+export const tradePostInputSchema = z.object({ listId: z.number().int().positive() });
+
 export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
@@ -199,6 +202,8 @@ const feedPostSchema = z.object({
   id: z.number().int(),
   tags: z.array(postTagSchema),
   narrowed: z.boolean(),
+  /** the signed-in viewer hid this post; only the person and post pages return one */
+  hidden: z.boolean().default(false),
   bumpedAt: z.string().nullable(),
   updatedAt: z.string(),
   sides: z.array(feedSideSchema),

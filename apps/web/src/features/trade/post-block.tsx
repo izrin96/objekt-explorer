@@ -3,6 +3,8 @@ import {
   ArrowSquareOutIcon,
   ChatCircleIcon,
   DotsThreeIcon,
+  EyeIcon,
+  EyeSlashIcon,
   FlagIcon,
   HandshakeIcon,
   PencilSimpleIcon,
@@ -24,7 +26,7 @@ import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useCopyTradeLink, useTakeDownPost } from "./actions";
+import { useCopyTradeLink, useHidePostWithUndo, useTakeDownPost, useUnhidePost } from "./actions";
 import type { Surface } from "./browse-search";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { CopyLinkItem, ReasonItem } from "./copy-link-item";
@@ -38,6 +40,27 @@ import type { PersonPostData, PostSideData } from "./post-types";
 import { SideCompareContext } from "./side-items-sheet";
 import { NoProfileOffer, type TradeContact } from "./trade-actions";
 import { TradeSides } from "./trade-row";
+
+/**
+ * Hide post, or Unhide post on a post the viewer hid. It mounts with the open menu, so a feed's
+ * posts hold no mutation until one is opened.
+ */
+function HidePostItem({ listId, hidden }: { listId: number; hidden: boolean }) {
+  const hide = useHidePostWithUndo();
+  const unhide = useUnhidePost();
+
+  return hidden ? (
+    <MenuItem onClick={() => unhide.mutate({ listId })}>
+      <EyeIcon />
+      {m.trade_post_unhide()}
+    </MenuItem>
+  ) : (
+    <MenuItem onClick={() => hide(listId)}>
+      <EyeSlashIcon />
+      {m.trade_post_hide()}
+    </MenuItem>
+  );
+}
 
 /** The post as its own viewer sees it: no rings, since the viewer's row counts nothing. */
 function unringed(post: PersonPostData): PersonPostData {
@@ -243,6 +266,7 @@ export function PostBlock({
       {!own && signedIn ? (
         <>
           <MenuSeparator />
+          <HidePostItem listId={post.id} hidden={post.hidden} />
           <MenuItem onClick={() => setReportRequest((n) => n + 1)}>
             <FlagIcon />
             {m.trade_post_report()}

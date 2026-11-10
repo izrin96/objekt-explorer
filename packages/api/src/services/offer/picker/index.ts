@@ -116,7 +116,8 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
   if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return empty;
 
   const [{ recounted }, nearLists] = await Promise.all([
-    recountPartners(me, sides, "all", { ownerIds: [partnerId] }),
+    // an offer aims at this person on purpose, so a post the viewer hid still fills it
+    recountPartners(me, sides, "all", { ownerIds: [partnerId], skipHiddenPosts: false }),
     // the strips' near matches, narrowed as the strips are: by Compare with when a list is named
     personNear(
       me,

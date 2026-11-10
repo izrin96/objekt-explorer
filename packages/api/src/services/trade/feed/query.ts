@@ -6,7 +6,7 @@ import { IDLE_DAYS } from "../../../lib/trade-rank";
 import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { matchableListSql } from "../lists";
+import { leadsPairSql, matchableListSql } from "../lists";
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
@@ -39,18 +39,8 @@ export const postsCte = sql`
       ) AS bumped_at,
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
-    LEFT JOIN on_trade p
-      ON ${offersSwapsSql("a")}
-      AND p.id = a.linked_list_id
-      AND p.list_type = 'want'
-      AND p.user_id = a.user_id
-    WHERE NOT EXISTS (
-      SELECT 1 FROM on_trade h
-      WHERE a.list_type = 'want'
-        AND ${offersSwapsSql("h")}
-        AND h.linked_list_id = a.id
-        AND h.user_id = a.user_id
-    )
+    LEFT JOIN on_trade p ON ${leadsPairSql("a", "p")}
+    WHERE NOT EXISTS (SELECT 1 FROM on_trade h WHERE ${leadsPairSql("h", "a")})
   )
 `;
 
@@ -94,6 +84,8 @@ export type FeedRow = {
   user_id: string;
   cursor_at: string;
   message_allow: string | null;
+  /** the viewer hid this post; only a read that keeps hidden posts can return one */
+  hidden: boolean;
 };
 
 export type FeedQuery = {
@@ -103,7 +95,13 @@ export type FeedQuery = {
   slug: string | null;
   /** the viewer's slugs by the post side they match, when matching is on */
   matches: MatchIndex | null;
+  /** false on the person and post pages, which keep the posts the viewer hid */
+  skipHiddenPosts: boolean;
 };
+
+const hiddenPost = (viewerId: string) => sql`EXISTS (
+  SELECT 1 FROM hidden_trade_post hp WHERE hp.user_id = ${viewerId} AND hp.list_id = posts.id
+)`;
 
 /** The predicates every feed read shares: listed, visible to the viewer, and the filters. */
 export function feedWhere(query: FeedQuery): SQL[] {
@@ -114,6 +112,7 @@ export function feedWhere(query: FeedQuery): SQL[] {
       SELECT 1 FROM hidden_trade_partner h
       WHERE h.user_id = ${query.viewerId} AND h.hidden_user_id = posts.user_id
     )`);
+    if (query.skipHiddenPosts) where.push(sql`NOT ${hiddenPost(query.viewerId)}`);
   }
   if (query.type !== "all") where.push(TAG_WHERE[query.type]);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
@@ -200,7 +199,8 @@ export async function fetchPersonRows(query: FeedQuery, ownerIds: string[]): Pro
       posts.partner_id,
       posts.user_id,
       posts.bumped_at::text AS cursor_at,
-      mp.allow AS message_allow
+      mp.allow AS message_allow,
+      ${query.viewerId === null ? sql`false` : hiddenPost(query.viewerId)} AS hidden
     FROM posts
     LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}

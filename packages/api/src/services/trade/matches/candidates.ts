@@ -5,7 +5,13 @@ import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../../lib/tra
 import { offersSwapsSql } from "../../../lib/trade-sql";
 import type { TradeFilter } from "../../../schemas/trade";
 import { listedCte, postsCte } from "../feed/query";
-import { offerMatchesWantSql, matchableListSql, tradePartnerSql } from "../lists";
+import {
+  inHiddenPostSql,
+  leadsPairSql,
+  offerMatchesWantSql,
+  matchableListSql,
+  tradePartnerSql,
+} from "../lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -32,6 +38,8 @@ export type CandidateOptions = {
   limit?: number;
   /** the ranking the cut keeps the top of; the filter's own by default */
   order?: TradeFilter | "sum";
+  /** false on the person and post pages, which count the posts the viewer hid */
+  skipHiddenPosts?: boolean;
 };
 
 type CandidateRow = {
@@ -50,7 +58,12 @@ export async function fetchTradeCandidates(
   userId: string,
   sides: { haveListIds: number[]; wantListIds: number[] },
   filter: TradeFilter,
-  { ownerIds, limit = CANDIDATE_LIMIT, order = filter }: CandidateOptions = {},
+  {
+    ownerIds,
+    limit = CANDIDATE_LIMIT,
+    order = filter,
+    skipHiddenPosts = true,
+  }: CandidateOptions = {},
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
@@ -82,15 +95,15 @@ export async function fetchTradeCandidates(
         AND l.id IN (SELECT id FROM listed)
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
         AND ${tradePartnerSql(userId, sql`l.user_id`)}
+        ${skipHiddenPosts ? sql`AND NOT ${inHiddenPostSql(userId, "l")}` : sql``}
     ),
     -- a post is a linked pair whose offering half can swap, keyed by that half's id; both halves
     -- must take part, so a list linked to an unlisted one keys to no post
     partner_post AS (
-      SELECT p.id, CASE WHEN p.list_type = 'want' THEN q.id ELSE p.id END AS post_key
-      FROM partner_lists p
-      JOIN partner_lists q ON q.id = p.linked_list_id AND q.user_id = p.user_id
-      WHERE (p.list_type = 'want') <> (q.list_type = 'want')
-        AND CASE WHEN p.list_type = 'want' THEN ${offersSwapsSql("q")} ELSE ${offersSwapsSql("p")} END
+      SELECT half.id, o.id AS post_key
+      FROM partner_lists o
+      JOIN partner_lists w ON ${leadsPairSql("o", "w")}
+      CROSS JOIN LATERAL (VALUES (o.id), (w.id)) AS half(id)
     ),
     matched AS (
       -- a swap when the list offers swaps and my want list takes them; a sale when it is a sale

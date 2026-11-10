@@ -31,6 +31,29 @@ export const boundOfferListSql = (alias?: string) =>
 export const offerMatchesWantSql = (offer: string, want: string) =>
   sql`((${offersSwapsSql(offer)} AND ${column(want, "match_have")}) OR (${column(offer, "list_type")} = 'sale' AND ${column(want, "match_sale")}))`;
 
+/**
+ * Whether `offer` leads `want` as one post: the same owner's linked want list, with `offer`
+ * offering swaps. The one pairing rule `postsCte`, match candidates and hidden posts share; a
+ * link is written to both rows, so reading it from the offer's side is enough.
+ */
+export const leadsPairSql = (offer: string, want: string) =>
+  sql`(${column(want, "list_type")} = 'want'
+    AND ${column(offer, "linked_list_id")} = ${column(want, "id")}
+    AND ${column(offer, "user_id")} = ${column(want, "user_id")}
+    AND ${offersSwapsSql(offer)})`;
+
+/**
+ * Whether the list `alias` belongs to a post `viewer` hid: the hide names the post's lead, so a
+ * want half is found through the list leading it.
+ */
+export const inHiddenPostSql = (viewer: UserRef, alias: string) =>
+  sql`EXISTS (
+    SELECT 1 FROM hidden_trade_post hp
+    WHERE hp.user_id = ${ref(viewer)}
+      AND (hp.list_id = ${column(alias, "id")}
+        OR hp.list_id IN (SELECT lead.id FROM lists lead WHERE ${leadsPairSql("lead", alias)}))
+  )`;
+
 /** {@link matchableList} over a raw `lists` row, aliased or not. */
 export const matchableListSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} = 'want' OR ${boundOfferListSql(alias)})`;

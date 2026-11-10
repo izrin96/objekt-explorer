@@ -1,6 +1,7 @@
 import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
 import { listedCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
+  inHiddenPostSql,
   offerMatchesWantSql,
   boundOfferListSql,
   matchableListSql,
@@ -80,6 +81,15 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         WHEN 'forward' THEN ${tradePartnerSql(sql`p.want_user_id`, sql`p.offer_user_id`)}
         ELSE ${tradePartnerSql(sql`p.offer_user_id`, sql`p.want_user_id`)}
       END
+      -- nor from a post the recipient hid: the new entry's list is the partner's
+      AND NOT EXISTS (
+        SELECT 1 FROM lists pl
+        WHERE pl.id = CASE p.direction WHEN 'forward' THEN p.offer_list_id ELSE p.want_list_id END
+          AND ${inHiddenPostSql(
+            sql`CASE p.direction WHEN 'forward' THEN p.want_user_id ELSE p.offer_user_id END`,
+            "pl",
+          )}
+      )
       AND ${notTradeSanctioned(sql`p.offer_user_id`)}
       AND ${notTradeSanctioned(sql`p.want_user_id`)}
       AND NOT EXISTS (

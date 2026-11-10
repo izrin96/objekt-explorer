@@ -235,6 +235,26 @@ export const hiddenTradePartner = pgTable(
   ],
 );
 
+/** A Trade post the viewer hid, keyed by the post's lead list (see `postsCte`). */
+export const hiddenTradePost = pgTable(
+  "hidden_trade_post",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    listId: integer("list_id")
+      .notNull()
+      .references(() => lists.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.listId] }),
+    index("hidden_trade_post_list_id_idx").on(t.listId),
+  ],
+);
+
 export const notification = pgTable(
   "notification",
   {

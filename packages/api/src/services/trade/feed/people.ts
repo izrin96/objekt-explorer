@@ -78,7 +78,7 @@ async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Pr
 
 /** The stage-1 predicates of a people read; Mutual only and the Mutual section read WTT posts. */
 function feedQueryOf(
-  ctx: Pick<PeopleContext, "viewerId" | "input" | "slugs" | "match">,
+  ctx: Pick<PeopleContext, "viewerId" | "input" | "slugs" | "match" | "skipHiddenPosts">,
   type: FeedQuery["type"],
 ): FeedQuery {
   return {
@@ -87,6 +87,7 @@ function feedQueryOf(
     slugs: ctx.slugs,
     slug: ctx.input.slug ?? null,
     matches: ctx.match ? matchIndexOf(ctx.match.compared) : null,
+    skipHiddenPosts: ctx.skipHiddenPosts,
   };
 }
 
@@ -224,7 +225,9 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const { cursor } = input;
 
   const lead = cursor ? cursor.lead : input.person;
-  const ctx: PeopleContext = { viewerId, viewer, input, slugs, match };
+  // the person and post pages read one person's row this way, and keep the posts the viewer hid
+  const skipHiddenPosts = !(input.person && !cursor);
+  const ctx: PeopleContext = { viewerId, viewer, input, slugs, match, skipHiddenPosts };
   // Mutual is a swap between two people, so under Mutual only it lists WTT posts
   const query = feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type);
   if (input.person && !cursor) {

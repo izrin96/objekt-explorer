@@ -17,6 +17,7 @@ import {
   tabCountsOutputSchema,
   takeDownPostInputSchema,
   tradePartnerInputSchema,
+  tradePostInputSchema,
   unshownEntriesInputSchema,
 } from "../schemas/trade";
 import { tradePersonInputSchema, tradePersonOutputSchema } from "../schemas/trade-person";
@@ -32,7 +33,14 @@ import {
   fetchSideItems,
 } from "../services/trade/feed/sides";
 import { fetchUnshownEntries } from "../services/trade/feed/unshown";
-import { fetchHiddenPartners, hidePartner, unhidePartner } from "../services/trade/hidden";
+import {
+  fetchHiddenPartners,
+  fetchHiddenPosts,
+  hidePartner,
+  hidePost,
+  unhidePartner,
+  unhidePost,
+} from "../services/trade/hidden";
 import { mutualCount } from "../services/trade/matches/mutual";
 import { resolveTradePerson } from "../services/trade/person";
 import { savePost, takeDownPost } from "../services/trade/post";
@@ -220,4 +228,22 @@ export const tradeRouter = {
   hiddenPartners: authed.handler(({ context: { session } }) =>
     fetchHiddenPartners(session.user.id),
   ),
+
+  /**
+   * Only another account's post on Trade is hidden; any other id gets the same empty response,
+   * so the call never tells whether a list exists.
+   */
+  hidePost: authed
+    .input(tradePostInputSchema)
+    .handler(async ({ input: { listId }, context: { session } }) => {
+      await hidePost(session.user.id, listId);
+    }),
+
+  unhidePost: authed
+    .input(tradePostInputSchema)
+    .handler(async ({ input: { listId }, context: { session } }) => {
+      await unhidePost(session.user.id, listId);
+    }),
+
+  hiddenPosts: authed.handler(({ context: { session } }) => fetchHiddenPosts(session.user.id)),
 };

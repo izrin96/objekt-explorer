@@ -52,6 +52,7 @@ export async function mutualCount(userId: string, list: string | undefined) {
           slugs: null,
           slug: null,
           matches: matchIndexOf(narrowViewer(viewer, sides)),
+          skipHiddenPosts: true,
         },
         people,
       );

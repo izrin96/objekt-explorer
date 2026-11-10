@@ -1,6 +1,13 @@
 import type { Outputs } from "@repo/api";
 import { startForPost } from "@repo/api/schemas/trade-post";
-import { type InfiniteData, matchQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  type Query,
+  type QueryClient,
+  matchQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
 import { toastManager } from "@/components/ui/toast";
@@ -108,6 +115,117 @@ export function useUnhidePartner() {
       onSuccess: () => invalidate(),
       onError: () => {
         toastManager.add({ type: "error", title: m.trade_unhide_error() });
+      },
+    }),
+  );
+}
+
+/** A `trade.people` read of one person's row: the person and post pages, which keep hidden posts. */
+function readsOnePerson(query: Query) {
+  const [, options] = query.queryKey as [unknown, { input?: { person?: string } } | undefined];
+  return Boolean(options?.input?.person);
+}
+
+/** The page minus one post, and minus its person's row once that row holds no other post. */
+function withoutPost(page: PeoplePage, listId: number): PeoplePage {
+  return {
+    ...page,
+    people: page.people.flatMap((person) => {
+      const posts = person.posts.filter((post) => post.id !== listId);
+      if (posts.length === person.posts.length) return [person];
+      return posts.length > 0 ? [{ ...person, posts }] : [];
+    }),
+  };
+}
+
+function markHidden(page: PeoplePage, listId: number, hidden: boolean): PeoplePage {
+  return {
+    ...page,
+    people: page.people.map((person) => ({
+      ...person,
+      posts: person.posts.map((post) => (post.id === listId ? { ...post, hidden } : post)),
+    })),
+  };
+}
+
+/** Feeds drop a hidden post; the person and post pages keep it and offer Unhide post. */
+async function showHidden(queryClient: QueryClient, listId: number, hidden: boolean) {
+  const key = orpc.trade.people.key();
+  await queryClient.cancelQueries({ queryKey: key });
+  const update = (change: (page: PeoplePage) => PeoplePage) => (data?: InfiniteData<PeoplePage>) =>
+    data ? { ...data, pages: data.pages.map(change) } : data;
+  queryClient.setQueriesData<InfiniteData<PeoplePage>>(
+    { queryKey: key, predicate: readsOnePerson },
+    update((page) => markHidden(page, listId, hidden)),
+  );
+  if (hidden) {
+    queryClient.setQueriesData<InfiniteData<PeoplePage>>(
+      { queryKey: key, predicate: (query) => !readsOnePerson(query) },
+      update((page) => withoutPost(page, listId)),
+    );
+  }
+}
+
+function useHidePost() {
+  const queryClient = useQueryClient();
+  const invalidate = useTradeInvalidation();
+
+  return useMutation(
+    orpc.trade.hidePost.mutationOptions({
+      onMutate: ({ listId }) => showHidden(queryClient, listId, true),
+      // as Hide person: the post is already gone, so the feed refetches on its next mount
+      onSuccess: async () => {
+        const people = orpc.trade.people.key();
+        await queryClient.invalidateQueries({ queryKey: people, refetchType: "none" });
+        await queryClient.refetchQueries({
+          queryKey: people,
+          type: "active",
+          predicate: (query) => query.state.data === undefined,
+        });
+        await queryClient.invalidateQueries({
+          queryKey: orpc.trade.key(),
+          predicate: (query) => !matchQuery({ queryKey: people }, query),
+        });
+      },
+      onError: () => {
+        // puts the post back
+        void invalidate();
+        toastManager.add({ type: "error", title: m.trade_post_hide_error() });
+      },
+    }),
+  );
+}
+
+/** Hide post with a toast offering Undo. */
+export function useHidePostWithUndo() {
+  const hide = useHidePost();
+  const unhide = useUnhidePost();
+
+  // not `mutate`'s callbacks: hiding can drop the post that calls this, and an unmounted observer skips them
+  return (listId: number) =>
+    void hide.mutateAsync({ listId }).then(
+      () => {
+        addActionToast(
+          { type: "success", title: m.trade_post_hide_success() },
+          { label: m.common_actions_undo(), onClick: () => unhide.mutate({ listId }) },
+        );
+      },
+      // the mutation's own onError shows the toast
+      () => {},
+    );
+}
+
+export function useUnhidePost() {
+  const queryClient = useQueryClient();
+  const invalidate = useTradeInvalidation();
+
+  return useMutation(
+    orpc.trade.unhidePost.mutationOptions({
+      onMutate: ({ listId }) => showHidden(queryClient, listId, false),
+      onSuccess: () => invalidate(),
+      onError: () => {
+        void invalidate();
+        toastManager.add({ type: "error", title: m.trade_post_unhide_error() });
       },
     }),
   );
