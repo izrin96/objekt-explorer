@@ -58,7 +58,7 @@ the account and offer a link to it and a way back to `/account/profiles`.
 
 After the code is found in the status message, and only then, linking SHALL be refused when:
 - **restricted**: any account that has ever held the address has an active trade block or ban. The message SHALL say only that a moderation action restricts the profile, without naming an account. The refusal SHALL lift once the trade block is revoked or the ban ends;
-- **cooling down**: in the 7 days after the address left another account, by an unlink, a staff unlink or that account's deletion. The message SHALL name the date linking opens. The account the address left SHALL be able to link it again at once.
+- **cooling down** (switched off since 2026-11-10: `COOLDOWN_DAYS` is 0, so this refusal never fires and the unlink dialogs promise no wait): in the 7 days after the address left another account, by an unlink, a staff unlink or that account's deletion. The message SHALL name the date linking opens. The account the address left SHALL be able to link it again at once.
 
 Before the code is found, the flow SHALL refuse only an address linked now, as before, and SHALL not reveal either refusal above.
 

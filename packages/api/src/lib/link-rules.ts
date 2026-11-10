@@ -1,4 +1,6 @@
-export const COOLDOWN_DAYS = 7;
+// Off for now (was 7): it held back owners merging their own accounts, and a transfer to a new wallet
+// gets around it anyway. Leave history is still recorded, so restoring the number restores it.
+export const COOLDOWN_DAYS = 0;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type LinkHolder = { userId: string; sanctioned: boolean };

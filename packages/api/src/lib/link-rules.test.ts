@@ -21,13 +21,21 @@ describe("linkRefusal", () => {
     ).toBeNull();
   });
 
-  test("another account is refused until 7 days after the leave", () => {
-    expect(
-      linkRefusal({ callerId: "b", holders: [], lastLeave: leave, now: after(2 * DAY) }),
-    ).toEqual({ reason: "cosmo_link_cooldown", retryAt: after(COOLDOWN_DAYS * DAY) });
+  // the cooldown is switched off while COOLDOWN_DAYS is 0; restoring 7 runs these instead
+  test.if(COOLDOWN_DAYS === 0)("with the cooldown off, another account links at once", () => {
+    expect(linkRefusal({ callerId: "b", holders: [], lastLeave: leave, now: LEFT })).toBeNull();
   });
 
-  test("refused just before 7 days, allowed at exactly 7 days", () => {
+  test.skipIf(COOLDOWN_DAYS === 0)(
+    "another account is refused until 7 days after the leave",
+    () => {
+      expect(
+        linkRefusal({ callerId: "b", holders: [], lastLeave: leave, now: after(2 * DAY) }),
+      ).toEqual({ reason: "cosmo_link_cooldown", retryAt: after(COOLDOWN_DAYS * DAY) });
+    },
+  );
+
+  test.skipIf(COOLDOWN_DAYS === 0)("refused just before 7 days, allowed at exactly 7 days", () => {
     const refused = linkRefusal({
       callerId: "b",
       holders: [],
