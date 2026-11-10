@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker, useLocation, useRouter } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { type NearGroup, nearPayer, takeNear, withNear } from "@/features/offers/near-picks";
 import { pickKey, toPick } from "@/features/offers/pick";
 import { suggestOptions } from "@/features/offers/queries";
+import { useMountedRef } from "@/hooks/use-mounted-ref";
 import { m } from "@/paraglide/messages";
 
 import { BuilderForm } from "./builder/form";
@@ -163,13 +164,7 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
   // the open form's "does the draft hold anything"; absent while it loads or is refused
   const draft = useRef<(() => boolean) | null>(null);
   const sent = useRef(false);
-  const mounted = useRef(false);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  const mounted = useMountedRef();
   const setDraft = useCallback((holds: (() => boolean) | null) => {
     draft.current = holds;
   }, []);

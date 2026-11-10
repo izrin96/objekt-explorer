@@ -1,11 +1,14 @@
+import type { CreateOfferInput } from "@repo/api/schemas/offer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { toastManager } from "@/components/ui/toast";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { itemLabel } from "@/features/offers/format";
 import type { Collections, OfferPick } from "@/features/offers/pick";
 import { invalidateOfferLists } from "@/features/offers/queries";
 import { offerRefusalOf, offerRefusalText, refusedKeys } from "@/features/offers/refusal";
+import { useMountedRef } from "@/hooks/use-mounted-ref";
 import { orpc } from "@/lib/orpc";
 import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
@@ -30,6 +33,7 @@ export function useSendOffer({
   const queryClient = useQueryClient();
   const [error, setError] = useState<SendFailure | null>(null);
   const [refused, setRefused] = useState<ReadonlySet<string>>(new Set());
+  const mounted = useMountedRef();
   const create = useMutation(
     orpc.offer.create.mutationOptions({
       onSuccess: async ({ conversationId }) => {
@@ -44,31 +48,43 @@ export function useSendOffer({
         // still pending meanwhile, so Send stays disabled
         await ready;
       },
-      onError: (failure) => {
-        const refusal = offerRefusalOf(failure);
-        if (!refusal) {
-          setError({ text: m.offer_send_error(), remove: false, link: false });
-          return;
-        }
-        const keys = refusedKeys(refusal);
-        const named = joinList(
-          [...give, ...get]
-            .filter((pick) => keys.has(pick.key))
-            .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
-        );
-        setRefused(keys);
-        const text =
-          offerRefusalText(refusal, named || m.offer_refused_some()) ?? m.offer_send_error();
-        // here the way out is taking the named objekts out of the offer
-        setError({ text, remove: named !== "", link: refusal.reason === "no_address" });
-      },
     }),
   );
+
+  const fail = (failure: unknown) => {
+    const refusal = offerRefusalOf(failure);
+    if (!refusal) {
+      setError({ text: m.offer_send_error(), remove: false, link: false });
+      return;
+    }
+    const keys = refusedKeys(refusal);
+    const named = joinList(
+      [...give, ...get]
+        .filter((pick) => keys.has(pick.key))
+        .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
+    );
+    setRefused(keys);
+    const text = offerRefusalText(refusal, named || m.offer_refused_some()) ?? m.offer_send_error();
+    // here the way out is taking the named objekts out of the offer
+    setError({ text, remove: named !== "", link: refusal.reason === "no_address" });
+  };
+
+  const send = (input: CreateOfferInput) =>
+    void create.mutateAsync(input).catch((failure: unknown) => {
+      if (mounted.current) {
+        fail(failure);
+        return;
+      }
+      // the sender left while it was on its way: the form is gone, so a toast says it
+      const refusal = offerRefusalOf(failure);
+      const text = refusal ? offerRefusalText(refusal, m.offer_refused_some()) : null;
+      toastManager.add({ type: "error", title: text ?? m.offer_send_error() });
+    });
 
   const clearFailure = () => {
     setError(null);
     setRefused(new Set());
   };
 
-  return { create, error, refused, clearFailure };
+  return { create, send, error, refused, clearFailure };
 }

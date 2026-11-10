@@ -214,7 +214,13 @@ export function BuilderForm({
     });
     removeRef.current?.focus();
   };
-  const { create, error, refused, clearFailure } = useSendOffer({
+  const {
+    create,
+    send: sendOffer,
+    error,
+    refused,
+    clearFailure,
+  } = useSendOffer({
     onSent,
     give: giveShown,
     get: getShown,
@@ -222,8 +228,10 @@ export function BuilderForm({
     collections,
   });
 
-  // held while the send is on its way too: a refusal would land on a page already left
-  const holdsDraft = holdsDraftOf({ give, get, topup: topupNow, note }, prefill);
+  // leaving while the send is on its way asks nothing: the send goes on either way, and a
+  // refusal that lands after leaving shows as a toast
+  const holdsDraft =
+    !create.isPending && holdsDraftOf({ give, get, topup: topupNow, note }, prefill);
 
   useEffect(() => {
     onDraft(() => holdsDraft);
@@ -239,7 +247,7 @@ export function BuilderForm({
     }
     if (!gate.canSend) return;
     clearFailure();
-    create.mutate({
+    sendOffer({
       ...offerInput(to, { give: giveShown, get: getShown, topup: topupNow, note }),
       counters: request.counter,
     });

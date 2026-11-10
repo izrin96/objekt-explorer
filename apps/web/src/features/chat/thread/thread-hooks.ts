@@ -10,6 +10,7 @@ import {
   threadOptions,
 } from "@/features/chat/queries";
 import { type ThreadData, threadMessages } from "@/features/chat/thread-cache";
+import { useMountedRef } from "@/hooks/use-mounted-ref";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
@@ -195,13 +196,7 @@ export function useJumpToMessage({
   olderPage: { fetch: () => Promise<{ failed: boolean }>; resync: () => Promise<unknown> };
 }) {
   const queryClient = useQueryClient();
-  const mounted = useRef(false);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  const mounted = useMountedRef();
 
   return async (
     target: JumpTarget,
