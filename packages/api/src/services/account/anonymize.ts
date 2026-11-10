@@ -15,6 +15,7 @@ import { ownBannerKey } from "../../lib/banner-key";
 import { disconnectUser } from "../../realtime";
 import { lockTradeLists } from "../list/shared";
 import { audit, openReportsOf } from "../moderation/core";
+import { bumpSafetyVersions } from "../moderation/safety-cache";
 import { cancelOpenOffers, offersOf, publishCancelled } from "../offer/cancel";
 import { deleteFileFromBucket, S3_BUCKET, S3_PUBLIC_URL } from "../s3";
 import { lockAddresses, recordLinkEvents } from "./cosmo-link";
@@ -97,6 +98,8 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     return { cancelled: result, banners: held };
   });
   await publishCancelled(cancelled);
+  // its addresses left the account, so cached matches must stop counting what they hold
+  await bumpSafetyVersions([userId]);
   // the scrub committed; an open tab's connection would keep receiving its events
   await disconnectUser(userId);
 

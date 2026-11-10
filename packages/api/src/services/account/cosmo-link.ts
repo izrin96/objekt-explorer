@@ -234,14 +234,14 @@ export async function setDefault(userId: string, address: string) {
 }
 
 export async function unlink(userId: string, address: string) {
-  await db.transaction(async (tx) => {
+  const unlinked = await db.transaction(async (tx) => {
     await lockUsersShared(tx, [userId]);
     await lockAddresses(tx, [address]);
     const [current] = await tx
       .select({ address: userAddress.address })
       .from(userAddress)
       .where(and(eq(userAddress.userId, userId), eq(userAddress.address, address)));
-    if (!current) return;
+    if (!current) return false;
 
     const sanctioned = await sanctionedAmong(tx, [userId]);
     const refusal = unlinkRefusal({
@@ -272,8 +272,10 @@ export async function unlink(userId: string, address: string) {
         reason: "user" as const,
       })),
     );
+    return removed.length > 0;
   });
-  await bumpSafetyVersions([userId]);
+  // the market version is shared by every viewer, so only a real unlink may drop it
+  if (unlinked) await bumpSafetyVersions([userId]);
 }
 
 export async function assertAddressNotLinked(address: string, userId: string) {

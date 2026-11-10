@@ -15,7 +15,7 @@ import {
 import { scanMessage } from "../../lib/scam-patterns";
 import { publishNotify } from "../../realtime";
 import { type FlagCategory } from "../../schemas/chat";
-import { type CreateOfferInput, OPEN_OFFER_LIMIT } from "../../schemas/offer";
+import { type CreateOfferInput, type OfferRefusal, OPEN_OFFER_LIMIT } from "../../schemas/offer";
 import {
   appendMessage,
   chatSafety,
@@ -55,6 +55,28 @@ import {
   refuseAction,
 } from "./state";
 import { fetchOffers, offerItemCards, toOfferView } from "./view";
+
+/**
+ * Why a counter of `counteredId` can't be sent: it lapsed, another offer to `me` replaced it, or
+ * it was answered or withdrawn. `replaced` says whether another offer to `me` is open now.
+ */
+async function staleCounterReason(
+  executor: Pick<typeof db, "select">,
+  counteredId: number,
+  conversationId: number | null,
+  me: string,
+  replaced: boolean,
+): Promise<OfferRefusal> {
+  const [countered] = await executor
+    .select(offerRowColumns)
+    .from(offer)
+    .where(eq(offer.id, counteredId));
+  if (!countered || countered.conversationId !== conversationId || countered.toUserId !== me) {
+    return "not_open";
+  }
+  if (effectiveStatus(countered, new Date()) === "expired") return "expired";
+  return replaced ? "offer_changed" : "not_open";
+}
 
 /** Whether any of `slugs` is on one of the partner's want lists. */
 async function givesWanted(partnerId: string, slugs: string[]) {
@@ -111,6 +133,12 @@ export async function createOffer(
     counteredGives(addressed.conversationId, me),
     partnerHasLists(partnerId),
   ]);
+  // before the get side is checked: a stale counter's kept items would read as unlisted
+  if (input.counters !== undefined && kept?.offerId !== input.counters) {
+    refuseOffer(
+      await staleCounterReason(db, input.counters, addressed.conversationId, me, kept !== null),
+    );
+  }
   const getRows = input.get.map((item) => {
     const entry = matchEntry(item, entries);
     if (entry) {
@@ -230,9 +258,8 @@ export async function createOffer(
         // the row lock waits for it and re-reads the status, so a counter never overwrites it
         .for("update");
       let open: OfferRow | null = current ?? null;
-      const lapsedId = open && effectiveStatus(open, now) === "expired" ? open.id : null;
       const expiredNotes: Parameters<typeof writeNotes>[1] = [];
-      if (open && lapsedId !== null) {
+      if (open && effectiveStatus(open, now) === "expired") {
         await tx
           .update(offer)
           .set({ status: "expired", respondedAt: sql`now()` })
@@ -261,11 +288,7 @@ export async function createOffer(
       // a counter answers the offer its sender saw, never one that replaced it since
       if (input.counters !== undefined && (effect !== "counter" || open!.id !== input.counters)) {
         refuseOffer(
-          input.counters === lapsedId
-            ? "expired"
-            : effect === "counter"
-              ? "offer_changed"
-              : "not_open",
+          await staleCounterReason(tx, input.counters, conversationId, me, effect === "counter"),
         );
       }
       // kept objekts ride on countering that very offer; anything else lists them again
