@@ -34,10 +34,7 @@ export function useObjektLink<T extends GridObjekt>(
   const { slug, id, serial } = useSearch({
     strict: false,
     structuralSharing: true,
-    select: (search) => {
-      const link = search as ObjektSearch;
-      return { slug: link.slug, id: link.id, serial: link.serial };
-    },
+    select: (search) => ({ slug: search.slug, id: search.id, serial: search.serial }),
   });
   const [picked, setPicked] = useState<T | null>(null);
   const linked = slug !== undefined || id !== undefined;

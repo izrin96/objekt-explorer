@@ -24,8 +24,8 @@ type ActivitySearch = z.infer<typeof activitySearchSchema>;
 /** `all` is the absence of the parameter, so a default view carries no key. */
 export function useActivityType(): ActivityType {
   return useSearch({
-    strict: false,
-    select: (search) => (search as ActivitySearch).type ?? "all",
+    from: "/(container)/activity",
+    select: (search) => search.type ?? "all",
   });
 }
 

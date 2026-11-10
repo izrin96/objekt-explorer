@@ -22,8 +22,8 @@ type TradesSearch = z.infer<typeof tradesSearchSchema>;
 /** `all` is the absence of the parameter, so a default view carries no key. */
 export function useTradesType(): TransferType {
   return useSearch({
-    strict: false,
-    select: (search) => (search as TradesSearch).type ?? "all",
+    from: "/@{$nickname}/trades",
+    select: (search) => search.type ?? "all",
   });
 }
 

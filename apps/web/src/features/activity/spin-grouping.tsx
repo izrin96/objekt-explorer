@@ -13,7 +13,7 @@ type SpinsSearch = { spins?: z.infer<typeof spinsSearchSchema> };
 export function useSpinsGrouped(): boolean {
   return useSearch({
     strict: false,
-    select: (search) => (search as SpinsSearch).spins !== "raw",
+    select: (search) => search.spins !== "raw",
   });
 }
 
