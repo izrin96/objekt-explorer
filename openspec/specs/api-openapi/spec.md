@@ -139,7 +139,7 @@ that response as CSV.
 ### Requirement: Stable contracts
 Reorganizing how request and response schemas are defined SHALL leave every request
 contract and response body unchanged: the paths and parameters of `/api/v1`, the inputs
-and outputs of `/rpc` procedures, and the responses of the legacy `/api` routes.
+and outputs of `/rpc` procedures.
 
 #### Scenario: Document paths and parameters are unchanged
 - **WHEN** `/api/v1/spec.json` is compared before and after a schema reorganization
@@ -147,9 +147,8 @@ and outputs of `/rpc` procedures, and the responses of the legacy `/api` routes.
   differ
 
 #### Scenario: Legacy and v1 responses still match
-- **WHEN** the same read is made through a legacy `/api` route and its `/api/v1`
-  operation after the reorganization
-- **THEN** both return the body they returned before it
+- **WHEN** a client requests a removed legacy path, such as `GET /api/transfers/{address}`
+- **THEN** the response is 404, and the same read at its `/api/v1` path answers as before
 
 ### Requirement: Held-by first-copy fields
 Each collection row of `GET /objekts/held-by/{address}` SHALL carry, alongside `copies`,
@@ -158,8 +157,7 @@ three fields computed over the copies the address holds at request time:
 of that copy) and `firstReceivedAt` (the earliest time, as an ISO 8601 string, at which
 the address received a copy it still holds). When two held copies share the lowest serial,
 `minSerialTokenId` SHALL be the lower token ID. The same fields SHALL be returned by the
-`/rpc` procedure and the legacy `/api/objekts/held-by/$address` route, and the OpenAPI
-document SHALL name them in the response schema.
+`/rpc` procedure, and the OpenAPI document SHALL name them in the response schema.
 
 #### Scenario: Collector with several copies
 - **WHEN** an address holds serials 412, 37 and 980 of a collection, received on
@@ -192,9 +190,8 @@ An omitted `order` SHALL mean `desc`, newest first, as before. With `asc` the re
 SHALL list the same transfers oldest first, ordered by timestamp then ID, with the same
 body and cursor shape; following `nextCursor` SHALL continue toward newer transfers. The
 `type`, collection facet and `at` filters SHALL select the same transfers in both orders.
-Any other `order` value SHALL be rejected with 400. The `/rpc` procedure and the legacy
-`/api/transfers/$address` route SHALL accept the same parameter, and the OpenAPI document
-SHALL list it.
+Any other `order` value SHALL be rejected with 400. The `/rpc` procedure SHALL accept the same
+parameter, and the OpenAPI document SHALL list it.
 
 #### Scenario: First transfer in one request
 - **WHEN** a client requests `GET /api/v1/transfers/{address}?order=asc`
