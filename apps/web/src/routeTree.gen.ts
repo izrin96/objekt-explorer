@@ -26,11 +26,8 @@ import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$ni
 import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
 import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
 import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
-import { Route as ApiActivityRouteImport } from './routes/api/activity'
-import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiErrorsRouteImport } from './routes/api/errors'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
-import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
 import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
 import { Route as MERouteImport } from './routes/m/e'
 import { Route as MSRouteImport } from './routes/m/s'
@@ -68,8 +65,6 @@ import { Route as containerTradeForYouRouteImport } from './routes/(container)/t
 import { Route as containerTradeMineRouteRouteImport } from './routes/(container)/trade/mine/route'
 import { Route as containerTradeNewRouteImport } from './routes/(container)/trade/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
-import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1.$'
 import { Route as ApiV1CollectionsRouteImport } from './routes/api/v1.collections'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
@@ -84,11 +79,6 @@ import { Route as containerTradeAtChar123handleChar125SlugRouteImport } from './
 import { Route as containerTradeAtChar123handleChar125OfferRouteImport } from './routes/(container)/trade/@{$handle}/offer'
 import { Route as containerTradeMineIndexRouteImport } from './routes/(container)/trade/mine/index'
 import { Route as containerTradeMineTradeIdRouteImport } from './routes/(container)/trade/mine/$tradeId'
-import { Route as ApiObjektsHeldByAddressRouteImport } from './routes/api/objekts/held-by.$address'
-import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
-import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
-import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
-import { Route as ApiObjektsTransfersCollectionSlugSerialRouteImport } from './routes/api/objekts/transfers.$collectionSlug.$serial'
 
 const containerRouteRoute = containerRouteRouteImport.update({
   id: '/(container)',
@@ -181,16 +171,6 @@ const AtChar123nicknameChar125TradesRoute =
     path: '/trades',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
-const ApiActivityRoute = ApiActivityRouteImport.update({
-  id: '/api/activity',
-  path: '/api/activity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCollectionRoute = ApiCollectionRouteImport.update({
-  id: '/api/collection',
-  path: '/api/collection',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiErrorsRoute = ApiErrorsRouteImport.update({
   id: '/api/errors',
   path: '/api/errors',
@@ -199,11 +179,6 @@ const ApiErrorsRoute = ApiErrorsRouteImport.update({
 const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
   id: '/api/healthcheck',
   path: '/api/healthcheck',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiLiveSessionsRoute = ApiLiveSessionsRouteImport.update({
-  id: '/api/live-sessions',
-  path: '/api/live-sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOpenAppRoute = ApiOpenAppRouteImport.update({
@@ -397,16 +372,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTransfersAddressRoute = ApiTransfersAddressRouteImport.update({
-  id: '/api/transfers/$address',
-  path: '/api/transfers/$address',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
-  id: '/api/user/search',
-  path: '/api/user/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
   id: '/api/v1/$',
   path: '/api/v1/$',
@@ -487,35 +452,6 @@ const containerTradeMineTradeIdRoute =
     path: '/$tradeId',
     getParentRoute: () => containerTradeMineRouteRoute,
   } as any)
-const ApiObjektsHeldByAddressRoute = ApiObjektsHeldByAddressRouteImport.update({
-  id: '/api/objekts/held-by/$address',
-  path: '/api/objekts/held-by/$address',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiObjektsListCollectionSlugRoute =
-  ApiObjektsListCollectionSlugRouteImport.update({
-    id: '/api/objekts/list/$collectionSlug',
-    path: '/api/objekts/list/$collectionSlug',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiObjektsMetadataCollectionSlugRoute =
-  ApiObjektsMetadataCollectionSlugRouteImport.update({
-    id: '/api/objekts/metadata/$collectionSlug',
-    path: '/api/objekts/metadata/$collectionSlug',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiObjektsOwnedByAddressRoute =
-  ApiObjektsOwnedByAddressRouteImport.update({
-    id: '/api/objekts/owned-by/$address',
-    path: '/api/objekts/owned-by/$address',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiObjektsTransfersCollectionSlugSerialRoute =
-  ApiObjektsTransfersCollectionSlugSerialRouteImport.update({
-    id: '/api/objekts/transfers/$collectionSlug/$serial',
-    path: '/api/objekts/transfers/$collectionSlug/$serial',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
@@ -532,11 +468,8 @@ export interface FileRoutesByFullPath {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
-  '/api/activity': typeof ApiActivityRoute
-  '/api/collection': typeof ApiCollectionRoute
   '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
-  '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/m/e': typeof MERoute
   '/m/s': typeof MSRoute
@@ -569,8 +502,6 @@ export interface FileRoutesByFullPath {
   '/trade/for-you': typeof containerTradeForYouRoute
   '/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/transfers/$address': typeof ApiTransfersAddressRoute
-  '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/account/': typeof containerAccountIndexRoute
@@ -587,16 +518,11 @@ export interface FileRoutesByFullPath {
   '/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
   '/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
-  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
-  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
-  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
-  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/mod/addresses/': typeof containerModAddressesIndexRoute
   '/mod/reports/': typeof containerModReportsIndexRoute
   '/mod/trades/': typeof containerModTradesIndexRoute
   '/trade/@{$handle}/': typeof containerTradeAtChar123handleChar125IndexRoute
   '/trade/mine/': typeof containerTradeMineIndexRoute
-  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
@@ -608,11 +534,8 @@ export interface FileRoutesByTo {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
-  '/api/activity': typeof ApiActivityRoute
-  '/api/collection': typeof ApiCollectionRoute
   '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
-  '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/m/e': typeof MERoute
   '/m/s': typeof MSRoute
@@ -641,8 +564,6 @@ export interface FileRoutesByTo {
   '/trade/for-you': typeof containerTradeForYouRoute
   '/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/transfers/$address': typeof ApiTransfersAddressRoute
-  '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/account': typeof containerAccountIndexRoute
@@ -659,16 +580,11 @@ export interface FileRoutesByTo {
   '/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
   '/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
-  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
-  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
-  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
-  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/mod/addresses': typeof containerModAddressesIndexRoute
   '/mod/reports': typeof containerModReportsIndexRoute
   '/mod/trades': typeof containerModTradesIndexRoute
   '/trade/@{$handle}': typeof containerTradeAtChar123handleChar125IndexRoute
   '/trade/mine': typeof containerTradeMineIndexRoute
-  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -687,11 +603,8 @@ export interface FileRoutesById {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
-  '/api/activity': typeof ApiActivityRoute
-  '/api/collection': typeof ApiCollectionRoute
   '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
-  '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/m/e': typeof MERoute
   '/m/s': typeof MSRoute
@@ -724,8 +637,6 @@ export interface FileRoutesById {
   '/(container)/trade/for-you': typeof containerTradeForYouRoute
   '/(container)/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/transfers/$address': typeof ApiTransfersAddressRoute
-  '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/v1/collections': typeof ApiV1CollectionsRoute
   '/(container)/account/': typeof containerAccountIndexRoute
@@ -742,16 +653,11 @@ export interface FileRoutesById {
   '/(container)/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
   '/(container)/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/(container)/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
-  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
-  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
-  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
-  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/(container)/mod/addresses/': typeof containerModAddressesIndexRoute
   '/(container)/mod/reports/': typeof containerModReportsIndexRoute
   '/(container)/mod/trades/': typeof containerModTradesIndexRoute
   '/(container)/trade/@{$handle}/': typeof containerTradeAtChar123handleChar125IndexRoute
   '/(container)/trade/mine/': typeof containerTradeMineIndexRoute
-  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -770,11 +676,8 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
-    | '/api/activity'
-    | '/api/collection'
     | '/api/errors'
     | '/api/healthcheck'
-    | '/api/live-sessions'
     | '/api/open-app'
     | '/m/e'
     | '/m/s'
@@ -807,8 +710,6 @@ export interface FileRouteTypes {
     | '/trade/for-you'
     | '/trade/new'
     | '/api/auth/$'
-    | '/api/transfers/$address'
-    | '/api/user/search'
     | '/api/v1/$'
     | '/api/v1/collections'
     | '/account/'
@@ -825,16 +726,11 @@ export interface FileRouteTypes {
     | '/trade/@{$handle}/$slug'
     | '/trade/@{$handle}/offer'
     | '/trade/mine/$tradeId'
-    | '/api/objekts/held-by/$address'
-    | '/api/objekts/list/$collectionSlug'
-    | '/api/objekts/metadata/$collectionSlug'
-    | '/api/objekts/owned-by/$address'
     | '/mod/addresses/'
     | '/mod/reports/'
     | '/mod/trades/'
     | '/trade/@{$handle}/'
     | '/trade/mine/'
-    | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activity'
@@ -846,11 +742,8 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
-    | '/api/activity'
-    | '/api/collection'
     | '/api/errors'
     | '/api/healthcheck'
-    | '/api/live-sessions'
     | '/api/open-app'
     | '/m/e'
     | '/m/s'
@@ -879,8 +772,6 @@ export interface FileRouteTypes {
     | '/trade/for-you'
     | '/trade/new'
     | '/api/auth/$'
-    | '/api/transfers/$address'
-    | '/api/user/search'
     | '/api/v1/$'
     | '/api/v1/collections'
     | '/account'
@@ -897,16 +788,11 @@ export interface FileRouteTypes {
     | '/trade/@{$handle}/$slug'
     | '/trade/@{$handle}/offer'
     | '/trade/mine/$tradeId'
-    | '/api/objekts/held-by/$address'
-    | '/api/objekts/list/$collectionSlug'
-    | '/api/objekts/metadata/$collectionSlug'
-    | '/api/objekts/owned-by/$address'
     | '/mod/addresses'
     | '/mod/reports'
     | '/mod/trades'
     | '/trade/@{$handle}'
     | '/trade/mine'
-    | '/api/objekts/transfers/$collectionSlug/$serial'
   id:
     | '__root__'
     | '/(container)'
@@ -924,11 +810,8 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
-    | '/api/activity'
-    | '/api/collection'
     | '/api/errors'
     | '/api/healthcheck'
-    | '/api/live-sessions'
     | '/api/open-app'
     | '/m/e'
     | '/m/s'
@@ -961,8 +844,6 @@ export interface FileRouteTypes {
     | '/(container)/trade/for-you'
     | '/(container)/trade/new'
     | '/api/auth/$'
-    | '/api/transfers/$address'
-    | '/api/user/search'
     | '/api/v1/$'
     | '/api/v1/collections'
     | '/(container)/account/'
@@ -979,40 +860,25 @@ export interface FileRouteTypes {
     | '/(container)/trade/@{$handle}/$slug'
     | '/(container)/trade/@{$handle}/offer'
     | '/(container)/trade/mine/$tradeId'
-    | '/api/objekts/held-by/$address'
-    | '/api/objekts/list/$collectionSlug'
-    | '/api/objekts/metadata/$collectionSlug'
-    | '/api/objekts/owned-by/$address'
     | '/(container)/mod/addresses/'
     | '/(container)/mod/reports/'
     | '/(container)/mod/trades/'
     | '/(container)/trade/@{$handle}/'
     | '/(container)/trade/mine/'
-    | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
-  ApiActivityRoute: typeof ApiActivityRoute
-  ApiCollectionRoute: typeof ApiCollectionRoute
   ApiErrorsRoute: typeof ApiErrorsRoute
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
-  ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
   ApiOpenAppRoute: typeof ApiOpenAppRoute
   MERoute: typeof MERoute
   MSRoute: typeof MSRoute
   RpcSplatRoute: typeof RpcSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
-  ApiUserSearchRoute: typeof ApiUserSearchRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
   ApiV1CollectionsRoute: typeof ApiV1CollectionsRoute
-  ApiObjektsHeldByAddressRoute: typeof ApiObjektsHeldByAddressRoute
-  ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
-  ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
-  ApiObjektsOwnedByAddressRoute: typeof ApiObjektsOwnedByAddressRoute
-  ApiObjektsTransfersCollectionSlugSerialRoute: typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1136,20 +1002,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/api/activity': {
-      id: '/api/activity'
-      path: '/api/activity'
-      fullPath: '/api/activity'
-      preLoaderRoute: typeof ApiActivityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/collection': {
-      id: '/api/collection'
-      path: '/api/collection'
-      fullPath: '/api/collection'
-      preLoaderRoute: typeof ApiCollectionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/errors': {
       id: '/api/errors'
       path: '/api/errors'
@@ -1162,13 +1014,6 @@ declare module '@tanstack/react-router' {
       path: '/api/healthcheck'
       fullPath: '/api/healthcheck'
       preLoaderRoute: typeof ApiHealthcheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/live-sessions': {
-      id: '/api/live-sessions'
-      path: '/api/live-sessions'
-      fullPath: '/api/live-sessions'
-      preLoaderRoute: typeof ApiLiveSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/open-app': {
@@ -1430,20 +1275,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/transfers/$address': {
-      id: '/api/transfers/$address'
-      path: '/api/transfers/$address'
-      fullPath: '/api/transfers/$address'
-      preLoaderRoute: typeof ApiTransfersAddressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/user/search': {
-      id: '/api/user/search'
-      path: '/api/user/search'
-      fullPath: '/api/user/search'
-      preLoaderRoute: typeof ApiUserSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/v1/$': {
       id: '/api/v1/$'
       path: '/api/v1/$'
@@ -1541,41 +1372,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/trade/mine/$tradeId'
       preLoaderRoute: typeof containerTradeMineTradeIdRouteImport
       parentRoute: typeof containerTradeMineRouteRoute
-    }
-    '/api/objekts/held-by/$address': {
-      id: '/api/objekts/held-by/$address'
-      path: '/api/objekts/held-by/$address'
-      fullPath: '/api/objekts/held-by/$address'
-      preLoaderRoute: typeof ApiObjektsHeldByAddressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/objekts/list/$collectionSlug': {
-      id: '/api/objekts/list/$collectionSlug'
-      path: '/api/objekts/list/$collectionSlug'
-      fullPath: '/api/objekts/list/$collectionSlug'
-      preLoaderRoute: typeof ApiObjektsListCollectionSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/objekts/metadata/$collectionSlug': {
-      id: '/api/objekts/metadata/$collectionSlug'
-      path: '/api/objekts/metadata/$collectionSlug'
-      fullPath: '/api/objekts/metadata/$collectionSlug'
-      preLoaderRoute: typeof ApiObjektsMetadataCollectionSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/objekts/owned-by/$address': {
-      id: '/api/objekts/owned-by/$address'
-      path: '/api/objekts/owned-by/$address'
-      fullPath: '/api/objekts/owned-by/$address'
-      preLoaderRoute: typeof ApiObjektsOwnedByAddressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/objekts/transfers/$collectionSlug/$serial': {
-      id: '/api/objekts/transfers/$collectionSlug/$serial'
-      path: '/api/objekts/transfers/$collectionSlug/$serial'
-      fullPath: '/api/objekts/transfers/$collectionSlug/$serial'
-      preLoaderRoute: typeof ApiObjektsTransfersCollectionSlugSerialRouteImport
-      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -1816,26 +1612,15 @@ const rootRouteChildren: RootRouteChildren = {
   containerRouteRoute: containerRouteRouteWithChildren,
   AtChar123nicknameChar125RouteRoute:
     AtChar123nicknameChar125RouteRouteWithChildren,
-  ApiActivityRoute: ApiActivityRoute,
-  ApiCollectionRoute: ApiCollectionRoute,
   ApiErrorsRoute: ApiErrorsRoute,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
-  ApiLiveSessionsRoute: ApiLiveSessionsRoute,
   ApiOpenAppRoute: ApiOpenAppRoute,
   MERoute: MERoute,
   MSRoute: MSRoute,
   RpcSplatRoute: RpcSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiTransfersAddressRoute: ApiTransfersAddressRoute,
-  ApiUserSearchRoute: ApiUserSearchRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
   ApiV1CollectionsRoute: ApiV1CollectionsRoute,
-  ApiObjektsHeldByAddressRoute: ApiObjektsHeldByAddressRoute,
-  ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
-  ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,
-  ApiObjektsOwnedByAddressRoute: ApiObjektsOwnedByAddressRoute,
-  ApiObjektsTransfersCollectionSlugSerialRoute:
-    ApiObjektsTransfersCollectionSlugSerialRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

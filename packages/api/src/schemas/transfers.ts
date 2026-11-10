@@ -24,7 +24,6 @@ export type AddressTransfersOutput = z.infer<typeof addressTransfersOutputSchema
 export const transferTypeSchema = z.enum(["all", "mint", "received", "sent", "spin"]);
 export type TransferType = z.infer<typeof transferTypeSchema>;
 
-/** an address's transfers input; the legacy `GET /api/transfers/$address` sends the cursor as JSON */
 export const addressTransfersFiltersSchema = z.object({
   type: transferTypeSchema.default("all"),
   ...collectionFiltersSchema.shape,

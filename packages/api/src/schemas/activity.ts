@@ -33,7 +33,6 @@ export type ActivityFeedOutput = z.infer<typeof activityFeedOutputSchema>;
 export const activityTypeSchema = z.enum(["all", "mint", "transfer", "spin"]);
 export type ActivityType = z.infer<typeof activityTypeSchema>;
 
-/** activity feed input; the legacy `GET /api/activity` sends the cursor as JSON */
 export const activityFeedInputSchema = z.object({
   type: activityTypeSchema.default("all"),
   ...collectionFiltersSchema.shape,
