@@ -62,6 +62,12 @@ function useHidePartner() {
       onSuccess: async () => {
         const people = orpc.trade.people.key();
         await queryClient.invalidateQueries({ queryKey: people, refetchType: "none" });
+        // a feed still on its first load had that load cancelled above, and nothing else restarts it
+        await queryClient.refetchQueries({
+          queryKey: people,
+          type: "active",
+          predicate: (query) => query.state.data === undefined,
+        });
         await queryClient.invalidateQueries({
           queryKey: orpc.trade.key(),
           predicate: (query) => !matchQuery({ queryKey: people }, query),
