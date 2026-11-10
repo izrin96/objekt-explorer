@@ -36,6 +36,7 @@ import { fetchPartners, hydrateCards } from "../chat";
 import { redis, redisFailOpen } from "../redis";
 import { reputationOf } from "../reputation";
 import { fetchObjekts } from "./core";
+import { legCardRefs } from "./trade-row";
 import { findTrade, readIndexerSeen } from "./trades";
 import { autoAcceptedLegs, heldCopyWhere } from "./verify";
 import { fetchOffers, topupView } from "./view";
@@ -131,16 +132,7 @@ export async function fetchTrade(me: string, tradeId: number) {
     heldByOf(me, legs, profiles),
     hydrateCards(
       [
-        ...legs.map((leg) =>
-          leg.objektId === null
-            ? { collectionSlug: leg.collectionSlug }
-            : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
-        ),
-        ...legs.flatMap((leg) =>
-          leg.verifiedObjektId === null
-            ? []
-            : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
-        ),
+        ...legCardRefs(legs),
         ...substitutes.map((sub) => ({
           collectionSlug: slugOf.get(sub.legId)!,
           objektId: sub.objektId,

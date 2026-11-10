@@ -2,6 +2,7 @@ import type { Tx } from "@repo/db";
 import { trade, tradeLeg } from "@repo/db/schema";
 import { eq, sql } from "drizzle-orm";
 
+import type { CardRef } from "../../schemas/chat";
 import type { TradeStatus } from "../../schemas/offer";
 
 /**
@@ -28,3 +29,24 @@ export const countVerified = (tx: Tx, tradeId: number) =>
     .from(tradeLeg)
     .where(eq(tradeLeg.tradeId, tradeId))
     .then((rows) => rows[0] ?? { total: 0, verified: 0 });
+
+type LegObjekts = Pick<
+  typeof tradeLeg.$inferSelect,
+  "collectionSlug" | "objektId" | "verifiedObjektId"
+>;
+
+/** Every objekt a trade's legs name: the one each leg asks for, then the copy that verified it. */
+export function legCardRefs(legs: LegObjekts[]): CardRef[] {
+  return [
+    ...legs.map((leg) =>
+      leg.objektId === null
+        ? { collectionSlug: leg.collectionSlug }
+        : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
+    ),
+    ...legs.flatMap((leg) =>
+      leg.verifiedObjektId === null
+        ? []
+        : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
+    ),
+  ];
+}

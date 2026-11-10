@@ -4,6 +4,7 @@ import { desc, inArray } from "drizzle-orm";
 
 import { iso } from "../../lib/time";
 import { hydrateCards } from "../chat";
+import { legCardRefs } from "../offer/trade-row";
 import { autoAcceptedLegs } from "../offer/verify";
 
 /**
@@ -32,21 +33,7 @@ export async function tradeDetail(tradeIds: number[]) {
     db.select().from(tradeLeg).where(inArray(tradeLeg.tradeId, ids)).orderBy(tradeLeg.id),
     autoAcceptedLegs(ids),
   ]);
-  const { serial, collections } = await hydrateCards(
-    [
-      ...legs.map((leg) =>
-        leg.objektId === null
-          ? { collectionSlug: leg.collectionSlug }
-          : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
-      ),
-      ...legs.flatMap((leg) =>
-        leg.verifiedObjektId === null
-          ? []
-          : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
-      ),
-    ],
-    null,
-  );
+  const { serial, collections } = await hydrateCards(legCardRefs(legs), null);
   return {
     trades: rows.map((t) => ({
       id: t.id,
