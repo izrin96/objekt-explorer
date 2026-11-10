@@ -12,6 +12,7 @@ export function useOpenComposer() {
       void router.navigate({
         to: "/trade/new",
         search: composerSearch(start, router.state.location.href),
+        state: { composerBack: true },
       }),
     [router],
   );

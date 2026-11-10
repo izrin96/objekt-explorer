@@ -70,5 +70,7 @@ declare module "@tanstack/react-router" {
     fromProfile?: string;
     /** the offer page was opened from inside the app, so Back can go back a step */
     offerBack?: boolean;
+    /** the composer was opened from inside the app, so leaving it can go back a step */
+    composerBack?: boolean;
   }
 }

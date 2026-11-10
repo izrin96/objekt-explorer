@@ -1,7 +1,7 @@
 import { ArrowFatLineDownIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { type ComposerStart, planPost } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useBlocker, useRouter } from "@tanstack/react-router";
+import { Link, useBlocker, useLocation, useRouter } from "@tanstack/react-router";
 import { type SetStateAction, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -23,7 +23,7 @@ import { useSavePost, useTakeDownPost } from "../actions";
 import { type Choice, postInput, withoutGone } from "../composer-choice";
 import { usePlanLists } from "../post-plan";
 import { tradeBlockedOptions } from "../queries";
-import { picksChanged, returnAfter } from "./link";
+import { picksChanged, returnAfter, returnPath } from "./link";
 import { ComposerPreview } from "./preview";
 import { ComposerSettings, PostButton } from "./settings";
 
@@ -70,10 +70,19 @@ export function ComposerPage({
     enableBeforeUnload: holds,
     withResolver: true,
   });
+  const openedInApp = useLocation({ select: (location) => location.state.composerBack === true });
+  // back to the opener when it is the entry below, so it comes back scrolled as it was and Back
+  // never reopens the composer; else replaced, with an href, as sign-in's redirect is followed
+  const goTo = (href: string) => {
+    if (openedInApp && href === returnPath(from) && router.history.canGoBack()) {
+      router.history.back();
+    } else {
+      router.history.replace(href);
+    }
+  };
   const leave = (anchor: string | null) => {
     done.current = true;
-    // an href, not a registered path, as sign-in's redirect is followed
-    router.history.push(returnAfter(from, start.replaces, anchor));
+    goTo(returnAfter(from, start.replaces, anchor));
   };
 
   return (
@@ -155,11 +164,7 @@ export function ComposerPage({
         {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the phone bar spans the screen and sits flush */}
         {/* mt-auto: on a short page the bar still sits on the screen's bottom edge */}
         <div className="bg-background sticky bottom-0 z-10 -mx-5 mt-auto -mb-10 flex gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] md:static md:col-start-1 md:row-start-2 md:m-0 md:border-0 md:bg-transparent md:p-0">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => router.history.push(returnAfter(from, null, null))}
-          >
+          <Button variant="outline" size="lg" onClick={() => goTo(returnPath(from))}>
             {m.common_modal_cancel()}
           </Button>
           <PostButton
