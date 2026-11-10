@@ -40,7 +40,12 @@ export function BrowseFilters({
   const { facets, groups } = useScopedFacets();
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
-  const chips = useActiveChips();
+  // only what the feed reads: a shared link may carry other surfaces' filters, and a collection
+  // link reads no artist
+  const chips = useActiveChips().filter((chip) => {
+    const key = chip.key.split(":")[0]!;
+    return (FACET_KEYS as readonly string[]).includes(key) && !(search.slug && key === "artist");
+  });
 
   const setFacet = useSetFacet();
   const values = facetValues(filters);
