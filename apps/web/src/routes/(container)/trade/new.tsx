@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { composerSearchSchema, resolveStart } from "@/features/trade/composer/link";
 import { ComposerPage } from "@/features/trade/composer/page";
-import { toPlanList } from "@/features/trade/post-plan";
+import { toPlanList } from "@/features/trade/plan-list";
 import { currentUserOptions, requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
