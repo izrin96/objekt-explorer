@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
@@ -234,37 +233,5 @@ function TypeSegment({ type, selected }: { type: ListType; selected: boolean }) 
     >
       <span className="text-center text-pretty">{LIST_TYPE_LABEL[type]()}</span>
     </RadioPrimitive.Root>
-  );
-}
-
-export function SwitchRow({
-  id,
-  label,
-  description,
-  checked,
-  disabled,
-  onCheckedChange,
-}: {
-  id: string;
-  label: string;
-  description: string;
-  checked: boolean;
-  disabled?: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}) {
-  return (
-    <Label htmlFor={id} className="flex min-w-0 items-start justify-between gap-3 font-normal">
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="text-muted-foreground text-xs text-pretty">{description}</span>
-      </span>
-      <Switch
-        id={id}
-        className="mt-0.5 shrink-0"
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={onCheckedChange}
-      />
-    </Label>
   );
 }

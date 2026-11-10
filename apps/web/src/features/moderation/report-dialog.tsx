@@ -6,6 +6,7 @@ import {
 } from "@repo/api/schemas/moderation";
 import { type FormEvent, type RefObject, useId, useRef, useState } from "react";
 
+import { SwitchRow } from "@/components/shared/switch-row";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -221,39 +221,5 @@ function ReportForm({
         </Button>
       </DialogFooter>
     </form>
-  );
-}
-
-function SwitchRow({
-  id,
-  checked,
-  onCheckedChange,
-  label,
-  description,
-}: {
-  id: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  label: string;
-  description: string;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex flex-col gap-0.5">
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </Label>
-        <p id={`${id}-desc`} className="text-muted-foreground text-xs text-pretty">
-          {description}
-        </p>
-      </div>
-      <Switch
-        id={id}
-        aria-describedby={`${id}-desc`}
-        className="mt-0.5 shrink-0"
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-      />
-    </div>
   );
 }

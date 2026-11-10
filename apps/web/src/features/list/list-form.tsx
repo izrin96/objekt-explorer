@@ -2,6 +2,7 @@ import { InfoIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 
+import { SwitchRow } from "@/components/shared/switch-row";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { m } from "@/paraglide/messages";
 
 import { bindNote, isBindable, type ListDraft, type ListUrl, listTypePatch } from "./list-draft";
-import { ListTypeField, ListUrlField, ProfileField, SwitchRow } from "./list-form-fields";
+import { ListTypeField, ListUrlField, ProfileField } from "./list-form-fields";
 import { RatioPicker } from "./ratio-picker";
 
 export {
