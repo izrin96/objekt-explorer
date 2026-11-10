@@ -1,6 +1,13 @@
 import { serverEnv } from "@repo/api/env";
+import { ipRateLimited } from "@repo/api/services/redis";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { READ_DEADLINE_MS, readCapped } from "@/lib/server/error-tunnel";
+
+// a page view or event is a few hundred bytes; the tracker sends no custom data here
+const MAX_EVENT_BYTES = 16 * 1024;
+// one person sends one event per navigation; a shared address (mobile carrier NAT) sends more
+const PER_IP_PER_MINUTE = 120;
 const FORWARDED_HEADERS = ["content-type", "user-agent", "accept-language"];
 // Traefik overwrites x-real-ip with the peer address; any other header arrives
 // as the client wrote it
@@ -34,6 +41,15 @@ export const Route = createFileRoute("/m/e")({
           return new Response(null, { status: 404 });
         }
 
+        if (await ipRateLimited("umami", request.headers, PER_IP_PER_MINUTE, 60)) {
+          return new Response(null, { status: 429, headers: { "retry-after": "60" } });
+        }
+        const declared = Number(request.headers.get("content-length"));
+        if (declared > MAX_EVENT_BYTES) return new Response(null, { status: 413 });
+        const read = await readCapped(request.body, MAX_EVENT_BYTES, READ_DEADLINE_MS);
+        if (read === "too_large") return new Response(null, { status: 413 });
+        if (read === "timeout") return new Response(null, { status: 408 });
+
         const headers = new Headers();
         for (const name of FORWARDED_HEADERS) {
           const value = request.headers.get(name);
@@ -44,7 +60,7 @@ export const Route = createFileRoute("/m/e")({
         });
 
         const ip = getClientIp(request.headers);
-        let body = await request.text();
+        let body = new TextDecoder().decode(read);
         if (ip) {
           headers.set("x-forwarded-for", ip);
           headers.set("x-client-ip", ip);
