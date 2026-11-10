@@ -1,3 +1,4 @@
+import { type OfferRef, offerNotes } from "@repo/api/lib/offer-notes";
 import { type HeldItem, itemStillHeld, type SeenTransfer } from "@repo/api/lib/offer-rules";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import { db } from "@repo/db";
@@ -8,7 +9,7 @@ import { chunkMap } from "@repo/lib";
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
-import { earliest, type OfferRef, offerNotes, toPublish } from "../../lib/offer-notes";
+import { earliest, toPublish } from "../../lib/offer-notes";
 import { sentChanges } from "../../lib/offer-sent";
 import type { Publish } from "../../lib/trade-publish";
 

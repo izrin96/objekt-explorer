@@ -2,36 +2,10 @@ import type { Tx } from "@repo/db";
 import { offer } from "@repo/db/schema";
 import { and, eq, gt, or, sql } from "drizzle-orm";
 
+import { offerNotes } from "../../lib/offer-notes";
 import type { OfferCancelReason } from "../../schemas/offer";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
-
-type CancelledOffer = { id: number; conversationId: number; fromUserId: string; toUserId: string };
-
-/** Each party's "cancelled" note for every offer, naming the other party. */
-export function cancelledNotes(
-  cancelled: CancelledOffer[],
-  reason: OfferCancelReason,
-  nameOf: Awaited<ReturnType<typeof partyNames>>,
-) {
-  return cancelled.flatMap((o) =>
-    [
-      [o.fromUserId, o.toUserId],
-      [o.toUserId, o.fromUserId],
-    ].map(([userId, other]) => ({
-      type: "offer" as const,
-      userId: userId!,
-      payload: {
-        offerId: o.id,
-        conversationId: o.conversationId,
-        tradeId: null,
-        event: "cancelled" as const,
-        reason,
-        partner: nameOf(other!),
-      },
-    })),
-  );
-}
 
 export const cancelledColumns = {
   id: offer.id,
@@ -63,7 +37,7 @@ export async function cancelOpenOffers(
     cancelled.flatMap((o) => [o.fromUserId, o.toUserId]),
     tx,
   );
-  const notified = await writeNotes(tx, cancelledNotes(cancelled, reason, name));
+  const notified = await writeNotes(tx, offerNotes(cancelled, "cancelled", reason, name));
   return {
     conversations: cancelled.map((o) => ({
       conversationId: o.conversationId,

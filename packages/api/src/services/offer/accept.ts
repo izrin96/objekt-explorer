@@ -4,12 +4,13 @@ import { findPgError } from "@repo/lib/pg-error";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { legInsertOrder } from "../../lib/leg-order";
+import { offerNotes } from "../../lib/offer-notes";
 import { unique } from "../../lib/unique";
 import { VERIFIER_NUDGE_CHANNEL } from "../../schemas/offer";
 import { lockAddresses } from "../account/cosmo-link";
 import { chatSafety, updateMemberIn } from "../chat";
 import { redis } from "../redis";
-import { cancelledColumns, cancelledNotes } from "./cancel";
+import { cancelledColumns } from "./cancel";
 import { linkedAddresses, lockParties, refuseOffer, refuseUnsafe, refuseUnsafeIn } from "./core";
 import { type Side, checkItems, refuseCopyShortfall } from "./items";
 import { partyNames, writeNotes } from "./notes";
@@ -191,7 +192,7 @@ export async function acceptOffer(me: string, offerId: number) {
           partner: name(row.toUserId),
         },
       },
-      ...cancelledNotes(cancelled, "reserved", others),
+      ...offerNotes(cancelled, "cancelled", "reserved", others),
     ]);
     return { tradeId, cancelled, notified };
   });
