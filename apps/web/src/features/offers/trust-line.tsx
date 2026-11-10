@@ -54,7 +54,7 @@ export function TrustLine({
       <span className="sr-only">{m.trust_label()} </span>
       {reputation.verified === 0 ? (
         unfinished > 0 ? (
-          <span title={hint} className="whitespace-nowrap">
+          <span title={hint} className="text-warning-foreground whitespace-nowrap">
             {m.trust_none_unfinished({ count })}
             <span className="sr-only"> ({hint})</span>
           </span>
@@ -70,7 +70,7 @@ export function TrustLine({
           {unfinished > 0 ? (
             <>
               {" · "}
-              <span title={hint} className="text-destructive-foreground whitespace-nowrap">
+              <span title={hint} className="text-warning-foreground whitespace-nowrap">
                 {m.trust_unfinished({ count })}
                 <span className="sr-only"> ({hint})</span>
               </span>

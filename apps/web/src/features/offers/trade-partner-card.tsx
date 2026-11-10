@@ -159,7 +159,6 @@ export function TradePartnerCard({ trade, primary, ...handlers }: Props) {
 /** The phone's row: avatar, name, the record on one line, and View profile; the bar holds the rest. */
 export function TradePartnerRow({ trade }: { trade: Trade }) {
   const { reputation, user } = trade.partner;
-  const locale = getLocale();
   return (
     <section
       aria-label={m.offer_partner_title()}
@@ -172,33 +171,7 @@ export function TradePartnerRow({ trade }: { trade: Trade }) {
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Name trade={trade} className="font-semibold" />
-        {reputation ? (
-          isNew(reputation) ? (
-            <TrustLine reputation={reputation} variant="compact" className="self-start" />
-          ) : (
-            <span className="text-muted-foreground text-xs">
-              {m.trust_verified({ count: reputation.verified.toLocaleString(locale) })}
-              {reputation.unfinished > 0 ? (
-                <>
-                  {" · "}
-                  <span className="text-warning-foreground" title={m.trust_unfinished_hint()}>
-                    {m.trust_unfinished({ count: reputation.unfinished.toLocaleString(locale) })}
-                    <span className="sr-only"> ({m.trust_unfinished_hint()})</span>
-                  </span>
-                </>
-              ) : null}
-              {reputation.positive !== null ? (
-                <>
-                  {" · "}
-                  <span aria-hidden>{`${reputation.positive}%`}</span>
-                  <span className="sr-only">
-                    {m.trust_positive({ percent: reputation.positive })}
-                  </span>
-                </>
-              ) : null}
-            </span>
-          )
-        ) : null}
+        <TrustLine reputation={reputation} variant="compact" className="self-start" />
       </div>
       <ViewProfile trade={trade} className="h-11 shrink-0" />
     </section>
