@@ -16,10 +16,6 @@ const MIN_SAVING = 0.1;
 
 export type BackfillDecision = "replace" | "keep" | "too-large";
 
-export function isMovingType(type: string) {
-  return type === "image/gif" || type.startsWith("video/");
-}
-
 export function backfillDecision({
   type,
   originalSize,
