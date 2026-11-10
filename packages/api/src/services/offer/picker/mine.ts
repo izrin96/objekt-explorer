@@ -66,7 +66,7 @@ export async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: CandidateCursor | undefined,
-  { filters, matchOnly, wantList, fromList }: PickerNarrowing,
+  { filters, matchOnly, wantList, fromList, objektIds }: PickerNarrowing,
 ) {
   const [linked, partnerWants, named, fromWhere] = await Promise.all([
     linkedAddresses([me]),
@@ -80,8 +80,12 @@ export async function mineCandidates(
     return candidatesPage({});
 
   const [{ page, nextCursor }, haveEntries] = await Promise.all([
-    ownedPage(addresses, cursor, { filters, slugs: keptSlugs, where: fromWhere }),
-    cursor || fromList !== undefined
+    ownedPage(addresses, cursor, {
+      filters,
+      slugs: keptSlugs,
+      where: and(fromWhere, objektIds ? inArray(objekts.id, objektIds) : undefined),
+    }),
+    cursor || fromList !== undefined || objektIds !== undefined
       ? []
       : db
           .select({

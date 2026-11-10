@@ -13,7 +13,7 @@ import { type GetSource, sourceOf } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import { type Collections, type OfferPick, type OfferSide, pickKey } from "@/features/offers/pick";
 import { putBack, takeOut, takeOutAdded, takeOutAll } from "@/features/offers/quantity";
-import { myCopyOptions, theirCandidatesOptions } from "@/features/offers/queries";
+import { myCopyOptions, myObjektsOptions, theirCandidatesOptions } from "@/features/offers/queries";
 import { offerRefusalOf } from "@/features/offers/refusal";
 import { useCurrency } from "@/features/settings/use-currency";
 import { joinList } from "@/lib/text";
@@ -104,20 +104,12 @@ export function BuilderForm({
     ...theirs.data?.collections,
     ...seen,
   };
-  // a counter's own picks come with no flags: the viewer's copies of those collections carry them
-  const unflagged = [
-    ...new Set(
-      give.flatMap((pick) =>
-        pick.objektId !== null && pick.flags === null ? [pick.collectionSlug] : [],
-      ),
-    ),
-  ];
-  const ownChecks = useQueries({
-    queries: unflagged.map((slug) => myCopyOptions(to, collections[slug])),
-  });
-  const myFlags = new Map(
-    ownChecks.flatMap((query) => query.data?.items ?? []).map((item) => [pickKey(item), item]),
-  );
+  // a counter's own picks come with no flags: one read of those objekts carries them
+  const unflagged = give
+    .flatMap((pick) => (pick.objektId !== null && pick.flags === null ? [pick.objektId] : []))
+    .toSorted();
+  const ownCheck = useQuery(myObjektsOptions(to, unflagged));
+  const myFlags = new Map((ownCheck.data?.items ?? []).map((item) => [pickKey(item), item]));
   const flagsOf = (pick: OfferPick) => pickFlags(pick, theirFlags) ?? pickFlags(pick, myFlags);
   const estimatedOf = (pick: OfferPick) => pickEstimated(pick, theirFlags);
 

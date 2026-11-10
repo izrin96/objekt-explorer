@@ -113,6 +113,15 @@ export const myCopyOptions = (to: OfferAddress, collection: ValidObjekt | undefi
     retry: retryUnlessRefused,
   });
 
+/** The viewer's own objekts `objektIds`, read once for the flags a counter's give picks lack. */
+export const myObjektsOptions = (to: OfferAddress, objektIds: string[]) =>
+  orpc.offer.candidates.queryOptions({
+    input: { ...to, side: "mine", objektIds: objektIds.length > 0 ? objektIds : undefined },
+    enabled: objektIds.length > 0,
+    staleTime: 30_000,
+    retry: retryUnlessRefused,
+  });
+
 export const mineOptions = () =>
   orpc.offer.mine.infiniteOptions({
     input: (cursor: HistoryCursor | undefined) => ({ cursor }),

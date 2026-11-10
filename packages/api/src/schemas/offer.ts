@@ -220,6 +220,8 @@ const pickerNarrowingSchema = z.object({
   wantList: z.string().min(1).max(12).optional(),
   /** mine: only what one of the sender's own have, sale or general lists names; theirs: only one of the partner's have or sale lists on Trade */
   fromList: z.string().min(1).max(12).optional(),
+  /** mine: only these objekts, for the flags a counter's give picks come without */
+  objektIds: z.array(objektIdSchema).min(1).max(OFFER_SIDE_LIMIT).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
 
