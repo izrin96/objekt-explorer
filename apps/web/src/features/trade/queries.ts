@@ -41,7 +41,14 @@ export const tradePersonOptions = (input: { handle: string } | { userId: string 
   orpc.trade.person.queryOptions({ input, staleTime: 60_000, retry: retryUnlessRefused });
 
 export const myPostsOptions = () =>
-  orpc.trade.myPosts.queryOptions({ staleTime: LOADER_READ_STALE_MS });
+  orpc.trade.myPosts.queryOptions({
+    staleTime: LOADER_READ_STALE_MS,
+    // Bump's wait is the server's to judge: read again once it ends, so Bump turns on by itself
+    refetchInterval: (query) => {
+      const next = query.state.data?.[0]?.nextBumpAt;
+      return next ? Math.max(new Date(next).getTime() - Date.now(), 1000) : false;
+    },
+  });
 
 export const tradeBlockedOptions = () => orpc.trade.blocked.queryOptions({ staleTime: 0 });
 
