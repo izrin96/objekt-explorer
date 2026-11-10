@@ -142,11 +142,11 @@ export function tradeStatusText(status: TradeView["status"]) {
 
 export function mineStatusText(row: MineRow) {
   if (row.kind === "trade") {
-    return tradeStatusText(row.status as TradeView["status"]);
+    return tradeStatusText(row.status);
   }
   if (row.status === "open") return row.yourTurn ? m.offer_your_turn() : m.offer_sent();
   return offerStatusText({
-    status: row.status as OfferView["status"],
+    status: row.status,
     mine: !row.yourTurn,
     cancelReason: null,
   });

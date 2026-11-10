@@ -7,30 +7,43 @@ import {
   HISTORY_PAGE_SIZE,
   type HistoryCursor,
   type MineRow,
+  type OfferCancelReason,
+  type OfferStatus,
   type Progress,
+  type TradeCancelReason,
+  type TradeStatus,
 } from "../../schemas/offer";
 import { fetchPartners, hydrateCards } from "../chat";
 import { offersOf, openOffersWhere } from "./cancel";
 import { progressColumns } from "./trade-row";
 import { fetchOffers, offerItemCards, topupView, itemViews } from "./view";
 
-type MineEntry = {
-  kind: "offer" | "trade";
-  id: number;
-  offerId: number;
-  status: string;
-  cancelReason: string | null;
-  at: string;
-};
+type MineEntry = { id: number; offerId: number; at: string } & (
+  | { kind: "offer"; status: OfferStatus; cancelReason: OfferCancelReason | null }
+  | { kind: "trade"; status: TradeStatus; cancelReason: TradeCancelReason | null }
+);
 
-type HistoryRow = {
-  kind: "offer" | "trade";
-  id: number;
-  offer_id: number;
-  status: string;
-  cancel_reason: string | null;
-  at: string;
-};
+type HistoryRow = { id: number; offer_id: number; at: string } & (
+  | { kind: "offer"; status: OfferStatus; cancel_reason: OfferCancelReason | null }
+  | { kind: "trade"; status: TradeStatus; cancel_reason: TradeCancelReason | null }
+);
+
+function historyEntry(row: HistoryRow): MineEntry {
+  const base = { id: row.id, offerId: row.offer_id, at: row.at };
+  return row.kind === "offer"
+    ? {
+        ...base,
+        kind: "offer",
+        status: row.status,
+        cancelReason: shownCancelReason(row.cancel_reason),
+      }
+    : {
+        ...base,
+        kind: "trade",
+        status: row.status,
+        cancelReason: shownCancelReason(row.cancel_reason),
+      };
+}
 
 const GROUP_LIMIT = 100;
 
@@ -101,14 +114,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
   `);
 
   const groups = groupsQuery ? await groupsQuery : null;
-  const historyPage: MineEntry[] = history.rows.slice(0, HISTORY_PAGE_SIZE).map((row) => ({
-    kind: row.kind,
-    id: row.id,
-    offerId: row.offer_id,
-    status: row.status,
-    cancelReason: shownCancelReason(row.cancel_reason),
-    at: row.at,
-  }));
+  const historyPage = history.rows.slice(0, HISTORY_PAGE_SIZE).map(historyEntry);
   const openOffers = groups?.[0] ?? [];
   const inProgress: MineEntry[] = (groups?.[1] ?? []).map((t) => ({
     kind: "trade",
@@ -155,14 +161,10 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
     if (!partner) return [];
     return [
       {
-        kind: entry.kind,
-        id: entry.id,
-        offerId: entry.offerId,
+        ...entry,
         tradeId: entry.kind === "trade" ? entry.id : source.trade_id,
         conversationId: source.conversation_id,
         partner,
-        status: entry.status as MineRow["status"],
-        cancelReason: entry.cancelReason as MineRow["cancelReason"],
         yourTurn: entry.kind === "offer" && entry.status === "open" && source.to_user_id === me,
         ...itemViews(source, me, serialOf),
         topup: topupView(source, source.from_user_id === me),

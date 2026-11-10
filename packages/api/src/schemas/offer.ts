@@ -421,16 +421,12 @@ export const tradeViewSchema = z.object({
 });
 export type TradeView = z.infer<typeof tradeViewSchema>;
 
-/** A My trades row; `kind` says whether `id` is an offer's or a trade's. */
-const mineRowSchema = z.object({
-  kind: z.enum(["offer", "trade"]),
+const mineRowBase = {
   id: z.number(),
   offerId: z.number(),
   tradeId: z.number().nullable(),
   conversationId: z.number(),
   partner: chatPartnerSchema,
-  status: z.union([z.enum(OFFER_STATUSES), z.enum(TRADE_STATUSES)]),
-  cancelReason: z.union([z.enum(OFFER_CANCEL_REASONS), z.enum(TRADE_CANCEL_REASONS)]).nullable(),
   /** an open offer waiting on the viewer */
   yourTurn: z.boolean(),
   give: offerItemViewSchema.array(),
@@ -440,7 +436,23 @@ const mineRowSchema = z.object({
   progress: progressSchema.nullable(),
   /** what the row is ordered by: when it ended, else when it started */
   at: z.string(),
-});
+};
+
+/** A My trades row; `kind` says whether `id` is an offer's or a trade's, and so which statuses apply. */
+const mineRowSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("offer"),
+    ...mineRowBase,
+    status: z.enum(OFFER_STATUSES),
+    cancelReason: z.enum(OFFER_CANCEL_REASONS).nullable(),
+  }),
+  z.object({
+    kind: z.literal("trade"),
+    ...mineRowBase,
+    status: z.enum(TRADE_STATUSES),
+    cancelReason: z.enum(TRADE_CANCEL_REASONS).nullable(),
+  }),
+]);
 export type MineRow = z.infer<typeof mineRowSchema>;
 
 export const NOTE_OBJEKTS = 3;
