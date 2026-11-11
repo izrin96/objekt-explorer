@@ -42,7 +42,9 @@
     "stitch-design-taste": "off"
   },
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": false
+    "frontend-design@claude-plugins-official": false,
+    "compound-engineering@compound-engineering-plugin": false,
+    "design-research@designer-skills": false
   },
   "hooks": {
     "PreToolUse": [
