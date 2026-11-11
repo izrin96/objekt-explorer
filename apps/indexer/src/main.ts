@@ -7,6 +7,7 @@ import { collectionChanged, collectionFields } from "./collection-fields";
 import { env } from "./env";
 import { createHold } from "./hold";
 import { fetchMetadata } from "./metadata";
+import { type TokenRead, isMint, mintReads, readTransferability } from "./mint-transferability";
 import {
   Collection,
   ComoBalance,
@@ -60,9 +61,16 @@ processor.run(db, async (ctx) => {
       });
       const decide = createHold(held.map((p) => p.tokenId));
       const metadataBatch = await Promise.all(chunk.map((e) => fetchMetadata(e.transfer.tokenId)));
+      const transferableAtMint = await readTransferability(ctx._chain.client, mintReads(chunk));
       const newlyMintedIds: string[] = [];
+      // objekts first seen on a transfer that is not their mint (a run from a late START_BLOCK)
+      const firstSeen: { objekt: Objekt; read: TokenRead }[] = [];
+      const heldMintUpdates: TransferabilityUpdate[] = [];
 
-      for (const [j, { transfer, blockNumber, logIndex }] of chunk.entries()) {
+      for (const [
+        j,
+        { transfer, blockNumber, blockHash, transactionIndex, logIndex },
+      ] of chunk.entries()) {
         const metadata = metadataBatch[j] ?? null;
         const existing = await findObjekt(ctx, objektBatch, transfer.tokenId);
         // an objekt with no collection has none to keep, so a failed fetch holds its transfer
@@ -74,7 +82,18 @@ processor.run(db, async (ctx) => {
         let objekt: Objekt;
         let collection: Collection;
         if (action === "record" && metadata) {
-          objekt = existing ? moveObjekt(existing, transfer) : newObjekt(metadata, transfer);
+          if (existing) {
+            objekt = moveObjekt(existing, transfer);
+          } else if (isMint(transfer)) {
+            objekt = newObjekt(
+              metadata,
+              transfer,
+              chainValue(transferableAtMint, transfer.tokenId),
+            );
+          } else {
+            objekt = newObjekt(metadata, transfer, false);
+            firstSeen.push({ objekt, read: { tokenId: transfer.tokenId, blockNumber, blockHash } });
+          }
           const handled = await handleCollection(ctx, metadata, collectionBatch, transfer);
           collection = handled.collection;
           if (handled.save) collectionBatch.set(collection.slug, collection);
@@ -98,6 +117,19 @@ processor.run(db, async (ctx) => {
               logIndex,
             }),
           );
+          if (isMint(transfer)) {
+            heldMintUpdates.push(
+              new TransferabilityUpdate({
+                id: Bun.randomUUIDv7(),
+                tokenId: transfer.tokenId,
+                transferable: chainValue(transferableAtMint, transfer.tokenId),
+                blockNumber,
+                transactionIndex,
+                hash: transfer.hash,
+                appliedAt: null,
+              }),
+            );
+          }
           continue;
         }
         objektBatch.set(objekt.id, objekt);
@@ -108,9 +140,24 @@ processor.run(db, async (ctx) => {
         transferBatch.push(transfer);
       }
 
+      if (firstSeen.length > 0) {
+        const atTransfer = await readTransferability(
+          ctx._chain.client,
+          firstSeen.map((f) => f.read),
+        );
+        for (const { objekt } of firstSeen) {
+          objekt.transferable = chainValue(atTransfer, objekt.id);
+        }
+      }
+
       if (pendingBatch.length > 0) {
         ctx.log.warn(`Holding ${pendingBatch.length} transfers until their metadata is fetched`);
         await ctx.store.insert(pendingBatch);
+      }
+
+      // the replay applies these over the metadata's guess, like any other pending update
+      if (heldMintUpdates.length > 0) {
+        await ctx.store.insert(heldMintUpdates);
       }
 
       // apply any pending transferability updates that were waiting for these mints
@@ -294,17 +341,26 @@ function moveObjekt(objekt: Objekt, transfer: Transfer) {
 }
 
 /**
- * Create the objekt row from its metadata.
+ * Create the objekt row from its metadata. Transferable comes from the chain: the metadata's value
+ * is a guess from the class.
  */
-function newObjekt(metadata: CosmoObjektMetadataV1, transfer: Transfer) {
+function newObjekt(metadata: CosmoObjektMetadataV1, transfer: Transfer, transferable: boolean) {
   return new Objekt({
     id: transfer.tokenId,
     mintedAt: new Date(transfer.timestamp),
     receivedAt: new Date(transfer.timestamp),
     owner: addr(transfer.to),
     serial: metadata.objekt.objektNo,
-    transferable: metadata.objekt.transferable,
+    transferable,
   });
+}
+
+function chainValue(transferable: Map<string, boolean>, tokenId: string) {
+  const value = transferable.get(tokenId);
+  if (value === undefined) {
+    throw new Error(`No chain transferability read for token ${tokenId}`);
+  }
+  return value;
 }
 
 /**
