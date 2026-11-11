@@ -10,6 +10,7 @@ import {
   type CandidateCursor,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { pickerTagsFor } from "../../trade/feed/near";
 import { boundOfferList } from "../../trade/lists";
 import {
@@ -133,7 +134,11 @@ export async function mineCandidates(
     .slice(0, CANDIDATE_PAGE_SIZE);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
-  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
+  const [reserved, holders, anchored] = await Promise.all([
+    reservedIds(ids),
+    openOfferHolders(ids, me),
+    anchoredSerialIds(ids),
+  ]);
   const flags = (objekt: IndexedObjekt) =>
     itemFlags(objekt, reserved, holders, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
@@ -146,10 +151,10 @@ export async function mineCandidates(
 
   return candidatesPage({
     items: page.map((objekt) =>
-      toCandidate(objekt, flags(objekt), suggestionOf.get(objekt.id) ?? null),
+      toCandidate(objekt, flags(objekt), anchored, suggestionOf.get(objekt.id) ?? null),
     ),
     suggested: suggestedList.map(({ objekt, listSlug }) =>
-      toCandidate(objekt, flags(objekt), listSlug),
+      toCandidate(objekt, flags(objekt), anchored, listSlug),
     ),
     nextCursor,
     tags,

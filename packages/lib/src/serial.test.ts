@@ -12,12 +12,17 @@ import {
 
 describe("isSerialEstimated", () => {
   test("before the cutoff is Cosmo's serial", () => {
-    expect(isSerialEstimated(new Date(V1_CUTOFF_MS - 1))).toBe(false);
+    expect(isSerialEstimated(new Date(V1_CUTOFF_MS - 1), false)).toBe(false);
   });
 
   test("at and after the cutoff is estimated", () => {
-    expect(isSerialEstimated(new Date(V1_CUTOFF_MS))).toBe(true);
-    expect(isSerialEstimated("2026-09-01T00:00:00Z")).toBe(true);
+    expect(isSerialEstimated(new Date(V1_CUTOFF_MS), false)).toBe(true);
+    expect(isSerialEstimated("2026-09-01T00:00:00Z", false)).toBe(true);
+  });
+
+  test("an anchored range makes a later serial exact", () => {
+    expect(isSerialEstimated(new Date(V1_CUTOFF_MS), true)).toBe(false);
+    expect(isSerialEstimated("2026-09-01T00:00:00Z", true)).toBe(false);
   });
 });
 

@@ -26,6 +26,7 @@ import { wrongCopyNote } from "../../lib/trade-notes";
 import { needsHeld, settleNotes, settlePlan } from "../../lib/trade-settle";
 import { unique } from "../../lib/unique";
 import { HELD_COPY_STATUSES } from "../../schemas/offer";
+import { anchoredSerialIds } from "../objekt/serial-anchored";
 import { writeNotes } from "./notes";
 
 export { wrongCopyNote };
@@ -302,17 +303,22 @@ export async function readTransferable(ids: string[]) {
 
 /** Serials as the trade page shows them, for a wrong copy's notes. */
 export async function shownSerials(ids: string[]) {
-  const rows =
+  const [rows, anchored] = await Promise.all([
     ids.length === 0
       ? []
-      : await indexer
+      : indexer
           .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
           .from(objekts)
-          .where(inArray(objekts.id, unique(ids)));
+          .where(inArray(objekts.id, unique(ids))),
+    anchoredSerialIds(ids),
+  ]);
   const byId = new Map(
     rows.map((row) => [
       row.id,
-      { serial: shownSerial(row.serial), estimated: isSerialEstimated(row.mintedAt) },
+      {
+        serial: shownSerial(row.serial),
+        estimated: isSerialEstimated(row.mintedAt, anchored.has(row.id)),
+      },
     ]),
   );
   return (id: string) => byId.get(id) ?? { serial: null, estimated: false };

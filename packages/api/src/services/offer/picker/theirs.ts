@@ -16,6 +16,7 @@ import {
   type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { pickerTagsFor } from "../../trade/feed/near";
 import { askableOnTrade } from "../../trade/lists";
 import {
@@ -85,7 +86,11 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     openAnyCopyLegs([{ userId: partnerId, slugs: anySlugs }]),
   ]);
   const ids = unique([...tokens.keys(), ...copies.map((o) => o.id)]);
-  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
+  const [reserved, holders, anchored] = await Promise.all([
+    reservedIds(ids),
+    openOfferHolders(ids, me),
+    anchoredSerialIds(ids),
+  ]);
   const flags = (objekt: IndexedObjekt) =>
     itemFlags(objekt, reserved, holders, addressed.conversationId);
 
@@ -98,7 +103,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
       if (!objekt || !theirs.has(objekt.owner) || objekt.slug !== entry.collectionSlug) continue;
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
-      items.push(toCandidate(objekt, flags(objekt), entry.listSlug, entry.ratio));
+      items.push(toCandidate(objekt, flags(objekt), anchored, entry.listSlug, entry.ratio));
       continue;
     }
     const held = copies.filter((o) => o.slug === entry.collectionSlug);
@@ -126,7 +131,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     for (const objekt of held) {
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
-      items.push(toCandidate(objekt, flags(objekt), entry.listSlug, entry.ratio));
+      items.push(toCandidate(objekt, flags(objekt), anchored, entry.listSlug, entry.ratio));
     }
   }
 
@@ -135,7 +140,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     const objekt = tokens.get(id);
     if (!objekt || seen.has(id) || !theirs.has(objekt.owner)) continue;
     seen.add(id);
-    items.push(toCandidate(objekt, flags(objekt), null));
+    items.push(toCandidate(objekt, flags(objekt), anchored, null));
   }
 
   // whether the partner listed anything at all, so an empty picker can say why
@@ -268,10 +273,19 @@ export async function theirCollectionPage(
   const rest = page.filter((o) => !keptIds.has(o.id));
   const objekts = cursor ? rest : [...kept, ...rest];
   const ids = objekts.map((o) => o.id);
-  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
+  const [reserved, holders, anchored] = await Promise.all([
+    reservedIds(ids),
+    openOfferHolders(ids, me),
+    anchoredSerialIds(ids),
+  ]);
   return candidatesPage({
     items: objekts.map((objekt) =>
-      toCandidate(objekt, itemFlags(objekt, reserved, holders, addressed.conversationId), null),
+      toCandidate(
+        objekt,
+        itemFlags(objekt, reserved, holders, addressed.conversationId),
+        anchored,
+        null,
+      ),
     ),
     nextCursor,
     partnerLists: false,

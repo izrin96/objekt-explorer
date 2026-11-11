@@ -26,6 +26,7 @@ import {
 } from "../../../schemas/offer";
 import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
+import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { personNear } from "../../trade/feed/near";
 import { askableOnTrade, matchableList } from "../../trade/lists";
 import { recountPartners, resolveCompareSides } from "../../trade/matches";
@@ -453,8 +454,12 @@ async function myCopies(
     }
   }
   const ids = [...found.keys()];
-  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
+  const [reserved, holders, anchored] = await Promise.all([
+    reservedIds(ids),
+    openOfferHolders(ids, me),
+    anchoredSerialIds(ids),
+  ]);
   return [...found.values()].map(({ objekt, listSlug }) =>
-    toCandidate(objekt, itemFlags(objekt, reserved, holders, conversationId), listSlug),
+    toCandidate(objekt, itemFlags(objekt, reserved, holders, conversationId), anchored, listSlug),
   );
 }

@@ -2,8 +2,12 @@
 // minted at or after it are populate-serial's estimate.
 export const V1_CUTOFF_MS = Date.parse("2026-06-04T08:07:02Z");
 
-export function isSerialEstimated(mintedAt: Date | string) {
-  return new Date(mintedAt).getTime() >= V1_CUTOFF_MS;
+/**
+ * `anchored`: the objekt sits in a reserved range that also holds a serial
+ * Cosmo supplied or a manual anchor, so its serial follows from that one.
+ */
+export function isSerialEstimated(mintedAt: Date | string, anchored: boolean) {
+  return !anchored && new Date(mintedAt).getTime() >= V1_CUTOFF_MS;
 }
 
 /** Serial 0 means not numbered yet. */

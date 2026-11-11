@@ -18,6 +18,7 @@ import {
 } from "../../schemas/chat";
 import type { ShownSerial } from "../../schemas/offer";
 import { fetchCollectionsBySlug } from "../list/collections";
+import { anchoredSerialIds } from "../objekt/serial-anchored";
 import { fetchPostCards } from "../trade/feed/post-cards";
 
 /** Either kind of card; for what is written to `message.card` and for the thread's own readers. */
@@ -38,7 +39,7 @@ export async function hydrateCards(cards: CardRef[], viewerId: string | null) {
   );
   const slugs = unique(cards.map((card) => card.collectionSlug));
 
-  const [listRows, serialRows, collectionRows] = await Promise.all([
+  const [listRows, serialRows, collectionRows, anchored] = await Promise.all([
     listIds.length === 0
       ? []
       : db
@@ -64,6 +65,7 @@ export async function hydrateCards(cards: CardRef[], viewerId: string | null) {
           .from(objekts)
           .where(inArray(objekts.id, objektIds)),
     fetchCollectionsBySlug(slugs, []),
+    anchoredSerialIds(objektIds),
   ]);
 
   const saleListIds = listRows.filter((l) => l.listType === "sale").map((l) => l.id);
@@ -135,7 +137,10 @@ export async function hydrateCards(cards: CardRef[], viewerId: string | null) {
     serial: (objektId: string): ShownSerial => {
       const row = serialOf.get(objektId);
       return row
-        ? { serial: shownSerial(row.serial), estimated: isSerialEstimated(row.mintedAt) }
+        ? {
+            serial: shownSerial(row.serial),
+            estimated: isSerialEstimated(row.mintedAt, anchored.has(objektId)),
+          }
         : { serial: null, estimated: false };
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<

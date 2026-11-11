@@ -23,6 +23,7 @@ import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 export function toCandidate(
   objekt: IndexedObjekt,
   flags: ReturnType<typeof itemFlags>,
+  anchored: ReadonlySet<string>,
   listSlug: string | null,
   ratio: number | null = null,
 ): CandidateItem {
@@ -30,7 +31,7 @@ export function toCandidate(
     collectionSlug: objekt.slug,
     objektId: objekt.id,
     serial: shownSerial(objekt.serial),
-    serialEstimated: isSerialEstimated(objekt.mintedAt),
+    serialEstimated: isSerialEstimated(objekt.mintedAt, anchored.has(objekt.id)),
     ...flags,
     listSlug,
     copies: null,

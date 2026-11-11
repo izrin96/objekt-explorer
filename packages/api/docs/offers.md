@@ -33,6 +33,10 @@ Part of `packages/api/AGENTS.md`, which points here.
 - Each get item is matched back to its match's list entry by `matchEntry`, the rule sending uses (`itemsOnLists`), since the picker keeps one list per objekt and two lists can hold the same copy.
 - It returns the picks `chooseMatchPicks` (`lib/offer-prefill.ts`) chooses and `matched` per side, the count before the side limit; with `post`, only that post's lists (`postSides`) and the post's name. The narrowing is pure, in `lib/offer-prefill.ts`, beside its tests.
 
+## Estimated serials
+
+`serialEstimated` (and a `ShownSerial`'s `estimated`) comes from `isSerialEstimated(mintedAt, anchored)` (`@repo/lib/serial`), with `anchored` read through `anchoredSerialIds` (`services/objekt/serial-anchored.ts`), never from mint time alone: a post-cutoff objekt whose reserved range also holds a pre-cutoff serial or a manual anchor has an exact serial. Load the set once for the objekts a read returns, beside its other reads, as the pickers, `shownSerials` and `hydrateCards` do. The query mirrors how the worker pins a range (`apps/worker/docs/offline-serials.md`).
+
 ## Wrong copies
 
 A wrong copy is accepted in one place: `acceptCopy` (`services/offer/verify.ts`), under the trade's row lock. The receiver's Accept (`acceptSubstitute`, `auto: false`) and the worker's deadline, expiry and break (`auto: true`, which sets `auto_accepted`) all call it, and `finishSettle` ends the trade either way. It lives in `offer/verify.ts` because the worker can import that module and not `services/offer/substitute.ts`, whose chain reaches `env.ts`.
