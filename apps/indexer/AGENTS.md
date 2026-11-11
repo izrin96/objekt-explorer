@@ -6,6 +6,10 @@ Subsquid processor that writes production data, so changes here are small, targe
 
 `collection`, `objekt` and `transfer` hold only metadata-backed rows. When Cosmo's metadata fetch fails for a token with no objekt, its transfer goes to `pending_transfer` (same id, plus block and log position), and every later transfer of a held token follows it there, even when its own fetch succeeds, so the mint replays first (`src/hold.ts`). A known objekt keeps its collection on a failed fetch; one with no collection is held like a new token. Held transfers get no outbox row and no live publish; the worker's `fix-collection` job replays them (`apps/worker/AGENTS.md`, Held transfers). A resync always fetches metadata: there is no flag to skip it.
 
+## Transferability at mint
+
+A new objekt's `transferable` comes from `isObjektTransferable` at its mint block, never from Cosmo's metadata, whose v3 value `normalizeV3` guesses from the class. `src/mint-transferability.ts` makes one Multicall3 `aggregate3` per block with mints, pinned by block hash, through `ctx._chain.client`: that is the ingestion client, so each call counts against `RPC_RATE_LIMIT`. Below block 9,051,409 (before Multicall3 existed) it reads one token per `eth_call`. A held mint stores the value as a pending `transferability_update` at the mint's position, which the worker's replay applies. A token first seen on a non-mint transfer (a run from a late `START_BLOCK`) is read at that transfer's block. A failed read, or a return that is not one bool word, fails the batch and Subsquid retries it; the codec reads an empty return as `true`, so keep the word check. A resync needs an RPC with state back to `START_BLOCK` (the public endpoint had it on 2026-11-11). Rows recorded before this rule are corrected by the worker's `script/fix-transferability.ts`.
+
 ## Schema changes
 
 1. `schema.graphql`, then the matching TypeORM model in `src/model/generated/`.

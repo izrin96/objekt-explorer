@@ -32,6 +32,8 @@ export function parseBlocks(blocks: BlockData<Fields>[]) {
           hash: event.hash,
         }),
         blockNumber: event.blockNumber,
+        blockHash: event.blockHash,
+        transactionIndex: event.transactionIndex,
         logIndex: event.logIndex,
       })),
 
@@ -70,6 +72,8 @@ export type TransferEvent = {
   tokenId: string;
   timestamp: number;
   blockNumber: number;
+  blockHash: string;
+  transactionIndex: number;
   logIndex: number;
 };
 
@@ -88,6 +92,8 @@ export function parseTransferEvent(log: Log): TransferEvent | undefined {
         tokenId: event.tokenId.toString(),
         timestamp: log.block.timestamp,
         blockNumber: log.block.height,
+        blockHash: log.block.hash,
+        transactionIndex: log.transactionIndex,
         logIndex: log.logIndex,
       };
     }
