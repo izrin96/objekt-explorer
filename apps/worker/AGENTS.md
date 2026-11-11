@@ -10,7 +10,7 @@ Register every cron job through `safeRun(tag, job)` in `src/index.ts`, with the 
 
 ## Logging
 
-Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed something logs one `info` summary; a run that changed nothing stays silent. Per-item lines go to `debug`, shown only with `WORKER_LOG_LEVEL=debug`. A job running every few minutes adds its counts to a `heartbeat`, which logs one line an hour. Drift and failures that retry on their own are `warn`, one line per run with a count; a failed job, or a failure only a person can fix (an expired Cosmo refresh token), is `error`. `src/script/` prints to the console, since its output is the point.
+Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed something logs one `info` summary; a run that changed nothing stays silent. Per-item lines go to `debug`, shown only with `WORKER_LOG_LEVEL=debug`. A job running every few minutes adds its counts to a `heartbeat`, which logs one line an hour. Drift and failures that retry on their own are `warn`, one line per run with a count; a failed job, or a failure only a person can fix (an expired Cosmo refresh token), is `error`. `src/script/` prints to the console, since its output is the point. Every `log(tag).error` is also reported to Sentry (`instrument.ts` sets the sink); what is reported and the privacy rules are in `apps/web/AGENTS.md` (Error tracking).
 
 ## Held transfers
 

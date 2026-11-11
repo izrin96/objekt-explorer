@@ -97,20 +97,20 @@ Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/ski
 | Colour tokens, contrast, light/dark tints           | `oklch-skill`                                                                                  |
 | Checking a change in the running app                | `browser-testing-with-devtools`                                                                |
 | Something broken, slow or throwing                  | `debugging-and-error-recovery` first                                                           |
-| Reviewing a branch or a change                      | `code-review-and-quality`; `interface-review` for its UI                                       |
+| Reviewing a branch or a change                      | `code-review-and-quality`; suggest `/interface-review` for its UI                              |
 | Code that works but reads badly                     | `code-simplification`                                                                          |
 | Auth, user input, sessions, third-party calls       | `security-and-hardening`; the `security-auditor` agent for a full audit                        |
 | Core Web Vitals, slow queries, bundle size          | `performance-optimization`; the `web-performance-auditor` agent for a full audit               |
 | Branches, commit messages, splitting work           | `git-workflow-and-versioning`                                                                  |
 | Recording a decision or its reasoning               | `documentation-and-adrs`                                                                       |
-| Passing work to another agent or session            | `handoff`                                                                                      |
+| Passing work to another agent or session            | suggest `/handoff`                                                                             |
 | Parallel work across agents or worktrees            | `orchestration` to supervise Orca workers; `orca-cli` to hand off a whole worktree             |
 | A merge conflict                                    | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged)   |
 | Editing this file, a skill, an agent or `openspec/` | `writing-for-agents`                                                                           |
 
 `better-interface` loads `better-accessibility`, `better-layout`, `better-writing`, `better-typography`, `better-colors` and `better-ui` itself, so invoke it on its own; it reports without editing unless you also ask for the fixes. `better-accessibility` owns the accessibility rules the review applies, and `fixing-accessibility` stays the one-file fixer.
 
-The app's look is set in `apps/web/AGENTS.md` (Look), and UI work follows it. Design skills that bring a look of their own (`frontend-design`, the taste skills) are turned off here through `skillOverrides` and `enabledPlugins` in `.claude/settings.json`. Only the user starts `state-machine` (every state of one component on a scratch page, behind a switcher) and `break` (one component under worst-case content); suggest them when a component's states or edge cases are the work, and delete their scratch route when the user is done with it.
+The app's look is set in `apps/web/AGENTS.md` (Look), and UI work follows it. Design skills that bring a look of their own (`frontend-design`, the taste skills) are turned off here through `skillOverrides` and `enabledPlugins` in `.claude/settings.json`. Four skills are started by the user typing `/<name>`, so suggest them and let the user run them: `handoff`, `interface-review`, `state-machine` (every state of one component on a scratch page, behind a switcher) and `break` (one component under worst-case content). Suggest the last two when a component's states or edge cases are the work, and delete their scratch route when the user is done with it.
 
 The `addyosmani/agent-skills` skills read their checklists from `.agents/references/` (security, performance, accessibility, testing, definition of done) and the two agents in `.claude/agents/` from there too. `skills-lock.json` does not track those files: refresh them from that repository's `references/` by hand.
 
@@ -154,16 +154,11 @@ Full list in `.env.example`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo (`centrifugo/config.json`; reachable only on the Docker network, with `/connection` routed to it by the reverse proxy, see `design/realtime-centrifugo-deploy.md`). Locally, `docker compose --env-file .env --env-file .env.local up -d centrifugo` also applies `docker-compose.override.yml`, which publishes it on `127.0.0.1:8000` for the dev server's `/connection` proxy. The `user` namespace has `presence` on, which the online dot reads. Centrifugo reads its config only on start and `up -d` leaves a running container alone, so a change to `centrifugo/config.json` needs `docker compose … restart centrifugo`, on prod before the web that relies on it. S3 storage and mail are external services configured through `.env`.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo. S3 storage and mail are external services configured through `.env`. Running Centrifugo locally, or changing `centrifugo/config.json`: read Centrifugo in `apps/web/AGENTS.md` first.
 
 ## Error tracking
 
-Sentry (sentry.io, hosted; the official `@sentry/*` SDKs, pinned in the catalog), with no server of its own in `docker-compose.yml`. `SENTRY_DSN` is the web project's DSN and `WORKER_SENTRY_DSN` the worker's, as Sentry shows them, plus `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. Unset, every SDK stays off. Every event counts against the Sentry plan's quota, which is one reason for the tunnel's per-IP limit.
-
-- **Browser.** The DSN reaches it at runtime: the root loader's `error-tracking` query fills `<meta name="error-tracking-*">` in the shell (so it survives a failed loader). `client.tsx` reads it and only then downloads `@sentry/react`; with no DSN the browser loads none of it. It sends to `/api/errors` (`routes/api/errors.ts`), which forwards only `event` items of an envelope whose header names the configured DSN, with a per-IP limit and a size and time cap (`lib/server/error-tunnel.ts`).
-- **What is reported.** Unexpected errors only. `isExpectedError` drops any oRPC error under 500 and anything with a `data.reason`, so a refusal is never reported; `orpcErrorAdapter` (`src/start.ts`) keeps both across SSR hydration. Web server: `logORPCError` (`/rpc`, `/api/v1`), the in-process SSR client in `lib/orpc.ts`, and h3's unhandled errors in `src/server.ts`. Browser: `ErrorComponent`, `WidgetBoundary` and uncaught errors, never an oRPC error, which the server reports. Worker: every `log(tag).error` (`instrument.ts` sets the sink).
-- **Privacy.** Every event and breadcrumb passes `scrubEvent` / `scrubBreadcrumb` and the SDKs run with `DATA_COLLECTION` (`@repo/lib/error-scrub`): the user is its id only; no emails, wallet addresses, `/@` profile names, query strings, values quoted by a failed query, click labels, cookies, auth headers, bodies or console breadcrumbs. A new capture goes through the same init, and new private fields join its key lists: `PRIVATE_KEY` everywhere, `USER_TEXT_KEY` in `extra` and the app's own contexts (the SDK's `message`, `name` and `description` stay).
-- **Source maps.** `vite build` uploads the client's maps and deletes them from `dist` only when `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_RELEASE` are all set; `SENTRY_URL` is only for a self-hosted Sentry. CI has no token, so CI builds upload nothing.
+Sentry (sentry.io, hosted; the official `@sentry/*` SDKs, pinned in the catalog), with no server of its own in `docker-compose.yml`. `SENTRY_DSN` is the web project's DSN and `WORKER_SENTRY_DSN` the worker's, as Sentry shows them, plus `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. Unset, every SDK stays off. Every event passes the scrubber in `@repo/lib/error-scrub`. Adding a capture, a private field or a new error path: read Error tracking in `apps/web/AGENTS.md` first, which holds what is reported, the privacy rules, the browser tunnel and source maps.
 
 ## CI/CD
 
