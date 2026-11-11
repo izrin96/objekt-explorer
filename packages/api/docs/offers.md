@@ -1,0 +1,46 @@
+# Offers and trades
+
+Part of `packages/api/AGENTS.md`, which points here.
+
+## Offer get sources
+
+### Where a get item comes from
+
+- A get item comes from the partner's lists while they have any (`partnerHasLists`), and `createOffer` checks nothing else bar the recipient's offer rules (below). Those lists are `askableOnTrade` (`services/trade/lists.ts`): have or sale, bound, and put on Trade, idle or not; a bound list kept off Trade is never asked from.
+- Where an offer starts never narrows the get side, except for a recipient who takes asks from one post (below).
+- `fromList` narrows the theirs picker through `allowedEntries` (and skips kept counter items, which sit on no list); the send check is unchanged.
+- The whole theirs list (`offer.candidates` without an offset) adds the partner's lists on Trade as `lists` (`partnerListChoices`) for the web's List choice; `suggestOffer` skips that query.
+- With none, and only while the partner has `allow_collection_asks` on (off by default), the get side may draw on what the partner holds at any linked address (`collectionAddresses`), by specific objekt only, since every copy there shows its serial: the same set the picker offers. `refusedCollectionAsks` (`services/offer/collection.ts`) checks this at send, with `collectionAskAllowed` as the pure rule; the `theirs-collection` candidates side (`theirCollectionPage`) refuses `not_listed` for a partner who has lists, so a stale tab can't bypass them. A collection item keeps `list_id` null, as a kept counter item does.
+
+### The recipient's offer rules
+
+- The recipient's offer rules are three `user` switches: `only_wanted_offers` and `allow_collection_asks`, off by default, and `multi_post_asks`, on by default, whose off means one post per offer. `createOffer` reads the switches through `offerRulesOf` and applies all three before `checkMessageRate`, which spends a send slot, through the pure `lib/offer-recipient-rules.ts` (tested).
+- Only offers with what I want refuses `not_wanted` for a give off the offer's post's own want list (`postWantedAmong`, through the post's `linked_list_id`; a post without one, or an empty one, takes anything); an offer on no post checks every discoverable want list (`wantedAmong`). The post is the one the asks came through, else the client's `post` for an offer that asks nothing, which is stored as no post.
+- The builder reads each post's want list from `PartnerList.want` and keeps the picker to it with `wantList`. The offer view's "Not on your wants" label reads every want list instead, since only the recipient sees it.
+- With `multi_post_asks` off, one post per offer refuses `other_post` unless every ask comes through one `askableOnTrade` list (`onePostVerdict`); it never trusts the client's `post` alone, which a sender can leave out by offering from chat.
+- A closed collection refuses `not_listed`, the code tabs from before it already know.
+- A counter's kept objekts are exempt from all three, keyed by objekt id, since a kept objekt that is also listed gets a `list_id` from `matchEntry`; a give the recipient asked for in the countered offer is exempt from the wanted rule (`counteredAsks`).
+- `offer.post_list_id` records the post: the client's `post` (resolved by `resolvePostList`, null rather than a refusal) while every ask fits it, else the one list the asks came through, for "Offer on {post}"; null for an offer that asks nothing or asks across posts, where `multi_post_asks` allows it (a named post the asks don't fit is retried as none).
+- The builder's whole theirs page (`offer.candidates`, side `theirs`, no offset) carries `partnerRules` (`partnerRulesOf`), which the builder follows; scroll pages don't, and a closed collection is checked by `allow_collection_asks` alone.
+- `fetchOffers(ids, reader)` runs the label and nudge checks only for offers sent to `reader`.
+- `user.setOfferRules` sets them one at a time for the decline nudge and the Messages notice; `user.updateAccount` needs the whole General form.
+
+### Suggested offers
+
+- `suggestOffer` (`offer.suggest`) reads the person-row pipeline: `recountPartners` for the one partner under the row's Compare with sides, then fills by the rule the row's chip follows (`fillMatches`): with a Can swap person, opened without a post or from the person's post in the counted pair, the `swapPair` matches both ways, each cut to the pair's lists; otherwise only the side with more matches through the post (or all), You get on a tie, swaps and sales alike (no top-up is set for a sale).
+- For a partner who takes asks from one post, a row's You get matches outside a pair keep only the partner list with the most (`rowPost`, a tie going to the row's `lead`), returned as `postSlug`.
+- Near matches still skip every match through the post, the unfilled side's too.
+- Each get item is matched back to its match's list entry by `matchEntry`, the rule sending uses (`itemsOnLists`), since the picker keeps one list per objekt and two lists can hold the same copy.
+- It returns the picks `chooseMatchPicks` (`lib/offer-prefill.ts`) chooses and `matched` per side, the count before the side limit; with `post`, only that post's lists (`postSides`) and the post's name. The narrowing is pure, in `lib/offer-prefill.ts`, beside its tests.
+
+## Wrong copies
+
+A wrong copy is accepted in one place: `acceptCopy` (`services/offer/verify.ts`), under the trade's row lock. The receiver's Accept (`acceptSubstitute`, `auto: false`) and the worker's deadline, expiry and break (`auto: true`, which sets `auto_accepted`) all call it, and `finishSettle` ends the trade either way. It lives in `offer/verify.ts` because the worker can import that module and not `services/offer/substitute.ts`, whose chain reaches `env.ts`.
+
+## Legs marked as received
+
+The receiver can close a waiting leg by hand (`confirmLeg`, `services/offer/confirm.ts`), under the trade's row lock and through `finishSettle`, as Accept on a wrong copy does. The leg gets `open = false`, `verified_at` and `confirmed_at`, and no `tx_hash`, `verified_objekt_id` or `transfer_id`, so every "done" count that reads `verified_at` (progress, the cancel lock, `tradeOutcome`, the unfinished rule) takes it unchanged. A verified leg therefore may have no hash. Only three reads tell a confirmed leg apart, through `confirmed_at`: reputation's verified count (`done` skips any trade with one), `rateRefusal` (`confirmedLegs`, refusing `confirmed_trade` on a completed trade only, so a failed one keeps the deliverer's rating; every caller passes it, `readDeals` included) and the trade read's `confirmedAt`. A pending wrong copy on the leg refuses `copy_pending`: the copy is decided first, since the worker's copy jobs skip a closed leg and would leave it pending. The giver gets `leg_confirmed` unless the confirmation ends the trade, which sends `completed` to both instead. `finishSettle` marks any `completed` note `confirmed: true` when a leg of the trade was confirmed, whoever closed the last leg, and the popover offers no Leave feedback on it.
+
+## Cancel by agreement
+
+Once Cancel trade locks, the parties end a trade together through a request (`services/offer/cancel-request.ts`): `offer.askCancel`, `answerCancel` and `withdrawCancel`. Every request is a `trade_cancel_request` row, kept for the Timeline and the 24-hour wait after a decline (`cancelAskWait`, keyed on the decline's `answered_at`); a partial unique index holds one `pending` row per trade. Each procedure locks the trade row `FOR UPDATE` before reading or writing a request, the order the verifier and `cancelTrade` take. Accept ends the trade through `endTradeCancelled` (`services/offer/trades.ts`), the one ending write `cancelTrade` shares: status `cancelled`, every leg closed, any pending wrong copy declined, with reason `agreed` and `cancelled_by` the asker. Nobody closes a pending row when the trade ends another way, so every read gates on the trade being `in_progress`: `fetchTrade` reports such a row as `lapsed` (the pure `cancelRequestViews`, `lib/offer-rules.ts`), and `readDeals` and `needsYouSql` skip it. Who may answer or withdraw is the pure `cancelAnswerRefusal` (`lib/offer-rules.ts`). Ask and withdraw share one per-user limit (`trade-cancel-ask`, 6 an hour), so a loop can't add a Timeline row and a partner notice each round. While a request is open it outranks a different copy and Your turn, so `needsYouSql`'s leg branch skips a trade with a pending request, as `dealOf` does.

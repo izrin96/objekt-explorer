@@ -1,0 +1,64 @@
+# Trade
+
+Part of `packages/api/AGENTS.md`, which points here.
+
+## Trade matching
+
+### Can swap (Mutual)
+
+- Mutual (Can swap) is `mutualOf` in `schemas/trade.ts`, which returns `counts.swap`: what the two can swap inside one post on each side. `swapScore` (`lib/trade-person.ts`, run by `matchCounts`) groups each swap match's `swapMyListIds` and `swapPartnerListIds` (the lists `trade` holds through, which `recount` fills; `myListIds` and `partnerListIds` also carry sale lists) by post pair and keeps the best pairing's smaller count, with that pairing's they-have count as `swapTheyHave` and the pairing as `swapPair` (the viewer's list ids in it and the person's post key, which is that feed post's `id`); the web's rules note (`swapThroughRules`) counts only rule matches inside it.
+- A post key is the id of the pair's have or sale list: the viewer's come from `viewerPostOf` (`lib/trade-rank.ts`, over `pickedSides`, keyed only when the offering half swaps), carried on `Sides.postOf` by `resolveTradeSides`; the partner's from `partner_post` in `candidates.ts`, which pairs a listed list with its `linked_list_id` when that list is listed too, on the other side, and the offering half swaps. `recount` puts both maps on the partner as `posts`, so every `matchCounts(partner)` reads them. A list with no key counts one way only.
+- `candidates.ts` computes its own pooled swap counts in SQL for the Mutual prefilter and order, a superset of the per-post rule that the recount then narrows.
+
+### Which lists swap, and Open to
+
+- A list offers swaps when it is a have list, or a sale list with `takes_swaps` (Sell or swap): one predicate, `offersSwapsSql` (`lib/trade-sql.ts`) and its TS twin `offersSwaps` (`schemas/open-to.ts`), locked together by `lib/trade-sql.test.ts`, which `offerMatchesWantSql`, `candidates.ts`, the feed's `postsCte`, `TAG_WHERE` and match index, and the viewer's `tradeHave` all read.
+- A Sell only sale list never counts toward Mutual, though it counts toward the one-way counts (`theyHave`, `youHave`), so a person matched only through such lists is One way.
+- A candidate entry carries `swap` and `sale`, and a Sell or swap entry can be both; `recount` judges haves on `swap` (an entry cached before it reads `swap` as `!sale`) and sales on `sale`.
+- A want list's Open to is two booleans: Swaps only is `match_have` true and `match_sale` false, Swaps or buying both true, Buying only `match_have` false and `match_sale` true; `lists_open_to_something` keeps them from both being false, and `resolveOpenTo` (`schemas/open-to.ts`, beside `openToOf` and `flagsOf`, the one decode of the two booleans into Swaps only, Swaps or buying and Buying only; `byOpenToSql` in `lib/trade-sql.ts`, which the Browse match index uses, is the SQL twin of `pickByOpenTo`, locked by `lib/trade-sql.test.ts`) is what list create saves; a want list's Open to after that is the post composer's.
+- A want list linked to a have list is never Buying only: `pairRefusesOpenTo` (same module) is the rule, and `checkLinkedList` refuses it with `list_pair_buying_only` on list create (every pair refusal is decided by the pure `pairRefusal`, `lib/list-pair.ts`), reading the want side's Open to (the flags a want list is about to save, or a have list's partner's), so a WTT pair's want side always takes swaps.
+- A have list counts in a direction only against a want list open to swaps (`match_have`), a sale list only against one open to buying (`match_sale`), and `offerMatchesWantSql`, `candidates.ts`, `recount`, and Browse's `Viewer` indexes (`tradeWant`, `saleHave`) all apply it.
+- A chip popover names only the lists that produced the match (`myListIds`). Ranking, Mutual only and the web chip all read it.
+
+### Rankings and their caches
+
+- `trade.people`'s per-person chip reads the matching pipeline through `personMatches` (`services/trade/matches/person.ts`, over `recountPartners`), so a change to the matching rules lands in one place. Its Mutual reads the Mutual people through `getMutualPeople` (`services/trade/matches/mutual.ts`, over `mutualPeople` in `lib/trade-rank.ts`), and its One way the people ranked by the sum of both counts through `getOneWayPeople` (`services/trade/matches/one-way.ts`, over `recountPartners(…, "all", { order: "sum" })`): no slice and no idle tier. The read loops are `readBatches` (`lib/trade-feed.ts`), tested there.
+- Both feed rankings recount up to `FEED_CANDIDATE_LIMIT` (1000) candidates, cut in SQL by the ranking's own order (`fetchTradeCandidates`' `order`) before the ownership check; `personMatches` keeps `CANDIDATE_LIMIT` and the filter's order, which for `all` is the swap score first, as `rankPartners` ranks.
+- The rankings are cached for 5 minutes and refresh separately, so a person can leave Mutual or the One way set between two loads; the stored people order below keeps a scroll steady across that.
+- Every Redis read on this path goes through `redisFailOpen` (`services/redis.ts`), as `getCache` does, so an outage costs the cache, not the feed; while Redis is unreachable `getCache` keeps values in process (`LOCAL_MAX_ENTRIES`), so upstream calls still run once per TTL per process.
+- Compare with narrows the viewer once through `narrowViewer` (`lib/trade-feed.ts`), so chips, rings and filters share it.
+
+### The people feed and handles
+
+- `trade.people` is what the web reads: it pages by person (`PEOPLE_PAGE_SIZE` 12, each row every post the feed keeps for that person, `peopleFeed` in `services/trade/feed/people.ts`) through a stored order.
+- A first-page `person` skips the order and returns only that person's row, or none, with no cursor: the person and post pages read their row this way, not a URL parameter. `lead` in the cursor only serves cursors from before that.
+- Each row carries the person's `handle`, as do `trade.myPosts` (the viewer's own) and a post card's `owner`: `tradeHandle` (`schemas/trade-person.ts`, tested, beside `defaultProfile`), the default profile's nickname, else its address, lower-cased, null with no linked profile.
+- `trade.person` (`services/trade/person.ts`, under `limitFeed`) turns a handle (any linked nickname or address, any case, through citext; an old `user_address` row keeps its nickname, so two accounts can share one: `handleOwner` (`schemas/trade-person.ts`, tested) picks the account whose own handle it is, else a default profile first, then the newest linked row) or an older link's user id into `{ userId, handle }` with the canonical handle, or `NOT_FOUND`, also for an account with no linked profile.
+- Each have or sale side carries `first`, its list's first collection in the list's own order whatever the viewer rings (`firstSlug`), for a shared post's preview image.
+
+### The stored people order
+
+- Page 1 builds the whole order (`buildOrder`; `buildPeopleOrder` in `lib/trade-feed.ts`): Browse by newest bump, Mutual only the Mutual people with a kept WTT post, Any those, then the One way people with a kept post, then everyone else by bump. A person keeps their first place, so a Mutual-ranked person with no kept WTT post lands in One way.
+- It is stored for an hour (`savePeopleOrder`, `services/trade/feed/scope.ts`, `trade:people-order:3:<viewerId|anon>:<token>`, the token a hash of the order so a reload or every signed-out reader shares one key, bound to `ordersFingerprint` of the filters, mode, Compare with list and lead), and later pages read it by position (the cursor's `order` and `at`), so a ranking or a bump that changes mid-scroll moves no one; the rankings and kept-post checks run only when the order is built.
+- A person whose posts all emptied is skipped where their place comes.
+- Past `ORDER_LIMIT` (2000) the tail goes on by the `(bumpedAt, userId)` keyset from the order's `more`.
+- When the order is gone or was built for other filters, the server builds it again and goes on by `resumeAt`: after the cursor's person, else at `at`. The cursor carries `bumpedAt` and `userId` for that and for the keyset past a capped order.
+- A request makes its first stage-2 read and at most `EXTRA_PEOPLE_READS` more (`readBudget`, `lib/trade-feed.ts`), so sold-out people can't chain recounts; `at` moves past every person read, kept or emptied, so a short or empty page still moves on.
+
+### Partner rules, hidden and idle posts
+
+- The partner side of a match is `tradePartnerSql`, `inHiddenPostSql` and `listedCte` (`services/trade/lists.ts`, `services/trade/feed/query.ts`), shared with the worker's want-list alerts, so a partner rule changes there for both; a new Trade read that applies `tradePartnerSql` applies `inHiddenPostSql` too.
+- A hidden post is `hidden_trade_post`, keyed by the post's lead list: `feedWhere` drops it unless `skipHiddenPosts` is false, which `peopleFeed` sets for a first-page `person` read, so the person and post pages keep it, counted, with `hidden` set.
+- Matching candidates (`candidates.ts`) count only lists inside a listed post, so an idle list counts toward nobody; the viewer's own lists count whether listed or not.
+
+### Near matches
+
+- A near match (a collection that would count if one side's Open to allowed it) comes only from the viewer index: `nearFor` (`lib/trade-feed.ts`) is set differences of the `Viewer` sets beside `indexFor`, so the two change together and a match is never near. It rides on the viewer's reads only (strip items and `side.near`, `trade.sideItems`, `trade.listMatches`, `offer.suggest`'s `near` through `personNear`, the picker's `tags` through `pickerTagsFor`) and never enters the recount, the rankings, their caches, alerts or chat cards.
+
+### Cache versions
+
+- The ranking caches carry a version (`trade:mutual-people:10`, `trade:mutual-count:9`, `trade:oneway-people:6`, `trade:person:10`, `trade:people-order:3`); bump it when the cached value changes shape or meaning.
+
+## Trade posts
+
+A post is still its lists: `discoverable`, the link on both rows, a want list's Open to and a sale list's `takes_swaps`. There is no post table. A want list pairs with a have list, or with a sale list that takes swaps (`checkLinkedList` refuses a Sell only one with `list_sale_links_sell_only`); `groupPosts` and `postsCte` fold either kind of pair into one post (in SQL, `leadsPairSql` in `services/trade/lists.ts` is the one pairing rule, which `postsCte`, `candidates.ts`' `partner_post` and `inHiddenPostSql` share), and a sale post with swaps is tagged WTS then WTT, then WTB when its want side is open to buying (a Sell post's "also pay", saved as the want list's `match_sale`, as on a Swap post). `schemas/trade-post.ts` is the one source of post kinds (Swap, Sell, Buy) and tags, pure and imported by the web: `tagsOf` (WTT for a have list or a want list open to swaps, WTB for a want side open to buying, WTS for a sale list; WTT before WTB, and a sale post leads with WTS), `postKindOf`, `groupPosts` (which `pairPosts` in `lib/trade-feed.ts` wraps), and `planPost`, which turns a composer choice into the writes or a `TRADE_POST_REFUSALS` code. `TAG_WHERE` in `lib/trade-sql.ts` is the SQL twin of `tagsOf`, locked by `lib/trade-sql.test.ts` (a table of post rows through `tagsOf`, the rendered SQL pinned beside it): its `wtb` reads the pair partner's `partner_match_sale`/`partner_match_have` from `postsCte`, for a pair anchored on a have or a sale list, and its `wtt` reads no partner column, since `excludeWttOf` negates it. Feed posts and `trade.myPosts` carry `tags`; chat post cards carry `tag` only, the first tag. `trade.savePost` and `trade.takeDownPost` (`services/trade/post.ts`) lock the poster's have, want and sale rows `FOR UPDATE`, run `planPost` on them and write in one transaction, then `touchList` every changed id. A Swap post with one list, or a Sell post that takes swaps, keeps that list's pair; any other split of a pair needs `unpair`, except that a list an edit drops from the post is unlinked from the half that stays. Taking a post off Trade keeps its link. `list.edit` takes no Trade state for any list type: a list's link, Open to and `discoverable` belong to its post, which `trade.savePost` writes, and the `discoverable` a tab from before this rule still sends is stripped by the input schema.
