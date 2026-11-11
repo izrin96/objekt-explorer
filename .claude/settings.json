@@ -33,13 +33,15 @@
     "ask": ["Bash(git commit:*)", "Bash(git push:*)"]
   },
   "skillOverrides": {
+    "agent-browser": "off",
     "brandkit": "off",
     "design-taste-frontend": "off",
     "frontend-design": "off",
     "gpt-taste": "off",
     "minimalist-ui": "off",
     "redesign-existing-projects": "off",
-    "stitch-design-taste": "off"
+    "stitch-design-taste": "off",
+    "use-railway": "off"
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
