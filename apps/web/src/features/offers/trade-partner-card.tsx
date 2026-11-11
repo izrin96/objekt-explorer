@@ -15,8 +15,9 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import type { Primary } from "./next-step";
+import { sinceLabel } from "./since-label";
 import { TradeMenu } from "./trade-menu";
-import { TrustLine, sinceLabel } from "./trust-line";
+import { TrustLine } from "./trust-line";
 
 type Props = {
   trade: Trade;

@@ -1,19 +1,10 @@
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { toastManager } from "@/components/ui/toast";
-import { useStartGate } from "@/features/user/start-gate";
-import { orpc } from "@/lib/orpc";
-import { isRefusalError, refusalText as sharedRefusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
-import { putDraftCard } from "@/stores/chat-draft";
 
-import { refusalOf, refusalText } from "./format";
-import { fetchNewer, threadOptions } from "./queries";
-import { seedThread } from "./thread-cache";
+import { useStartConversation } from "./use-start-conversation";
 
 /**
  * Opens the conversation with the target's account, with `card` attached to send. The
@@ -47,75 +38,4 @@ export function MessageButton({
       {iconOnly ? null : <span>{m.chat_message()}</span>}
     </Button>
   );
-}
-
-/** Opens the conversation with the target's account, for a button or a menu item. */
-export function useStartConversation() {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { gate, offerLink } = useStartGate();
-
-  const mutation = useMutation(
-    orpc.chat.start.mutationOptions({
-      onSuccess: ({ id, card, thread }, { to }) => {
-        if (card?.kind === "objekt") {
-          const objekt = card.collections[card.input.collectionSlug];
-          if (objekt) {
-            putDraftCard(id, {
-              kind: "objekt",
-              input: card.input,
-              objekt,
-              listName: card.view.list?.name ?? null,
-              listType: card.view.list?.listType,
-            });
-          }
-        }
-        if (card?.kind === "post") {
-          putDraftCard(id, {
-            kind: "post",
-            input: card.input,
-            view: card.view,
-            collections: card.collections,
-          });
-        }
-        // an open thread's cache may hold older pages and live messages; only a new one is seeded
-        const { queryKey } = threadOptions(id);
-        if (thread && !queryClient.getQueryData(queryKey)) {
-          queryClient.setQueryData(queryKey, seedThread(thread));
-          // a message that landed after the server read it has no cache to reach yet
-          void fetchNewer(queryClient, id).catch(() => undefined);
-        }
-        void navigate({
-          to: "/messages/$id",
-          params: { id: String(id) },
-          state: {
-            fromMessage: true,
-            fromProfile: to.kind === "profile" ? to.address.toLowerCase() : undefined,
-          },
-        });
-      },
-      onError: (error) => {
-        const refusal = refusalOf(error);
-        if (refusal?.reason === "no_address") {
-          offerLink();
-          return;
-        }
-        toastManager.add({
-          type: "error",
-          title: refusal
-            ? refusalText(refusal)
-            : isRefusalError(error)
-              ? sharedRefusalText(error)
-              : m.chat_start_error(),
-        });
-      },
-    }),
-  );
-
-  return {
-    start: (target: ChatTarget, card?: CardInput) => {
-      if (gate()) mutation.mutate({ to: target, card });
-    },
-    pending: mutation.isPending,
-  };
 }

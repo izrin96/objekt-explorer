@@ -4,7 +4,7 @@ import type { GridObjekt, PinState } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useCanonicalFilters, useValidatedCanonicalFilters } from "@/features/filters/use-filters";
@@ -14,8 +14,8 @@ import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 
 import { joinOwnedPages } from "./owned-join";
-import { useProfile } from "./profile-provider";
 import { heldCollectionsOptions, locksOptions, ownedCopiesOptions, pinsOptions } from "./queries";
+import { useProfile } from "./use-profile";
 
 const NO_PINS: ReadonlyMap<string, number> = new Map();
 const NO_LOCKS: ReadonlySet<string> = new Set();

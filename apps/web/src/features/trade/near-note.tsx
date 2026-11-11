@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useOpenAddToList } from "@/features/list/add-to-list-dialog";
+import { useOpenAddToList } from "@/features/list/use-open-add-to-list";
 import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 

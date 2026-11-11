@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toastManager } from "@/components/ui/toast";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";

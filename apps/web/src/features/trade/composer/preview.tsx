@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetPopup } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditListDialog } from "@/features/list/edit-list-dialog";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-labels";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { type RatioSide } from "@/features/list/ratio-text";
 import { RuleForm, SHEET_PARTS } from "@/features/list/rules/rule-dialog";

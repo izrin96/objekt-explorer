@@ -1,12 +1,12 @@
 import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { useFilterData } from "@/features/filters/filter-data-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { useMemberColor } from "@/features/filters/member-colors";
+import { useFilterData } from "@/features/filters/use-filter-data";
 
-import { useChartMembers } from "./member-progress-chart";
 import { catalogueTotals, memberProgress, rankableMembers, shapeProgress } from "./shape-progress";
+import { useChartMembers } from "./use-chart-members";
 
 /** every figure the progress tab draws, from the catalogue and the copies the profile holds */
 export function useProgressStats(

@@ -15,7 +15,7 @@ import { truncateAddress } from "@repo/lib/address";
 import { useHydrated } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 
-import { rich } from "@/components/shared/message-markup";
+import { rich } from "@/components/shared/rich-message";
 import { Button } from "@/components/ui/button";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { formatCount } from "@/lib/number";

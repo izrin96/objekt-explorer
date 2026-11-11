@@ -35,15 +35,10 @@ import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
-import {
-  LIST_TYPE_LABEL,
-  LIST_TYPE_TONE,
-  ListBoundBadge,
-  ListCurrencyBadge,
-  ListTypeBadge,
-} from "./list-type-badge";
-import { useCopyListLink } from "./share-list-button";
+import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
 import { TagBadges } from "./tag-label";
+import { useCopyListLink } from "./use-copy-list-link";
 import { useIsListOwner } from "./use-list-owned";
 
 const chipClass =

@@ -15,17 +15,10 @@ import { cn, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useColumns, useColumnStore } from "@/stores/columns";
 
-import { ActiveChips, useActiveChips } from "./active-chips";
-import {
-  type ExtraFacet,
-  ExtraFacetControls,
-  FACET_KEYS,
-  FacetControls,
-  facetValues,
-  NO_EXTRAS,
-  useDeclaredFacets,
-  useFacetParity,
-} from "./facet-controls";
+import { ActiveChips } from "./active-chips";
+import { ExtraFacetControls, FacetControls } from "./facet-controls";
+import { type ExtraFacet, FACET_KEYS, facetValues, NO_EXTRAS } from "./facet-keys";
+import { useDeclaredFacets, useFacetParity } from "./facet-parity";
 import type { Facets, MemberGroup } from "./facets";
 import { FilterSearchField } from "./filter-search";
 import { FilterSheet } from "./filter-sheet";
@@ -35,6 +28,7 @@ import { LongTailFields, LongTailToolbar } from "./long-tail-fields";
 import { ResetButton } from "./reset-button";
 import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
 import { toolbarTrigger } from "./toolbar-trigger";
+import { useActiveChips } from "./use-active-chips";
 import {
   useCanonicalFilters,
   useFilters,

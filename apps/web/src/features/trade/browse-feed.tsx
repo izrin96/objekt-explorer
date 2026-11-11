@@ -12,7 +12,7 @@ import { m } from "@/paraglide/messages";
 import type { Surface } from "./browse-search";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import type { PersonData } from "./post-types";
-import { SideCompareContext } from "./side-items-sheet";
+import { SideCompareContext } from "./side-compare-context";
 
 export type FeedRow =
   | { heading: "mutual" | "oneWay"; person?: undefined }

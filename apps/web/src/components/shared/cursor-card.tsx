@@ -3,9 +3,6 @@ import type { ReactNode } from "react";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-/** Every hover card opens and closes on the same beat. */
-export const cursorCardDelays = { delay: 120, closeDelay: 0 } as const;
-
 /**
  * One card shared by every trigger on its handle, so a long table mounts a
  * single popup. It follows the cursor, which makes it unreachable: it is

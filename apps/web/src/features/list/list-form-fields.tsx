@@ -33,7 +33,8 @@ import {
   profilePatch,
   slugFieldValue,
 } from "./list-draft";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
+import { ListTypeBadge } from "./list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
 
 export function ListTypeField({
   id,

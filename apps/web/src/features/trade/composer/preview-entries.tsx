@@ -23,8 +23,8 @@ import {
   ratioName,
   ratioText,
 } from "@/features/list/ratio-text";
+import { collectionName } from "@/features/objekt/collection-name";
 import { ObjektCard, PriceCaption, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
-import { collectionName } from "@/features/objekt/objekt-label";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";

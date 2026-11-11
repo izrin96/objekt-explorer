@@ -2,7 +2,7 @@ import type { ActivityItem, ActivityParams, ActivityType } from "@repo/api/schem
 import { Addresses } from "@repo/lib";
 
 import type { useCanonicalFilters } from "@/features/filters/use-filters";
-import type { EventKind } from "@/features/objekt/drawer/timeline";
+import type { EventKind } from "@/features/objekt/drawer/timeline-events";
 
 type Filters = ReturnType<typeof useCanonicalFilters>;
 

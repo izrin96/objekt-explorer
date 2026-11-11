@@ -21,7 +21,8 @@ import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
 
 import { useCreateList } from "./actions";
-import { EMPTY_DRAFT, type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
+import { EMPTY_DRAFT, type ListDraft, listDraftSchema, toCreateInput } from "./list-draft";
+import { ListForm } from "./list-form";
 
 /** Controlled: one of its triggers is a menu item, and the menu takes its popup with it. */
 export function CreateListDialog({

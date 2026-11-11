@@ -10,7 +10,7 @@ import {
   type TradeView,
 } from "@repo/api/schemas/offer";
 
-import { collectionName } from "@/features/objekt/objekt-label";
+import { collectionName } from "@/features/objekt/collection-name";
 import { formatCurrency } from "@/features/settings/currency-format";
 import { intlCached } from "@/lib/intl-cache";
 import { formatCount } from "@/lib/number";

@@ -3,23 +3,11 @@ import type { ListType } from "@repo/api/schemas/list";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
-import { type Tone, toneChip } from "@/lib/tone";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-export const LIST_TYPE_LABEL: Record<ListType, () => string> = {
-  general: m.list_type_general,
-  sale: m.list_type_sale,
-  have: m.list_type_have,
-  want: m.list_type_want,
-};
-
-export const LIST_TYPE_TONE: Record<ListType, Tone> = {
-  general: "neutral",
-  have: "have",
-  want: "want",
-  sale: "sale",
-};
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
 
 export function ListTypeBadge({
   type,

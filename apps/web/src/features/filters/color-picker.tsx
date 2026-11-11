@@ -10,14 +10,14 @@ import {
   ColorPickerInput,
   ColorPickerSwatch,
   ColorPickerSwatches,
-  hexToHsv,
-  hsvToHex,
   useColorPicker,
 } from "@/components/ui/color-picker";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { m } from "@/paraglide/messages";
+
+import { canonicalHex } from "./canonical-hex";
 
 type EyeDropperConstructor = new () => { open: () => Promise<{ sRGBHex: string }> };
 
@@ -102,16 +102,6 @@ function HexField({ onValueChange }: { onValueChange: (hex: string) => void }) {
       </InputGroupAddon>
     </InputGroup>
   );
-}
-
-/**
- * Lowercase `#rrggbb`, or null if `hex` does not parse. The picker re-seeds whenever its
- * `value` differs from its own `#rrggbb`, so a `#fff` or `ff0000` from a hand-edited URL
- * would re-render it forever.
- */
-export function canonicalHex(hex: string | undefined): string | null {
-  const parsed = hex ? hexToHsv(hex) : null;
-  return parsed ? hsvToHex(parsed) : null;
 }
 
 export function FilterColorPicker({

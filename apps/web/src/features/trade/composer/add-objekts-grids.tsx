@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { OwnedObjektsGrid } from "@/features/chat/attach/attach-owned-grid";
 import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { filterObjekts } from "@/features/filters/filter-utils";
@@ -11,7 +11,7 @@ import {
   type PickerFacetFilters,
   pickerFiltered,
   toFilterSearch,
-} from "@/features/filters/picker-filter-bar";
+} from "@/features/filters/picker-filters";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionOptions } from "@/features/objekt/queries";

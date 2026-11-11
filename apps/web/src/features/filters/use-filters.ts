@@ -1,10 +1,10 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { noteFilterReset } from "@/stores/filter-resets";
 
-import type { FacetPatch } from "./facet-controls";
+import type { FacetPatch } from "./facet-keys";
 import {
   defaultFilters,
   filterSearchSchema,

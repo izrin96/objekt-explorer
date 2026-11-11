@@ -11,8 +11,9 @@ import {
   NumberFieldInput,
 } from "@/components/ui/number-field";
 import { RatioChip } from "@/features/list/ratio-chip";
+import { collectionName } from "@/features/objekt/collection-name";
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
+import { CollectionLabel, SerialNo } from "@/features/objekt/objekt-label";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { activateOnKey } from "@/lib/a11y";
 import { formatCount } from "@/lib/number";

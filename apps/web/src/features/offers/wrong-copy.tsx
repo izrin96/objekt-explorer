@@ -1,7 +1,7 @@
 import type { TradeView } from "@repo/api/schemas/offer";
 import { useState } from "react";
 
-import { rich } from "@/components/shared/message-markup";
+import { rich } from "@/components/shared/rich-message";
 import {
   AlertDialog,
   AlertDialogClose,

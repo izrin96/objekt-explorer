@@ -10,7 +10,7 @@ import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { formatCount } from "@/lib/number";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { scrollXOnlyClass } from "@/lib/utils";
@@ -26,7 +26,8 @@ import { MetadataPanel } from "./metadata";
 import { OwnedPanel, type OwnedRowMenu } from "./owned";
 import { SerialsPanel } from "./serials";
 import { ObjektSummary } from "./summary";
-import { Timeline, toTimeline } from "./timeline";
+import { Timeline } from "./timeline";
+import { toTimeline } from "./timeline-events";
 
 export type DrawerTab = "owned" | "serials" | "market" | "metadata" | "holders";
 

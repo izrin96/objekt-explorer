@@ -39,13 +39,13 @@ import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
-import { useListTarget } from "./list-provider";
 import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
 import { partnerSwitch } from "./partner-switch";
 import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
 import { TagBadges } from "./tag-label";
 import { useListOwned } from "./use-list-owned";
+import { useListTarget } from "./use-list-target";
 
 export function ListHeader() {
   const list = useListTarget();

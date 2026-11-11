@@ -1,9 +1,9 @@
 import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
 import { useMemo } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 
-import { useFilterData } from "./filter-data-provider";
+import { useFilterData } from "./use-filter-data";
 
 export type Facets = {
   artists: readonly string[];

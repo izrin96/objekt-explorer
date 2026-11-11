@@ -19,7 +19,7 @@ import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -43,7 +43,7 @@ import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
 import { myPostsOptions, peopleOptions } from "./queries";
 import { sharePreview } from "./share-preview";
-import { SideCompareContext } from "./side-items-sheet";
+import { SideCompareContext } from "./side-compare-context";
 
 /** a person page counts against all of the viewer's lists, as Browse does */
 const NO_COMPARE = { list: undefined, mutual: false };

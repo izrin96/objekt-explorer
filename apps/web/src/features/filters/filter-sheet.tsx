@@ -16,17 +16,16 @@ import {
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { ExtraFacetControls, FacetControls } from "./facet-controls";
 import {
   type ExtraFacet,
-  ExtraFacetControls,
   FACET_KEYS,
-  FacetControls,
   NO_EXTRAS,
   QUICK_FACET_KEYS,
-  useDeclaredFacets,
   type FacetPatch,
   type FacetValues,
-} from "./facet-controls";
+} from "./facet-keys";
+import { useDeclaredFacets } from "./facet-parity";
 import type { Facets, MemberGroup } from "./facets";
 import { ResetButton } from "./reset-button";
 

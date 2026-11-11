@@ -7,19 +7,17 @@ import { type ReactNode, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  NO_PICKER_FILTERS,
-  PickerFilterBar,
-  pickerFiltered,
-} from "@/features/filters/picker-filter-bar";
+import { PickerFilterBar } from "@/features/filters/picker-filter-bar";
+import { NO_PICKER_FILTERS, pickerFiltered } from "@/features/filters/picker-filters";
 import { SingleSelect } from "@/features/filters/single-select";
 import { listOption } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { m } from "@/paraglide/messages";
 
-import { CandidateGrid, pagedGridProps } from "./candidate-grid";
+import { CandidateGrid } from "./candidate-grid";
 import { candidateMatcher } from "./candidate-match";
+import { pagedGridProps } from "./paged-grid-props";
 import type { Collections } from "./pick";
 import {
   myCandidatesOptions,

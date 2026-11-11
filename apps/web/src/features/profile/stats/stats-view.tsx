@@ -13,18 +13,19 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { EmptyStateReset } from "@/features/filters/reset-button";
+import { useFilterData } from "@/features/filters/use-filter-data";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
-import { useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
-import { MemberProgressChart, useChartMembers } from "../progress/member-progress-chart";
+import { MemberProgressChart } from "../progress/member-progress-chart";
 import { memberProgress, rankableMembers } from "../progress/shape-progress";
+import { useChartMembers } from "../progress/use-chart-members";
+import { useProfile } from "../use-profile";
 import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 
 type Slice = { name: string; count: number; percentage: number; fill: string };

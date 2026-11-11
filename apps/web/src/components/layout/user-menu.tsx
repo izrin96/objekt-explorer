@@ -16,10 +16,11 @@ import type { Icon } from "@phosphor-icons/react";
 import { isStaffRole } from "@repo/api/schemas/moderation";
 import type { User } from "@repo/api/services/account/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useState } from "react";
 
 import { AboutDialog } from "@/components/layout/about";
+import { useSignInSearch } from "@/components/layout/use-sign-in-search";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,16 +55,6 @@ const CreateListDialog = lazy(() =>
 
 export function UserAvatar({ user, className }: { user: User; className?: string }) {
   return <PersonAvatar name={user.name} image={user.image} className={className} />;
-}
-
-/**
- * `/login` is a page like any other, so parking it as its own redirect would
- * only be undone by the sign-in guard a moment later.
- */
-export function useSignInSearch(): { redirect: string | undefined } {
-  const redirect = useLocation({ select: (s) => (s.pathname === "/login" ? undefined : s.href) });
-
-  return { redirect };
 }
 
 export function UserMenu({ user }: { user: User }) {

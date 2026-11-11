@@ -20,7 +20,8 @@ import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { canonicalHex, FilterColorPicker } from "./color-picker";
+import { canonicalHex } from "./canonical-hex";
+import { FilterColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
 import { FilterToggle } from "./filter-toggle";
 import { EDITION_LABEL } from "./labels";

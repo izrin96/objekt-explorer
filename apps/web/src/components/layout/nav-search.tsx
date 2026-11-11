@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useUserSearchStore } from "@/features/user/search-store";
-import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
+import { useUserSearch } from "@/features/user/use-user-search";
+import { UserRowBody, UserSearchEmpty } from "@/features/user/user-search";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

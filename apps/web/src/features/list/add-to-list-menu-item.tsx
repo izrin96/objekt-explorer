@@ -7,7 +7,8 @@ import { selectBarFillClass, selectBarIconOnlyClass } from "@/features/objekt/se
 import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
 
-import { type AddableObjekt, useOpenAddToList } from "./add-to-list-dialog";
+import { type AddableObjekt } from "./add-to-list-dialog";
+import { useOpenAddToList } from "./use-open-add-to-list";
 
 /** An `ObjektCardMenu` item; must sit under an `AddToListProvider`. */
 export function AddToListMenuItem({

@@ -29,10 +29,10 @@ import {
   type ThreadPage,
 } from "@/features/chat/thread-cache";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { OfferCard } from "@/features/offers/offer-card";
 import { partnerHandle } from "@/features/offers/offer-link";
 import { takeReturn } from "@/features/offers/return-focus";
+import { useOpenOffer } from "@/features/offers/use-open-offer";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { joinSentences } from "@/lib/text";

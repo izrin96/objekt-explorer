@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 
-import { ActiveChips, type ActiveChip, useActiveChips } from "@/features/filters/active-chips";
-import {
-  FACET_KEYS,
-  FacetControls,
-  facetValues,
-  useDeclaredFacets,
-  useFacetParity,
-} from "@/features/filters/facet-controls";
+import { ActiveChips } from "@/features/filters/active-chips";
+import { FacetControls } from "@/features/filters/facet-controls";
+import { FACET_KEYS, facetValues } from "@/features/filters/facet-keys";
+import { useDeclaredFacets, useFacetParity } from "@/features/filters/facet-parity";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { ResetButton } from "@/features/filters/reset-button";
+import { type ActiveChip, useActiveChips } from "@/features/filters/use-active-chips";
 import { useCanonicalFilters, useSetFacet, useSetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 

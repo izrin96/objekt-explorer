@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 
 /**
  * Every member's Cosmo colour (`primaryColorHex`), pinned as the fallback for

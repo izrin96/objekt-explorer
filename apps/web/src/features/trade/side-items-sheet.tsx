@@ -2,7 +2,7 @@ import type { Outputs } from "@repo/api";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { createContext, type ReactNode, type RefObject, use } from "react";
+import { type ReactNode, type RefObject, use } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-labels";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
@@ -29,14 +29,10 @@ import { m } from "@/paraglide/messages";
 
 import { type NearOpen, type OpenObjekt, type SideNear } from "./near";
 import { sideItemsOptions } from "./queries";
+import { SideCompareContext } from "./side-compare-context";
 import type { SideProps } from "./side-props";
 import { stackPriceText } from "./stack-price";
 import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
-
-/** For you's Compare with, as the feed sends it, so the sheet rings what the strip rings. */
-export const SideCompareContext = createContext<{ list?: string; mutual: boolean }>({
-  mutual: false,
-});
 
 type SideItem = Outputs["trade"]["sideItems"]["items"][number];
 

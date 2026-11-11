@@ -8,7 +8,7 @@ import {
   type PickerFacetFilters,
   pickerFiltered,
   toFilterSearch,
-} from "@/features/filters/picker-filter-bar";
+} from "@/features/filters/picker-filters";
 import { listEntriesOptions } from "@/features/list/queries";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";

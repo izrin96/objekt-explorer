@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { collectionName } from "@/features/objekt/objekt-label";
+import { collectionName } from "@/features/objekt/collection-name";
 import { progressText } from "@/features/offers/format";
 import { joinList } from "@/lib/text";
 import { formatTimestamp, relativeTime } from "@/lib/time";

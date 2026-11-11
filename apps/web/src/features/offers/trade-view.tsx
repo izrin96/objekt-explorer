@@ -13,7 +13,7 @@ import { flushSync } from "react-dom";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
-import { rich } from "@/components/shared/message-markup";
+import { rich } from "@/components/shared/rich-message";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";

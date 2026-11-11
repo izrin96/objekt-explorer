@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CopyListForm } from "@/features/list/copy-list-dialog";
-import { ListLabel } from "@/features/list/list-option";
+import { ListLabel } from "@/features/list/list-label";
 import { listFindOptions } from "@/features/list/queries";
 import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";

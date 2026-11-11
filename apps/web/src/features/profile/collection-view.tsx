@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
+import { MessageMarkup } from "@/components/shared/message-markup";
+import { countMarkup } from "@/components/shared/rich-message";
 import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
-import type { ExtraFacet } from "@/features/filters/facet-controls";
+import type { ExtraFacet } from "@/features/filters/facet-keys";
 import { CombineDupsToggle, TransferableToggle } from "@/features/filters/filter-toggle";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -33,10 +34,11 @@ import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/
 
 import { CheckpointPopover } from "./checkpoint-popover";
 import { CollectionEmpty, CollectionNotices } from "./collection-states";
-import { LockMenuItem, PinMenuItem, useOwnerActions } from "./owner-actions";
-import { useProfileColumns, useProfileAuthed, useProfile } from "./profile-provider";
+import { LockMenuItem, PinMenuItem } from "./owner-actions";
 import { ProfileToolbar } from "./profile-toolbar";
+import { useOwnerActions } from "./use-owner-actions";
 import { usePinOrder } from "./use-pin-order";
+import { useProfileColumns, useProfileAuthed, useProfile } from "./use-profile";
 import { isSpinAddress, useProfileObjekts } from "./use-profile-objekts";
 
 // dnd-kit serves only the owner's pin drag, so it loads when they view their own profile

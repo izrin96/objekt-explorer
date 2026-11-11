@@ -15,10 +15,10 @@ import {
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
-import { PickerSelectionContext } from "./candidate-grid";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { MineGrid, TheirCollectionGrid, TheirsGrid } from "./offer-picker-grids";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
+import { PickerSelectionContext } from "./picker-selection";
 import { copiesLeft, countOf, totalOf, withCount } from "./quantity";
 import type { OfferAddress } from "./queries";
 

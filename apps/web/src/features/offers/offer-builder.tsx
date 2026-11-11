@@ -26,7 +26,8 @@ import { BuilderHeader } from "./builder/header";
 import { BuilderBody, BuilderGrid, BuilderTitle, STATUS_AREA } from "./builder/layout";
 import { StatusLine } from "./builder/matches-line";
 import type { OfferMatches, OfferRequest } from "./builder/types";
-import { armReturn, disarmReturn, forgetOpener } from "./return-focus";
+import { disarmReturn, forgetOpener } from "./return-focus";
+import { useLeaveOffer } from "./use-leave-offer";
 
 /** Both sides' shape while the matches load: a heading, the Add button and a row of tiles. */
 function SidesSkeleton() {
@@ -262,23 +263,4 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
       </AlertDialog>
     </>
   );
-}
-
-/**
- * Back and Cancel. Opened from inside the app, the page steps back through history, so a feed
- * comes back scrolled as it was and its opener takes focus; else it is replaced with `backHref`.
- */
-export function useLeaveOffer(backHref: string) {
-  const router = useRouter();
-  const openedInApp = useLocation({ select: (location) => location.state.offerBack === true });
-  return () => {
-    armReturn();
-    // the landing page's openers look once, as it draws; one drawn later must not take focus
-    const stop = router.subscribe("onResolved", () => {
-      stop();
-      requestAnimationFrame(() => requestAnimationFrame(disarmReturn));
-    });
-    if (openedInApp && router.history.canGoBack()) router.history.back();
-    else router.history.replace(backHref);
-  };
 }

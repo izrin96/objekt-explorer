@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/autocomplete";
 import { Spinner } from "@/components/ui/spinner";
 import { StepError } from "@/features/link/steps/step-error";
-import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
+import { useUserSearch } from "@/features/user/use-user-search";
+import { UserRowBody, UserSearchEmpty } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";

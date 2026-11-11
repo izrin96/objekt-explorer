@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { FilterToggle } from "@/features/filters/filter-toggle";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
@@ -109,6 +109,7 @@ const DIALOG_PARTS = {
 };
 
 /** The form's frame inside a `SheetPopup`: Dialog's parts size their spacing off a dialog popup. */
+// oxlint-disable-next-line react/only-export-components -- all components, which Fast Refresh accepts
 export const SHEET_PARTS: typeof DIALOG_PARTS = {
   Header: SheetHeader,
   Title: SheetTitle,

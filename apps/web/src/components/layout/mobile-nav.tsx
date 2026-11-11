@@ -3,10 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
-import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
+import { ChangelogDialog, NewDot } from "@/components/layout/changelog";
 import { type NavLink, useAlsoActive } from "@/components/layout/nav-links";
 import { SystemStatus } from "@/components/layout/system-status";
-import { UserAvatar, useSignInSearch } from "@/components/layout/user-menu";
+import { useChangelogNew } from "@/components/layout/use-changelog-new";
+import { useSignInSearch } from "@/components/layout/use-sign-in-search";
+import { UserAvatar } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {

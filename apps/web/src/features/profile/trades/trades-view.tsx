@@ -23,11 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SpinGroupToggle, useSpinsGrouped } from "@/features/activity/spin-grouping";
+import { SpinGroupToggle } from "@/features/activity/spin-grouping";
 import { SpinOutcome } from "@/features/activity/spin-outcome";
 import { foldSpinRows } from "@/features/activity/spin-rows";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import type { ExtraFacet } from "@/features/filters/facet-controls";
+import { useSpinsGrouped } from "@/features/activity/spins-search";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
+import type { ExtraFacet } from "@/features/filters/facet-keys";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { EmptyStateReset } from "@/features/filters/reset-button";
 import { canReset, isFiltering } from "@/features/filters/search-schema";
@@ -41,8 +42,8 @@ import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
 import { ProfileCell } from "../profile-hover-card";
-import { useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
+import { useProfile } from "../use-profile";
 import { transfersOptions } from "./queries";
 import { useResetTrades, useSetTradesType, useTradesType } from "./search-schema";
 

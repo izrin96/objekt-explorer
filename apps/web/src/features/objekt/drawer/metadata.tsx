@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { EDITION_LABEL } from "@/features/filters/labels";
 import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";

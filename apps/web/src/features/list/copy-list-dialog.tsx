@@ -25,7 +25,8 @@ import { m } from "@/paraglide/messages";
 
 import { useCopyList } from "./actions";
 import { toCopyDraft } from "./copy-draft";
-import { type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
+import { type ListDraft, listDraftSchema, toCreateInput } from "./list-draft";
+import { ListForm } from "./list-form";
 import { listFindOptions } from "./queries";
 
 type StoredList = Awaited<ReturnType<typeof client.list.find>>;

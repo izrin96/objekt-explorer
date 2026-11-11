@@ -1,8 +1,6 @@
-import type { PublicList } from "@repo/api/schemas/list";
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import { useQuery } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
-import { useId, useMemo } from "react";
+import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,7 +8,6 @@ import { TogglePrimitive } from "@/components/ui/toggle";
 import { ObjektStaticGrid } from "@/features/objekt/objekt-virtual-grid";
 import { MatchedListsChip } from "@/features/trade/matched-lists";
 import type { SideNear } from "@/features/trade/near";
-import { listMatchesOptions } from "@/features/trade/queries";
 import { NEAR_RING } from "@/features/trade/thumb-grid";
 import { nearCountText, nearRingText } from "@/lib/near-text";
 import { formatCount } from "@/lib/number";
@@ -18,34 +15,6 @@ import { refusalText } from "@/lib/refusal";
 import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-/** The collections the grid keeps while the toggle is on; the request waits for it. */
-export function useListMatches(list: PublicList, on: boolean) {
-  const { data, isPending, error } = useQuery(listMatchesOptions(list.id, on));
-  const slugs = useMemo(() => (on && data ? new Set(data.slugs) : null), [on, data]);
-  const near = useMemo(
-    () =>
-      on && data?.near
-        ? {
-            slugs: new Set(data.near.slugs),
-            listIdsOf: data.near.listIdsOf,
-            side: {
-              verb: data.near.verb,
-              count: data.near.slugs.length,
-              listIds: data.near.listIds,
-            } satisfies SideNear,
-          }
-        : null,
-    [on, data],
-  );
-  return {
-    slugs,
-    near,
-    listIds: on ? (data?.listIds ?? []) : [],
-    pending: on && isPending,
-    error: on ? error : null,
-  };
-}
 
 /**
  * The toggle, and once it is on the count of what matched, which opens the viewer's lists behind

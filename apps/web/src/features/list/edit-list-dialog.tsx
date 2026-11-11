@@ -25,8 +25,15 @@ import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
 
 import { useEditList } from "./actions";
-import { type StoredList, toDraft } from "./list-draft";
-import { type ListDraft, ListForm, type ListUrl, listDraftSchema, toEditInput } from "./list-form";
+import {
+  type ListDraft,
+  type ListUrl,
+  listDraftSchema,
+  type StoredList,
+  toDraft,
+  toEditInput,
+} from "./list-draft";
+import { ListForm } from "./list-form";
 import { listFindOptions } from "./queries";
 
 export function EditListDialog({

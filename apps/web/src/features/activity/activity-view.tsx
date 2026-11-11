@@ -8,30 +8,26 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { PageHeader } from "@/components/shared/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
-import {
-  type ExtraFacet,
-  ExtraFacetControls,
-  FACET_KEYS,
-  FacetControls,
-  facetValues,
-  useDeclaredFacets,
-  useFacetParity,
-} from "@/features/filters/facet-controls";
+import { ActiveChips } from "@/features/filters/active-chips";
+import { ExtraFacetControls, FacetControls } from "@/features/filters/facet-controls";
+import { type ExtraFacet, FACET_KEYS, facetValues } from "@/features/filters/facet-keys";
+import { useDeclaredFacets, useFacetParity } from "@/features/filters/facet-parity";
 import { useScopedFacets } from "@/features/filters/facets";
 import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { EmptyStateReset, ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
+import { useActiveChips } from "@/features/filters/use-active-chips";
 import { useCanonicalFilters, useSetFacet, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { m } from "@/paraglide/messages";
 
 import { ActivityTable } from "./activity-table";
 import { useActivityType, useResetActivity, useSetActivityType } from "./search-schema";
-import { SpinGroupToggle, useSpinsGrouped } from "./spin-grouping";
+import { SpinGroupToggle } from "./spin-grouping";
 import { foldSpinRows } from "./spin-rows";
+import { useSpinsGrouped } from "./spins-search";
 import { useLiveActivity } from "./use-live-activity";
 
 const TYPE_LABEL: Record<ActivityType, () => string> = {

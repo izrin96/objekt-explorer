@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { type ReactNode, memo } from "react";
 
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-labels";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioName } from "@/features/list/ratio-text";
 import { ObjektCard, QTY_BADGE, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
@@ -191,11 +191,6 @@ const StripTile = memo(function StripTile({
     </li>
   );
 });
-
-/** A side with no objekts, narrowed out or never listed: it shows as one line, not a strip. */
-export function isEmptySide(side: PostSideData) {
-  return side.copyCount === 0;
-}
 
 /** A side's role, and why none of its objekts show: on For you who they would be for. */
 function sideWording(side: PostSideData, surface: Surface) {

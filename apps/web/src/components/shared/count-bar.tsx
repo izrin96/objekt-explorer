@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
-import { countMarkup, MessageMarkup } from "./message-markup";
+import { MessageMarkup } from "./message-markup";
+import { countMarkup } from "./rich-message";
 
 /** "N total", the number standing out of muted text. */
 export function TotalCount({ count }: { count: number }) {

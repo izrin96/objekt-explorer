@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useHydrated } from "@tanstack/react-router";
 import type { Ref, RefObject } from "react";
 
-import { rich } from "@/components/shared/message-markup";
+import { rich } from "@/components/shared/rich-message";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
@@ -11,8 +11,8 @@ import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { legView } from "./exchange-group";
 import { itemLabel, shortDate } from "./format";
+import { legView } from "./leg-view";
 import { MarkReceived } from "./mark-received";
 import { type Leg, canMarkReceived } from "./next-step";
 import { OfferThumb } from "./offer-item";

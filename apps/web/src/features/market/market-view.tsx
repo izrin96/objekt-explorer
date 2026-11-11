@@ -6,12 +6,13 @@ import { useCallback, useMemo, useState } from "react";
 
 import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
-import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
+import { countMarkup } from "@/components/shared/rich-message";
 import { Button } from "@/components/ui/button";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { useSetCompare } from "@/features/compare/use-compare";
-import type { ExtraFacet } from "@/features/filters/facet-controls";
+import type { ExtraFacet } from "@/features/filters/facet-keys";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { LONG_TAIL } from "@/features/filters/long-tail";

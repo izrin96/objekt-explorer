@@ -5,7 +5,7 @@ import { Fragment, useCallback, useLayoutEffect, useRef, useState, type ReactNod
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TogglePrimitive } from "@/components/ui/toggle";
 import { ToggleGroupPrimitive } from "@/components/ui/toggle-group";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

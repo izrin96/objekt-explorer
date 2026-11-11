@@ -23,22 +23,11 @@ type Sdk = typeof SentryClient;
 const TUNNEL = "/api/errors";
 
 /** The root document writes the runtime config into these, for the client to read before hydrating. */
-const META = {
+export const ERROR_TRACKING_META = {
   dsn: "error-tracking-dsn",
   environment: "error-tracking-env",
   release: "error-tracking-release",
 };
-
-export function ErrorTrackingMeta({ config }: { config: ErrorTrackingConfig | null }) {
-  if (!config) return null;
-  return (
-    <>
-      <meta name={META.dsn} content={config.dsn} />
-      {config.environment && <meta name={META.environment} content={config.environment} />}
-      {config.release && <meta name={META.release} content={config.release} />}
-    </>
-  );
-}
 
 function readMeta(name: string) {
   return document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content || undefined;
@@ -83,7 +72,7 @@ function withSdk(use: (Sentry: Sdk) => void) {
 
 /** Loads and starts the browser SDK when the page carries a DSN. */
 export function initClientErrorTracking() {
-  const dsn = readMeta(META.dsn);
+  const dsn = readMeta(ERROR_TRACKING_META.dsn);
   if (!dsn) return;
 
   // errors thrown while the SDK downloads; its own handlers take over once it starts
@@ -102,8 +91,8 @@ export function initClientErrorTracking() {
       Sentry.init({
         dsn,
         tunnel: TUNNEL,
-        environment: readMeta(META.environment),
-        release: readMeta(META.release),
+        environment: readMeta(ERROR_TRACKING_META.environment),
+        release: readMeta(ERROR_TRACKING_META.release),
         dataCollection: DATA_COLLECTION,
         // no session per page view, and no reports about dropped events
         integrations: (defaults) => defaults.filter(({ name }) => name !== "BrowserSession"),

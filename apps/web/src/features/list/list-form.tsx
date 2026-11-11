@@ -13,15 +13,6 @@ import { bindNote, isBindable, type ListDraft, type ListUrl, listTypePatch } fro
 import { ListTypeField, ListUrlField, ProfileField } from "./list-form-fields";
 import { RatioPicker } from "./ratio-picker";
 
-export {
-  EMPTY_DRAFT,
-  type ListDraft,
-  type ListUrl,
-  listDraftSchema,
-  toCreateInput,
-  toEditInput,
-} from "./list-draft";
-
 type ListFormProps = {
   value: ListDraft;
   onChange: (next: ListDraft) => void;

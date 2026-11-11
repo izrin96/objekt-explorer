@@ -11,8 +11,8 @@ import { type PropsWithChildren, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCallDuration, useToggleFullScreen } from "@/features/live/hooks";
-import { useLiveSession } from "@/features/live/live-stage";
 import { LiveAvatar } from "@/features/live/session-list";
+import { useLiveSession } from "@/features/live/use-live-session";
 import { formatDuration } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 

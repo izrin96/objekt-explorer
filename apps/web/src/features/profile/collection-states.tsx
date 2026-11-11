@@ -7,13 +7,13 @@ import {
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
+import { useArtistScopeNarrowed } from "@/features/artist/use-cosmo-artist";
 import { EmptyStateReset } from "@/features/filters/reset-button";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
-import { checkpointDate, formatCheckpoint } from "./checkpoint-popover";
+import { checkpointDate, formatCheckpoint } from "./checkpoint-date";
 import { isSpinAddress } from "./use-profile-objekts";
 
 export function CollectionNotices({ address, at }: { address: string; at: string | undefined }) {

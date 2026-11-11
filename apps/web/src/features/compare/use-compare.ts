@@ -2,7 +2,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { orpc } from "@/lib/orpc";
 

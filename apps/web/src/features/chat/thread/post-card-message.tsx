@@ -7,7 +7,7 @@ import { MoreCount } from "@/components/shared/more-count";
 import { Card } from "@/components/ui/card";
 import { formatPostPrices } from "@/features/chat/format";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-labels";
 import { TagBadges } from "@/features/list/tag-label";
 import { OfferThumb } from "@/features/offers/offer-item";
 import { TONE_INK } from "@/lib/tone";

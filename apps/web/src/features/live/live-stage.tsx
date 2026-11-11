@@ -5,7 +5,7 @@ import {
   type StreamVideoParticipant,
   type VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { type PropsWithChildren, type ReactElement, createContext, use } from "react";
+import { type PropsWithChildren, type ReactElement } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,22 +13,16 @@ import { Spinner } from "@/components/ui/spinner";
 import { LiveAvatar } from "@/features/live/session-list";
 import { m } from "@/paraglide/messages";
 
+import { LiveSessionContext, useLiveSession } from "./use-live-session";
+
 /** the viewport minus the chrome around it, so the footer stays on screen: the
  *  nav (h-13 and a 1px border), PageMain's pt-5 and pb-10, the gap-2 and the
  *  footer's two text lines (2.75rem). Both states keep it so the page does not
  *  jump between a live session and an ended one */
 const STAGE = "relative flex h-[calc(100svh-10.25rem-1px)] w-full items-center justify-center";
 
-const LiveSessionContext = createContext<LiveSession | null>(null);
-
 export function LiveSessionProvider({ live, children }: PropsWithChildren<{ live: LiveSession }>) {
   return <LiveSessionContext value={live}>{children}</LiveSessionContext>;
-}
-
-export function useLiveSession(): LiveSession {
-  const live = use(LiveSessionContext);
-  if (!live) throw new Error("useLiveSession must be used within LiveSessionProvider");
-  return live;
 }
 
 function VideoPlaceholder({ style }: VideoPlaceholderProps) {

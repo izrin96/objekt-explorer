@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { type Code, codeInput, hasProfile } from "@/features/link/link-flow-rules";
 import { StepError } from "@/features/link/steps/step-error";
 import { orpc } from "@/lib/orpc";

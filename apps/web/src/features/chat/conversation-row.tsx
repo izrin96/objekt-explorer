@@ -5,7 +5,7 @@ import { Link, useHydrated } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
 import { TagBadges } from "@/features/list/tag-label";
-import { collectionName } from "@/features/objekt/objekt-label";
+import { collectionName } from "@/features/objekt/collection-name";
 import { offerNo } from "@/features/offers/format";
 import { OfferThumb } from "@/features/offers/offer-item";
 import { OnlineAvatar } from "@/features/presence/online-avatar";

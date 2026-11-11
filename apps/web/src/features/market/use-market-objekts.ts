@@ -2,7 +2,7 @@ import type { MarketObjekt, ObjektTags } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useCanonicalFilters } from "@/features/filters/use-filters";

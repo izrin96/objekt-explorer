@@ -1,36 +1,19 @@
-import {
-  CheckIcon,
-  ClockIcon,
-  type Icon,
-  MinusIcon,
-  PaperPlaneTiltIcon,
-  WarningIcon,
-} from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useHydrated } from "@tanstack/react-router";
 import { useId } from "react";
 
-import { untilLabel } from "@/lib/time";
 import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { type ExchangeGroup, type GroupKey, type LegStatus, legStatus } from "./exchange";
+import { type ExchangeGroup, type GroupKey } from "./exchange";
 import { itemLabel } from "./format";
-import type { Leg, LegChip } from "./next-step";
-import { ObjektTile, type TileMark } from "./objekt-tile";
+import { legView } from "./leg-view";
+import { ObjektTile } from "./objekt-tile";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import type { ExchangeState } from "./trade-exchange";
 import { LegSerial } from "./wrong-copy";
-
-const LEG_MARKS: Record<LegChip, { tone: Tone; icon: Icon; label: () => string }> = {
-  verified: { tone: "success", icon: CheckIcon, label: m.offer_leg_verified },
-  confirmed: { tone: "success", icon: CheckIcon, label: m.offer_leg_confirmed },
-  waiting: { tone: "warning", icon: ClockIcon, label: m.offer_leg_waiting_short },
-  sendThis: { tone: "progress", icon: PaperPlaneTiltIcon, label: m.offer_leg_send_this },
-  differentCopy: { tone: "warning", icon: WarningIcon, label: m.offer_side_different },
-  notSent: { tone: "neutral", icon: MinusIcon, label: m.offer_side_not_sent },
-};
 
 const GROUPS: Record<GroupKey, { title: () => string; tone: Tone }> = {
   send: { title: m.offer_group_send, tone: "progress" },
@@ -40,28 +23,6 @@ const GROUPS: Record<GroupKey, { title: () => string; tone: Tone }> = {
   verified: { title: m.offer_leg_verified, tone: "success" },
   notSent: { title: m.offer_side_not_sent, tone: "neutral" },
 };
-
-/**
- * A stuck or away leg's warning, while it waits. The away date is in the viewer's zone, unknown
- * to the server render, so it waits for the client.
- */
-function legWarning(leg: Leg, { warning }: LegStatus, hydrated: boolean) {
-  if (warning === "stuck") return m.offer_leg_stuck();
-  if (warning === "away" && leg.away && hydrated) {
-    return m.offer_leg_away({ date: untilLabel(leg.away.breaksAt) });
-  }
-  return null;
-}
-
-/** What a tile and a list row say about a leg: its mark and its accessible name. */
-export function legView(leg: Leg, ended: boolean, collections: Collections, hydrated: boolean) {
-  const status = legStatus(leg, ended);
-  const chip = LEG_MARKS[status.chip];
-  const mark: TileMark = { tone: chip.tone, icon: chip.icon, label: chip.label() };
-  const warning = legWarning(leg, status, hydrated);
-  const label = [itemLabel(leg, collections), mark.label, warning].filter(Boolean).join(" · ");
-  return { status, mark, warning, label };
-}
 
 function GroupHeading({ group, id }: { group: ExchangeGroup; id: string }) {
   const meta = GROUPS[group.key];

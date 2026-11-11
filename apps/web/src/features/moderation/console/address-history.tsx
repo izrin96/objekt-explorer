@@ -22,7 +22,7 @@ import { formatCount } from "@/lib/number";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { linkEventLabel } from "./link-history";
+import { linkEventLabel } from "./link-event-label";
 import { addressHistoryOptions } from "./queries";
 import { personName, sectionTitle } from "./shared";
 import { When } from "./when";

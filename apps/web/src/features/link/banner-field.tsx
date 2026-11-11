@@ -3,7 +3,7 @@ import {
   TrashSimpleIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
-import { lazy, type RefObject, Suspense, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useId, useRef } from "react";
 import type { CropperRef } from "react-advanced-cropper";
 
 import { MessageMarkup } from "@/components/shared/message-markup";
@@ -26,61 +26,11 @@ import { BANNER_ACCEPT, bannerFileError, isCroppable } from "@/features/link/ban
 import { TONE_SOLID } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
 
+import { type useBannerPick } from "./use-banner-pick";
+
 const BannerCropper = lazy(() =>
   import("@/features/link/banner-cropper").then((mod) => ({ default: mod.BannerCropper })),
 );
-
-/** The banner pick, its crop readiness and Remove, kept by the form that saves them. */
-export function useBannerPick(saveRef: RefObject<AbortController | null>) {
-  const cropperRef = useRef<CropperRef>(null);
-  const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
-  const [cropReady, setCropReady] = useState(false);
-  const [removeBanner, setRemoveBanner] = useState(false);
-  // a file dropped anywhere but the dropzone (which cancels its own events) would open in the tab
-  // and lose the dialog; refuse it so the cursor shows the drop is not allowed
-  useEffect(() => {
-    const refuseDragOver = (event: DragEvent) => {
-      if (event.defaultPrevented || !event.dataTransfer?.types.includes("Files")) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "none";
-    };
-    const refuseDrop = (event: DragEvent) => {
-      if (!event.defaultPrevented) event.preventDefault();
-    };
-    window.addEventListener("dragover", refuseDragOver);
-    window.addEventListener("drop", refuseDrop);
-    return () => {
-      window.removeEventListener("dragover", refuseDragOver);
-      window.removeEventListener("drop", refuseDrop);
-    };
-  }, []);
-
-  // a replaced pick, a Clear, a Save and a Cancel all release the preview's object URL here
-  const pickedUrl = picked?.url;
-  useEffect(() => {
-    if (pickedUrl === undefined) return;
-    return () => URL.revokeObjectURL(pickedUrl);
-  }, [pickedUrl]);
-
-  const clearPick = () => {
-    saveRef.current?.abort();
-    setPicked(null);
-    setCropReady(false);
-  };
-
-  const awaitingCrop = picked !== null && !removeBanner && isCroppable(picked.file) && !cropReady;
-
-  return {
-    cropperRef,
-    picked,
-    setPicked,
-    setCropReady,
-    removeBanner,
-    setRemoveBanner,
-    clearPick,
-    awaitingCrop,
-  };
-}
 
 function useBatchedRejects() {
   // FileUpload reports each rejected file of a drop on its own, all in one pass: gather them

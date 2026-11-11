@@ -11,7 +11,6 @@ import {
 } from "@phosphor-icons/react";
 
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import type { Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 import type { Collections } from "./stack";
@@ -26,12 +25,6 @@ const TONE_ICON: Record<NotificationIcon, Icon> = {
   package: PackageIcon,
   shield: ShieldWarningIcon,
   warning: WarningIcon,
-};
-
-/** An alert's objekts keep their list type's colour; it is the one colour a row has besides class stripes. */
-export const TONE_FRAME: Partial<Record<Tone, string>> = {
-  want: "outline-type-want",
-  have: "outline-type-have",
 };
 
 /** Every leading mark sits in this slot, so the text beside it does not move between kinds. */

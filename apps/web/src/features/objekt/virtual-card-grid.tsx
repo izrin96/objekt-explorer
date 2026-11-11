@@ -6,7 +6,7 @@ import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { ScrollAreaPrimitive } from "@/components/ui/scroll-area";
 import { m } from "@/paraglide/messages";
 
-import { useCardColumns } from "./card-grid";
+import { useCardColumns } from "./use-card-columns";
 
 type Row<T> =
   | { type: "title"; key: string; title: string }

@@ -4,7 +4,7 @@ import { Link, linkOptions } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { collectionName } from "@/features/objekt/objekt-label";
+import { collectionName } from "@/features/objekt/collection-name";
 import {
   offerNo,
   offerNotificationText,
@@ -27,11 +27,12 @@ import {
   RowBody,
   type RowVariant,
 } from "./row-body";
-import { NotificationStack, PartnerAvatar, TONE_FRAME, ToneTile } from "./row-lead";
+import { NotificationStack, PartnerAvatar, ToneTile } from "./row-lead";
 import { alertText, type ListNotification, sanctionText, updatesLabel } from "./row-text";
 import { rowAction } from "./sections";
 import { type Collections, sameSlugs, shownSlugs } from "./stack";
 import { notificationTone } from "./tone";
+import { TONE_FRAME } from "./tone-frame";
 
 const ROW =
   "hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring relative flex items-start gap-3 py-2.5 ps-5 pe-4 outline-none focus-visible:ring-2 focus-visible:ring-inset";

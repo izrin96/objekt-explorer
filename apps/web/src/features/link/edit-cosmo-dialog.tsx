@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
-import { BannerField, useBannerPick } from "@/features/link/banner-field";
+import { BannerField } from "@/features/link/banner-field";
 import {
   isUploadFailure,
   prepareBanner,
@@ -28,6 +28,7 @@ import {
   refusalMessage,
 } from "@/features/link/banner-upload";
 import { PROFILE_QUERY_KEY, invalidateLinkChange, profileOptions } from "@/features/link/queries";
+import { useBannerPick } from "@/features/link/use-banner-pick";
 import { displayNickname } from "@/lib/address";
 import { formatCount } from "@/lib/number";
 import { client, orpc } from "@/lib/orpc";

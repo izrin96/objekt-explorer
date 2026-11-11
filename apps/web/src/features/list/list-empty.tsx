@@ -3,13 +3,13 @@ import { Link } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
+import { useArtistScopeNarrowed } from "@/features/artist/use-cosmo-artist";
 import { useCurrentUser } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
-import { useListTarget } from "./list-provider";
 import { useListOwned } from "./use-list-owned";
+import { useListTarget } from "./use-list-target";
 
 /**
  * `listEntries` is scoped to the selected artists, so with an artist left out

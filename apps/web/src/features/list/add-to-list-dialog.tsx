@@ -1,7 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
-import { createContext, type ReactNode, use, useCallback, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ import { useAddToList } from "./actions";
 import { ListPicker } from "./add-to-list-picker";
 import { PreviewSection } from "./add-to-list-preview";
 import {
-  type AddableObjekt,
   type AddTarget,
   addToListInput,
   currencyChanges,
@@ -40,19 +39,13 @@ import {
 } from "./add-to-list-source";
 import { addedToast, addHint, profileLabel } from "./add-to-list-text";
 import { CreateListDialog } from "./create-list-dialog";
-import { EMPTY_DRAFT, type ListDraft } from "./list-form";
+import { EMPTY_DRAFT, type ListDraft } from "./list-draft";
 import { PriceFields, type PriceValue } from "./price-fields";
+import { type OpenAddToList, AddToListContext } from "./use-open-add-to-list";
 
 export type { AddableObjekt } from "./add-to-list-source";
 
 const EMPTY_PRICE: PriceValue = { price: null, isQyop: false, note: "" };
-
-type OpenAddToList = (
-  objekts: AddableObjekt[],
-  options?: Pick<AddTarget, "combined" | "saleOnly">,
-) => void;
-
-const AddToListContext = createContext<OpenAddToList | null>(null);
 
 /**
  * One dialog per surface, opened from anywhere under it: a menu closes on click
@@ -98,12 +91,6 @@ export function AddToListProvider({
       />
     </AddToListContext>
   );
-}
-
-export function useOpenAddToList(): OpenAddToList {
-  const open = use(AddToListContext);
-  if (!open) throw new Error("useOpenAddToList must be used within AddToListProvider");
-  return open;
 }
 
 type DialogProps = {

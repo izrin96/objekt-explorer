@@ -19,10 +19,10 @@ import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
-import { useStartConversation } from "@/features/chat/message-button";
+import { useStartConversation } from "@/features/chat/use-start-conversation";
 import { TagBadges } from "@/features/list/tag-label";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
-import { useOpenOffer } from "@/features/offers/make-offer-button";
+import { useOpenOffer } from "@/features/offers/use-open-offer";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -30,14 +30,15 @@ import { useCopyTradeLink, useHidePostWithUndo, useTakeDownPost, useUnhidePost }
 import type { Surface } from "./browse-search";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { CopyLinkItem, ReasonItem } from "./copy-link-item";
+import { isEmptySide } from "./empty-side";
 import type { ObjektAsk, OpenObjekt } from "./near";
 import { anchorOf } from "./person-page";
 import { listCount, matchedListIds } from "./person-row";
 import { usePlanLists } from "./post-plan";
-import { EmptySide, isEmptySide, SideNotes } from "./post-side";
+import { EmptySide, SideNotes } from "./post-side";
 import { SideAllDialog, SideStrip } from "./post-side-strip";
 import type { PersonPostData, PostSideData } from "./post-types";
-import { SideCompareContext } from "./side-items-sheet";
+import { SideCompareContext } from "./side-compare-context";
 import { NoProfileOffer, type TradeContact } from "./trade-actions";
 import { TradeSides } from "./trade-row";
 

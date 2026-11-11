@@ -5,7 +5,7 @@ import type * as z from "zod";
 
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
-import { spinsSearchSchema } from "./spin-grouping";
+import { spinsSearchSchema } from "./spins-search";
 
 /** `at` scopes a surface rather than filtering it, and the feed has no use for it. */
 const { at: _at, ...resetPatch } = defaultFilters;

@@ -4,7 +4,7 @@ import { type ReactNode, type RefObject } from "react";
 
 import { MoreCount } from "@/components/shared/more-count";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-labels";
 import { ratioSideOf } from "@/features/list/ratio-text";
 import { nearCountText } from "@/lib/near-text";
 import { formatCount } from "@/lib/number";

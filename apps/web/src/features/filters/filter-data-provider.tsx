@@ -1,18 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createContext, type PropsWithChildren, use, useCallback, useMemo } from "react";
+import { type PropsWithChildren, useCallback, useMemo } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { orpc } from "@/lib/orpc";
 
-type FilterDataContextValue = {
-  collections: string[];
-  seasons: string[];
-  classes: string[];
-  compareSeason: (a: string, b: string) => number;
-  compareClass: (a: string, b: string) => number;
-};
-
-const FilterDataContext = createContext<FilterDataContextValue | null>(null);
+import { FilterDataContext } from "./use-filter-data";
 
 export function FilterDataProvider({ children }: PropsWithChildren) {
   const { data } = useSuspenseQuery(orpc.config.getFilterData.queryOptions());
@@ -63,10 +55,4 @@ export function FilterDataProvider({ children }: PropsWithChildren) {
   );
 
   return <FilterDataContext value={value}>{children}</FilterDataContext>;
-}
-
-export function useFilterData(): FilterDataContextValue {
-  const ctx = use(FilterDataContext);
-  if (!ctx) throw new Error("useFilterData must be used within FilterDataProvider");
-  return ctx;
 }

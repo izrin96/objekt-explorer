@@ -18,7 +18,7 @@ import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
 import { ProfileBanner } from "./profile-banner";
-import { useProfileAuthed } from "./profile-provider";
+import { useProfileAuthed } from "./use-profile";
 
 export function ProfileHeader({ profile }: { profile: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();

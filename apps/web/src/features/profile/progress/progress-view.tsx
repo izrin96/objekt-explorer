@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ExtraFacet } from "@/features/filters/facet-controls";
+import type { ExtraFacet } from "@/features/filters/facet-keys";
 import { TransferableToggle } from "@/features/filters/filter-toggle";
 import { LONG_TAIL } from "@/features/filters/long-tail";
 import { EmptyStateReset } from "@/features/filters/reset-button";
@@ -17,8 +17,8 @@ import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
-import { useProfileColumns, useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
+import { useProfileColumns, useProfile } from "../use-profile";
 import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 import { ClassCard, TallyValue } from "./class-card";
 import { MemberProgressChart } from "./member-progress-chart";

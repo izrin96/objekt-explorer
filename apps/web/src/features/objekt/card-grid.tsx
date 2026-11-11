@@ -1,16 +1,7 @@
-import { useElementSize } from "@/hooks/use-element-size";
 import { cn } from "@/lib/utils";
 
 import { PhotocardSkeleton } from "./photocard-skeleton";
-
-/** Card width the grid aims for; the column count follows the container's width. */
-const CELL_PX = 112;
-
-/** The column count of a card grid in a dialog or sheet: one per `CELL_PX` of width, at least three. */
-export function useCardColumns<T extends HTMLElement>() {
-  const [ref, { width }] = useElementSize<T>();
-  return { ref, measured: width > 0, columns: Math.max(3, Math.floor(width / CELL_PX)) };
-}
+import { useCardColumns } from "./use-card-columns";
 
 /** Spacing `VirtualCardGrid` gets from its rows' `gap-2 pb-3`. */
 const GAPS = "gap-x-2 gap-y-3";

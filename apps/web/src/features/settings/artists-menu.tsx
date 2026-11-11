@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { MenuCheckboxItem, MenuSub, MenuSubPopup, MenuSubTrigger } from "@/components/ui/menu";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { useSetSelectedArtists } from "@/features/artist/use-selected-artists";
 import { m } from "@/paraglide/messages";
 

@@ -1,5 +1,5 @@
 import { HandshakeIcon } from "@phosphor-icons/react";
-import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { useStartGate } from "@/features/user/start-gate";
 import { m } from "@/paraglide/messages";
 
 import { offerLink, type OfferStart } from "./offer-link";
-import { forgetOpener, rememberOpener, takeReturn } from "./return-focus";
+import { rememberOpener, takeReturn } from "./return-focus";
 
 type MakeOfferProps = {
   /** where the offer starts; `from` is this page */
@@ -60,20 +60,4 @@ export function MakeOfferButton({
       <span>{label}</span>
     </Button>
   );
-}
-
-/**
- * Opens the offer page from a menu item or a drawer, where a link can't be; `from` is this page
- * unless set. `opener` names the control that takes focus again on Back, when there is one.
- */
-export function useOpenOffer() {
-  const { gate } = useStartGate();
-  const navigate = useNavigate();
-  const router = useRouter();
-  return (start: OfferStart, opener?: string) => {
-    if (!gate()) return;
-    if (opener) rememberOpener(opener);
-    else forgetOpener();
-    void navigate(offerLink({ ...start, from: start.from ?? router.state.location.href }));
-  };
 }

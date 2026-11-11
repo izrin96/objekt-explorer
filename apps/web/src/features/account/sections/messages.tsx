@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { refusalOf, refusalText } from "@/features/chat/format";
 import { chatSettingsOptions } from "@/features/chat/queries";
-import { useShownAs } from "@/features/link/shown-as";
+import { useShownAs } from "@/features/link/use-shown-as";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 

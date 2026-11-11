@@ -3,9 +3,9 @@ import { type ReactElement, memo, useMemo } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { useFilterData } from "@/features/filters/filter-data-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import type { FilterSearch } from "@/features/filters/search-schema";
+import { useFilterData } from "@/features/filters/use-filter-data";
 import { useWindowVirtualizerRestore } from "@/hooks/use-window-virtualizer-restore";
 import { m } from "@/paraglide/messages";
 import { useColumns } from "@/stores/columns";

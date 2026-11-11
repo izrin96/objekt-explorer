@@ -28,21 +28,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
-import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale, type Locale } from "@/paraglide/runtime";
 
-/** the `at` parameter is an instant; a checkpoint defaults to "the end of that day" */
-export function checkpointDate(at: string | undefined): Date | undefined {
-  if (at === undefined) return undefined;
-  const parsed = new Date(at);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-}
+import { checkpointDate, formatCheckpoint } from "./checkpoint-date";
 
 /** Cosmo's chain history starts here, so an earlier snapshot is always empty */
 const EARLIEST = new Date(2022, 7, 1);
+
 const END_OF_DAY_TIME = "23:59:59";
+
 /** Safari centres a time value unless its inner field is told otherwise */
 const dateTimeClass = "[&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
 
@@ -103,11 +99,6 @@ function CalendarDropdown({ options, value, onChange, "aria-label": ariaLabel }:
       </SelectPopup>
     </Select>
   );
-}
-
-/** the day alone for the default end-of-day instant, the time as well when one was picked */
-export function formatCheckpoint(date: Date): string {
-  return isEqual(date, endOfDay(date)) ? format(date, "yyyy/MM/dd") : formatTimestamp(date);
 }
 
 function timeOf(date: Date | undefined): string {

@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
-import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
+import { CursorCard } from "@/components/shared/cursor-card";
+import { cursorCardDelays } from "@/components/shared/cursor-card-delays";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";

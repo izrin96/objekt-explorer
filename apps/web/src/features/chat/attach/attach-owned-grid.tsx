@@ -10,7 +10,7 @@ import {
   type PickerFacetFilters,
   pickerFiltered,
   toFilterSearch,
-} from "@/features/filters/picker-filter-bar";
+} from "@/features/filters/picker-filters";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";

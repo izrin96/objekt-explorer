@@ -13,17 +13,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { m } from "@/paraglide/messages";
 
-import { type FormatChoices, type FormatFlag, withGroupBy } from "./choices";
+import { type FormatChoices, withGroupBy } from "./choices";
 import type { FormatStyle, GroupByMode } from "./format";
-
-export const FLAGS: { key: FormatFlag; label: () => string }[] = [
-  { key: "showCount", label: m.generate_discord_show_count },
-  { key: "includeLink", label: m.generate_discord_include_link },
-  { key: "lowercaseCollection", label: m.generate_discord_lower_case },
-  { key: "bullet", label: m.generate_discord_bulleted_list },
-  { key: "showMemberEmoji", label: m.generate_discord_show_member_emoji },
-  { key: "hideType", label: m.generate_discord_hide_type },
-];
+import { type FLAGS } from "./format-flags";
 
 const GROUP_BY: { value: GroupByMode; label: () => string }[] = [
   { value: "none", label: m.generate_discord_group_by_none },

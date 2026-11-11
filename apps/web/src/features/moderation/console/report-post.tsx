@@ -4,7 +4,7 @@ import { Fragment } from "react";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { LIST_TYPE_TONE } from "@/features/list/list-type-labels";
 import { TagBadges } from "@/features/list/tag-label";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";

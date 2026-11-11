@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { counterRequest } from "@/features/offers/counter-request";
-import { OfferPage, useLeaveOffer } from "@/features/offers/offer-builder";
+import { OfferPage } from "@/features/offers/offer-builder";
 import {
   backPath,
   listSlugsOf,
@@ -13,6 +13,7 @@ import {
   requestOf,
   withoutLists,
 } from "@/features/offers/offer-link";
+import { useLeaveOffer } from "@/features/offers/use-leave-offer";
 import { loadOfferPage } from "@/features/trade/offer-loader";
 import { PersonPageRefused } from "@/features/trade/person-page-view";
 import { requireSignedIn } from "@/features/user/queries";

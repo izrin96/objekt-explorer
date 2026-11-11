@@ -17,10 +17,10 @@ import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useListTarget } from "../list-provider";
 import { RatioChip } from "../ratio-chip";
 import { appliedRatio } from "../ratio-text";
 import { useListOwned } from "../use-list-owned";
+import { useListTarget } from "../use-list-target";
 import { ConfirmRule } from "./confirm-rule";
 import { ruleObjektsOptions, useListRules } from "./queries";
 import { RuleDialog } from "./rule-dialog";

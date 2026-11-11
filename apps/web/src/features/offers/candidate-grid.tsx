@@ -1,45 +1,17 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { PickerTag } from "@repo/api/schemas/trade";
-import { type ReactNode, createContext, use } from "react";
+import { type ReactNode, use } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
-import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { CandidateTile } from "./candidate-tile";
 import { type Collections, pickKey } from "./pick";
-import { offerRefusalOf, offerRefusalText } from "./refusal";
-
-function loadError(error: unknown, refetch: () => Promise<unknown>) {
-  const refusal = offerRefusalOf(error);
-  return {
-    retry: () => void refetch(),
-    // a refusal outside the offer domain, such as the picker's rate limit, has its own text
-    text: refusal
-      ? (offerRefusalText(refusal, m.offer_refused_some()) ?? null)
-      : isRefusalError(error)
-        ? refusalText(error)
-        : null,
-  };
-}
-
-type PickerSelection = {
-  isSelected: (item: CandidateItem) => boolean;
-  countOf: (item: CandidateItem) => number;
-  /** an any-copy item's copies still free to ask for */
-  copiesOf: (item: CandidateItem) => number;
-  full: boolean;
-  /** the id of the footer line that says the side is full */
-  fullId: string;
-  onToggle: (item: CandidateItem, collections: Collections) => void;
-  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
-};
-
-export const PickerSelectionContext = createContext<PickerSelection | null>(null);
+import { type PickerSelection, PickerSelectionContext } from "./picker-selection";
 
 function usePickerSelection(): PickerSelection {
   const selection = use(PickerSelectionContext);
@@ -124,30 +96,4 @@ export function CandidateGrid({
       )}
     />
   );
-}
-
-/** The loading, error and paging props the grid reads off an infinite candidates query. */
-export function pagedGridProps(
-  query: {
-    isPending: boolean;
-    isError: boolean;
-    error: unknown;
-    refetch: () => Promise<unknown>;
-    hasNextPage: boolean;
-    isFetchingNextPage: boolean;
-    isFetchNextPageError: boolean;
-    fetchNextPage: (options?: { cancelRefetch?: boolean }) => Promise<unknown>;
-  },
-  loaded: number,
-) {
-  return {
-    pending: query.isPending,
-    error: query.isError && loaded === 0 ? loadError(query.error, query.refetch) : null,
-    more: {
-      has: query.hasNextPage,
-      loading: query.isFetchingNextPage,
-      failed: query.isFetchNextPageError,
-      load: () => void query.fetchNextPage({ cancelRefetch: false }),
-    },
-  };
 }

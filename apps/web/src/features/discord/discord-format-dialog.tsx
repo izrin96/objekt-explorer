@@ -22,10 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toastManager } from "@/components/ui/toast";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { useFilterData } from "@/features/filters/filter-data-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
+import { useFilterData } from "@/features/filters/use-filter-data";
+import { ListLabel } from "@/features/list/list-label";
 import { getListLinkOption } from "@/features/list/list-link";
-import { ListLabel } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
@@ -33,8 +33,9 @@ import { siteOrigin } from "@/lib/site-origin";
 import { m } from "@/paraglide/messages";
 
 import { EMPTY_CHOICES, type Section, joinSections, toFormatOptions } from "./choices";
-import { ChoicesFields, FLAGS, FormattedText } from "./choices-fields";
+import { ChoicesFields, FormattedText } from "./choices-fields";
 import { format } from "./format";
+import { FLAGS } from "./format-flags";
 
 const NONE = "__none__";
 

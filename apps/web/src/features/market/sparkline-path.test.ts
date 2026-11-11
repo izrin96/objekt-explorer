@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { sparklinePath } from "./price-sparkline";
+import { sparklinePath } from "./sparkline-path";
 
 describe("sparklinePath", () => {
   test("runs from the first to the last value, low at the bottom", () => {

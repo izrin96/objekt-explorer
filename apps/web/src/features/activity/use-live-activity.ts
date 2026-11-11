@@ -2,7 +2,7 @@ import type { ActivityMessage, ActivityType } from "@repo/api/schemas/activity";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import type { useCanonicalFilters } from "@/features/filters/use-filters";
 
 import {

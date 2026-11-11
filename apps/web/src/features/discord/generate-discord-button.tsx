@@ -12,13 +12,14 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { useFilterData } from "@/features/filters/filter-data-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
+import { useFilterData } from "@/features/filters/use-filter-data";
 import { m } from "@/paraglide/messages";
 
 import { EMPTY_CHOICES, joinSections, toFormatOptions } from "./choices";
-import { ChoicesFields, FLAGS, FormattedText } from "./choices-fields";
+import { ChoicesFields, FormattedText } from "./choices-fields";
 import { format } from "./format";
+import { FLAGS } from "./format-flags";
 
 // the on-screen set has no saved list to link to
 const VISITOR_FLAGS = FLAGS.filter((flag) => flag.key !== "includeLink");

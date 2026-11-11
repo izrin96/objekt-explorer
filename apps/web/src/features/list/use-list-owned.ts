@@ -1,6 +1,6 @@
 import { useUserLists } from "@/features/user/hooks";
 
-import { useListTarget } from "./list-provider";
+import { useListTarget } from "./use-list-target";
 
 /** The owner's own lists are the ones `currentUser` carries; a viewer's are not. */
 export function useIsListOwner(slug: string): boolean {

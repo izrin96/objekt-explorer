@@ -4,14 +4,6 @@ import { m } from "@/paraglide/messages";
 
 import { getCollectionShortNo } from "./objekt-utils";
 
-/** "DaHyun A201Z", the code the cards print; the slug while the collection is unknown. */
-export function collectionName(
-  slug: string,
-  collection: Pick<ValidObjekt, "member" | "artist" | "season" | "collectionNo"> | undefined,
-) {
-  return collection ? `${collection.member} ${getCollectionShortNo(collection)}` : slug;
-}
-
 /** "#537", or "~#537" read as "estimated #537" when we computed the serial, not Cosmo. */
 export function SerialNo({ serial, estimated }: { serial: number; estimated?: boolean }) {
   return (

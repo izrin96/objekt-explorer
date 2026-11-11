@@ -6,7 +6,7 @@ import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import type { Code } from "@/features/link/link-flow-rules";
 import { ArtistStep } from "@/features/link/steps/artist-step";
 import { NicknameStep } from "@/features/link/steps/nickname-step";

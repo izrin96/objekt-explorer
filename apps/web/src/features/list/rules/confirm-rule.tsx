@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useRef } from "react";
 
-import { rich } from "@/components/shared/message-markup";
+import { rich } from "@/components/shared/rich-message";
 import {
   AlertDialog,
   AlertDialogDescription,

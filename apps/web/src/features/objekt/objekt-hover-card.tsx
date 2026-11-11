@@ -1,6 +1,7 @@
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
-import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
+import { CursorCard } from "@/components/shared/cursor-card";
+import { cursorCardDelays } from "@/components/shared/cursor-card-delays";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
 
 import { ObjektArtwork } from "./objekt-artwork";

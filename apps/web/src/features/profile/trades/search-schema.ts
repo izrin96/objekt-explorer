@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 import type * as z from "zod";
 
-import { spinsSearchSchema } from "@/features/activity/spin-grouping";
+import { spinsSearchSchema } from "@/features/activity/spins-search";
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
 const { at: _at, ...resetPatch } = defaultFilters;
