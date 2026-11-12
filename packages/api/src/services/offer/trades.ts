@@ -104,12 +104,11 @@ export async function cancelTrade(me: string, tradeId: number) {
     return between;
   };
   // checked once before the wait, so a trade already locked refuses at once
-  const between = await refuseIfSent();
+  const [between, name] = await Promise.all([refuseIfSent(), partyNames([me])]);
   // the indexer trails the chain by seconds, so a send just made would not lock the trade yet:
   // wait until it has read every block mined before this cancel, then check again
   const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp(between));
   if (!behind) await refuseIfSent();
-  const name = await partyNames([me]);
 
   const notified = await db.transaction(async (tx) => {
     const status = await lockTradeRow(tx, tradeId);
@@ -153,16 +152,18 @@ export async function cancelTrade(me: string, tradeId: number) {
 /** Feedback on a completed trade, or a failed one from the party who delivered, changeable for 14 days; only totals are ever shown. */
 export async function rateTrade(me: string, tradeId: number, rating: TradeRating) {
   const row = await findTrade(tradeId, me);
-  const safety = await chatSafety(me, row.partnerId);
+  const [safety, legs] = await Promise.all([
+    chatSafety(me, row.partnerId),
+    db
+      .select({
+        fromUserId: tradeLeg.fromUserId,
+        verifiedAt: tradeLeg.verifiedAt,
+        confirmedAt: tradeLeg.confirmedAt,
+      })
+      .from(tradeLeg)
+      .where(eq(tradeLeg.tradeId, tradeId)),
+  ]);
   if (safety.tradeBlocked) refuseOffer("trade_blocked");
-  const legs = await db
-    .select({
-      fromUserId: tradeLeg.fromUserId,
-      verifiedAt: tradeLeg.verifiedAt,
-      confirmedAt: tradeLeg.confirmedAt,
-    })
-    .from(tradeLeg)
-    .where(eq(tradeLeg.tradeId, tradeId));
   const refusal = rateRefusal(
     {
       ...row,

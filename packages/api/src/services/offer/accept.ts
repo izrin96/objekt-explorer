@@ -40,11 +40,9 @@ export async function acceptOffer(me: string, offerId: number) {
   const now = new Date();
   const row = await findOffer(offerId, me);
   const partnerId = row.fromUserId === me ? row.toUserId : row.fromUserId;
-  const safety = await chatSafety(me, partnerId);
-  refuseAction(row, me, "accept", now, { tradeBlocked: safety.tradeBlocked });
-  refuseUnsafe("accept", safety);
-
-  const [items, addresses] = await Promise.all([
+  // none of these reads refuses, so the refusals below keep their order
+  const [safety, items, addresses] = await Promise.all([
+    chatSafety(me, partnerId),
     db
       .select({
         side: sql<"give" | "get">`${offerItem.side}`,
@@ -56,23 +54,27 @@ export async function acceptOffer(me: string, offerId: number) {
       .orderBy(offerItem.id),
     linkedAddresses([row.fromUserId, row.toUserId]),
   ]);
+  refuseAction(row, me, "accept", now, { tradeBlocked: safety.tradeBlocked });
+  refuseUnsafe("accept", safety);
   const fromAddresses = addresses.get(row.fromUserId)!;
   const toAddresses = addresses.get(row.toUserId)!;
   if (toAddresses.size === 0 || fromAddresses.size === 0) refuseOffer("no_address");
   const holdersOf = (side: Side) => (side === "give" ? fromAddresses : toAddresses);
   // read before the lock: the indexer is another database, and a token that moves after
   // this read is caught by the verifier
-  const copyNeeds = await checkItems(items, {
-    giverId: (side) => (side === "give" ? row.fromUserId : row.toUserId),
-    holders: holdersOf,
-    copyHolders: holdersOf,
-    sent: {
-      since: row.createdAt,
-      receivers: (side) => (side === "give" ? toAddresses : fromAddresses),
-    },
-  });
+  const [copyNeeds, name] = await Promise.all([
+    checkItems(items, {
+      giverId: (side) => (side === "give" ? row.fromUserId : row.toUserId),
+      holders: holdersOf,
+      copyHolders: holdersOf,
+      sent: {
+        since: row.createdAt,
+        receivers: (side) => (side === "give" ? toAddresses : fromAddresses),
+      },
+    }),
+    partyNames([row.fromUserId, row.toUserId]),
+  ]);
   const anyCopy = items.filter((item) => item.objektId === null);
-  const name = await partyNames([row.fromUserId, row.toUserId]);
 
   const result = await db.transaction(async (tx) => {
     // the link lock order, before the conversation lock: an unlink can't land between the

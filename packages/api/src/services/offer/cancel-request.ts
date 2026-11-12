@@ -25,8 +25,7 @@ const closeRequest = (tx: Tx, id: number, status: Exclude<CancelRequestStatus, "
 
 /** Either party asks to end the trade; the other answers. One open request per trade. */
 export async function askCancel(me: string, tradeId: number) {
-  const row = await findTrade(tradeId, me);
-  const name = await partyNames([me]);
+  const [row, name] = await Promise.all([findTrade(tradeId, me), partyNames([me])]);
 
   const notified = await db.transaction(async (tx) => {
     if ((await lockTradeRow(tx, tradeId)) !== "in_progress") refuseOffer("trade_ended");
@@ -77,8 +76,7 @@ export async function askCancel(me: string, tradeId: number) {
  * `cancelled_by`, or declines, and the trade carries on. The asker is told either way.
  */
 export async function answerCancel(me: string, tradeId: number, accept: boolean) {
-  const row = await findTrade(tradeId, me);
-  const name = await partyNames([me]);
+  const [row, name] = await Promise.all([findTrade(tradeId, me), partyNames([me])]);
 
   const notified = await db.transaction(async (tx) => {
     const status = await lockTradeRow(tx, tradeId);

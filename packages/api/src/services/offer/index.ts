@@ -124,26 +124,26 @@ export async function createOffer(
   const { partnerId } = addressed;
   const startCtx = addressed.start;
   // the offer is the conversation's first message when it is empty, and then the start
-  const firstCtx =
-    startCtx ?? (addressed.empty ? await prepareFirst(me, meCreatedAt, partnerId) : null);
-  const [safety, addresses] = await Promise.all([
-    startCtx ? startCtx.safety : chatSafety(me, partnerId),
-    linkedAddresses([me, partnerId]),
-  ]);
+  const firstRead =
+    startCtx === null && addressed.empty ? prepareFirst(me, meCreatedAt, partnerId) : null;
+  // none of these reads refuses, so the refusals below keep their order
+  const [firstCtx, safety, addresses, entries, kept, hasLists, rules, postListId] =
+    await Promise.all([
+      startCtx ?? firstRead,
+      startCtx?.safety ?? firstRead?.then((ctx) => ctx.safety) ?? chatSafety(me, partnerId),
+      linkedAddresses([me, partnerId]),
+      allowedEntries(
+        addressed,
+        input.get.map((item) => item.collectionSlug),
+      ),
+      counteredGives(addressed.conversationId, me),
+      partnerHasLists(partnerId),
+      offerRulesOf(partnerId),
+      resolvePostList(partnerId, input.post),
+    ]);
   const myAddresses = addresses.get(me)!;
   if (myAddresses.size === 0) refuseOffer("no_address");
   refuseUnsafe("send", safety);
-
-  const [entries, kept, hasLists, rules, postListId] = await Promise.all([
-    allowedEntries(
-      addressed,
-      input.get.map((item) => item.collectionSlug),
-    ),
-    counteredGives(addressed.conversationId, me),
-    partnerHasLists(partnerId),
-    offerRulesOf(partnerId),
-    resolvePostList(partnerId, input.post),
-  ]);
   // before the get side is checked: a stale counter's kept items would read as unlisted
   if (input.counters !== undefined && kept?.offerId !== input.counters) {
     refuseOffer(
@@ -260,23 +260,6 @@ export async function createOffer(
   }
   const keptIds = new Set(getRows.flatMap((row) => (row.kept ? [row.item.objektId!] : [])));
   const asksThroughList = getRows.some((row) => row.listId !== null);
-  const listed =
-    firstCtx !== null &&
-    firstListed(
-      {
-        offer: {
-          asksThroughList,
-          givesWanted:
-            !asksThroughList &&
-            (await givesWanted(
-              partnerId,
-              input.give.map((item) => item.collectionSlug),
-            )),
-        },
-      },
-      partnerId,
-    );
-
   const items: ItemRow[] = [
     ...input.give.map((item) => ({
       side: "give" as const,
@@ -290,28 +273,39 @@ export async function createOffer(
     })),
   ];
   const partnerAddresses = addresses.get(partnerId)!;
-  await checkItems(items, {
-    giverId: (side) => (side === "give" ? me : partnerId),
-    // a kept objekt was the partner's own offer, so it may sit anywhere they hold it
-    holders: (side) => {
-      if (side === "give") return myAddresses;
-      return collectionAddrs && keptIds.size === 0 ? new Set(collectionAddrs) : partnerAddresses;
-    },
-    copyHolders: (side) => (side === "give" ? myAddresses : partnerAddresses),
-    // an any-copy ask takes only a copy the chosen post offers
-    getScope: collectionAddrs
-      ? undefined
-      : anyCopyScope(chosen === null ? entries : entries.filter((e) => e.listId === chosen)),
-  });
-
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
-  const holders = await openOfferHolders(specificIds, me);
+  // only checkItems refuses in this batch, so its refusals still come before the send slot
+  const [, wantedGive, holders, name] = await Promise.all([
+    checkItems(items, {
+      giverId: (side) => (side === "give" ? me : partnerId),
+      // a kept objekt was the partner's own offer, so it may sit anywhere they hold it
+      holders: (side) => {
+        if (side === "give") return myAddresses;
+        return collectionAddrs && keptIds.size === 0 ? new Set(collectionAddrs) : partnerAddresses;
+      },
+      copyHolders: (side) => (side === "give" ? myAddresses : partnerAddresses),
+      // an any-copy ask takes only a copy the chosen post offers
+      getScope: collectionAddrs
+        ? undefined
+        : anyCopyScope(chosen === null ? entries : entries.filter((e) => e.listId === chosen)),
+    }),
+    firstCtx !== null &&
+      !asksThroughList &&
+      givesWanted(
+        partnerId,
+        input.give.map((item) => item.collectionSlug),
+      ),
+    openOfferHolders(specificIds, me),
+    partyNames([me, partnerId]),
+  ]);
+  const listed =
+    firstCtx !== null &&
+    firstListed({ offer: { asksThroughList, givesWanted: wantedGive } }, partnerId);
   const warnings = specificIds.flatMap((objektId) => {
     const offerIds = openOffersOf(holders.get(objektId) ?? [], addressed.conversationId);
     return offerIds.length > 0 ? [{ objektId, offerIds }] : [];
   });
 
-  const name = await partyNames([me, partnerId]);
   const releaseSlot = await checkMessageRate(me, now);
   const note = input.note ? input.note : null;
   const caution: FlagCategory[] = note === null ? [] : scanMessage(note);
@@ -476,11 +470,10 @@ export async function createOffer(
 /** Decline (the recipient) or withdraw (the sender); `respondedAt` marks when. */
 export async function respondToOffer(me: string, offerId: number, action: "decline" | "withdraw") {
   const now = new Date();
-  const row = await findOffer(offerId, me);
+  const [row, name] = await Promise.all([findOffer(offerId, me), partyNames([me])]);
   const partnerId = row.fromUserId === me ? row.toUserId : row.fromUserId;
-  const safety = await chatSafety(me, partnerId);
-  refuseAction(row, me, action, now, { tradeBlocked: safety.tradeBlocked });
-  const name = await partyNames([me]);
+  // a trade block refuses only accept and counter (actionRefusal), so decline and withdraw read no safety
+  refuseAction(row, me, action, now);
 
   const notified = await db.transaction(async (tx) => {
     await lockConversation(tx, row.conversationId);
