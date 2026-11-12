@@ -43,7 +43,7 @@ async function blockedBetween(a: string, b: string) {
 
 /**
  * For one conversation: whether the partner's Seen and typing reach the viewer, whether the
- * viewer's reach the partner, and how far the partner has read. A block between the two
+ * viewer's reach the partner, how far the partner has read, and the viewer's own member row. A block between the two
  * hides both ways; a caller that reads `chatSafety` passes its `blockedEitherWay`, still pending
  * when the two reads run side by side.
  */
@@ -58,6 +58,8 @@ export async function activityBetween(
       .select({
         userId: conversationMember.userId,
         request: conversationMember.request,
+        archivedAt: conversationMember.archivedAt,
+        mutedUntil: conversationMember.mutedUntil,
         lastReadMessageId: conversationMember.lastReadMessageId,
       })
       .from(conversationMember)
@@ -83,6 +85,7 @@ export async function activityBetween(
         shownRequest: viewer?.request ?? true,
       }),
     partnerReadMessageId: partnerMember?.lastReadMessageId ?? null,
+    viewer,
   };
 }
 

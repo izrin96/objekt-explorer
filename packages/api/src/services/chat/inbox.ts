@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { conversationMember, message, offer } from "@repo/db/schema";
+import { message, offer } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type * as z from "zod";
 
@@ -241,61 +241,46 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
   const forward = input.after !== undefined;
   const older = input.before !== undefined;
   const safetyRead = chatSafety(me, partnerId);
-  const [rows, [member], partners, safety, reputations, deals, anyOffer, activity] =
-    await Promise.all([
-      db
-        .select({
-          id: message.id,
-          senderId: message.senderId,
-          body: message.body,
-          card: message.card,
-          createdAt: message.createdAt,
-          caution: message.caution,
-          offerId: message.offerId,
-          unsentAt: message.unsentAt,
-          replyToId: message.replyToId,
-        })
-        .from(message)
-        .where(
-          and(
-            eq(message.conversationId, input.id),
-            forward ? gt(message.id, input.after!) : undefined,
-            input.before === undefined ? undefined : lt(message.id, input.before),
-          ),
-        )
-        .orderBy(forward ? asc(message.id) : desc(message.id))
-        .limit(THREAD_PAGE_SIZE + 1),
-      db
-        .select({
-          request: conversationMember.request,
-          archivedAt: conversationMember.archivedAt,
-          mutedUntil: conversationMember.mutedUntil,
-          lastReadMessageId: conversationMember.lastReadMessageId,
-        })
-        .from(conversationMember)
-        .where(
-          and(eq(conversationMember.conversationId, input.id), eq(conversationMember.userId, me)),
+  const [rows, partners, safety, reputations, deals, anyOffer, activity] = await Promise.all([
+    db
+      .select({
+        id: message.id,
+        senderId: message.senderId,
+        body: message.body,
+        card: message.card,
+        createdAt: message.createdAt,
+        caution: message.caution,
+        offerId: message.offerId,
+        unsentAt: message.unsentAt,
+        replyToId: message.replyToId,
+      })
+      .from(message)
+      .where(
+        and(
+          eq(message.conversationId, input.id),
+          forward ? gt(message.id, input.after!) : undefined,
+          input.before === undefined ? undefined : lt(message.id, input.before),
         ),
-      fetchPartners([partnerId]),
-      safetyRead,
-      reputationOf([partnerId]),
-      // the cache keeps only the newest page's `conversation`, so an older page skips the deal
-      older ? null : readDeals(me, [input.id]),
-      older
-        ? []
-        : db
-            .select({ id: offer.id })
-            .from(offer)
-            .where(eq(offer.conversationId, input.id))
-            .limit(1),
-      activityBetween(
-        input.id,
-        me,
-        partnerId,
-        safetyRead.then((read) => read.blockedEitherWay),
-      ),
-    ]);
+      )
+      .orderBy(forward ? asc(message.id) : desc(message.id))
+      .limit(THREAD_PAGE_SIZE + 1),
+    fetchPartners([partnerId]),
+    safetyRead,
+    reputationOf([partnerId]),
+    // the cache keeps only the newest page's `conversation`, so an older page skips the deal
+    older ? null : readDeals(me, [input.id]),
+    older
+      ? []
+      : db.select({ id: offer.id }).from(offer).where(eq(offer.conversationId, input.id)).limit(1),
+    activityBetween(
+      input.id,
+      me,
+      partnerId,
+      safetyRead.then((read) => read.blockedEitherWay),
+    ),
+  ]);
   const partner = partners.get(partnerId);
+  const member = activity.viewer;
   if (!member || !partner) throw new ORPCError("NOT_FOUND");
 
   const page = rows.slice(0, THREAD_PAGE_SIZE);
