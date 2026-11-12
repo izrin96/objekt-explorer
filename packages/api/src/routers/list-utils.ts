@@ -11,7 +11,7 @@ import {
   updateEntryPricesInputSchema,
 } from "../schemas/list";
 import { takesRatio } from "../schemas/trade-ratio";
-import { setEntryPrices, setEntryRatio } from "../services/list/entries";
+import { assertTakesPrices, setEntryPrices, setEntryRatio } from "../services/list/entries";
 import { fetchPartialOwnedListCollections } from "../services/list/entry-view";
 import { exportListCsv } from "../services/list/export";
 import { findHeldList } from "../services/list/read";
@@ -30,10 +30,7 @@ export const listUtils = {
 
       const list = await findHeldList(slug, user.id);
 
-      // Only sale lists can set prices
-      if (list.listType !== "sale") {
-        refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
-      }
+      assertTakesPrices(list);
 
       await setEntryPrices(list.id, updates);
       await touchList([list.id]);

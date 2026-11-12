@@ -1,6 +1,5 @@
 import { ORPCError } from "@orpc/server";
 
-import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -14,7 +13,7 @@ import {
   dropReceivedInputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
-import { addEntries, removeEntries } from "../services/list/entries";
+import { addEntries, assertTakesPrices, removeEntries } from "../services/list/entries";
 import { buildListEntries } from "../services/list/entry-view";
 import {
   fetchListPreviews,
@@ -85,9 +84,7 @@ export const listEntriesRouter = {
       const list = await findHeldList(slug, user.id);
       const trimmed = note?.trim() || null;
       const priced = isQyop === true || price != null || trimmed !== null;
-      if (priced && list.listType !== "sale") {
-        refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
-      }
+      if (priced) assertTakesPrices(list);
       const { rows, skipped, unowned } = await addEntries(
         list,
         from,

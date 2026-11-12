@@ -21,6 +21,12 @@ type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
 /** What each added entry starts with: a sale list's price and note, set when the caller checked the list takes them. */
 type EntryPricing = { price: number | null; isQyop: boolean; note: string | null };
 
+export function assertTakesPrices(list: Pick<List, "listType">) {
+  if (list.listType !== "sale") {
+    refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
+  }
+}
+
 /**
  * Of the requested items that added nothing, `unowned` counts those the bound
  * list's profile holds no copy of, and `skipped` the rest, already in the list.
