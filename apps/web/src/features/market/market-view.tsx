@@ -64,7 +64,7 @@ export function MarketView() {
   const matchesOn = !!user && showMatches;
   const matchesQuery = useQuery(marketMatchesOptions(matchesOn));
   const wanted = matchesOn ? matchesQuery.data?.want : undefined;
-  const market = useMarketObjekts(marketCompare.ownedSlugs, wanted);
+  const market = useMarketObjekts(marketCompare.ownedSlugs, wanted, marketCompare.onlySlugs);
   const { filtered, filters, rarityMap, totalListings } = market;
   const isPending =
     market.isPending || marketCompare.isPending || (matchesOn && matchesQuery.isPending);
@@ -137,14 +137,22 @@ export function MarketView() {
                 pending={matchesOn && matchesQuery.isPending}
                 error={matchesOn ? matchesQuery.error : null}
               />
-              <MarketCompareButton activeAddress={marketCompare.activeAddress} />
+              <MarketCompareButton
+                activeAddress={marketCompare.activeAddress}
+                activeList={marketCompare.activeList}
+              />
             </>
           ) : undefined
         }
       />
 
       {compare !== null ? (
-        <CompareBanner compare={compare} onClear={clearCompare} error={marketCompare.error} />
+        <CompareBanner
+          compare={compare}
+          targetName={marketCompare.targetName}
+          onClear={clearCompare}
+          error={marketCompare.error}
+        />
       ) : null}
 
       {!isPending && !narrowingFailed && (
@@ -180,7 +188,9 @@ export function MarketView() {
         <EmptyState
           icon={MagnifyingGlassIcon}
           title={m.compare_view_empty_title()}
-          hint={m.market_compare_empty()}
+          hint={
+            compare.cmp_type === "list" ? m.market_compare_list_empty() : m.market_compare_empty()
+          }
         />
       ) : filtered.length === 0 ? (
         <EmptyState

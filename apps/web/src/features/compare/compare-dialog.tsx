@@ -26,7 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUserProfiles } from "@/features/user/hooks";
+import { ListLabel } from "@/features/list/list-label";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
@@ -41,6 +42,8 @@ type Mode = "missing" | "matches";
 
 /** the picker's value for typing a Cosmo ID instead of choosing a linked profile */
 const OTHER_PROFILE = "other";
+/** the same for pasting a list's link or ID; a list ID is never this long */
+const OTHER_LIST = "other-list-target";
 
 type Choice<T extends string> = { value: T; label: () => string; description: () => string };
 
@@ -110,6 +113,7 @@ export function CompareDialog({
   const [targetType, setTargetType] = useState<TargetType>("profile");
   // unset until picked, so profiles that load after the first render still lead
   const [pickedChoice, setPickedChoice] = useState<string | null>(null);
+  const [pickedListChoice, setPickedListChoice] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("missing");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [resolving, setResolving] = useState(false);
@@ -120,10 +124,20 @@ export function CompareDialog({
   const profileChoice = pickedChoice ?? profiles[0]?.address ?? OTHER_PROFILE;
   const choiceProfile = profiles.find((profile) => profile.address === profileChoice);
   const pickedProfile = showPicker ? choiceProfile : undefined;
+  const ownLists = useUserLists().filter((list) => list.slug !== sourceId);
+  const showListPicker = targetType === "list" && ownLists.length > 0;
+  const listChoice = pickedListChoice ?? ownLists[0]?.slug ?? OTHER_LIST;
+  const choiceList = ownLists.find((list) => list.slug === listChoice);
+  const pickedList = showListPicker ? choiceList : undefined;
 
   const submit = async (values: Record<string, unknown>) => {
     if (pickedProfile) {
       setCompare(compareWithProfile(pickedProfile, mode));
+      onOpenChange(false);
+      return;
+    }
+    if (pickedList) {
+      setCompare({ cmp_type: "list", cmp_to: pickedList.slug, cmp_mode: mode });
       onOpenChange(false);
       return;
     }
@@ -162,6 +176,7 @@ export function CompareDialog({
         if (!next) {
           setTargetType("profile");
           setPickedChoice(null);
+          setPickedListChoice(null);
           setMode("missing");
           setErrors({});
         }
@@ -222,12 +237,51 @@ export function CompareDialog({
               </div>
             ) : null}
 
+            {showListPicker ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="compare-list">{field.label()}</Label>
+                <span className="text-muted-foreground text-xs">
+                  {m.compare_list_picker_description()}
+                </span>
+                <Select
+                  value={listChoice}
+                  onValueChange={(next: string | null) => {
+                    setPickedListChoice(next);
+                    setErrors({});
+                  }}
+                >
+                  <SelectTrigger id="compare-list" className="min-w-0">
+                    <SelectValue>
+                      {choiceList ? (
+                        <ListLabel name={choiceList.name} type={choiceList.listType} />
+                      ) : (
+                        m.compare_list_picker_other()
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPopup className="max-w-(--anchor-width)">
+                    {ownLists.map((list) => (
+                      <SelectItem key={list.slug} value={list.slug} label={list.name}>
+                        <ListLabel name={list.name} type={list.listType} />
+                      </SelectItem>
+                    ))}
+                    <SelectSeparator />
+                    <SelectItem value={OTHER_LIST}>{m.compare_list_picker_other()}</SelectItem>
+                  </SelectPopup>
+                </Select>
+              </div>
+            ) : null}
+
             {/* keyed on the type: a Cosmo ID is not a list ID, so switching
                 clears the text and the error rather than carrying them over */}
-            {pickedProfile ? null : (
+            {pickedProfile || pickedList ? null : (
               <Field key={targetType} name="target" className="w-full gap-1.5">
                 <FieldLabel>
-                  {showPicker ? m.compare_profile_other_label() : field.label()}
+                  {showPicker
+                    ? m.compare_profile_other_label()
+                    : showListPicker
+                      ? m.compare_list_other_label()
+                      : field.label()}
                 </FieldLabel>
                 <FieldDescription>{field.description()}</FieldDescription>
                 <Input autoFocus aria-required placeholder={field.placeholder()} />

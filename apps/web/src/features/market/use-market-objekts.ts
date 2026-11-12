@@ -21,11 +21,13 @@ const DEFAULT_MARKET_SORT = "listedAt";
  * joined server-side, so the cached catalogue is merged with the per-collection
  * listing aggregate by slug. Filtering runs over every row, so it follows a
  * deferred copy of the filters. `ownedSlugs` drops what a compared profile
- * already holds; `wanted`, Show my matches, keeps only what the viewer's want lists hold.
+ * already holds; `wanted`, Show my matches, keeps only what the viewer's want lists hold;
+ * `only` keeps what a compared list holds.
  */
 export function useMarketObjekts(
   ownedSlugs?: ReadonlySet<string>,
   wanted?: Readonly<Record<string, readonly number[]>>,
+  only?: ReadonlySet<string>,
 ) {
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
@@ -54,6 +56,7 @@ export function useMarketObjekts(
       const entry = bySlug.get(collection.slug);
       if (!entry || ownedSlugs?.has(collection.slug)) continue;
       if (wanted && !Object.hasOwn(wanted, collection.slug)) continue;
+      if (only && !only.has(collection.slug)) continue;
       objekts.push({
         ...collection,
         floorPrice: entry.minPrice,
@@ -64,7 +67,7 @@ export function useMarketObjekts(
     }
 
     return objekts;
-  }, [collectionQuery.data, summaryQuery.data, ownedSlugs, wanted]);
+  }, [collectionQuery.data, summaryQuery.data, ownedSlugs, wanted, only]);
 
   const filtered = useMemo(() => filterObjekts(deferredFilters, listed), [deferredFilters, listed]);
 

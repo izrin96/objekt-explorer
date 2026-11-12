@@ -8,10 +8,13 @@ import type { ActiveCompare } from "./search-schema";
 
 export function CompareBanner({
   compare,
+  targetName,
   onClear,
   error,
 }: {
   compare: ActiveCompare;
+  /** shown in place of `cmp_to`, which for a list is its ID */
+  targetName?: string;
   onClear: () => void;
   error?: string;
 }) {
@@ -38,7 +41,8 @@ export function CompareBanner({
             : m.compare_view_showing_matches()}
         </span>
         <span className="text-muted-foreground text-xs">
-          {m.compare_view_target_label()}: <span className="text-foreground">{compare.cmp_to}</span>
+          {m.compare_view_target_label()}:{" "}
+          <span className="text-foreground">{targetName ?? compare.cmp_to}</span>
           {` (${compare.cmp_type === "list" ? m.compare_view_type_list() : m.compare_view_type_profile()})`}
         </span>
       </div>

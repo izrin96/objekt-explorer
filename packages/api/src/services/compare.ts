@@ -33,14 +33,15 @@ export async function fetchHeldSlugs(address: string): Promise<Set<string>> {
 }
 
 /**
- * The collection slugs a list holds, or `null` when there is no such list. A
- * list shows only the column its binding uses, so only that column counts.
+ * The collection slugs a list holds, or `null` when there is no such list, or
+ * when `ownerId` is given and the list is not theirs. A list shows only the
+ * column its binding uses, so only that column counts.
  */
-async function fetchListSlugs(slug: string): Promise<Set<string> | null> {
+export async function fetchListSlugs(slug: string, ownerId?: string): Promise<Set<string> | null> {
   const list = await db.query.lists.findFirst({
     columns: { isProfileBind: true },
     with: { entries: { columns: { collectionSlug: true, objektId: true } } },
-    where: { slug },
+    where: { slug, ...(ownerId === undefined ? {} : { userId: ownerId }) },
   });
 
   if (!list) return null;

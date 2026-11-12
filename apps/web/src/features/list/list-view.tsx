@@ -35,7 +35,7 @@ import { NearNote } from "@/features/trade/near-note";
 import { canShowMatches } from "@/features/trade/show-matches";
 import { NearMatches, ShowMyMatches } from "@/features/trade/show-my-matches";
 import { useListMatches } from "@/features/trade/use-list-matches";
-import { useCurrentUser } from "@/features/user/hooks";
+import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -80,6 +80,11 @@ function ListEntries() {
 
   const search = useCompareSearch();
   const compare = isComparing(search) ? search : null;
+  const ownLists = useUserLists();
+  const compareName =
+    compare?.cmp_type === "list"
+      ? ownLists.find((owned) => owned.slug === compare.cmp_to)?.name
+      : undefined;
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
 
@@ -258,6 +263,7 @@ function ListEntries() {
     return (
       <CompareBanner
         compare={compare}
+        targetName={compareName}
         onClear={clearCompare}
         error={refusalText(compareQuery.error)}
       />
@@ -301,7 +307,9 @@ function ListEntries() {
         }
       />
 
-      {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
+      {compare !== null ? (
+        <CompareBanner compare={compare} targetName={compareName} onClear={clearCompare} />
+      ) : null}
 
       {query.isPending || rarityLoading ? (
         <SkeletonGrid />
