@@ -61,10 +61,16 @@ export const listFindOptions = (slug: string, enabled: boolean) =>
 export const profileListsOptions = (address: string) =>
   orpc.list.profileLists.queryOptions({ input: { address } });
 
+const previewOptions = {
+  // as with `listBySlugQuery`: hydration keeps the server's read, and the viewer's edits invalidate it
+  staleTime: 30_000,
+  select: (data: Outputs["list"]["listPreviews"]) =>
+    new Map(data.map((preview) => [preview.slug, preview])),
+};
+
 export const listPreviewsOptions = (slugs: string[]) =>
-  orpc.list.listPreviews.queryOptions({
-    input: { slugs },
-    // as with `listBySlugQuery`: hydration keeps the server's read, and the viewer's edits invalidate it
-    staleTime: 30_000,
-    select: (data) => new Map(data.map((preview) => [preview.slug, preview])),
-  });
+  orpc.list.listPreviews.queryOptions({ input: { slugs }, ...previewOptions });
+
+/** A profile's previews by its address, so they load beside its lists and not after them. */
+export const profilePreviewsOptions = (address: string) =>
+  orpc.list.profilePreviews.queryOptions({ input: { address }, ...previewOptions });

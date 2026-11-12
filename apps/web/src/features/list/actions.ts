@@ -55,6 +55,7 @@ function useListInvalidation() {
                 ]
               : []),
             queryClient.invalidateQueries({ queryKey: orpc.list.listPreviews.key() }),
+            queryClient.invalidateQueries({ queryKey: orpc.list.profilePreviews.key() }),
             queryClient.invalidateQueries({ queryKey: orpc.list.profileLists.key() }),
           ]
         : [

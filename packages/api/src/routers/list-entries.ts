@@ -19,6 +19,7 @@ import {
   fetchListPreviews,
   fetchListWithEntries,
   fetchProfileLists,
+  fetchProfilePreviews,
   findHeldList,
   findOwnedList,
 } from "../services/list/read";
@@ -71,6 +72,11 @@ export const listEntriesRouter = {
     .input(profileListsInputSchema)
     .output(documented(profileListsOutputSchema))
     .handler(({ input }) => fetchProfileLists(input.address)),
+
+  /** The site's own read: the Lists tab asks for it beside `profileLists`, which has the slugs. */
+  profilePreviews: pub
+    .input(profileListsInputSchema)
+    .handler(({ input }) => fetchProfilePreviews(input.address)),
 
   addToList: authed.input(addToListInputSchema).handler(
     async ({

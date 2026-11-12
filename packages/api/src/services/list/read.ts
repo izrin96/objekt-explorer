@@ -5,7 +5,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, userAddress } from "@repo/db/schema";
 import type { UserAddress } from "@repo/db/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { type AnyColumn, and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
 import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
@@ -149,6 +149,21 @@ export async function fetchListForViewer(lookup: ListLookup, viewerId: string | 
   return { ...toPublicList(row, handle), messageable };
 }
 
+/**
+ * The lists under a profile: those of the account holding the address now. One that unlinked it,
+ * or lost it to a staff move, keeps its rows but no longer shows under the profile.
+ */
+function heldProfileLists(profileAddress: string) {
+  return {
+    profileAddress,
+    RAW: (list: { profileAddress: AnyColumn; userId: AnyColumn }) => sql`EXISTS (
+      SELECT 1 FROM ${userAddress}
+      WHERE ${userAddress.address} = ${list.profileAddress}
+        AND ${userAddress.userId} = ${list.userId}
+    )`,
+  };
+}
+
 export async function fetchOwnedLists(
   column: "userId" | "profileAddress",
   identifier: string,
@@ -170,19 +185,7 @@ export async function fetchOwnedLists(
       takesSwaps: true,
       bumpedAt: true,
     },
-    where:
-      column === "userId"
-        ? { userId: identifier }
-        : {
-            profileAddress: identifier,
-            // only the account holding the address now: one that unlinked it, or lost it to a
-            // staff move, keeps its rows but no longer shows under the profile
-            RAW: (list) => sql`EXISTS (
-              SELECT 1 FROM ${userAddress}
-              WHERE ${userAddress.address} = ${list.profileAddress}
-                AND ${userAddress.userId} = ${list.userId}
-            )`,
-          },
+    where: column === "userId" ? { userId: identifier } : heldProfileLists(identifier),
     with: {
       userAddress: ownerAddress,
       linkedList: linkedListWith,
@@ -207,21 +210,30 @@ export async function fetchOwnedLists(
   });
 }
 
-/** The lists shown under a profile: those of the account holding the address now. */
 export function fetchProfileLists(profileAddress: string): Promise<PublicList[]> {
   return fetchOwnedLists("profileAddress", profileAddress);
 }
 
+/** The previews of the lists `fetchProfileLists` returns, read beside it instead of after. */
+export function fetchProfilePreviews(profileAddress: string): Promise<ListPreview[]> {
+  return fetchListPreviews({ profileAddress });
+}
+
 /** Each list's entry count and its latest few artworks, newest first. */
-export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]> {
-  if (slugs.length === 0) return [];
+export async function fetchListPreviews(
+  source: string[] | { profileAddress: string },
+): Promise<ListPreview[]> {
+  if (Array.isArray(source) && source.length === 0) return [];
+  const scope = Array.isArray(source)
+    ? { slug: { in: source } }
+    : heldProfileLists(source.profileAddress);
 
   // the list page reads only the column its binding uses, so the preview does too
   const readLists = (bound: boolean) => {
     const shown = bound ? isNotNull(listEntries.objektId) : isNotNull(listEntries.collectionSlug);
     return db.query.lists.findMany({
       columns: { slug: true },
-      where: { slug: { in: slugs }, isProfileBind: bound },
+      where: { ...scope, isProfileBind: bound },
       extras: {
         count: (list) =>
           db.$count(

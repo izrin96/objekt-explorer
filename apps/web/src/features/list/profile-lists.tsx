@@ -7,7 +7,7 @@ import { m } from "@/paraglide/messages";
 
 import { type GetPreview, ListRow, ListRowGroup, ListRowsSkeleton, ListSection } from "./list-rows";
 import { profileListsOptions } from "./queries";
-import { useListPreviews } from "./use-list-previews";
+import { useProfilePreviews } from "./use-list-previews";
 
 /**
  * Every list filed under that Cosmo, bound to it or only displayed on it: what it has (have and
@@ -15,7 +15,7 @@ import { useListPreviews } from "./use-list-previews";
  */
 export function ProfileLists({ address }: { address: string }) {
   const { data: lists } = useSuspenseQuery(profileListsOptions(address));
-  const getPreview = useListPreviews(lists.map((list) => list.slug));
+  const getPreview = useProfilePreviews(address);
 
   if (lists.length === 0) {
     return (
