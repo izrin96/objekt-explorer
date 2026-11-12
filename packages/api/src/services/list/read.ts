@@ -13,8 +13,7 @@ import { refuse } from "../../lib/refuse";
 import { normalizeUserText } from "../../schemas/common/user-text";
 import { needsTradeHandle, type ListPreview, type PublicList } from "../../schemas/list";
 import { tradeHandle } from "../../schemas/trade-person";
-import { isBlockedEither } from "../moderation/core";
-import { isBanned } from "../moderation/safety";
+import { messageBarred } from "../moderation/safety";
 import { getCollectionColumns } from "../objekt/collection-columns";
 import { toPublicUser } from "../profile";
 import { fetchAddresses } from "../trade/matches/holdings";
@@ -128,11 +127,7 @@ export async function fetchList(lookup: ListLookup): Promise<PublicList | null> 
 async function offersMessage(row: ListRow, viewerId: string | undefined) {
   if (row.userId === viewerId) return false;
   if (!isMessageable(toMessagePref(row.user?.messagePref))) return false;
-  const [blocked, ownerBanned] = await Promise.all([
-    viewerId ? isBlockedEither(viewerId, row.userId) : false,
-    isBanned(row.userId),
-  ]);
-  return !blocked && !ownerBanned;
+  return !(await messageBarred(viewerId, row.userId));
 }
 
 /** The list page's read: the list, and whether it offers Message to this viewer. */

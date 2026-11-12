@@ -41,9 +41,16 @@ export function banned(user: UserRef) {
   )`;
 }
 
-export async function isBanned(userId: string) {
-  const result = await db.execute<{ banned: boolean }>(sql`SELECT ${banned(userId)} AS banned`);
-  return result.rows[0]?.banned ?? false;
+/**
+ * Whether the owner's pages hide Message from this viewer: a block either way, or the owner's
+ * ban. A signed-out viewer has no block to read.
+ */
+export async function messageBarred(viewerId: string | undefined, ownerId: string) {
+  const blocked = viewerId ? sql`NOT ${notBlockedEither(viewerId, ownerId)}` : sql`false`;
+  const { rows } = await db.execute<{ barred: boolean }>(
+    sql`SELECT ${blocked} OR ${banned(ownerId)} AS barred`,
+  );
+  return rows[0]?.barred ?? false;
 }
 
 /** An active trade block or ban: the account takes no part in offers, trades or any feed of lists. */

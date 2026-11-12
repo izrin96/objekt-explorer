@@ -6,7 +6,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { effectiveSanction } from "../../lib/sanctions";
 import type { Role } from "../../permissions";
 import type { AuditAction } from "../../schemas/moderation";
-import { activeSanctionWhere, notBlockedEither } from "./safety";
+import { activeSanctionWhere } from "./safety";
 
 const MODERATION_REFUSALS = [
   "self",
@@ -88,14 +88,6 @@ export async function changeRole(
       ...(change.via ? { via: change.via } : {}),
     },
   });
-}
-
-/** Either account has blocked the other; a Message button between them stays hidden. */
-export async function isBlockedEither(a: string, b: string) {
-  const result = await db.execute<{ blocked: boolean }>(
-    sql`SELECT NOT ${notBlockedEither(a, b)} AS blocked`,
-  );
-  return result.rows[0]?.blocked ?? false;
 }
 
 export async function findAccount(userId: string) {
