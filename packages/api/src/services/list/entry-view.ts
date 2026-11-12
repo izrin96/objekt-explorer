@@ -113,7 +113,7 @@ export async function buildListEntries(
  */
 export async function fetchPartialOwnedListCollections(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({
-    where: { slug, ...(userId ? { userId } : {}) },
+    where: { slug, userId },
     with: {
       entries: {
         columns: {
