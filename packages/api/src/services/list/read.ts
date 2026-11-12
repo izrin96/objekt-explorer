@@ -2,20 +2,21 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, messagePref, userAddress } from "@repo/db/schema";
+import { listEntries, userAddress } from "@repo/db/schema";
 import type { UserAddress } from "@repo/db/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
+import { refuse } from "../../lib/refuse";
 import { normalizeUserText } from "../../schemas/common/user-text";
 import { needsTradeHandle, type ListPreview, type PublicList } from "../../schemas/list";
 import { tradeHandle } from "../../schemas/trade-person";
 import { isBlockedEither } from "../moderation/core";
 import { isBanned } from "../moderation/safety";
 import { getCollectionColumns } from "../objekt/collection-columns";
-import { assertProfileOwned, toPublicUser } from "../profile";
+import { toPublicUser } from "../profile";
 import { fetchAddresses } from "../trade/matches/holdings";
 import { fetchCollectionsBySlug } from "./collections";
 
@@ -61,13 +62,13 @@ const linkedListWith = {
   with: { userAddress: ownerAddress },
 } as const;
 
-export async function fetchList(
-  lookup: { slug: string } | { profileSlug: string; profileAddress: string },
-): Promise<PublicList | null> {
-  const result = await db.query.lists.findFirst({
+type ListLookup = { slug: string } | { profileSlug: string; profileAddress: string };
+
+function readList(lookup: ListLookup) {
+  return db.query.lists.findFirst({
     // load full
     with: {
-      user: true,
+      user: { with: { messagePref: { columns: { allow: true } } } },
       userAddress: ownerAddress,
       linkedList: linkedListWith,
     },
@@ -76,11 +77,15 @@ export async function fetchList(
         ? { profileSlug: lookup.profileSlug, profileAddress: lookup.profileAddress.toLowerCase() }
         : { slug: lookup.slug },
   });
+}
 
-  if (!result) return null;
+type ListRow = NonNullable<Awaited<ReturnType<typeof readList>>>;
 
-  const handle = needsTradeHandle(result) ? await ownerTradeHandle(result.userId) : null;
+function listTradeHandle(row: ListRow) {
+  return needsTradeHandle(row) ? ownerTradeHandle(row.userId) : null;
+}
 
+function toPublicList(result: ListRow, handle: PublicList["tradeHandle"]): PublicList {
   return {
     id: result.id,
     slug: result.slug,
@@ -114,20 +119,31 @@ export async function fetchList(
   };
 }
 
+export async function fetchList(lookup: ListLookup): Promise<PublicList | null> {
+  const row = await readList(lookup);
+  return row ? toPublicList(row, await listTradeHandle(row)) : null;
+}
+
 /** Whether the list page offers Message to the viewer: never on their own list, nor a blocked pair. */
-export async function isListMessageable(listId: number, viewerId: string | undefined) {
-  const [row] = await db
-    .select({
-      userId: lists.userId,
-      allow: messagePref.allow,
-    })
-    .from(lists)
-    .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
-    .where(eq(lists.id, listId));
-  if (!row || row.userId === viewerId) return false;
-  if (viewerId && (await isBlockedEither(viewerId, row.userId))) return false;
-  if (await isBanned(row.userId)) return false;
-  return isMessageable(toMessagePref(row));
+async function offersMessage(row: ListRow, viewerId: string | undefined) {
+  if (row.userId === viewerId) return false;
+  if (!isMessageable(toMessagePref(row.user?.messagePref))) return false;
+  const [blocked, ownerBanned] = await Promise.all([
+    viewerId ? isBlockedEither(viewerId, row.userId) : false,
+    isBanned(row.userId),
+  ]);
+  return !blocked && !ownerBanned;
+}
+
+/** The list page's read: the list, and whether it offers Message to this viewer. */
+export async function fetchListForViewer(lookup: ListLookup, viewerId: string | undefined) {
+  const row = await readList(lookup);
+  if (!row) return null;
+  const [handle, messageable] = await Promise.all([
+    listTradeHandle(row),
+    offersMessage(row, viewerId),
+  ]);
+  return { ...toPublicList(row, handle), messageable };
 }
 
 export async function fetchOwnedLists(
@@ -207,19 +223,6 @@ export async function fetchProfileLists(profileAddress: string): Promise<PublicL
   return fetchOwnedLists("profileAddress", profileAddress, holder.userId);
 }
 
-/**
- * A list bound to a Cosmo profile takes entries and prices only while its owner still holds that
- * address, or an account that lost it could keep listing what the address holds now.
- */
-export async function refuseUnheldProfile(
-  list: { isProfileBind: boolean; profileAddress: string | null },
-  userId: string,
-) {
-  if (list.isProfileBind && list.profileAddress) {
-    await assertProfileOwned(list.profileAddress, userId);
-  }
-}
-
 /** Each list's entry count and its latest few artworks, newest first. */
 export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]> {
   if (slugs.length === 0) return [];
@@ -290,6 +293,27 @@ export async function findOwnedList(slug: string, userId: string) {
   });
 
   if (!list) throw new ORPCError("NOT_FOUND");
+
+  return list;
+}
+
+/**
+ * The caller's list, for a write of entries, prices or rules. A list bound to a Cosmo profile takes
+ * them only while its owner still holds that address, or an account that lost it could keep
+ * listing what the address holds now.
+ */
+export async function findHeldList(slug: string, userId: string) {
+  const found = await db.query.lists.findFirst({
+    where: { slug, userId },
+    with: { userAddress: { columns: { userId: true } } },
+  });
+
+  if (!found) throw new ORPCError("NOT_FOUND");
+
+  const { userAddress: holder, ...list } = found;
+  if (list.isProfileBind && list.profileAddress && holder?.userId !== userId) {
+    refuse("FORBIDDEN", "profile_not_linked", "This Cosmo is not linked with your account");
+  }
 
   return list;
 }

@@ -13,7 +13,7 @@ import {
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
-import { findListBySlug, findOwnedList, refuseUnheldProfile } from "../services/list/read";
+import { findHeldList, findListBySlug, findOwnedList } from "../services/list/read";
 import {
   addRule,
   deleteRule,
@@ -57,8 +57,7 @@ export const listRulesRouter = {
     .input(addRuleInputSchema)
     .handler(async ({ input: { slug, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
-      const list = await findOwnedList(slug, session.user.id);
-      await refuseUnheldProfile(list, session.user.id);
+      const list = await findHeldList(slug, session.user.id);
       return addRule(list, rule, ratio ?? null, session.user.id);
     }),
 
@@ -66,8 +65,7 @@ export const listRulesRouter = {
     .input(updateRuleInputSchema)
     .handler(async ({ input: { slug, ruleId, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
-      const list = await findOwnedList(slug, session.user.id);
-      await refuseUnheldProfile(list, session.user.id);
+      const list = await findHeldList(slug, session.user.id);
       await updateRule(list, ruleId, rule, ratio, session.user.id);
     }),
 

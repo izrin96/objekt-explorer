@@ -20,8 +20,8 @@ import {
   fetchListPreviews,
   fetchListWithEntries,
   fetchProfileLists,
+  findHeldList,
   findOwnedList,
-  refuseUnheldProfile,
 } from "../services/list/read";
 import { dropReceived } from "../services/list/received";
 import { touchList } from "../services/list/shared";
@@ -82,8 +82,7 @@ export const listEntriesRouter = {
       },
     }) => {
       await refuseOverUserLimit("list-add", user.id, 60, 60);
-      const list = await findOwnedList(slug, user.id);
-      await refuseUnheldProfile(list, user.id);
+      const list = await findHeldList(slug, user.id);
       const trimmed = note?.trim() || null;
       const priced = isQyop === true || price != null || trimmed !== null;
       if (priced && list.listType !== "sale") {

@@ -14,7 +14,7 @@ import { takesRatio } from "../schemas/trade-ratio";
 import { setEntryPrices, setEntryRatio } from "../services/list/entries";
 import { fetchPartialOwnedListCollections } from "../services/list/entry-view";
 import { exportListCsv } from "../services/list/export";
-import { findOwnedList, refuseUnheldProfile } from "../services/list/read";
+import { findHeldList } from "../services/list/read";
 import { ownRuleLines } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
 
@@ -28,8 +28,7 @@ export const listUtils = {
     }) => {
       if (updates.length === 0) return;
 
-      const list = await findOwnedList(slug, user.id);
-      await refuseUnheldProfile(list, user.id);
+      const list = await findHeldList(slug, user.id);
 
       // Only sale lists can set prices
       if (list.listType !== "sale") {
@@ -49,8 +48,7 @@ export const listUtils = {
         session: { user },
       },
     }) => {
-      const list = await findOwnedList(slug, user.id);
-      await refuseUnheldProfile(list, user.id);
+      const list = await findHeldList(slug, user.id);
       if (!takesRatio(list.listType)) {
         refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
       }

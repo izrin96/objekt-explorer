@@ -1,4 +1,4 @@
-import { fetchList, isListMessageable } from "@repo/api/services/list/read";
+import { fetchListForViewer } from "@repo/api/services/list/read";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
@@ -15,11 +15,12 @@ export const getListBySlug = createServerFn({ method: "GET" })
   .middleware([optionalAuth])
   .validator(listBySlugInputSchema)
   .handler(async ({ data, context: { session } }) => {
-    const list = await fetchList(
+    const list = await fetchListForViewer(
       data.address !== undefined
         ? { profileSlug: data.slug, profileAddress: data.address }
         : { slug: data.slug },
+      session?.user.id,
     );
     if (!list) throw notFound();
-    return { ...list, messageable: await isListMessageable(list.id, session?.user.id) };
+    return list;
   });
