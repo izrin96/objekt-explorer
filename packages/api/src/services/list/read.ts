@@ -317,10 +317,3 @@ export async function findHeldList(slug: string, userId: string) {
 
   return list;
 }
-
-/** Any list by its slug, whoever owns it; NOT_FOUND when none has it. */
-export async function findListBySlug(slug: string) {
-  const list = await db.query.lists.findFirst({ where: { slug } });
-  if (!list) throw new ORPCError("NOT_FOUND");
-  return list;
-}

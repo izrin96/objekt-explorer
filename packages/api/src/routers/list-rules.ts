@@ -13,7 +13,7 @@ import {
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
-import { findHeldList, findListBySlug, findOwnedList } from "../services/list/read";
+import { findHeldList, findOwnedList } from "../services/list/read";
 import {
   addRule,
   deleteRule,
@@ -41,8 +41,7 @@ export const listRulesRouter = {
     .input(listRulesInputSchema)
     .output(documented(listRulesOutputSchema))
     .handler(async ({ input: { slug } }) => {
-      const list = await findListBySlug(slug);
-      return fetchListRules(list);
+      return fetchListRules(slug);
     }),
 
   // the rule dialog asks again on each change of the draft, so this budget is per minute
@@ -100,7 +99,6 @@ export const listRulesRouter = {
       if (await ipRateLimited("rule-objekts", context.headers ?? getRequestHeaders(), 60, 60)) {
         refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
       }
-      const list = await findListBySlug(slug);
-      return ruleObjekts(list, ruleId, cursor);
+      return ruleObjekts(slug, ruleId, cursor);
     }),
 };

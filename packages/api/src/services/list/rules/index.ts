@@ -46,6 +46,31 @@ const ruleColumns = {
 
 type RuleRow = ListRuleDef & { id: number; listId: number; ratio: number | null };
 
+/** `ruleColumns` for a relational read. */
+const ruleFields = {
+  id: true,
+  listId: true,
+  kind: true,
+  artist: true,
+  season: true,
+  collectionNo: true,
+  class: true,
+  editions: true,
+  members: true,
+  prio: true,
+  skipOwned: true,
+  ratio: true,
+} as const;
+
+/** The list owner's linked addresses, read with the list. */
+const ownerAddresses = {
+  columns: { id: true },
+  with: { userAddresses: { columns: { address: true } } },
+} as const;
+
+const addressesOf = (owner: { userAddresses: { address: string }[] } | null) =>
+  (owner?.userAddresses ?? []).map((row) => row.address.toLowerCase());
+
 const toDef = (row: RuleRow): ListRuleDef => ({
   kind: row.kind,
   artist: row.artist,
@@ -194,23 +219,30 @@ export async function detachRule(list: List, ruleId: number) {
 }
 
 /**
- * A list's rules, oldest first. `canMatch` counts the entries the rule keeps, which is what
- * matching reads; `owned` and `range` come from the indexer now, for the strip's line.
+ * Any list's rules by its slug, oldest first; NOT_FOUND when no list has it. `canMatch` counts
+ * the entries the rule keeps, which is what matching reads; `owned` and `range` come from the
+ * indexer now, for the strip's line.
  */
-export async function fetchListRules(list: Pick<List, "id" | "userId">) {
-  const rows = await db
-    .select({
-      ...ruleColumns,
-      canMatch: sql<number>`(
-        SELECT count(*)::int FROM ${listEntries} e WHERE e.rule_id = "list_rule"."id"
-      )`,
-    })
-    .from(listRule)
-    .where(eq(listRule.listId, list.id))
-    .orderBy(asc(listRule.id));
+export async function fetchListRules(slug: string) {
+  const list = await db.query.lists.findFirst({
+    columns: { id: true },
+    where: { slug },
+    with: {
+      rules: {
+        columns: ruleFields,
+        orderBy: { id: "asc" },
+        extras: {
+          canMatch: (rule) => db.$count(listEntries, eq(listEntries.ruleId, rule.id)),
+        },
+      },
+      user: ownerAddresses,
+    },
+  });
+  if (!list) throw new ORPCError("NOT_FOUND");
+  const rows = list.rules;
   if (rows.length === 0) return [];
 
-  const addresses = await linkedAddresses(list.userId);
+  const addresses = addressesOf(list.user);
   // rules describing the same collections share one indexer read, as the worker's refresh does
   const described = new Map<string, Promise<RuleCollection[]>>();
   return Promise.all(
@@ -260,10 +292,18 @@ export async function fetchRuleDefs(listIds: number[]) {
  * it now. The counts and `headed` cover the whole rule; only the page's collections are read
  * whole, which is most of the cost of a rule spanning thousands.
  */
-export async function ruleObjekts(list: List, ruleId: number, cursor?: number) {
-  const row = await findRule(list, ruleId);
+export async function ruleObjekts(slug: string, ruleId: number, cursor?: number) {
+  const list = await db.query.lists.findFirst({
+    columns: { id: true },
+    where: { slug },
+    with: { rules: { columns: ruleFields }, user: ownerAddresses },
+  });
+  if (!list) throw new ORPCError("NOT_FOUND");
+  // picked here, not bound in SQL: an id past int4 would fail the whole statement, list lookup included
+  const row = list.rules.find((rule) => rule.id === ruleId);
+  if (!row) throw new ORPCError("NOT_FOUND");
   const def = toDef(row);
-  const reading = await readRule(def, await linkedAddresses(list.userId));
+  const reading = await readRule(def, addressesOf(list.user));
   const wanted = new Set(reading.slugs);
   const page = rulePage(
     reading.collections.filter((c) => ruleCovers(def, c)),
