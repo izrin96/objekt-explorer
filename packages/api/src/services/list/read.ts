@@ -63,22 +63,31 @@ const linkedListWith = {
 
 type ListLookup = { slug: string } | { profileSlug: string; profileAddress: string };
 
+function listWhere(lookup: ListLookup) {
+  return "profileAddress" in lookup
+    ? { profileSlug: lookup.profileSlug, profileAddress: lookup.profileAddress.toLowerCase() }
+    : { slug: lookup.slug };
+}
+
+const listWith = { userAddress: ownerAddress, linkedList: linkedListWith } as const;
+
 function readList(lookup: ListLookup) {
   return db.query.lists.findFirst({
-    // load full
-    with: {
-      user: { with: { messagePref: { columns: { allow: true } } } },
-      userAddress: ownerAddress,
-      linkedList: linkedListWith,
-    },
-    where:
-      "profileAddress" in lookup
-        ? { profileSlug: lookup.profileSlug, profileAddress: lookup.profileAddress.toLowerCase() }
-        : { slug: lookup.slug },
+    with: { ...listWith, user: true },
+    where: listWhere(lookup),
+  });
+}
+
+/** `readList` with the owner's message setting, which only the list page's Message button reads. */
+function readListForViewer(lookup: ListLookup) {
+  return db.query.lists.findFirst({
+    with: { ...listWith, user: { with: { messagePref: { columns: { allow: true } } } } },
+    where: listWhere(lookup),
   });
 }
 
 type ListRow = NonNullable<Awaited<ReturnType<typeof readList>>>;
+type ViewerListRow = NonNullable<Awaited<ReturnType<typeof readListForViewer>>>;
 
 function listTradeHandle(row: ListRow) {
   return needsTradeHandle(row) ? ownerTradeHandle(row.userId) : null;
@@ -124,7 +133,7 @@ export async function fetchList(lookup: ListLookup): Promise<PublicList | null> 
 }
 
 /** Whether the list page offers Message to the viewer: never on their own list, nor a blocked pair. */
-async function offersMessage(row: ListRow, viewerId: string | undefined) {
+async function offersMessage(row: ViewerListRow, viewerId: string | undefined) {
   if (row.userId === viewerId) return false;
   if (!isMessageable(toMessagePref(row.user?.messagePref))) return false;
   return !(await messageBarred(viewerId, row.userId));
@@ -132,7 +141,7 @@ async function offersMessage(row: ListRow, viewerId: string | undefined) {
 
 /** The list page's read: the list, and whether it offers Message to this viewer. */
 export async function fetchListForViewer(lookup: ListLookup, viewerId: string | undefined) {
-  const row = await readList(lookup);
+  const row = await readListForViewer(lookup);
   if (!row) return null;
   const [handle, messageable] = await Promise.all([
     listTradeHandle(row),
