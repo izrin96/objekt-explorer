@@ -8,9 +8,18 @@ import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CautionLine } from "@/features/moderation/caution-line";
@@ -30,6 +39,7 @@ import {
   tradeStatusText,
 } from "./format";
 import { type HeldAction, holdLine } from "./hold";
+import { isLopsided } from "./lopsided";
 import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
 import { type Collections, pickKey } from "./pick";
@@ -60,10 +70,12 @@ export function OfferBody({
         .map((item) => itemLabel(item, collections)),
     ),
   );
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const held = useOfferHolds((s) => s.holds[offer.id]);
   const undoRef = useRef<HTMLButtonElement>(null);
   const declineRef = useRef<HTMLButtonElement>(null);
   const withdrawRef = useRef<HTMLButtonElement>(null);
+  const acceptRef = useRef<HTMLButtonElement>(null);
   const hold = (action: HeldAction) => {
     const origin = action === "decline" ? declineRef : withdrawRef;
     const input = { offerId: offer.id };
@@ -85,6 +97,7 @@ export function OfferBody({
       })
       .catch(() => {});
   const busy = actions.accept.isPending || actions.decline.isPending || actions.withdraw.isPending;
+  const canCounter = offer.actions.includes("counter") && onCounter;
   const open = offer.status === "open";
   const reason = offer.status === "cancelled" ? cancelReasonText(offer.cancelReason) : null;
   const title = offer.mine
@@ -224,7 +237,7 @@ export function OfferBody({
                   {m.offer_decline()}
                 </Button>
               ) : null}
-              {offer.actions.includes("counter") && onCounter ? (
+              {canCounter ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -236,10 +249,15 @@ export function OfferBody({
               ) : null}
               {offer.actions.includes("accept") ? (
                 <Button
+                  ref={acceptRef}
                   size="sm"
                   disabled={busy}
                   loading={actions.accept.isPending}
-                  onClick={() => actions.accept.mutate({ offerId: offer.id })}
+                  onClick={() =>
+                    isLopsided(offer)
+                      ? setConfirmOpen(true)
+                      : actions.accept.mutate({ offerId: offer.id })
+                  }
                 >
                   {m.offer_accept()}
                 </Button>
@@ -248,6 +266,50 @@ export function OfferBody({
           ) : null}
         </footer>
       ) : null}
+
+      <AlertDialog
+        open={confirmOpen && offer.actions.includes("accept")}
+        onOpenChange={setConfirmOpen}
+      >
+        {/* Safari doesn't focus a clicked button, so focus would not come back to Accept by itself */}
+        <AlertDialogPopup finalFocus={acceptRef}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{m.offer_lopsided_title()}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {m.offer_lopsided_desc({ get: offer.get.length, give: offer.give.length })}
+              {canCounter ? <span className="block">{m.offer_lopsided_counter_hint()}</span> : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" />}>
+              {m.common_modal_cancel()}
+            </AlertDialogClose>
+            {canCounter ? (
+              <Button
+                variant="outline"
+                disabled={actions.accept.isPending}
+                onClick={() => {
+                  setConfirmOpen(false);
+                  onCounter(offer);
+                }}
+              >
+                {m.offer_counter()}
+              </Button>
+            ) : null}
+            <Button
+              loading={actions.accept.isPending}
+              onClick={() =>
+                actions.accept.mutate(
+                  { offerId: offer.id },
+                  { onSettled: () => setConfirmOpen(false) },
+                )
+              }
+            >
+              {m.offer_accept()}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogPopup>
+      </AlertDialog>
     </div>
   );
 }

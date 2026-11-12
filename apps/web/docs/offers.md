@@ -10,6 +10,8 @@ Its state lives in the pure `features/offers/next-step.ts` (the status card's st
 
 Decline and Withdraw on an open offer wait `HOLD_MS` before they send. The hold lives in `stores/offer-holds.ts`, beside its timer, so it outlives the card; Undo (notice or card) calls `cancelOfferHold`, and a closed tab drops it. Pure parts are in `features/offers/hold.ts`.
 
+Accept sends at once, except on a lopsided offer (`isLopsided` in `features/offers/lopsided.ts`: both sides hold objekts and one holds at least `LOPSIDED_RATIO` times the other), where `OfferBody` first opens a confirmation that names both counts and offers Counter. The rule is the browser's alone: the server accepts either way.
+
 ## Offer builder
 
 Make offer and Counter are the page `/trade/@<handle>/offer` (`routes/(container)/trade/@{$handle}/offer.tsx`), never a dialog. Every caller links through `offerLink` (`features/offers/offer-link.ts`, tested): `MakeOfferButton` as a link, `useOpenOffer()` from a menu item or a drawer, both passing the current href as `from`. The search says how the offer starts (a list or conversation, the row's or one post's matches, a near pick, `counter`, a Market listing's `ask`), never the sender's picks; `requestOf` rebuilds the `OfferRequest` from it, and the loader reads a counter's offer (`offer.views`, refused unless `actions` has `counter`) checks that a conversation is the viewer's with this person, and starts from the person (`withoutLists`) when a list the search names isn't theirs. `partnerHandle` gives chat and the trade page a handle: a post card's, else the address, since a nickname can be shared.
