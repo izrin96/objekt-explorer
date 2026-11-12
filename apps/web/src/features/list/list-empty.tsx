@@ -1,5 +1,6 @@
 import { SelectionPlusIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useCurrentUser } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
+import { RuleDialog } from "./rules/rule-dialog";
 import { useListOwned } from "./use-list-owned";
 import { useListTarget } from "./use-list-target";
 
@@ -20,6 +22,7 @@ export function EmptyList() {
   const isOwner = useListOwned();
   const { data: user } = useCurrentUser();
   const scopeNarrowed = useArtistScopeNarrowed();
+  const [ruleOpen, setRuleOpen] = useState(false);
 
   if (scopeNarrowed) {
     return (
@@ -38,6 +41,35 @@ export function EmptyList() {
         title={m.list_empty_visitor_title()}
         hint={m.list_empty_visitor_hint()}
       />
+    );
+  }
+
+  if (list.listType === "want") {
+    return (
+      <>
+        <EmptyState
+          icon={SelectionPlusIcon}
+          title={m.list_empty_title()}
+          hint={m.list_empty_want_hint()}
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button variant="outline" size="sm" render={<Link to="/" />}>
+                {m.list_browse_objekts()}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setRuleOpen(true)}>
+                {m.rule_add()}
+              </Button>
+            </div>
+          }
+        />
+        <RuleDialog
+          slug={list.slug}
+          listName={list.name}
+          listRatio={list.ratio ?? null}
+          open={ruleOpen}
+          onOpenChange={setRuleOpen}
+        />
+      </>
     );
   }
 
