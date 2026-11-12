@@ -42,17 +42,23 @@ export const leadsPairSql = (offer: string, want: string) =>
     AND ${column(offer, "user_id")} = ${column(want, "user_id")}
     AND ${offersSwapsSql(offer)})`;
 
+/** `viewer`'s hides of the post the list `alias` belongs to, as `hp`, from FROM onwards. */
+export const hidesOfSql = (viewer: UserRef, alias: string) =>
+  sql`FROM hidden_trade_post hp
+    WHERE hp.user_id = ${ref(viewer)}
+      AND (hp.list_id = ${column(alias, "id")}
+        OR hp.list_id IN (SELECT lead.id FROM lists lead WHERE ${leadsPairSql("lead", alias)}))`;
+
 /**
  * Whether the list `alias` belongs to a post `viewer` hid: the hide names the post's lead, so a
  * want half is found through the list leading it.
  */
 export const inHiddenPostSql = (viewer: UserRef, alias: string) =>
-  sql`EXISTS (
-    SELECT 1 FROM hidden_trade_post hp
-    WHERE hp.user_id = ${ref(viewer)}
-      AND (hp.list_id = ${column(alias, "id")}
-        OR hp.list_id IN (SELECT lead.id FROM lists lead WHERE ${leadsPairSql("lead", alias)}))
-  )`;
+  sql`EXISTS (SELECT 1 ${hidesOfSql(viewer, alias)})`;
+
+/** When `viewer` last hid the post the list `alias` belongs to, or null when it is not hidden. */
+export const hiddenPostAtSql = (viewer: UserRef, alias: string) =>
+  sql`(SELECT max(hp.created_at) ${hidesOfSql(viewer, alias)})`;
 
 /** {@link matchableList} over a raw `lists` row, aliased or not. */
 export const matchableListSql = (alias?: string) =>

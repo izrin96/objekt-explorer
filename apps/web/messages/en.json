@@ -220,7 +220,7 @@
   "trade_hidden_partners_empty": "No one is hidden",
   "trade_hidden_partners_empty_hint": "To hide someone, choose Hide in the ··· menu at the top of their row on Trade.",
   "trade_hidden": "Hidden",
-  "trade_hidden_description": "People and posts you hide don't appear on Browse or For you, in your match notifications or in your lists' counts.",
+  "trade_hidden_description": "People and posts you hide don't appear on Browse or For you, in your match notifications or in your lists' counts. A hidden post comes back when its owner adds an objekt that matches your lists.",
   "trade_post_hide": "Hide post",
   "trade_post_unhide": "Unhide post",
   "trade_post_hide_success": "Post hidden",

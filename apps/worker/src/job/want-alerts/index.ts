@@ -3,16 +3,19 @@ import { matchableList } from "@repo/api/services/trade/lists";
 import { mutualPartnerIds } from "@repo/api/services/trade/matches/recount";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
+import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, sql } from "drizzle-orm";
 
 import { chunks, unique } from "../../lib/array";
 import { heartbeat, log } from "../../lib/log";
+import { redis } from "../../lib/redis";
 import {
   listProgress,
   mutualKey,
   type MutualQuestion,
   mutualQuestions,
   selectAlerts,
+  selectUnhides,
 } from "../../lib/want-alert-match";
 import {
   keepMarks,
@@ -55,7 +58,7 @@ export async function sendWantAlerts() {
 
   // the first run only marks where to start, so nothing already listed is announced
   if (progress.kind === "first") {
-    await recordRun([], new Date(nowMs), {
+    await recordRun([], [], new Date(nowMs), {
       cursor: maxId,
       state: { discoverable: discoverable.map((list) => list.id), marks: [[nowMs, maxId]] },
       first: true,
@@ -126,9 +129,10 @@ export async function sendWantAlerts() {
   const { alerts, unowned, notMutual } = context
     ? selectAlerts(context, mutual)
     : { alerts: [], unowned: [] as Pair[], notMutual: [] as Pair[] };
+  const returning = context ? selectUnhides(context) : { unhides: [], unowned: [] as Pair[] };
   const recheck = nextRecheck(
     state.recheck ?? [],
-    unowned.map((pair) => pair.entryId),
+    unique([...unowned, ...returning.unowned].map((pair) => pair.entryId)),
     nowMs,
   );
   const mutualRecheck = nextRecheck(
@@ -153,25 +157,28 @@ export async function sendWantAlerts() {
     recheck: recheck.recheck,
     mutualRecheck: mutualRecheck.recheck,
   };
-  const notified = await recordRun(alerts, new Date(nowMs), {
+  const notified = await recordRun(alerts, returning.unhides, new Date(nowMs), {
     cursor: nextCursor,
     state: next,
     first: false,
   });
 
+  // the hider's cached matches were built without the post
+  await bumpTradeVersion(redis, unique(returning.unhides.map((unhide) => unhide.userId)));
   await publishUsers(notified, { type: "notifications_changed" });
 
   const sinceLast = Math.round((nowMs - (state.marks.at(-1)?.[0] ?? nowMs)) / 60_000);
   alertsBeat.count("runs");
   alertsBeat.count("pairs", pairs.length);
   alertsBeat.count("alerts", alerts.length);
+  alertsBeat.count("posts unhidden", returning.unhides.length);
   alertsBeat.count("rechecked", recheckIds.length);
   alertsBeat.count("mutual checks", asks.length);
   alertsBeat.max("most behind", maxId - nextCursor);
-  // a run that sent nothing is counted in the hourly line only
-  if (alerts.length > 0) {
+  // a run that sent and unhid nothing is counted in the hourly line only
+  if (alerts.length > 0 || returning.unhides.length > 0) {
     alertsLog.info(
-      `${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
+      `${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified, ${returning.unhides.length} hidden posts brought back; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
     );
   }
   alertsBeat.flush();

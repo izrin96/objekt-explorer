@@ -32,6 +32,8 @@ export type AlertPair = {
   wantListId: number;
   slug: string;
   objektId: string | null;
+  /** the new entry sits in a post its recipient hid before it was added */
+  hidden?: boolean;
 };
 
 export type AlertInput<P extends AlertPair = AlertPair> = {
@@ -119,17 +121,9 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
     mode = "any";
   }
 
-  const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
-    input.holdings.copies.has(copyKey(address, first.slug)),
-  );
-  if (wanterHolds) return { kind: "skip" };
-
-  const { verdict } = collectionVerdict(
-    group.map((pair) => ({ listId: pair.offerListId, slug: pair.slug, objektId: pair.objektId })),
-    input.addresses.get(offer.userId) ?? none,
-    input.holdings,
-  );
-  if (verdict !== "ok") return { kind: "unowned", group };
+  const held = tradable(input, group, offer, want);
+  if (held === "skip") return { kind: "skip" };
+  if (held === "unowned") return { kind: "unowned", group };
 
   return {
     kind: "ok",
@@ -148,6 +142,59 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
       },
     },
   };
+}
+
+/** Whether the match is real today: the wanter holds no copy, and the offer's owner can trade one. */
+function tradable<P extends AlertPair>(
+  input: AlertInput<P>,
+  group: P[],
+  offer: AlertList,
+  want: AlertList,
+): "ok" | "skip" | "unowned" {
+  const slug = group[0]?.slug;
+  if (slug === undefined) return "skip";
+  const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
+    input.holdings.copies.has(copyKey(address, slug)),
+  );
+  if (wanterHolds) return "skip";
+
+  const { verdict } = collectionVerdict(
+    group.map((pair) => ({ listId: pair.offerListId, slug: pair.slug, objektId: pair.objektId })),
+    input.addresses.get(offer.userId) ?? none,
+    input.holdings,
+  );
+  return verdict === "ok" ? "ok" : "unowned";
+}
+
+export type Unhide = { userId: string; listId: number };
+
+/**
+ * The hidden posts to bring back: one whose owner added an entry, after the hide, that matches
+ * a list of the person who hid it. `listId` is the list the entry is on. This follows the match
+ * alone, never the recipient's alert settings, since a post returning is not a notification.
+ * `unowned` are the pairs to read again, as in {@link selectAlerts}.
+ */
+export function selectUnhides<P extends AlertPair>(
+  input: AlertInput<P>,
+): { unhides: Unhide[]; unowned: P[] } {
+  const unhides = new Map<string, Unhide>();
+  const unowned: P[] = [];
+  for (const group of groupPairs(input.pairs)) {
+    const [first] = group;
+    if (!first || !group.some((pair) => pair.hidden)) continue;
+    const offer = input.lists.get(first.offerListId);
+    const want = input.lists.get(first.wantListId);
+    if (!offer || !want || offer.userId === want.userId) continue;
+
+    const held = tradable(input, group, offer, want);
+    if (held === "unowned") unowned.push(...group);
+    if (held !== "ok") continue;
+    const forward = first.direction === "forward";
+    const userId = (forward ? want : offer).userId;
+    const listId = (forward ? offer : want).id;
+    unhides.set(`${userId}:${listId}`, { userId, listId });
+  }
+  return { unhides: [...unhides.values()], unowned };
 }
 
 export type MutualQuestion = {

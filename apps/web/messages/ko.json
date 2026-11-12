@@ -220,7 +220,7 @@
   "trade_hidden_partners_empty": "숨긴 사람이 없습니다",
   "trade_hidden_partners_empty_hint": "거래에서 그 사람 줄 위쪽의 ··· 메뉴에서 숨기기를 선택하면 그 사람을 숨길 수 있습니다.",
   "trade_hidden": "숨김",
-  "trade_hidden_description": "숨긴 사람과 게시물은 둘러보기와 추천 탭, 매칭 알림, 목록 개수에 표시되지 않습니다.",
+  "trade_hidden_description": "숨긴 사람과 게시물은 둘러보기와 추천 탭, 매칭 알림, 목록 개수에 표시되지 않습니다. 숨긴 게시물은 올린 사람이 내 목록과 맞는 오브젝트를 추가하면 다시 표시됩니다.",
   "trade_post_hide": "게시물 숨기기",
   "trade_post_unhide": "게시물 다시 표시",
   "trade_post_hide_success": "게시물을 숨겼습니다",

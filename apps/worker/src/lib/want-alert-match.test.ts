@@ -11,6 +11,7 @@ import {
   mutualQuestions,
   prefKey,
   selectAlerts,
+  selectUnhides,
   wholeEntries,
 } from "./want-alert-match";
 
@@ -392,6 +393,83 @@ describe("selectAlerts, Any or Can swap", () => {
       expect(mutualQuestions(one).map((ask) => ask.list.id)).toEqual([WANT.id]);
       expect(selectAlerts(one).notMutual).toEqual([forward()]);
     });
+  });
+});
+
+describe("selectUnhides", () => {
+  const hidden = forward({ hidden: true });
+  const hiddenReverse = forward({ direction: "reverse", hidden: true });
+
+  test("a new offer entry on a post the wanter hid brings it back for the wanter", () => {
+    expect(selectUnhides(input({ pairs: [hidden] }))).toEqual({
+      unhides: [{ userId: WANTER, listId: SALE.id }],
+      unowned: [],
+    });
+  });
+
+  test("a new want entry on a post the offer's owner hid brings it back for them", () => {
+    expect(selectUnhides(input({ pairs: [hiddenReverse] })).unhides).toEqual([
+      { userId: SELLER, listId: WANT.id },
+    ]);
+  });
+
+  test("a pair from a post that is not hidden unhides nothing", () => {
+    expect(selectUnhides(input())).toEqual({ unhides: [], unowned: [] });
+  });
+
+  test("alerts switched off, or Can swap with no mutual partner, still bring the post back", () => {
+    const off = new Map([[prefKey(WANTER, "want_match"), false]]);
+    expect(selectUnhides(input({ pairs: [hidden], prefs: off })).unhides).toHaveLength(1);
+    expect(selectAlerts(input({ pairs: [hidden], prefs: off })).alerts).toEqual([]);
+    expect(selectUnhides(input({ pairs: [hidden], matches: new Map() })).unhides).toHaveLength(1);
+  });
+
+  test("an alert goes out with the post it brings back", () => {
+    expect(alertsOf(input({ pairs: [hidden] }))).toHaveLength(1);
+  });
+
+  test("an offer its owner cannot trade yet waits, and is read again", () => {
+    expect(selectUnhides(input({ pairs: [hidden], holdings: holdings([]) }))).toEqual({
+      unhides: [],
+      unowned: [hidden],
+    });
+  });
+
+  test("a wanter who already holds a copy keeps the post hidden", () => {
+    const held = holdings([
+      [SELLER_ADDR, SLUG, true],
+      [WANTER_ADDR, SLUG, true],
+    ]);
+    expect(selectUnhides(input({ pairs: [hidden], holdings: held }))).toEqual({
+      unhides: [],
+      unowned: [],
+    });
+  });
+
+  test("two lists of one person never unhide anything", () => {
+    const own = new Map([SALE, list(WANT.id, SELLER)].map((l) => [l.id, l]));
+    expect(selectUnhides(input({ pairs: [hidden], lists: own }))).toEqual({
+      unhides: [],
+      unowned: [],
+    });
+  });
+
+  test("with alerts off, an offer not owned yet is still read again", () => {
+    const off = new Map([[prefKey(WANTER, "want_match"), false]]);
+    const value = input({ pairs: [hidden], prefs: off, holdings: holdings([]) });
+    expect(selectAlerts(value).unowned).toEqual([]);
+    expect(selectUnhides(value).unowned).toEqual([hidden]);
+  });
+
+  test("several entries on one list unhide it once", () => {
+    const other = forward({ hidden: true, slug: "nien-205z" });
+    const held = holdings([
+      [SELLER_ADDR, SLUG, true],
+      [SELLER_ADDR, "nien-205z", true],
+    ]);
+    expect(selectUnhides(input({ pairs: [hidden, other], holdings: held })).unhides).toEqual([
+      { userId: WANTER, listId: SALE.id },
+    ]);
   });
 });
 

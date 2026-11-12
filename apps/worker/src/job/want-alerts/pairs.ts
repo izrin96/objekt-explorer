@@ -1,7 +1,7 @@
 import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
 import { listedCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
-  inHiddenPostSql,
+  hiddenPostAtSql,
   offerMatchesWantSql,
   boundOfferListSql,
   matchableListSql,
@@ -20,6 +20,7 @@ type PairRow = {
   want_list_id: number;
   slug: string;
   objekt_id: string | null;
+  hidden: boolean;
 };
 
 export type Pair = AlertPair & { entryId: number; listId: number };
@@ -45,7 +46,8 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
     WITH ${postsCte},
     ${listedCte},
     cand AS (
-      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type,
+      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, e.created_at, e.rule_id,
+        l.list_type,
         l.match_sale, l.match_have, l.takes_swaps, l.user_id
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
@@ -58,7 +60,8 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
     pairs AS (
       SELECT c.id AS entry_id, c.list_id, 'forward' AS direction, c.list_id AS offer_list_id,
         w.list_id AS want_list_id, c.slug, c.objekt_id,
-        c.user_id AS offer_user_id, wl.user_id AS want_user_id
+        c.user_id AS offer_user_id, wl.user_id AS want_user_id, c.created_at AS entry_at,
+        false AS by_rule
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
@@ -66,7 +69,8 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND ${offerMatchesWantSql("c", "wl")}
         AND wl.list_type = 'want' AND wl.user_id <> c.user_id
       UNION ALL
-      SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
+      SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id,
+        c.created_at, c.rule_id IS NOT NULL
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
@@ -75,21 +79,25 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND ${offerMatchesWantSql("ol", "c")}
         AND ol.user_id <> c.user_id
     )
-    SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
+    SELECT p.entry_id, p.list_id, p.direction, p.offer_list_id, p.want_list_id, p.slug,
+      p.objekt_id, hid.at IS NOT NULL AS hidden
+    FROM pairs p
+    -- the new entry's list is the partner's: when the recipient last hid its post, if they did
+    JOIN lists pl ON pl.id = p.list_id
+    CROSS JOIN LATERAL (
+      SELECT ${hiddenPostAtSql(
+        sql`CASE p.direction WHEN 'forward' THEN p.want_user_id ELSE p.offer_user_id END`,
+        "pl",
+      )} AS at
+    ) hid
     -- the new entry's owner is the partner, seen by the recipient as For you sees them
     WHERE CASE p.direction
         WHEN 'forward' THEN ${tradePartnerSql(sql`p.want_user_id`, sql`p.offer_user_id`)}
         ELSE ${tradePartnerSql(sql`p.offer_user_id`, sql`p.want_user_id`)}
       END
-      -- nor from a post the recipient hid: the new entry's list is the partner's
-      AND NOT EXISTS (
-        SELECT 1 FROM lists pl
-        WHERE pl.id = CASE p.direction WHEN 'forward' THEN p.offer_list_id ELSE p.want_list_id END
-          AND ${inHiddenPostSql(
-            sql`CASE p.direction WHEN 'forward' THEN p.want_user_id ELSE p.offer_user_id END`,
-            "pl",
-          )}
-      )
+      -- a hidden post stays out, unless its owner added the entry after the hide: that one brings
+      -- it back. A rule's refresh also inserts entries, and those are not the owner's doing
+      AND (hid.at IS NULL OR (p.entry_at > hid.at AND NOT p.by_rule))
       AND ${notTradeSanctioned(sql`p.offer_user_id`)}
       AND ${notTradeSanctioned(sql`p.want_user_id`)}
       AND NOT EXISTS (
@@ -98,7 +106,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND s.source_list_id = p.offer_list_id
         AND s.collection_slug = p.slug
     )
-    ORDER BY ${order === "list" ? sql`list_id, entry_id` : sql`entry_id`}
+    ORDER BY ${order === "list" ? sql`p.list_id, p.entry_id` : sql`p.entry_id`}
     ${limit === null ? sql`` : sql`LIMIT ${limit}`}
   `);
 
@@ -110,5 +118,6 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
     wantListId: row.want_list_id,
     slug: row.slug,
     objektId: row.objekt_id,
+    hidden: row.hidden,
   }));
 }

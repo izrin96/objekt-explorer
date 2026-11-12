@@ -47,8 +47,8 @@ Part of `packages/api/AGENTS.md`, which points here.
 
 ### Partner rules, hidden and idle posts
 
-- The partner side of a match is `tradePartnerSql`, `inHiddenPostSql` and `listedCte` (`services/trade/lists.ts`, `services/trade/feed/query.ts`), shared with the worker's want-list alerts, so a partner rule changes there for both; a new Trade read that applies `tradePartnerSql` applies `inHiddenPostSql` too.
-- A hidden post is `hidden_trade_post`, keyed by the post's lead list: `feedWhere` drops it unless `skipHiddenPosts` is false, which `peopleFeed` sets for a first-page `person` read, so the person and post pages keep it, counted, with `hidden` set.
+- The partner side of a match is `tradePartnerSql`, `inHiddenPostSql` and `listedCte` (`services/trade/lists.ts`, `services/trade/feed/query.ts`), shared with the worker's want-list alerts (which read the hide through `hiddenPostAtSql`, the same predicate with its time), so a partner rule changes there for both; a new Trade read that applies `tradePartnerSql` applies `inHiddenPostSql` too.
+- A hidden post is `hidden_trade_post`, keyed by the post's lead list: `feedWhere` drops it unless `skipHiddenPosts` is false, which `peopleFeed` sets for a first-page `person` read, so the person and post pages keep it, counted, with `hidden` set. A hide ends three ways: Unhide, the owner deleting the lead list (the `list_id` cascade), and the worker's want-alerts job, when the post's owner adds an entry by hand after the hide that matches a list of the person who hid it (`hiddenPostAtSql`, `hidesOfSql`). The job bumps that person's trade version, as Unhide does.
 - Matching candidates (`candidates.ts`) count only lists inside a listed post, so an idle list counts toward nobody; the viewer's own lists count whether listed or not.
 
 ### Near matches

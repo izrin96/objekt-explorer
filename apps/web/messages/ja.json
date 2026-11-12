@@ -220,7 +220,7 @@
   "trade_hidden_partners_empty": "非表示の人はいません",
   "trade_hidden_partners_empty_hint": "取引で、その人の行の上部にある ··· メニューで「非表示」を選ぶと、その人を非表示にできます。",
   "trade_hidden": "非表示",
-  "trade_hidden_description": "非表示にした人と投稿は、「投稿」と「おすすめ」のタブ、マッチ通知、リストの件数に表示されません。",
+  "trade_hidden_description": "非表示にした人と投稿は、「投稿」と「おすすめ」のタブ、マッチ通知、リストの件数に表示されません。非表示にした投稿は、持ち主があなたのリストに合うObjektを追加すると再び表示されます。",
   "trade_post_hide": "投稿を非表示",
   "trade_post_unhide": "投稿を再表示",
   "trade_post_hide_success": "投稿を非表示にしました",
