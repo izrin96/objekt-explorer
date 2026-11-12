@@ -23,7 +23,6 @@ import {
   findOwnedList,
 } from "../services/list/read";
 import { dropReceived } from "../services/list/received";
-import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
 export const listEntriesRouter = {
@@ -122,8 +121,6 @@ export const listEntriesRouter = {
 
       const rows = await removeEntries(list.id, entryIds);
 
-      if (rows.length > 0) await touchList([list.id]);
-
       return { removed: rows.length };
     },
   ),
@@ -140,7 +137,6 @@ export const listEntriesRouter = {
       if (list.listType !== "want") throw new ORPCError("NOT_FOUND");
 
       const rows = await dropReceived(list.id, collectionSlugs, always);
-      if (rows.length > 0 || always) await touchList([list.id]);
 
       return { removed: rows.length };
     },

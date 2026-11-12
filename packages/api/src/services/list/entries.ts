@@ -206,6 +206,7 @@ export async function setEntryPrices(
       ) AS v(id, price, is_qyop, has_note, note)
       WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${listId}
     `);
+  await touchList([listId]);
 }
 
 /** Sets the ratio of a list's own entries; refuses, writing nothing, unless every id is one. */
@@ -234,12 +235,13 @@ export async function setEntryRatio(
     }
     await tx.update(listEntries).set({ ratio }).where(ownEntries);
   });
+  await touchList([listId]);
 }
 
 /** Removes a list's own entries (never a rule's), returning the ids that were there. */
 export async function removeEntries(listId: number, entryIds: number[]) {
   // an entry already gone, say removed from another tab, is not counted
-  return db
+  const rows = await db
     .delete(listEntries)
     .where(
       and(
@@ -249,4 +251,6 @@ export async function removeEntries(listId: number, entryIds: number[]) {
       ),
     )
     .returning({ id: listEntries.id });
+  if (rows.length > 0) await touchList([listId]);
+  return rows;
 }

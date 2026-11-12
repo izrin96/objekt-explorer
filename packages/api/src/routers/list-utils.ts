@@ -16,7 +16,6 @@ import { fetchPartialOwnedListCollections } from "../services/list/entry-view";
 import { exportListCsv } from "../services/list/export";
 import { findHeldList } from "../services/list/read";
 import { ownRuleLines } from "../services/list/rules";
-import { touchList } from "../services/list/shared";
 
 export const listUtils = {
   updateEntryPrices: authed.input(updateEntryPricesInputSchema).handler(
@@ -33,11 +32,10 @@ export const listUtils = {
       assertTakesPrices(list);
 
       await setEntryPrices(list.id, updates);
-      await touchList([list.id]);
     },
   ),
 
-  /** Not a bump: `touchList` moves `updated_at` only, so the post keeps its place in the feed. */
+  /** Not a bump: the write moves `updated_at` only, so the post keeps its place in the feed. */
   setRatio: authed.input(setRatioInputSchema).handler(
     async ({
       input: { slug, entryIds, ratio },
@@ -50,7 +48,6 @@ export const listUtils = {
         refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
       }
       await setEntryRatio(list.id, entryIds, ratio);
-      await touchList([list.id]);
     },
   ),
 
