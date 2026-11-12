@@ -16,6 +16,19 @@ const POST_CARD_LIMIT = 6;
 
 type PostCardPost = NonNullable<PostCardView["post"]>;
 
+/** The named lists and the other half of each one's pair, whichever row names the link. */
+function inPostsOf(listIds: number[]) {
+  const partnerIds = db
+    .select({ id: lists.linkedListId })
+    .from(lists)
+    .where(inArray(lists.id, listIds));
+  return or(
+    inArray(lists.id, listIds),
+    inArray(lists.id, partnerIds),
+    inArray(lists.linkedListId, listIds),
+  );
+}
+
 /**
  * Posts as a chat card draws them, by the id of the list the card was sent from; a list that is
  * gone, or no longer shown on Trade, maps to null. A card's list is either half of a pair: the
@@ -28,22 +41,10 @@ export async function fetchPostCards(
   const result = new Map<number, PostCardPost | null>(listIds.map((id) => [id, null]));
   if (listIds.length === 0) return result;
 
-  const named = await db
-    .select({ id: lists.id, linkedListId: lists.linkedListId })
-    .from(lists)
-    .where(inArray(lists.id, listIds));
-  const partnerIds = named.flatMap((list) =>
-    list.linkedListId === null ? [] : [list.linkedListId],
-  );
   const owned = await db
     .select(feedListColumns)
     .from(lists)
-    .where(
-      and(
-        or(inArray(lists.id, [...listIds, ...partnerIds]), inArray(lists.linkedListId, listIds)),
-        visibleOnTrade(viewerId),
-      ),
-    );
+    .where(and(inPostsOf(listIds), visibleOnTrade(viewerId)));
   const posts = pairPosts(owned);
   const found = listIds.flatMap((id) => {
     const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
@@ -56,9 +57,10 @@ export async function fetchPostCards(
   );
   const ownerIds = unique(members.map((list) => list.userId));
   const saleIds = members.filter((list) => list.listType === "sale").map((list) => list.id);
-  const [accounts, addressRows, priceRows] = await Promise.all([
+  const addressesRead = fetchAddresses(ownerIds);
+  const [accounts, addressRows, priceRows, entriesOf] = await Promise.all([
     db.select().from(user).where(inArray(user.id, ownerIds)),
-    fetchAddresses(ownerIds),
+    addressesRead,
     saleIds.length === 0
       ? []
       : db
@@ -76,8 +78,8 @@ export async function fetchPostCards(
             ),
           )
           .groupBy(listEntries.listId),
+    addressesRead.then((rows) => fetchPostEntries(members, addressesByUser(rows))),
   ]);
-  const entriesOf = await fetchPostEntries(members, addressesByUser(addressRows));
   const accountOf = new Map(accounts.map((account) => [account.id, account]));
   const nicknameOf = nicknamesByAddress(addressRows);
   const priceOf = new Map(priceRows.map((row) => [row.listId, row]));
@@ -158,20 +160,7 @@ export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPo
   if (listIds.length === 0) return result;
 
   const columns = { ...feedListColumns, discoverable: lists.discoverable };
-  const named = await db
-    .select({ id: lists.id, linkedListId: lists.linkedListId })
-    .from(lists)
-    .where(inArray(lists.id, listIds));
-  if (named.length === 0) return result;
-  const partnerIds = named.flatMap((list) =>
-    list.linkedListId === null ? [] : [list.linkedListId],
-  );
-  const rows = await db
-    .select(columns)
-    .from(lists)
-    .where(
-      or(inArray(lists.id, [...listIds, ...partnerIds]), inArray(lists.linkedListId, listIds)),
-    );
+  const rows = await db.select(columns).from(lists).where(inPostsOf(listIds));
   const posts = pairPosts(rows);
 
   for (const id of listIds) {
