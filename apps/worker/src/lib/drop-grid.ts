@@ -14,6 +14,8 @@ export type DropRegion = {
   foreign: number[];
   // the highest token whose owner was read; a drop ending past it cannot be judged
   readUntil: number;
+  // the foreign tokens that are another A drop's of the same season and artist, sorted
+  siblings?: number[];
 };
 
 export type DropGrid = {
@@ -27,8 +29,10 @@ export type DropGrid = {
 /**
  * Every slot size that fits, and the grid when exactly one does. A size fits
  * when every member token inside the drop lands in its own member's slot,
- * every member has a token in its slot, and the token right after the drop's
- * end is foreign.
+ * every member has a token in its slot, the token right after the drop's end
+ * is foreign, and no token of another A drop sits inside it. Drops reserved
+ * member by member interleave (Winter26 205A-208A), and skipping the other
+ * drops' tokens as separators lets a too-wide slot fit.
  */
 export function fitDropGrid(region: DropRegion): { slots: number[]; grid: DropGrid | null } {
   const { start, memberTokens, foreign, readUntil } = region;
@@ -36,6 +40,7 @@ export function fitDropGrid(region: DropRegion): { slots: number[]; grid: DropGr
   if (n < 2) return { slots: [], grid: null };
 
   const owned = ownedPositions(region);
+  const firstSibling = region.siblings?.find((t) => t >= start);
 
   // member 0's slot reaches at least its last token below member 1's first
   const firstOfNext = memberTokens[1]![0]!;
@@ -53,6 +58,7 @@ export function fitDropGrid(region: DropRegion): { slots: number[]; grid: DropGr
   function fits(slot: number) {
     const { end, separators } = gridEnd(region, slot);
     if (end + 1 > readUntil || foreign[separators] !== end + 1) return false;
+    if (firstSibling !== undefined && firstSibling <= end) return false;
     return eachInOwnSlot(owned, n, slot);
   }
 }

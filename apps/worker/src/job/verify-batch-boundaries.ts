@@ -292,7 +292,7 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
     logger.debug(`${t.slug}: Cosmo API error during rediscovery, skipping`);
     return { ...result, outcome: "failed" };
   }
-  const next = await fitRanges(t.id, t.season, fresh, tokenIds, {
+  const next = await fitRanges(t.id, t.season, fresh, rows, manualAnchors, {
     knownForeign: [...knownForeign, ...discoveryBoundaries(fresh)],
     dropSpanOf: spans.dropSpanOf,
   });

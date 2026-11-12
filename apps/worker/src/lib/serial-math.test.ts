@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  anchorGapHoles,
+  anchorGaps,
   checkManualAnchor,
   claimGapBlocks,
+  closeAnchorGaps,
   computeOfflineSerials,
   computeOfflineSerialUpdates,
   computeOnlineSerials,
@@ -516,5 +519,157 @@ describe("shiftedSerials", () => {
 
   test("numbering new mints only is no shift", () => {
     expect(shiftedSerials([{ id: "1", serial: 0 }], [{ id: "1", newSerial: 5 }])).toBeNull();
+  });
+});
+
+describe("anchorGaps", () => {
+  const batches = [
+    { start: 100, end: 199 },
+    { start: 300, end: 399 },
+    { start: 500, end: 599 },
+  ];
+
+  test("ranges that add up to the next anchor leave no gap", () => {
+    const rows = [objekt(100, 1, PRE), objekt(500, 201, PRE)];
+    expect(anchorGaps(rows, batches, [])).toEqual([]);
+  });
+
+  test("an anchor above the chain reports the serials the ranges before it miss", () => {
+    // the chain reaches 200 before the third range, the anchor says 205
+    const rows = [objekt(100, 1, PRE), objekt(310, 0), objekt(510, 216, PRE)];
+    expect(anchorGaps(rows, batches, [])).toEqual([{ batch: 2, gap: 5, chained: 1 }]);
+  });
+
+  test("an anchor below the chain reports a negative gap", () => {
+    const rows = [objekt(100, 1, PRE), objekt(300, 98, PRE)];
+    expect(anchorGaps(rows, batches, [])).toEqual([{ batch: 1, gap: -3, chained: 0 }]);
+  });
+
+  test("a first range whose anchor does not start at 1 is a gap", () => {
+    expect(anchorGaps([objekt(100, 4, PRE)], batches, [])).toEqual([
+      { batch: 0, gap: 3, chained: 0 },
+    ]);
+  });
+
+  test("a manual anchor counts like a v1 serial", () => {
+    const rows = [objekt(100, 1, PRE), objekt(320, 0)];
+    expect(anchorGaps(rows, batches, [{ tokenId: 320, serial: 127 }])).toEqual([
+      { batch: 1, gap: 6, chained: 0 },
+    ]);
+  });
+
+  test("a serial written after the cutoff is no anchor", () => {
+    const rows = [objekt(100, 1, PRE), objekt(300, 150)];
+    expect(anchorGaps(rows, batches, [])).toEqual([]);
+  });
+});
+
+describe("closeAnchorGaps", () => {
+  const span = (lo: number, hi: number) => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+  const close = (
+    batches: { start: number; end: number }[],
+    rows: ReturnType<typeof objekt>[],
+    minted: number[] = [],
+  ) => {
+    const gaps = anchorGaps(rows, batches, []);
+    return closeAnchorGaps(
+      batches,
+      rows.map((o) => parseInt(o.id)),
+      gaps,
+      minted,
+    );
+  };
+
+  describe("ranges short of the anchor", () => {
+    // an anchored range, a chained one, then a hole of 100 unminted tokens and
+    // 20 foreign ones before the next anchored range, which starts 100 high
+    const batches = [
+      { start: 1000, end: 1099 },
+      { start: 1101, end: 1200 },
+      { start: 1321, end: 1420 },
+    ];
+    const rows = [objekt(1000, 1, PRE), objekt(1150, 0), objekt(1321, 301, PRE)];
+    const foreign = span(1301, 1320);
+
+    test("the one hole holding exactly the missing blocks is claimed", () => {
+      const closed = close(batches, rows, foreign);
+      expect(closed).toEqual([
+        { start: 1000, end: 1099 },
+        { start: 1101, end: 1200 },
+        { start: 1201, end: 1300 },
+        { start: 1321, end: 1420 },
+      ]);
+      expect(anchorGaps(rows, closed, [])).toEqual([]);
+    });
+
+    test("the hole to read is the one between the chained and the anchored range", () => {
+      expect(anchorGapHoles(batches, anchorGaps(rows, batches, []))).toEqual([
+        { start: 1201, end: 1320 },
+      ]);
+    });
+
+    test("a hole holding more blocks than are missing is left alone", () => {
+      const wide = [batches[0]!, batches[1]!, { start: 1421, end: 1520 }];
+      const moved = [objekt(1000, 1, PRE), objekt(1150, 0), objekt(1421, 301, PRE)];
+      expect(close(wide, moved, span(1401, 1420))).toEqual(wide);
+    });
+
+    test("two holes that could each hold the blocks are left alone", () => {
+      const two = [
+        { start: 1000, end: 1099 },
+        { start: 1201, end: 1300 },
+        { start: 1401, end: 1500 },
+      ];
+      const short = [objekt(1000, 1, PRE), objekt(1250, 0), objekt(1401, 301, PRE)];
+      expect(close(two, short)).toEqual(two);
+    });
+
+    test("a gap that is not whole blocks is left alone", () => {
+      const off = [objekt(1000, 1, PRE), objekt(1150, 0), objekt(1321, 296, PRE)];
+      expect(close(batches, off, foreign)).toEqual(batches);
+    });
+
+    test("our own token in the hole means stale ranges, so nothing is claimed", () => {
+      expect(close(batches, [...rows, objekt(1250, 0)], [...foreign, 1250])).toEqual(batches);
+    });
+
+    test("a gap between two anchored ranges is left alone", () => {
+      const anchored = [batches[0]!, batches[2]!];
+      const pair = [objekt(1000, 1, PRE), objekt(1321, 201, PRE)];
+      expect(close(anchored, pair, foreign)).toEqual(anchored);
+    });
+  });
+
+  describe("ranges past the anchor", () => {
+    // the first range reaches 300 tokens below its first mint; the anchor in
+    // the second says only 100 serials come before it
+    const batches = [
+      { start: 1000, end: 1399 },
+      { start: 1401, end: 1500 },
+    ];
+    const rows = [objekt(1310, 0), objekt(1420, 120, PRE)];
+
+    test("the one range with room before its first mint loses that many tokens", () => {
+      const closed = close(batches, rows);
+      expect(closed).toEqual([
+        { start: 1300, end: 1399 },
+        { start: 1401, end: 1500 },
+      ]);
+      expect(anchorGaps(rows, closed, [])).toEqual([]);
+    });
+
+    test("two ranges with room are left alone", () => {
+      const three = [
+        { start: 1000, end: 1399 },
+        { start: 1401, end: 1800 },
+        { start: 1802, end: 1901 },
+      ];
+      const roomy = [objekt(1310, 0), objekt(1710, 0), objekt(1820, 519, PRE)];
+      expect(close(three, roomy)).toEqual(three);
+    });
+
+    test("a range with too little room is left alone", () => {
+      expect(close(batches, [objekt(1250, 0), objekt(1420, 120, PRE)])).toEqual(batches);
+    });
   });
 });

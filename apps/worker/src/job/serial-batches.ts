@@ -17,8 +17,11 @@ import {
 } from "@/lib/drop-grid";
 import type { Logger } from "@/lib/log";
 import {
+  anchorGapHoles,
+  anchorGaps,
   type Batch,
   claimGapBlocks,
+  closeAnchorGaps,
   computeOfflineSerialUpdates,
   gapSeparators,
   type ManualAnchor,
@@ -246,21 +249,57 @@ async function fillReservedGaps(
   return result;
 }
 
+export type SerialRow = { id: string; serial: number; mintedAt: string };
+
 /**
- * Apply the 100-token block rules to discovered batches. Idempotent, so it can
- * run on a mix of stored and freshly discovered ranges.
+ * Close the anchor gaps one place explains (`closeAnchorGaps`), reading the
+ * minted tokens of the holes it may claim blocks in.
+ */
+async function closeGaps(
+  batches: Batch[],
+  rows: SerialRow[],
+  presentTokenIds: number[],
+  anchors: ManualAnchor[],
+  knownForeign: number[],
+): Promise<Batch[]> {
+  const gaps = anchorGaps(rows, batches, anchors);
+  if (gaps.length === 0) return batches;
+  const minted: number[] = [];
+  for (const hole of anchorGapHoles(batches, gaps)) {
+    const inside = await indexer
+      .select({ id: objekts.id })
+      .from(objekts)
+      .where(tokenIdRange(hole.start, hole.end));
+    minted.push(
+      ...gapSeparators(
+        inside.map((o) => parseInt(o.id)),
+        knownForeign,
+        hole,
+      ),
+    );
+  }
+  return closeAnchorGaps(batches, presentTokenIds, gaps, minted);
+}
+
+/**
+ * Apply the 100-token block rules to discovered batches, then close the gaps
+ * the collection's anchors prove. Idempotent, so it can run on a mix of stored
+ * and freshly discovered ranges.
  */
 async function refineBatches(
   season: string,
   batches: Batch[],
-  presentTokenIds: number[],
+  rows: SerialRow[],
+  anchors: ManualAnchor[],
   knownForeign: number[] = [],
 ): Promise<Batch[]> {
   if (preBlockSeasons.includes(season)) return batches;
-  return snapBatchLengths(
+  const presentTokenIds = rows.map((o) => parseInt(o.id));
+  const blocks = snapBatchLengths(
     await fillReservedGaps(batches, presentTokenIds, knownForeign),
     presentTokenIds,
   );
+  return closeGaps(blocks, rows, presentTokenIds, anchors, knownForeign);
 }
 
 export type DropKey = {
@@ -315,14 +354,30 @@ async function loadDrop(
 
   const memberIds = new Set(members.map((m) => m.id));
   const region = await indexer
-    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .select({
+      id: objekts.id,
+      collectionId: objekts.collectionId,
+      season: collections.season,
+      artist: collections.artist,
+      collectionNo: collections.collectionNo,
+      onOffline: collections.onOffline,
+    })
     .from(objekts)
+    .leftJoin(collections, eq(collections.id, objekts.collectionId))
     .where(tokenIdRange(start - 1, readUntil));
   const isForeign = (o: (typeof region)[number]) =>
     o.collectionId === null || !memberIds.has(o.collectionId);
   const before = region.find((o) => parseInt(o.id) === start - 1);
-  const foreign = region
-    .filter((o) => parseInt(o.id) >= start && isForeign(o))
+  const inDrop = region.filter((o) => parseInt(o.id) >= start && isForeign(o));
+  const foreign = inDrop.map((o) => parseInt(o.id)).sort((a, b) => a - b);
+  const siblings = inDrop
+    .filter(
+      (o) =>
+        o.season === key.season &&
+        o.artist === key.artist &&
+        o.onOffline === "offline" &&
+        o.collectionNo?.endsWith("A"),
+    )
     .map((o) => parseInt(o.id))
     .sort((a, b) => a - b);
 
@@ -343,7 +398,7 @@ async function loadDrop(
 
   return {
     members,
-    region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
+    region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil, siblings },
     pinned: before !== undefined && isForeign(before),
     complete: rosterComplete(
       members.length,
@@ -581,17 +636,19 @@ async function writeFitMark(
 }
 
 /**
- * Discovered batches as a rewrite stores them: refined to whole blocks, then
- * fitted to the collection's grid.
+ * Discovered batches as a rewrite stores them: refined to whole blocks and to
+ * the collection's anchors, then fitted to its grid. `rows` are every objekt
+ * of the collection.
  */
 export async function fitRanges(
   collectionId: string,
   season: string,
   discovered: Batch[],
-  tokenIds: number[],
+  rows: SerialRow[],
+  anchors: ManualAnchor[],
   opts: { knownForeign?: number[]; dropSpanOf?: DropSpanOf } = {},
 ) {
-  const refined = await refineBatches(season, discovered, tokenIds, opts.knownForeign);
+  const refined = await refineBatches(season, discovered, rows, anchors, opts.knownForeign);
   return applyGrids(collectionId, refined, opts.dropSpanOf);
 }
 

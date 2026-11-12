@@ -189,6 +189,34 @@ describe("fitDropGrid", () => {
   test("a one-member drop is no grid", () => {
     expect(fitDropGrid({ ...cream02356a, memberTokens: [[29549513]] }).grid).toBeNull();
   });
+
+  describe("another A drop's token among the separators", () => {
+    const region: DropRegion = {
+      start: 1000,
+      memberTokens: [
+        [1000, 1099],
+        [1103, 1202],
+      ],
+      foreign: [1100, 1101, 1102, 1203],
+      readUntil: 2000,
+    };
+
+    test("fits while the separators belong to no other A drop", () => {
+      expect(fitDropGrid(region).slots).toEqual([100]);
+    });
+
+    test("inside the drop it rules the size out", () => {
+      expect(fitDropGrid({ ...region, siblings: [1101] }).slots).toEqual([]);
+    });
+
+    test("right after the drop's end it closes the drop like any foreign token", () => {
+      expect(fitDropGrid({ ...region, siblings: [1203] }).slots).toEqual([100]);
+    });
+
+    test("before the start it is ignored", () => {
+      expect(fitDropGrid({ ...region, siblings: [999] }).slots).toEqual([100]);
+    });
+  });
 });
 
 describe("mergeGridRanges", () => {

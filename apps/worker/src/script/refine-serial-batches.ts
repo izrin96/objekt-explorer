@@ -95,9 +95,8 @@ async function processOne(t: (typeof targets)[number]) {
     .orderBy(asc(objekts.id));
   if (rows.length === 0) return;
 
-  const tokenIds = rows.map((o) => parseInt(o.id));
   // no shared drop-fit memo: this run writes ranges as it goes, which can change a drop's fit
-  const grids = await fitRanges(t.id, t.season, stored, tokenIds);
+  const grids = await fitRanges(t.id, t.season, stored, rows, t.anchors ?? []);
   const refined = grids.batches;
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));

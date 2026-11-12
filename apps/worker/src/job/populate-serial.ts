@@ -347,7 +347,13 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
       return "api error";
     }
 
-    const next = await fitRanges(collectionId, collection.season, batches, presentTokenIds);
+    const next = await fitRanges(
+      collectionId,
+      collection.season,
+      batches,
+      allObjekts,
+      collection.serialAnchors ?? [],
+    );
     batches = next.batches;
 
     if (batches.length === 0) {

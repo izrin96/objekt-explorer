@@ -130,24 +130,7 @@ export function computeOfflineSerials(
   manualAnchors: ManualAnchor[],
 ): { id: string; serial: number }[] {
   const batchIndexOf = (tid: number) => batches.findIndex((b) => tid >= b.start && tid <= b.end);
-
-  // collect v1 anchors (pre-cutoff objekts with a real serial) per batch,
-  // tokenId ascending
-  const anchors: { tid: number; serial: number }[][] = batches.map(() => []);
-  for (const o of objekts) {
-    if (o.serial > 0 && Date.parse(o.mintedAt) < cutoffMs) {
-      const tid = parseInt(o.id);
-      const bi = batchIndexOf(tid);
-      if (bi !== -1) anchors[bi]!.push({ tid, serial: o.serial });
-    }
-  }
-  for (const m of manualAnchors) {
-    const bi = batchIndexOf(m.tokenId);
-    if (bi !== -1 && !anchors[bi]!.some((a) => a.tid === m.tokenId)) {
-      anchors[bi]!.push({ tid: m.tokenId, serial: m.serial });
-    }
-  }
-  for (const list of anchors) list.sort((a, b) => a.tid - b.tid);
+  const anchors = anchorsByBatch(objekts, batches, cutoffMs, manualAnchors);
 
   // serial at each batch's start: pinned by an anchor when the batch has one,
   // otherwise chained from the previous batch's end (used only for anchorless,
@@ -195,6 +178,76 @@ export function computeOfflineSerials(
     if (serial > 0) result.push({ id: o.id, serial });
   }
   return result;
+}
+
+// v1 anchors (pre-cutoff objekts with a real serial) and manual anchors per
+// batch, tokenId ascending; on the same token the v1 serial wins
+function anchorsByBatch(
+  objekts: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+  cutoffMs: number,
+  manualAnchors: ManualAnchor[],
+) {
+  const batchIndexOf = (tid: number) => batches.findIndex((b) => tid >= b.start && tid <= b.end);
+  const anchors: { tid: number; serial: number }[][] = batches.map(() => []);
+  for (const o of objekts) {
+    if (o.serial > 0 && Date.parse(o.mintedAt) < cutoffMs) {
+      const tid = parseInt(o.id);
+      const bi = batchIndexOf(tid);
+      if (bi !== -1) anchors[bi]!.push({ tid, serial: o.serial });
+    }
+  }
+  for (const m of manualAnchors) {
+    const bi = batchIndexOf(m.tokenId);
+    if (bi !== -1 && !anchors[bi]!.some((a) => a.tid === m.tokenId)) {
+      anchors[bi]!.push({ tid: m.tokenId, serial: m.serial });
+    }
+  }
+  for (const list of anchors) list.sort((a, b) => a.tid - b.tid);
+  return anchors;
+}
+
+export type AnchorGap = {
+  // index of the anchored batch
+  batch: number;
+  // its anchored start minus the serial the batches before it chain to:
+  // positive when they hold too few serials, negative when too many
+  gap: number;
+  // anchorless batches right before it, whose chained serials carry the error
+  chained: number;
+};
+
+/**
+ * Where the ranges disagree with their anchors: every anchored batch that
+ * starts at another serial than the batches before it add up to. The serials
+ * are right either way, since an anchor pins its own batch; the gap measures
+ * how wrong the ranges before it are, which is the error of every serial
+ * chained through them.
+ */
+export function anchorGaps(
+  objekts: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+  manualAnchors: ManualAnchor[],
+): AnchorGap[] {
+  const anchors = anchorsByBatch(objekts, batches, V1_CUTOFF_MS, manualAnchors);
+  const gaps: AnchorGap[] = [];
+  let prevEnd = 0;
+  let chained = 0;
+  for (let bi = 0; bi < batches.length; bi++) {
+    const b = batches[bi]!;
+    const first = anchors[bi]![0];
+    let start = prevEnd + 1;
+    if (first) {
+      const anchored = first.serial - (first.tid - b.start);
+      if (anchored !== start) gaps.push({ batch: bi, gap: anchored - start, chained });
+      start = anchored;
+      chained = 0;
+    } else {
+      chained++;
+    }
+    prevEnd = start + (b.end - b.start);
+  }
+  return gaps;
 }
 
 /**
@@ -312,21 +365,124 @@ export function claimGapBlocks(
   // our own token inside the gap means the stored ranges are stale
   if (mintedIds.some((t) => presentTokenIds.has(t))) return [];
 
+  return wholeBlockRuns(gap, mintedIds);
+}
+
+// the batches of a gap's chain with the anchored ones on either side, as
+// indexes into `batches`; `from` is 0 when the chain starts the collection
+function gapSegment(g: AnchorGap) {
+  return { from: Math.max(0, g.batch - g.chained - 1), to: g.batch };
+}
+
+const wholeBlocks = (g: AnchorGap) => g.chained > 0 && g.gap % BLOCK_SIZE === 0;
+
+/**
+ * The holes `closeAnchorGaps` needs the minted tokens of: those between the
+ * batches of a chain that comes up whole blocks short of its anchor.
+ */
+export function anchorGapHoles(batches: Batch[], gaps: AnchorGap[]): Batch[] {
+  const holes: Batch[] = [];
+  for (const g of gaps) {
+    if (!wholeBlocks(g) || g.gap < 0) continue;
+    const { from, to } = gapSegment(g);
+    for (let i = from; i < to; i++) {
+      const hole = { start: batches[i]!.end + 1, end: batches[i + 1]!.start - 1 };
+      if (mayHoldReservedBlocks(hole)) holes.push(hole);
+    }
+  }
+  return holes;
+}
+
+/**
+ * Batches with the gaps closed that an anchor proves and one place explains.
+ * Only a gap of whole blocks after a chain of anchorless batches counts, since
+ * those are the serials shown as estimates.
+ *
+ * Short of the anchor: a reserved block with no mint hides in a hole that
+ * `claimGapBlocks` refused for its many foreign tokens. When exactly one hole
+ * of the chain has whole-block unminted runs, and they add up to the gap, they
+ * become batches.
+ *
+ * Past the anchor: a batch reaches below its first mint over unminted tokens
+ * that are not the collection's. When exactly one batch of the chain has that
+ * much room before its first mint, its start moves up by the gap.
+ *
+ * Anything else is left for `script/anchor-gaps.ts` to report. `minted` are
+ * the minted or known-foreign tokens inside `anchorGapHoles`.
+ */
+export function closeAnchorGaps(
+  batches: Batch[],
+  presentTokenIds: number[],
+  gaps: AnchorGap[],
+  minted: number[],
+): Batch[] {
+  const present = new Set(presentTokenIds);
+  const mintedSorted = minted.toSorted((a, b) => a - b);
+  const claimedAfter = new Map<number, Batch[]>();
+  const startOf = new Map<number, number>();
+
+  for (const g of gaps) {
+    if (!wholeBlocks(g)) continue;
+    const { from, to } = gapSegment(g);
+
+    if (g.gap > 0) {
+      const found: { after: number; blocks: Batch[] }[] = [];
+      let unreadable = false;
+      for (let i = from; i < to; i++) {
+        const hole = { start: batches[i]!.end + 1, end: batches[i + 1]!.start - 1 };
+        const length = hole.end - hole.start + 1;
+        if (length < BLOCK_SIZE) continue;
+        const inside = mintedSorted.filter((t) => t >= hole.start && t <= hole.end);
+        // a hole too long to read, or holding our own token (stale ranges)
+        if (!mayHoldReservedBlocks(hole) || inside.some((t) => present.has(t))) {
+          unreadable = true;
+          break;
+        }
+        const blocks = wholeBlockRuns(hole, inside);
+        if (blocks.length > 0) found.push({ after: i, blocks });
+      }
+      if (unreadable || found.length !== 1) continue;
+      const { after, blocks } = found[0]!;
+      const total = blocks.reduce((n, b) => n + b.end - b.start + 1, 0);
+      if (total === g.gap) claimedAfter.set(after, blocks);
+      continue;
+    }
+
+    const excess = -g.gap;
+    const roomy: number[] = [];
+    let empty = false;
+    for (let i = g.batch - g.chained; i <= to; i++) {
+      const b = batches[i]!;
+      let lowest = Infinity;
+      for (const t of presentTokenIds) if (t >= b.start && t <= b.end && t < lowest) lowest = t;
+      // a batch with no mint could itself be the excess
+      if (lowest === Infinity) empty = empty || b.end - b.start + 1 >= excess;
+      else if (lowest - b.start >= excess) roomy.push(i);
+    }
+    if (!empty && roomy.length === 1) startOf.set(roomy[0]!, batches[roomy[0]!]!.start + excess);
+  }
+
+  if (claimedAfter.size === 0 && startOf.size === 0) return batches;
+  return batches.flatMap((b, i) => [
+    startOf.has(i) ? { start: startOf.get(i)!, end: b.end } : b,
+    ...(claimedAfter.get(i) ?? []),
+  ]);
+}
+
+// the unminted runs of a hole that hold a whole block, each cut to whole
+// blocks from its end; none when the leftovers outnumber unminted separators
+function wholeBlockRuns(hole: Batch, mintedInside: number[]): Batch[] {
   const runs: Batch[] = [];
-  let runStart = gap.start;
-  for (const t of [...mintedIds, gap.end + 1]) {
+  let runStart = hole.start;
+  for (const t of [...mintedInside, hole.end + 1]) {
     if (t > runStart) runs.push({ start: runStart, end: t - 1 });
     runStart = t + 1;
   }
-  const unmintedSeparators = runs.reduce((n, r) => n + ((r.end - r.start + 1) % BLOCK_SIZE), 0);
-  if (unmintedSeparators > MAX_UNMINTED_SEPARATORS) return [];
-
-  const claimed: Batch[] = [];
-  for (const r of runs) {
-    const length = r.end - r.start + 1;
-    if (length >= BLOCK_SIZE) claimed.push({ start: r.start + (length % BLOCK_SIZE), end: r.end });
-  }
-  return claimed;
+  const leftover = runs.reduce((n, r) => n + ((r.end - r.start + 1) % BLOCK_SIZE), 0);
+  if (leftover > MAX_UNMINTED_SEPARATORS) return [];
+  return runs
+    .filter((r) => r.end - r.start + 1 >= BLOCK_SIZE)
+    .map((r) => ({ start: r.start + ((r.end - r.start + 1) % BLOCK_SIZE), end: r.end }));
 }
 
 /**
