@@ -8,9 +8,19 @@ The worker imports some `services/` modules (`grep -r '@repo/api/services' apps/
 
 ## Round trips
 
-A request spends as few sequential round trips to one database as its reads allow; the owner weighs this above a shorter function. Two reads of the same row, or a lookup whose result only filters the next read, are one statement: a relation `with` (`findHeldList`, `fetchListForViewer` in `services/list/read.ts`), a join, or one `SELECT` of several `EXISTS` (`chatSafety`). Reads that don't depend on each other share one `Promise.all`, and a read that needs one field of another takes its pending promise (`activityBetween` takes `chatSafety`'s `blockedEitherWay` that way in `loadThread`).
+A request spends as few sequential round trips to one database as its reads allow; the owner weighs this above a shorter function. Before adding an `await` on a query, ask what it waits for:
 
-The refusal a caller gets stays the same: when two parallel reads can both refuse, use `Promise.allSettled` and rethrow in the old order (`prepareList`, `sendMessage`). A transaction keeps its statements in sequence and its documented lock order; the app and indexer databases cannot join, so run those side by side.
+- **It waits for nothing: run it in parallel.** Reads that don't depend on each other share one `Promise.all` (`toProfilePage`, `offersMessage` in `services/list/read.ts`). A read that needs one field of another takes that read's pending promise, so both still start together (`activityBetween` takes `chatSafety`'s `blockedEitherWay` that way in `loadThread`; `toChatMessages` chains only the objekt cards onto the offers read).
+- **It waits for a row only to filter by it: merge it.** Two reads of the same row, or a lookup whose result only filters the next read, are one statement: a relation `with` (`findHeldList`, `fetchListForViewer`), a join, or one `SELECT` of several `EXISTS` (`chatSafety`).
+
+What parallel reads must keep:
+
+- The refusal a caller gets: when two parallel reads can both refuse, use `Promise.allSettled` and rethrow in the old order (`prepareList`, `sendMessage`).
+- Every started promise inside the `Promise.all` or `allSettled` that awaits it. A promise started earlier and awaited after another `await` becomes an unhandled rejection when that `await` throws first.
+- Early returns: a path that ran no query (own list, the owner's Nobody setting) still runs none, so check the cheap in-memory conditions before starting the batch.
+- A transaction's statements in sequence, in its documented lock order: one connection runs one statement at a time.
+
+The app and indexer databases cannot join, so those reads run side by side.
 
 ## Domain docs
 
