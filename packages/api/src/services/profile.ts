@@ -71,26 +71,20 @@ type ProfileUser = User & { messagePref: { allow: string } | null };
 /** The profile page's read: the public profile plus whether it offers Message to the viewer. */
 async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
   const shown = toPublicProfile(profile, user);
-  const publicProfile =
-    shown.user && user
-      ? {
-          ...shown,
-          userId: user.id,
-          reputation: (await reputationOf([user.id])).get(user.id),
-          bio: profile.bio,
-        }
-      : shown;
-  if (!user || user.id === currentUser?.id) {
-    return { ...publicProfile, messageable: false };
-  }
+  if (!user) return { ...shown, messageable: false };
+  const own = user.id === currentUser?.id;
   // a blocked pair sees no button at all, as with Nobody, rather than a refusal
-  const [blocked, banned] = await Promise.all([
-    currentUser ? isBlockedEither(currentUser.id, user.id) : false,
-    isBanned(user.id),
+  const [reputation, blocked, banned] = await Promise.all([
+    reputationOf([user.id]),
+    currentUser && !own ? isBlockedEither(currentUser.id, user.id) : false,
+    own ? false : isBanned(user.id),
   ]);
   return {
-    ...publicProfile,
-    messageable: !blocked && !banned && isMessageable(toMessagePref(user.messagePref)),
+    ...shown,
+    userId: user.id,
+    reputation: reputation.get(user.id),
+    bio: profile.bio,
+    messageable: !own && !blocked && !banned && isMessageable(toMessagePref(user.messagePref)),
   };
 }
 
