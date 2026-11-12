@@ -3,8 +3,6 @@ import type { Tx } from "@repo/db";
 import { listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { touchList } from "./shared";
-
 /**
  * Takes what these legs, verified just now, delivered off the receiver's want lists that ask for
  * it (`remove_on_receive`), hand-added entries only: a rule's are the rule's. Only the legs this
@@ -62,7 +60,7 @@ export async function stillWantedOn(userId: string, tradeId: number) {
  * turns the list's switch on in the same transaction, so the two never disagree.
  */
 export async function dropReceived(listId: number, collectionSlugs: string[], always: boolean) {
-  const rows = await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     if (always) await tx.update(lists).set({ removeOnReceive: true }).where(eq(lists.id, listId));
     return tx
       .delete(listEntries)
@@ -75,6 +73,4 @@ export async function dropReceived(listId: number, collectionSlugs: string[], al
       )
       .returning({ id: listEntries.id });
   });
-  if (rows.length > 0 || always) await touchList([listId]);
-  return rows;
 }

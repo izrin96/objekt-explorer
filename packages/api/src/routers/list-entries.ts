@@ -24,6 +24,7 @@ import {
   findOwnedList,
 } from "../services/list/read";
 import { dropReceived } from "../services/list/received";
+import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
 export const listEntriesRouter = {
@@ -145,6 +146,8 @@ export const listEntriesRouter = {
       if (list.listType !== "want") throw new ORPCError("NOT_FOUND");
 
       const rows = await dropReceived(list.id, collectionSlugs, always);
+      // here and not in `dropReceived`: the worker imports its module, and `touchList` loads Redis
+      if (rows.length > 0 || always) await touchList([list.id]);
 
       return { removed: rows.length };
     },
