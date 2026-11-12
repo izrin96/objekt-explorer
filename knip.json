@@ -14,6 +14,10 @@
       "entry": ["src/script/*.ts"],
       "project": ["src/**/*.ts"]
     },
+    "apps/migrate": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
     "apps/indexer": {
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]

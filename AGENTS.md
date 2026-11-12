@@ -11,6 +11,7 @@
 | `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI)                      |
 | `apps/worker`       | `worker`         | Background job worker (`Bun.cron`)                                        |
 | `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                           |
+| `apps/migrate`      | `migrate`        | One-shot main DB migration image (`packages/db/migrations`)               |
 | `packages/api`      | `@repo/api`      | ORPC routers and services                                                 |
 | `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                |
 | `packages/lib`      | `@repo/lib`      | Shared utilities                                                          |
@@ -162,7 +163,7 @@ Sentry (sentry.io, hosted; the official `@sentry/*` SDKs, pinned in the catalog)
 
 ## CI/CD
 
-`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check and `bun run check`, and beside them builds the `web` Docker image (from `apps/web`) when web changed. On main the image is pushed as `:<sha>`, and `tag-latest` moves `:latest` to it only once the checks pass, since production pulls `:latest` by hand. Worker and indexer images are not built in CI; they are built on the VPS.
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check and `bun run check`, and beside them builds the `web` Docker image (from `apps/web`) when web changed. On main the image is pushed as `:<sha>`, and `tag-latest` moves `:latest` to it only once the checks pass, since production pulls `:latest` by hand. Worker, indexer and migrate images are not built in CI; they are built on the VPS.
 
 ## Behavior
 

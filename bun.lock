@@ -39,6 +39,21 @@
         "typescript": "catalog:dev",
       },
     },
+    "apps/migrate": {
+      "name": "migrate",
+      "version": "0.0.0",
+      "dependencies": {
+        "drizzle-orm": "catalog:",
+        "pg": "catalog:",
+      },
+      "devDependencies": {
+        "@repo/lint": "workspace:*",
+        "@repo/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
+        "@types/pg": "catalog:dev",
+        "typescript": "catalog:dev",
+      },
+    },
     "apps/web": {
       "name": "web",
       "dependencies": {
@@ -1857,6 +1872,8 @@
     "micromark-util-types": ["micromark-util-types@2.0.3", "", {}, "sha512-oxB2Ik03hI0gv+VNn9tnh1t1YEe9MDPptViAEgfdf3YQHsn0pzGTgCdlSCJXcwhqm8phaEuM7zeEu3QQzVBrPg=="],
 
     "micromatch": ["micromatch@4.0.8", "", { "dependencies": { "braces": "^3.0.3", "picomatch": "^2.3.1" } }, "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA=="],
+
+    "migrate": ["migrate@workspace:apps/migrate"],
 
     "mime-db": ["mime-db@1.54.0", "", {}, "sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ=="],
 

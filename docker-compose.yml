@@ -28,6 +28,19 @@ services:
       interval: 5s
       retries: 1
 
+  # one-shot main DB migrations; run with `docker compose run --build --rm migrate` before deploying web and worker
+  migrate:
+    profiles: [migrate]
+    build:
+      context: .
+      dockerfile: ./apps/migrate/Dockerfile
+    # a direct connection, never pgbouncer (transaction mode); set MIGRATE_DATABASE_URL when main lives outside this stack
+    environment:
+      - DATABASE_URL=${MIGRATE_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/main}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # indexer processor
   processor:
     build:
