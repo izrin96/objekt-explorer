@@ -6,6 +6,12 @@ A procedure checks its input and the caller, then calls a service; database and 
 
 The worker imports some `services/` modules (`grep -r '@repo/api/services' apps/worker/src` lists them), and its container cannot load `env.ts` or `services/redis`. Keep those modules' import chains clear of both; `apps/worker/src/import-boundary.test.ts` fails when one is not.
 
+## Round trips
+
+A request spends as few sequential round trips to one database as its reads allow; the owner weighs this above a shorter function. Two reads of the same row, or a lookup whose result only filters the next read, are one statement: a relation `with` (`findHeldList`, `fetchListForViewer` in `services/list/read.ts`), a join, or one `SELECT` of several `EXISTS` (`chatSafety`). Reads that don't depend on each other share one `Promise.all`, and a read that needs one field of another takes its pending promise (`activityBetween` takes `chatSafety`'s `blockedEitherWay` that way in `loadThread`).
+
+The refusal a caller gets stays the same: when two parallel reads can both refuse, use `Promise.allSettled` and rethrow in the old order (`prepareList`, `sendMessage`). A transaction keeps its statements in sequence and its documented lock order; the app and indexer databases cannot join, so run those side by side.
+
 ## Domain docs
 
 Five domains keep their rules in `docs/`. Read the file before changing code in its row:
