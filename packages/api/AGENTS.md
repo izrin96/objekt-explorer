@@ -13,6 +13,12 @@ A request spends as few sequential round trips to one database as its reads allo
 - **It waits for nothing: run it in parallel.** Reads that don't depend on each other share one `Promise.all` (`toProfilePage`, `offersMessage` in `services/list/read.ts`). A read that needs one field of another takes that read's pending promise, so both still start together (`activityBetween` takes `chatSafety`'s `blockedEitherWay` that way in `loadThread`; `toChatMessages` chains only the objekt cards onto the offers read).
 - **It waits for a row only to filter by it: merge it.** Two reads of the same row, or a lookup whose result only filters the next read, are one statement: a relation `with` (`findHeldList`, `fetchListForViewer`), a join, or one `SELECT` of several `EXISTS` (`chatSafety`).
 
+The same holds for every read:
+
+- A set of ids is one statement, never a query per item: `inArray`, or `= ANY($1)` with one array parameter for a large set (`setEntryRatio`), through `chunkMap` when it can pass `TOKEN_CHUNK_SIZE`; a batch write is one `UPDATE … FROM unnest(…)` (`setEntryPrices`).
+- A read names the columns its caller uses (`columns: { id: true }`, `select({ … })`). A whole `lists` row carries its description, and a whole row read through a relation is built as JSON first.
+- Redis counts as a round trip: several keys are one `MGET` (`reputationOf`, `onlineAmong`), and a Redis read runs beside a database read that doesn't need it.
+
 What parallel reads must keep:
 
 - The refusal a caller gets: when two parallel reads can both refuse, use `Promise.allSettled` and rethrow in the old order (`prepareList`, `sendMessage`).
