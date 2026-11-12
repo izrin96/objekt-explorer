@@ -26,6 +26,7 @@ import { wrongCopyNote } from "../../lib/trade-notes";
 import { needsHeld, settleNotes, settlePlan } from "../../lib/trade-settle";
 import { unique } from "../../lib/unique";
 import { HELD_COPY_STATUSES } from "../../schemas/offer";
+import { removeReceived } from "../list/received";
 import { anchoredSerialIds } from "../objekt/serial-anchored";
 import { writeNotes } from "./notes";
 
@@ -255,6 +256,7 @@ export async function acceptCopy(
       throw error;
     });
   if (!recorded) return null;
+  await removeReceived(tx, [copy.legId]);
   await tx
     .update(tradeSubstitute)
     .set({ status: "accepted", decidedAt: sql`now()`, autoAccepted: auto })

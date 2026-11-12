@@ -17,6 +17,7 @@ export type CopySource = Pick<
   | "matchHave"
   | "gridColumns"
   | "hideSerial"
+  | "removeOnReceive"
 >;
 
 /**
@@ -37,6 +38,7 @@ export function toCopyDraft(
     matchHave: keepsOpenTo ? list.matchHave : EMPTY_DRAFT.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
+    removeOnReceive: keepsOpenTo ? list.removeOnReceive : EMPTY_DRAFT.removeOnReceive,
     regenerateSlug: false,
     // the server carries the list's ratio when the copy keeps its type
     ratio: null,

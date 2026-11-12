@@ -159,6 +159,16 @@ export function ListForm({
         />
       ) : null}
 
+      {value.listType === "want" ? (
+        <SwitchRow
+          id={id("remove-on-receive")}
+          label={m.list_remove_on_receive_label()}
+          description={m.list_remove_on_receive_desc()}
+          checked={value.removeOnReceive}
+          onCheckedChange={(checked) => set({ removeOnReceive: checked })}
+        />
+      ) : null}
+
       {/* a serial only exists on an entry the bound profile owns */}
       {bindable ? (
         <SwitchRow

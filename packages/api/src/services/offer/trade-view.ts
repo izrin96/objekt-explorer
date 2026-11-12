@@ -33,6 +33,7 @@ import {
   awayBreaksAt,
 } from "../../schemas/offer";
 import { fetchPartners, hydrateCards } from "../chat";
+import { stillWantedOn } from "../list/received";
 import { redis, redisFailOpen } from "../redis";
 import { reputationOf } from "../reputation";
 import { fetchObjekts } from "./core";
@@ -128,8 +129,11 @@ export async function fetchTrade(me: string, tradeId: number) {
   const partner = partners.get(partnerId);
   if (!partner) throw new ORPCError("NOT_FOUND");
   const slugOf = new Map(legs.map((leg) => [leg.id, leg.collectionSlug]));
-  const [heldBy, { serial: serialOf, collections }] = await Promise.all([
+  const [heldBy, wantedOn, { serial: serialOf, collections }] = await Promise.all([
     heldByOf(me, legs, profiles),
+    legs.some((leg) => leg.toUserId === me && leg.verifiedAt !== null)
+      ? stillWantedOn(me, tradeId)
+      : new Map<string, { slug: string; name: string }[]>(),
     hydrateCards(
       [
         ...legCardRefs(legs),
@@ -209,6 +213,10 @@ export async function fetchTrade(me: string, tradeId: number) {
         verifiedSerial: swapped?.serial ?? null,
         verifiedSerialEstimated: swapped?.estimated ?? false,
         autoAccepted: autoLegs.has(leg.id),
+        wantedOn:
+          leg.toUserId === me && leg.verifiedAt !== null
+            ? (wantedOn.get(leg.collectionSlug) ?? [])
+            : [],
         substitutes: subs.map((sub) => {
           const sent = serialOf(sub.objektId);
           return {

@@ -183,6 +183,8 @@ export const createListInputSchema = z.object({
   discoverable: z.boolean().default(false),
   matchSale: z.boolean().default(true),
   matchHave: z.boolean().default(true),
+  /** want lists only; a tab from before it sends none, and gets a list with it off */
+  removeOnReceive: z.boolean().default(false),
 });
 
 export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
@@ -215,6 +217,8 @@ export const editListInputSchema = z.object({
   regenerateSlug: z.boolean().default(false),
   /** a have or want list's "Ratio for all"; omitted keeps the stored one, as a tab from before ratios sends it */
   ratio: tradeRatioSchema.nullable().optional(),
+  /** want lists only; omitted keeps the stored one, as a tab from before it sends it */
+  removeOnReceive: z.boolean().optional(),
 });
 export type EditListInput = z.infer<typeof editListInputSchema>;
 
@@ -258,6 +262,13 @@ export const addToListInputSchema = z.object({
 export const removeObjektsFromListInputSchema = z.object({
   slug: z.string(),
   entryIds: z.number().int().positive().array().max(50000),
+});
+
+/** Take received collections off a want list; `always` also turns on the list's switch. */
+export const dropReceivedInputSchema = z.object({
+  slug: z.string(),
+  collectionSlugs: z.string().min(1).array().min(1).max(500),
+  always: z.boolean().default(false),
 });
 
 /** Set ratio on a have or want list's own entries; null is 1:1. */

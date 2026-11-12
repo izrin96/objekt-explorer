@@ -11,6 +11,7 @@ import {
   listPreviewsOutputSchema,
   profileListsInputSchema,
   profileListsOutputSchema,
+  dropReceivedInputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
 import { addEntries, removeEntries } from "../services/list/entries";
@@ -22,6 +23,7 @@ import {
   findOwnedList,
   refuseUnheldProfile,
 } from "../services/list/read";
+import { dropReceived } from "../services/list/received";
 import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
@@ -125,6 +127,24 @@ export const listEntriesRouter = {
       const rows = await removeEntries(list.id, entryIds);
 
       if (rows.length > 0) await touchList([list.id]);
+
+      return { removed: rows.length };
+    },
+  ),
+
+  dropReceived: authed.input(dropReceivedInputSchema).handler(
+    async ({
+      input: { slug, collectionSlugs, always },
+      context: {
+        session: { user },
+      },
+    }) => {
+      const list = await findOwnedList(slug, user.id);
+      // the trade page offers it for want lists only; on another type it would drop real entries
+      if (list.listType !== "want") throw new ORPCError("NOT_FOUND");
+
+      const rows = await dropReceived(list.id, collectionSlugs, always);
+      if (rows.length > 0 || always) await touchList([list.id]);
 
       return { removed: rows.length };
     },

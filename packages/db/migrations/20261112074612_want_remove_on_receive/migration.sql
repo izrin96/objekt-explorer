@@ -1,0 +1,1 @@
+ALTER TABLE "lists" ADD COLUMN "remove_on_receive" boolean DEFAULT false NOT NULL;

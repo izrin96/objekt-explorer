@@ -140,6 +140,34 @@ describe("toCreateInput", () => {
   });
 });
 
+describe("toCreateInput, Remove objekts I get in a trade", () => {
+  test("a new want list sends it on, and off once the user turns it off", () => {
+    expect(toCreateInput(draft({ listType: "want" })).removeOnReceive).toBe(true);
+    expect(toCreateInput(draft({ listType: "want", removeOnReceive: false })).removeOnReceive).toBe(
+      false,
+    );
+  });
+
+  test("no other type sends it on", () => {
+    for (const listType of ["general", "have", "sale"] as const) {
+      expect(toCreateInput(draft({ listType })).removeOnReceive).toBe(false);
+    }
+  });
+
+  test("an edit carries the draft's choice for a want list", () => {
+    const off = toEditInput("abc", draft({ listType: "want", removeOnReceive: false }));
+    expect(off.removeOnReceive).toBe(false);
+    expect(editListInputSchema.parse(off).removeOnReceive).toBe(false);
+  });
+
+  test("a create or an edit from before it parses: off on create, absent on edit", () => {
+    const { removeOnReceive: _a, ...oldCreate } = toCreateInput(draft({ listType: "want" }));
+    expect(createListInputSchema.parse(oldCreate).removeOnReceive).toBe(false);
+    const { removeOnReceive: _b, ...oldEdit } = toEditInput("abc", draft({ listType: "want" }));
+    expect(editListInputSchema.parse(oldEdit).removeOnReceive).toBeUndefined();
+  });
+});
+
 describe("toEditInput", () => {
   test("leaves out what belongs to the post and carries slug, grid and slug regeneration", () => {
     const input = toEditInput(

@@ -114,6 +114,8 @@ export const lists = pgTable(
     bumpedAt: timestamp("bumped_at", { mode: "string", withTimezone: true }),
     /** a have or want list's trade ratio, which entries and rules without one follow; null is 1:1, never matched */
     ratio: smallint("ratio"),
+    /** a want list drops a hand-added entry when a trade leg delivers its collection to the owner */
+    removeOnReceive: boolean("remove_on_receive").notNull().default(false),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),

@@ -388,6 +388,11 @@ const tradeLegViewSchema = z.object({
     .array(),
   /** verified through a wrong copy accepted automatically */
   autoAccepted: z.boolean().optional(),
+  /**
+   * on a verified leg the viewer received: their want lists that still hold the collection as a
+   * hand-added entry and do not remove what a trade delivers
+   */
+  wantedOn: z.object({ slug: z.string(), name: z.string() }).array().optional(),
 });
 
 /** A request to cancel, as the viewer sees it; `lapsed`: still pending when the trade ended another way. */

@@ -22,6 +22,7 @@ const source = (patch: Partial<CopySource> = {}): CopySource => ({
   matchHave: true,
   gridColumns: 4,
   hideSerial: true,
+  removeOnReceive: false,
   ...patch,
 });
 
@@ -47,6 +48,7 @@ describe("toCopyDraft without a fixed type", () => {
       hideSerial: true,
       regenerateSlug: false,
       ratio: null,
+      removeOnReceive: true,
     });
   });
 
@@ -150,5 +152,22 @@ describe("toCopyDraft with a fixed type", () => {
     expect(draft.hideSerial).toBe(true);
     expect(draft.linkedListId).toBeNull();
     expect(draft.ratio).toBeNull();
+  });
+});
+
+describe("toCopyDraft, Remove objekts I get in a trade", () => {
+  const want = source({ listType: "want", isProfileBind: false, profileAddress: null });
+
+  test("a want copy of a want list keeps the source's choice", () => {
+    expect(toCopyDraft(want, { profiles: PROFILES }).removeOnReceive).toBe(false);
+    expect(
+      toCopyDraft({ ...want, removeOnReceive: true }, { profiles: PROFILES }).removeOnReceive,
+    ).toBe(true);
+  });
+
+  test("a want copy of another type starts with it on, as a new want list does", () => {
+    expect(toCopyDraft(source(), { fixedType: "want", profiles: PROFILES }).removeOnReceive).toBe(
+      EMPTY_DRAFT.removeOnReceive,
+    );
   });
 });

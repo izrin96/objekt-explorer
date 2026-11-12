@@ -190,6 +190,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
         input.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
       discoverable,
       ...resolveOpenTo(input.listType, input),
+      removeOnReceive: input.listType === "want" && input.removeOnReceive,
       bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })
     .returning({ id: lists.id });

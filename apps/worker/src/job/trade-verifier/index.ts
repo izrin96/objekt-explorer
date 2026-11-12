@@ -13,6 +13,7 @@ import {
   VERIFIER_LAST_KEY,
   VERIFIER_NUDGE_CHANNEL,
 } from "@repo/api/schemas/offer";
+import { removeReceived } from "@repo/api/services/list/received";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
   finishSettle,
@@ -234,6 +235,7 @@ async function settleTrade(
 
     const applied = new Map<number, LegResult>();
     const waiting: LegRow[] = [];
+    const recordedIds: number[] = [];
     let verified = 0;
     for (const { leg, result, record } of partitionOpenLegs(legs, results, openIds)) {
       if (!record) {
@@ -260,10 +262,14 @@ async function settleTrade(
           if (isUniqueViolation(error)) return false;
           throw error;
         });
-      if (recorded) verified += 1;
+      if (recorded) {
+        verified += 1;
+        recordedIds.push(leg.id);
+      }
       applied.set(leg.id, recorded ? result : { kind: "pending" });
       if (!recorded) waiting.push(leg);
     }
+    await removeReceived(tx, recordedIds);
 
     const settled = {
       tradeId,

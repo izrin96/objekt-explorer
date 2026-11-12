@@ -64,6 +64,7 @@ export async function editList(userId: string, input: EditListInput) {
       hideSerial:
         ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
       ratio: takesRatio(list.listType) ? input.ratio : undefined,
+      removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
     })
     .where(eq(lists.id, list.id));
   await touchList([list.id]);

@@ -23,6 +23,8 @@ export type ListDraft = OpenToFlags & {
   regenerateSlug: boolean;
   /** a have or want list's Ratio for all; edit only */
   ratio: number | null;
+  /** a want list drops a hand-added objekt once a trade delivers it */
+  removeOnReceive: boolean;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
@@ -40,6 +42,8 @@ export const EMPTY_DRAFT: ListDraft = {
   hideSerial: false,
   regenerateSlug: false,
   ratio: null,
+  // a new want list starts with it on; lists made before it existed are off
+  removeOnReceive: true,
 };
 
 /** Built per submit: the message functions read the request's locale. */
@@ -93,6 +97,7 @@ export function toCreateInput(draft: ListDraft) {
     matchSale: draft.matchSale,
     matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
+    removeOnReceive: draft.listType === "want" && draft.removeOnReceive,
   };
 }
 
@@ -213,5 +218,6 @@ export function toDraft(list: StoredList): ListDraft {
     hideSerial: list.hideSerial,
     regenerateSlug: false,
     ratio: list.ratio,
+    removeOnReceive: list.removeOnReceive,
   };
 }

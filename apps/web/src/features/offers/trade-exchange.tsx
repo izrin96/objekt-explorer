@@ -25,6 +25,7 @@ import { Group } from "./exchange-group";
 import { Progress, TopupText } from "./mono";
 import { type Leg, type SideStatus, sideStatus } from "./next-step";
 import type { Collections, OfferSide } from "./pick";
+import { StillWanted } from "./still-wanted";
 
 export type ExchangeView = "grid" | "list";
 
@@ -306,6 +307,9 @@ export function TradeExchange({
                   />
                 ))
               )}
+              {side.key === "get" ? (
+                <StillWanted legs={side.legs} collections={collections} />
+              ) : null}
               {topupIn === side.key && trade.topup ? (
                 <p className={cn(TONE_INK.warning, "flex items-start gap-1.5 text-sm text-pretty")}>
                   <WarningIcon aria-hidden weight="fill" className="mt-0.5 size-4 shrink-0" />

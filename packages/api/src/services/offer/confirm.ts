@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
+import { removeReceived } from "../list/received";
 import { forgetReputation } from "../reputation";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
@@ -51,6 +52,7 @@ export async function confirmLeg(me: string, legId: number) {
       .set({ open: false, verifiedAt: sql`now()`, confirmedAt: sql`now()` })
       .where(eq(tradeLeg.id, legId))
       .returning({ at: tradeLeg.confirmedAt });
+    await removeReceived(tx, [legId]);
 
     const progress = {
       alreadyVerified: legs.filter((row) => row.verifiedAt !== null).length,

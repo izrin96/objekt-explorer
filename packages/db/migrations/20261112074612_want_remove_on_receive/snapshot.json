@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "56806d42-322c-4161-b1b3-acad28cb9f04",
+  "prevIds": [
+    "ed4eccdf-2e16-4eb1-b2c1-2c106081e776"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "remove_on_receive"
+      ],
+      "writes": [
+        "s|col|public.lists.remove_on_receive",
+        "n|col|public.lists.remove_on_receive",
+        "e|col|public.lists.remove_on_receive"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "lists",
+        "name": "remove_on_receive",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}
