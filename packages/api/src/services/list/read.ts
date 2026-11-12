@@ -5,7 +5,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, userAddress } from "@repo/db/schema";
 import type { UserAddress } from "@repo/db/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
 import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
@@ -149,7 +149,6 @@ export async function fetchListForViewer(lookup: ListLookup, viewerId: string | 
 export async function fetchOwnedLists(
   column: "userId" | "profileAddress",
   identifier: string,
-  ownerId?: string,
 ): Promise<PublicList[]> {
   const result = await db.query.lists.findMany({
     columns: {
@@ -168,10 +167,19 @@ export async function fetchOwnedLists(
       takesSwaps: true,
       bumpedAt: true,
     },
-    where: {
-      [column]: identifier,
-      ...(ownerId === undefined ? {} : { userId: ownerId }),
-    },
+    where:
+      column === "userId"
+        ? { userId: identifier }
+        : {
+            profileAddress: identifier,
+            // only the account holding the address now: one that unlinked it, or lost it to a
+            // staff move, keeps its rows but no longer shows under the profile
+            RAW: (list) => sql`EXISTS (
+              SELECT 1 FROM ${userAddress}
+              WHERE ${userAddress.address} = ${list.profileAddress}
+                AND ${userAddress.userId} = ${list.userId}
+            )`,
+          },
     with: {
       userAddress: ownerAddress,
       linkedList: linkedListWith,
@@ -180,8 +188,10 @@ export async function fetchOwnedLists(
   });
 
   // a profile's lists carry its address, so only an account's own can need the handle
-  const owner = ownerId ?? (column === "userId" ? identifier : undefined);
-  const handle = result.some(needsTradeHandle) ? await ownerTradeHandle(owner) : null;
+  const handle =
+    column === "userId" && result.some(needsTradeHandle)
+      ? await ownerTradeHandle(identifier)
+      : null;
 
   // oxlint-disable-next-line oxc/no-map-spread
   return result.map(({ userAddress, linkedList, ...rest }) => {
@@ -210,17 +220,9 @@ export async function fetchOwnedLists(
   });
 }
 
-/**
- * Only the lists of the account holding the address now: one that unlinked it, or lost it to a
- * staff move, keeps its rows but no longer shows under the profile.
- */
-export async function fetchProfileLists(profileAddress: string): Promise<PublicList[]> {
-  const [holder] = await db
-    .select({ userId: userAddress.userId })
-    .from(userAddress)
-    .where(eq(userAddress.address, profileAddress));
-  if (!holder?.userId) return [];
-  return fetchOwnedLists("profileAddress", profileAddress, holder.userId);
+/** The lists shown under a profile: those of the account holding the address now. */
+export function fetchProfileLists(profileAddress: string): Promise<PublicList[]> {
+  return fetchOwnedLists("profileAddress", profileAddress);
 }
 
 /** Each list's entry count and its latest few artworks, newest first. */
