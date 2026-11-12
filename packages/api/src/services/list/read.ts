@@ -122,14 +122,7 @@ function toPublicList(result: ListRow, handle: PublicList["tradeHandle"]): Publi
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description ? normalizeUserText(result.description) : null,
     tradeHandle: handle,
-    linkedList: result.linkedList
-      ? {
-          ...result.linkedList,
-          profile: result.linkedList.userAddress
-            ? toPartialProfile(result.linkedList.userAddress)
-            : null,
-        }
-      : null,
+    linkedList: result.linkedList ? toLinkedList(result.linkedList) : null,
   };
 }
 
