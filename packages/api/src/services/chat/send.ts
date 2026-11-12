@@ -118,11 +118,16 @@ export async function sendMessage(
   input: z.infer<typeof sendInputSchema>,
 ) {
   const now = new Date();
-  const { partnerId, lastMessageId } = await findMembership(input.conversationId, me);
+  // allSettled so a clientId from another conversation never preempts the membership NOT_FOUND
+  const [membership, sentBefore] = await Promise.allSettled([
+    findMembership(input.conversationId, me),
+    input.clientId ? findSentMessage(me, input.clientId, input.conversationId) : undefined,
+  ]);
+  if (membership.status === "rejected") throw membership.reason;
+  if (sentBefore.status === "rejected") throw sentBefore.reason;
+  const { partnerId, lastMessageId } = membership.value;
   // a retry of a send that landed returns it, whatever has changed since: nothing is counted or published
-  const stored = input.clientId
-    ? await findSentMessage(me, input.clientId, input.conversationId)
-    : undefined;
+  const stored = sentBefore.value;
   if (stored) return sendResult(await toChatMessages([{ ...stored, senderId: me }], me));
 
   const [safety, hasAddress, replyAllowed] = await Promise.all([
@@ -194,10 +199,17 @@ export async function notifyTyping(me: string, conversationId: number) {
     ]),
   );
   if (first === null) return;
-  const safety = await chatSafety(me, partnerId);
-  if (safety.blocked || safety.mute !== null) return;
-  const activity = await activityBetween(conversationId, me, partnerId, safety.blockedEitherWay);
-  if (!activity.toPartner) return;
+  const safetyRead = chatSafety(me, partnerId);
+  const [safety, activity] = await Promise.all([
+    safetyRead,
+    activityBetween(
+      conversationId,
+      me,
+      partnerId,
+      safetyRead.then((read) => read.blockedEitherWay),
+    ),
+  ]);
+  if (safety.blocked || safety.mute !== null || !activity.toPartner) return;
   await publishNotify(partnerId, { type: "chat_typing", conversationId });
 }
 

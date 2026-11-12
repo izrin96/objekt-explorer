@@ -182,7 +182,7 @@ export async function findMembership(conversationId: number, userId: string) {
 
 type ToEvent = (state: MemberState, lastMessageId: number | null) => MemberEvent | null;
 
-/** Applies one member event under a row lock and returns the new state. */
+/** Applies one member event under a row lock and returns the new state, with the other member's id. */
 export async function updateMember(conversationId: number, userId: string, toEvent: ToEvent) {
   return db.transaction((tx) => updateMemberIn(tx, conversationId, userId, toEvent));
 }
@@ -195,7 +195,12 @@ export async function updateMemberIn(
   toEvent: ToEvent,
 ) {
   const [row] = await tx
-    .select({ ...memberColumns, lastMessageId: conversation.lastMessageId })
+    .select({
+      ...memberColumns,
+      lastMessageId: conversation.lastMessageId,
+      userLow: conversation.userLow,
+      userHigh: conversation.userHigh,
+    })
     .from(conversationMember)
     .innerJoin(conversation, eq(conversation.id, conversationMember.conversationId))
     .where(
@@ -208,10 +213,11 @@ export async function updateMemberIn(
     .for("update", { of: conversationMember });
   if (!row) throw new ORPCError("NOT_FOUND");
 
-  const { userId: _, lastMessageId, ...state } = row;
+  const { userId: _, lastMessageId, userLow, userHigh, ...state } = row;
+  const partnerId = userLow === userId ? userHigh : userLow;
   const event = toEvent(state, lastMessageId);
-  if (event === null) return { state, changed: false };
+  if (event === null) return { state, changed: false, partnerId };
   const next = nextMemberState(state, event, new Date().toISOString());
   await writeMember(tx, conversationId, userId, next);
-  return { state: next, changed: true };
+  return { state: next, changed: true, partnerId };
 }

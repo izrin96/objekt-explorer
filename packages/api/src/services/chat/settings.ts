@@ -44,13 +44,14 @@ async function blockedBetween(a: string, b: string) {
 /**
  * For one conversation: whether the partner's Seen and typing reach the viewer, whether the
  * viewer's reach the partner, and how far the partner has read. A block between the two
- * hides both ways; a caller that already read `chatSafety` passes its `blockedEitherWay`.
+ * hides both ways; a caller that reads `chatSafety` passes its `blockedEitherWay`, still pending
+ * when the two reads run side by side.
  */
 export async function activityBetween(
   conversationId: number,
   viewerId: string,
   partnerId: string,
-  blockedEitherWay?: boolean,
+  blockedEitherWay?: boolean | Promise<boolean>,
 ) {
   const [members, shows, blocked] = await Promise.all([
     db

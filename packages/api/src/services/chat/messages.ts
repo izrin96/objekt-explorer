@@ -72,7 +72,7 @@ export async function toChatMessages(
   limits: ActorLimits = {},
 ) {
   const cards = rows.map((row) => (row.unsentAt ? null : parseCard(row.card)));
-  const offers = await fetchOffers(
+  const offersRead = fetchOffers(
     rows.flatMap((row) => (row.offerId ? [row.offerId] : [])),
     viewerId,
   );
@@ -80,8 +80,12 @@ export async function toChatMessages(
   const replies = rows.flatMap((row) =>
     row.replyToId && !row.unsentAt ? [{ id: row.id, replyToId: row.replyToId }] : [],
   );
-  const [objekts, posts, quotes] = await Promise.all([
-    hydrateCards([...split.objekts, ...offerItemCards(offers.values())], viewerId),
+  // only the objekt cards wait for the offers, whose items they draw
+  const [offers, objekts, posts, quotes] = await Promise.all([
+    offersRead,
+    offersRead.then((read) =>
+      hydrateCards([...split.objekts, ...offerItemCards(read.values())], viewerId),
+    ),
     hydratePostCards(split.posts, viewerId),
     readQuotes(replies, viewerId),
   ]);

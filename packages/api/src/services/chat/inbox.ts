@@ -240,50 +240,61 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
 
   const forward = input.after !== undefined;
   const older = input.before !== undefined;
-  const [rows, [member], partners, safety, reputations, deals, anyOffer] = await Promise.all([
-    db
-      .select({
-        id: message.id,
-        senderId: message.senderId,
-        body: message.body,
-        card: message.card,
-        createdAt: message.createdAt,
-        caution: message.caution,
-        offerId: message.offerId,
-        unsentAt: message.unsentAt,
-        replyToId: message.replyToId,
-      })
-      .from(message)
-      .where(
-        and(
-          eq(message.conversationId, input.id),
-          forward ? gt(message.id, input.after!) : undefined,
-          input.before === undefined ? undefined : lt(message.id, input.before),
+  const safetyRead = chatSafety(me, partnerId);
+  const [rows, [member], partners, safety, reputations, deals, anyOffer, activity] =
+    await Promise.all([
+      db
+        .select({
+          id: message.id,
+          senderId: message.senderId,
+          body: message.body,
+          card: message.card,
+          createdAt: message.createdAt,
+          caution: message.caution,
+          offerId: message.offerId,
+          unsentAt: message.unsentAt,
+          replyToId: message.replyToId,
+        })
+        .from(message)
+        .where(
+          and(
+            eq(message.conversationId, input.id),
+            forward ? gt(message.id, input.after!) : undefined,
+            input.before === undefined ? undefined : lt(message.id, input.before),
+          ),
+        )
+        .orderBy(forward ? asc(message.id) : desc(message.id))
+        .limit(THREAD_PAGE_SIZE + 1),
+      db
+        .select({
+          request: conversationMember.request,
+          archivedAt: conversationMember.archivedAt,
+          mutedUntil: conversationMember.mutedUntil,
+          lastReadMessageId: conversationMember.lastReadMessageId,
+        })
+        .from(conversationMember)
+        .where(
+          and(eq(conversationMember.conversationId, input.id), eq(conversationMember.userId, me)),
         ),
-      )
-      .orderBy(forward ? asc(message.id) : desc(message.id))
-      .limit(THREAD_PAGE_SIZE + 1),
-    db
-      .select({
-        request: conversationMember.request,
-        archivedAt: conversationMember.archivedAt,
-        mutedUntil: conversationMember.mutedUntil,
-        lastReadMessageId: conversationMember.lastReadMessageId,
-      })
-      .from(conversationMember)
-      .where(
-        and(eq(conversationMember.conversationId, input.id), eq(conversationMember.userId, me)),
+      fetchPartners([partnerId]),
+      safetyRead,
+      reputationOf([partnerId]),
+      // the cache keeps only the newest page's `conversation`, so an older page skips the deal
+      older ? null : readDeals(me, [input.id]),
+      older
+        ? []
+        : db
+            .select({ id: offer.id })
+            .from(offer)
+            .where(eq(offer.conversationId, input.id))
+            .limit(1),
+      activityBetween(
+        input.id,
+        me,
+        partnerId,
+        safetyRead.then((read) => read.blockedEitherWay),
       ),
-    fetchPartners([partnerId]),
-    chatSafety(me, partnerId),
-    reputationOf([partnerId]),
-    // the cache keeps only the newest page's `conversation`, so an older page skips the deal
-    older ? null : readDeals(me, [input.id]),
-    older
-      ? []
-      : db.select({ id: offer.id }).from(offer).where(eq(offer.conversationId, input.id)).limit(1),
-  ]);
-  const activity = await activityBetween(input.id, me, partnerId, safety.blockedEitherWay);
+    ]);
   const partner = partners.get(partnerId);
   if (!member || !partner) throw new ORPCError("NOT_FOUND");
 
@@ -320,13 +331,12 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
 }
 
 export async function markConversationRead(me: string, id: number, upTo: number | undefined) {
-  const { changed, state } = await updateMember(id, me, (state, lastMessageId) => {
+  const { changed, state, partnerId } = await updateMember(id, me, (state, lastMessageId) => {
     if (lastMessageId === null) return null;
     const messageId = Math.min(upTo ?? lastMessageId, lastMessageId);
     return messageId > (state.lastReadMessageId ?? 0) ? { type: "read", messageId } : null;
   });
   if (!changed) return;
-  const { partnerId } = await findMembership(id, me);
   // the partner's open thread moves its Seen only when the reader's Seen reaches them
   const { toPartner } = await activityBetween(id, me, partnerId);
   const readTo = state.lastReadMessageId;
@@ -353,11 +363,10 @@ export async function muteConversation(me: string, { id, until }: z.infer<typeof
 
 /** Replying accepts too. */
 export async function acceptConversation(me: string, id: number) {
-  const { changed } = await updateMember(id, me, (state) =>
+  const { changed, partnerId } = await updateMember(id, me, (state) =>
     state.request ? { type: "accept" } : null,
   );
   if (!changed) return;
   // accepting lets the sender's thread show this account's Seen and typing
-  const { partnerId } = await findMembership(id, me);
   await publishChatChanged([me, partnerId], id);
 }
