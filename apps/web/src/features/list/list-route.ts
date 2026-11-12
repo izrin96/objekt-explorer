@@ -2,7 +2,7 @@ import { noop, type QueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
 
-import { listBySlugQuery, listEntriesOptions, profileListEntries } from "./queries";
+import { LIST_QUERY_KEY, listEntriesOptions, profileListEntries } from "./queries";
 import { listRulesOptions } from "./rules/queries";
 
 type ListRead = Promise<{ slug: string; listType: string }>;
@@ -42,13 +42,22 @@ export function startListReads(
       ...orpc.config.getSelectedArtists.queryOptions(),
       staleTime: "static",
     });
-    // a list already in the cache gives its slug at once, and its entries may be cached under it
+    // a list already in the cache under either of its addresses (`/list/<slug>` redirects here)
+    // gives its slug at once, and its entries may be cached under it
+    const cached = (at: { slug: string; address: string }) =>
+      queryClient
+        .getQueriesData<{ profileSlug: string | null; profileAddress: string | null }>({
+          queryKey: LIST_QUERY_KEY,
+        })
+        .some(
+          ([, read]) =>
+            read?.profileSlug === at.slug &&
+            read.profileAddress?.toLowerCase() === at.address.toLowerCase(),
+        );
     const early = scoped
       ? Promise.all([artists, scoped])
           .then(([artist, at]) =>
-            queryClient.getQueryData(listBySlugQuery(at).queryKey)
-              ? null
-              : profileListEntries(at.slug, at.address, artist),
+            cached(at) ? null : profileListEntries(at.slug, at.address, artist),
           )
           .catch(() => null)
       : null;

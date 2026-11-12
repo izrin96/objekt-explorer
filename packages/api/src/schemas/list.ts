@@ -160,8 +160,11 @@ export type TradePartner = z.infer<typeof tradePartnerSchema>;
 
 export const listSlugInputSchema = z.object({ slug: z.string() });
 
-export const listEntriesInputSchema = listSlugInputSchema.extend({
+export const listExportInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
+});
+
+export const listEntriesInputSchema = listExportInputSchema.extend({
   address: addressSchema.optional().meta({
     description: "A Cosmo address: `slug` is then the list's profile slug under it",
   }),

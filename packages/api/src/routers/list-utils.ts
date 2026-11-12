@@ -6,7 +6,7 @@ import { authed, pub } from "../orpc";
 import { errorResponses } from "../schemas/common/documented";
 import {
   generateDiscordFormatInputSchema,
-  listEntriesInputSchema,
+  listExportInputSchema,
   setRatioInputSchema,
   updateEntryPricesInputSchema,
 } from "../schemas/list";
@@ -77,7 +77,7 @@ export const listUtils = {
       summary: "A list's entries as a CSV file",
       spec: errorResponses(400, 404),
     })
-    .input(listEntriesInputSchema)
+    .input(listExportInputSchema)
     .output(z.file().mime("text/csv"))
     .handler(async ({ input: { slug, artist: artists } }) => {
       const exported = await exportListCsv(slug, artists);
