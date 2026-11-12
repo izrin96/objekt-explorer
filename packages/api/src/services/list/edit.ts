@@ -13,7 +13,13 @@ import { findOwnedList } from "./read";
 import { lockTradeLists, touchList } from "./shared";
 
 export async function editList(userId: string, input: EditListInput) {
-  const list = await findOwnedList(input.slug, userId);
+  // the profile check counts only for an unbound list, so its refusal waits for the list
+  const [found, profileCheck] = await Promise.allSettled([
+    findOwnedList(input.slug, userId),
+    input.profileAddress ? assertProfileOwned(input.profileAddress, userId) : undefined,
+  ]);
+  if (found.status === "rejected") throw found.reason;
+  const list = found.value;
 
   // Validate currency for sale lists
   if (list.listType === "sale" && !input.currency) {
@@ -24,9 +30,7 @@ export async function editList(userId: string, input: EditListInput) {
   }
 
   // address changes are ignored on a bound list, so only an unbound one is checked
-  if (input.profileAddress && !list.isProfileBind) {
-    await assertProfileOwned(input.profileAddress, userId);
-  }
+  if (!list.isProfileBind && profileCheck.status === "rejected") throw profileCheck.reason;
 
   let profileSlug: string | null = null;
   // For isProfileBind lists, the profileAddress is locked to the

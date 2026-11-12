@@ -71,10 +71,16 @@ export const listCrud = {
       }) => {
         await limitListWrites(user.id);
         const source = await findOwnedList(sourceSlug, user.id);
-        const prepared = await prepareList({ ...input, gridColumns: source.gridColumns }, user.id);
-        const { rows, carried, leftOut, unit } = await planCopy(source, input, user.id);
+        // allSettled keeps the new list's refusals ahead of the plan's
+        const [prepared, plan] = await Promise.allSettled([
+          prepareList({ ...input, gridColumns: source.gridColumns }, user.id),
+          planCopy(source, input, user.id),
+        ]);
+        if (prepared.status === "rejected") throw prepared.reason;
+        if (plan.status === "rejected") throw plan.reason;
+        const { rows, carried, leftOut, unit } = plan.value;
 
-        const { slug, changed } = await writeCopy(source, input.listType, prepared, rows);
+        const { slug, changed } = await writeCopy(source, input.listType, prepared.value, rows);
         await touchList(changed);
 
         return { slug, carried, leftOut, unit };

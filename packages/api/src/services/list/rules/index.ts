@@ -374,7 +374,12 @@ export async function fetchRulesById(ruleIds: number[]) {
 
 /** The Discord format's rule lines of the caller's list. */
 export async function ownRuleLines(slug: string, userId: string) {
-  const list = await db.query.lists.findFirst({ columns: { id: true }, where: { slug, userId } });
-  if (!list) return [];
-  return ((await fetchRuleDefs([list.id])).get(list.id) ?? []).map(ruleLine);
+  const list = await db.query.lists.findFirst({
+    columns: { id: true },
+    where: { slug, userId },
+    with: { rules: { columns: ruleFields, orderBy: { id: "asc" } } },
+  });
+  return (list?.rules ?? []).map((row) =>
+    ruleLine(Object.assign(toDef(row), { ratio: row.ratio })),
+  );
 }

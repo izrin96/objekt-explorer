@@ -36,32 +36,37 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
   const isProfileBind = ["have", "sale"].includes(target.listType) && target.isProfileBind;
   const binding = { ...target, isProfileBind };
   const mode = copyMode(source, binding);
+  const holdings = needsHoldings(mode);
+  if (holdings && !target.profileAddress) {
+    refuse(
+      "BAD_REQUEST",
+      "list_profile_required",
+      "Profile address is required for profile-bound lists",
+    );
+  }
+  const profile = holdings ? target.profileAddress : null;
 
-  const entries = await db
-    .select({
-      collectionSlug: listEntries.collectionSlug,
-      objektId: listEntries.objektId,
-      price: listEntries.price,
-      isQyop: listEntries.isQyop,
-      note: listEntries.note,
-      ratio: listEntries.ratio,
-    })
-    .from(listEntries)
-    // a rule's entries travel as the rule (`copyRules`), or not at all
-    .where(and(eq(listEntries.listId, source.id), isNull(listEntries.ruleId)))
-    .orderBy(listEntries.id);
+  // the entries read never refuses, so the profile check is still the first refusal
+  const [entries] = await Promise.all([
+    db
+      .select({
+        collectionSlug: listEntries.collectionSlug,
+        objektId: listEntries.objektId,
+        price: listEntries.price,
+        isQyop: listEntries.isQyop,
+        note: listEntries.note,
+        ratio: listEntries.ratio,
+      })
+      .from(listEntries)
+      // a rule's entries travel as the rule (`copyRules`), or not at all
+      .where(and(eq(listEntries.listId, source.id), isNull(listEntries.ruleId)))
+      .orderBy(listEntries.id),
+    profile ? assertProfileOwned(profile, userId) : undefined,
+  ]);
 
   let owned: ReadonlySet<string> | ReadonlyMap<string, OwnedCopy[]> = new Set<string>();
-  if (needsHoldings(mode)) {
-    if (!target.profileAddress) {
-      refuse(
-        "BAD_REQUEST",
-        "list_profile_required",
-        "Profile address is required for profile-bound lists",
-      );
-    }
-    await assertProfileOwned(target.profileAddress, userId);
-    const owner = target.profileAddress.toLowerCase();
+  if (profile) {
+    const owner = profile.toLowerCase();
 
     if (mode === "tokens") {
       const ids = Array.from(new Set(entries.flatMap((entry) => entry.objektId ?? [])));
