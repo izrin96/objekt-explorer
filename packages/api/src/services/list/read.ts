@@ -19,7 +19,7 @@ import { toPublicUser } from "../profile";
 import { fetchAddresses } from "../trade/matches/holdings";
 import { fetchCollectionsBySlug } from "./collections";
 
-export async function fetchListWithEntries(slug: string) {
+export async function fetchListWithEntries(lookup: ListLookup) {
   return db.query.lists.findFirst({
     with: {
       entries: {
@@ -28,7 +28,7 @@ export async function fetchListWithEntries(slug: string) {
         orderBy: { id: "asc" },
       },
     },
-    where: { slug },
+    where: listWhere(lookup),
   });
 }
 

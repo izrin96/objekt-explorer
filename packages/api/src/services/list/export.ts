@@ -11,7 +11,7 @@ export async function exportListCsv(
   slug: string,
   artists: z.infer<typeof listEntriesInputSchema>["artist"],
 ) {
-  const list = await fetchListWithEntries(slug);
+  const list = await fetchListWithEntries({ slug });
   if (!list) return null;
   const [entries, rules] = await Promise.all([
     buildListEntries(list.entries, list.isProfileBind, { artists, hideSerial: list.hideSerial }),

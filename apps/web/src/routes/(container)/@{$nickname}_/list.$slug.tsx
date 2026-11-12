@@ -17,16 +17,13 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),
   loaderDeps: ({ search }) => ({ comparing: isComparing(search) }),
   loader: async ({ params, deps, cause, context: { queryClient } }) => {
-    const read = queryClient
+    const scoped = queryClient
       .query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" })
-      .then((profile) =>
-        queryClient.query({
-          ...listBySlugQuery({ slug: params.slug, address: profile.address }),
-          staleTime: "static",
-        }),
-      );
-    // the URL names the list by its profile slug, so the entries wait for the list
-    startListReads(queryClient, { list: read, cause, comparing: deps.comparing });
+      .then((profile) => ({ slug: params.slug, address: profile.address }));
+    const read = scoped.then((at) =>
+      queryClient.query({ ...listBySlugQuery(at), staleTime: "static" }),
+    );
+    startListReads(queryClient, { list: read, scoped, cause, comparing: deps.comparing });
     return { list: await read };
   },
   head: listDetailHead,

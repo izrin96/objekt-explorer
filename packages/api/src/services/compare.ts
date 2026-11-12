@@ -93,7 +93,7 @@ export function findOwnProfileAddress(address: string, userId: string) {
 /** The source list's objekts compared against a target list or profile, by `input.mode`. */
 export async function compareLists(input: CompareInput) {
   async function buildSourceEntries(): Promise<ListObjekt[]> {
-    const sourceList = await fetchListWithEntries(input.sourceId);
+    const sourceList = await fetchListWithEntries({ slug: input.sourceId });
 
     if (!sourceList) refuse("NOT_FOUND", "compare_source_list_not_found", "Source list not found");
 

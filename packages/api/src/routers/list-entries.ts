@@ -37,8 +37,10 @@ export const listEntriesRouter = {
     })
     .input(listEntriesInputSchema)
     .output(documented(listEntriesOutputSchema))
-    .handler(async ({ input: { slug, artist: artists } }) => {
-      const result = await fetchListWithEntries(slug);
+    .handler(async ({ input: { slug, address, artist: artists } }) => {
+      const result = await fetchListWithEntries(
+        address === undefined ? { slug } : { profileSlug: slug, profileAddress: address },
+      );
 
       if (!result) throw new ORPCError("NOT_FOUND");
 

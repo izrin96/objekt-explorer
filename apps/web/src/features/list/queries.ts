@@ -24,12 +24,20 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
     staleTime: 30_000,
   });
 
+type ListEntries = Outputs["list"]["listEntries"];
+
+/**
+ * The entries of the list at a profile-scoped address, asked for by that address while the list
+ * itself is still loading. Null when the read fails, so the caller asks by the slug instead.
+ */
+export const profileListEntries = (profileSlug: string, address: string, artist: ValidArtist[]) =>
+  preloadedGet<ListEntries>(listEntriesUrl(profileSlug, artist, address)).catch(() => null);
+
 export const listEntriesOptions = (slug: string, artist: ValidArtist[]) =>
   orpc.list.listEntries.queryOptions({
     input: { slug, artist },
     // the list routes preload this URL
-    queryFn: ({ signal }) =>
-      preloadedGet<Outputs["list"]["listEntries"]>(listEntriesUrl(slug, artist), signal),
+    queryFn: ({ signal }) => preloadedGet<ListEntries>(listEntriesUrl(slug, artist), signal),
     // search and the edition facet read fields the endpoint does not carry
     select: (data) => data.map(mapObjektWithTag),
     staleTime: 0,
