@@ -12,8 +12,9 @@ type AddressRow = {
   isDefault: boolean;
 };
 
-export function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
-  if (userIds.length === 0) return Promise.resolve([]);
+// async, so callers share one Promise: a bare drizzle builder runs its query again on each `.then`
+export async function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
+  if (userIds.length === 0) return [];
   return (
     db
       .select({

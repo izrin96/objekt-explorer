@@ -23,6 +23,7 @@ What parallel reads must keep:
 
 - The refusal a caller gets: when two parallel reads can both refuse, use `Promise.allSettled` and rethrow in the old order (`prepareList`, `sendMessage`).
 - Every started promise inside the `Promise.all` or `allSettled` that awaits it. A promise started earlier and awaited after another `await` becomes an unhandled rejection when that `await` throws first.
+- One execution per query: a drizzle builder (`db.select()…`, not yet awaited) runs again on every `.then`, so passing one to `Promise.all` and also chaining `.then` on it sends the statement twice. Share the Promise an `async` function returns (`fetchAddresses`), never a bare builder.
 - Early returns: a path that ran no query (own list, the owner's Nobody setting) still runs none, so check the cheap in-memory conditions before starting the batch.
 - A transaction's statements in sequence, in its documented lock order: one connection runs one statement at a time.
 
