@@ -162,8 +162,9 @@ export const listSlugInputSchema = z.object({ slug: z.string() });
 
 export const listEntriesInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
-  /** set when `slug` is the list's profile slug under this Cosmo address */
-  address: addressSchema.optional(),
+  address: addressSchema.optional().meta({
+    description: "A Cosmo address: `slug` is then the list's profile slug under it",
+  }),
 });
 
 // the server's cleanup is the one that counts: an old tab or an API caller sends whatever it likes
