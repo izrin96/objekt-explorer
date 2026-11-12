@@ -21,11 +21,11 @@ export async function personNear(
     (list) => !listIds || listIds.has(list.id),
   );
   if (tradeLists.length === 0) return [];
-  const [addressRows, viewer] = await Promise.all([
-    fetchAddresses([personId]),
+  // the entries wait for the addresses only, not for the viewer's reads
+  const [entriesOf, viewer] = await Promise.all([
+    fetchAddresses([personId]).then((rows) => fetchPostEntries(tradeLists, addressesByUser(rows))),
     fetchViewer(viewerId),
   ]);
-  const entriesOf = await fetchPostEntries(tradeLists, addressesByUser(addressRows));
   const narrowed = sides ? narrowViewer(viewer, sides) : viewer;
   return tradeLists.flatMap((list) => {
     const near = nearOf(list.listType, list, entriesOf.get(list.id) ?? [], narrowed);
@@ -48,11 +48,11 @@ export async function pickerTagsFor(
     (list) => (list.listType === "want") === (direction === "give"),
   );
   if (sideLists.length === 0) return {};
-  const [addressRows, viewer] = await Promise.all([
-    fetchAddresses([personId]),
+  // the entries wait for the addresses only, not for the viewer's reads
+  const [entriesOf, viewer] = await Promise.all([
+    fetchAddresses([personId]).then((rows) => fetchPostEntries(sideLists, addressesByUser(rows))),
     fetchViewer(viewerId),
   ]);
-  const entriesOf = await fetchPostEntries(sideLists, addressesByUser(addressRows));
   return pickerTags(
     slugs,
     sideLists.map((list) => ({

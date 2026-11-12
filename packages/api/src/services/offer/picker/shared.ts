@@ -212,21 +212,24 @@ export async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
 }
 
 export async function wantListOf(slug: string) {
-  const [list] = await db
+  // one row per entry, or one with a null slug for an empty list
+  const rows = await db
     .select({
-      id: lists.id,
-      userId: lists.userId,
-      listType: lists.listType,
-      discoverable: lists.discoverable,
+      list: {
+        id: lists.id,
+        userId: lists.userId,
+        listType: lists.listType,
+        discoverable: lists.discoverable,
+      },
+      slug: listEntries.collectionSlug,
     })
     .from(lists)
+    .leftJoin(listEntries, eq(listEntries.listId, lists.id))
     .where(eq(lists.slug, slug));
-  if (!list) return { list: null, slugs: [] };
-  const rows = await db
-    .select({ slug: listEntries.collectionSlug })
-    .from(listEntries)
-    .where(eq(listEntries.listId, list.id));
-  return { list, slugs: rows.flatMap((row) => (row.slug ? [row.slug] : [])) };
+  return {
+    list: rows[0]?.list ?? null,
+    slugs: rows.flatMap((row) => (row.slug ? [row.slug] : [])),
+  };
 }
 
 type OwnedNarrowing = {

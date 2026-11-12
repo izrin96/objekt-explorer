@@ -336,55 +336,43 @@ export async function allowedEntries(
   slugs?: string[],
   fromList?: string,
 ): Promise<AllowedEntry[]> {
-  const allowed = await db
+  if (slugs?.length === 0) return [];
+  const rows = await db
     .select({
-      id: lists.id,
-      slug: lists.slug,
+      listId: listEntries.listId,
+      listSlug: lists.slug,
+      collectionSlug: listEntries.collectionSlug,
+      objektId: listEntries.objektId,
       hideSerial: lists.hideSerial,
       listType: lists.listType,
-      ratio: lists.ratio,
+      entryRatio: listEntries.ratio,
+      listRatio: lists.ratio,
     })
-    .from(lists)
+    .from(listEntries)
+    .innerJoin(lists, eq(lists.id, listEntries.listId))
     .where(
       and(
         eq(lists.userId, addressed.partnerId),
         askableOnTrade,
         fromList === undefined ? undefined : eq(lists.slug, fromList),
-      ),
-    );
-  if (allowed.length === 0 || slugs?.length === 0) return [];
-
-  const listOf = new Map(allowed.map((list) => [list.id, list]));
-  const rows = await db
-    .select({
-      listId: listEntries.listId,
-      collectionSlug: listEntries.collectionSlug,
-      objektId: listEntries.objektId,
-      ratio: listEntries.ratio,
-    })
-    .from(listEntries)
-    .where(
-      and(
-        inArray(listEntries.listId, [...listOf.keys()]),
         slugs ? inArray(listEntries.collectionSlug, unique(slugs)) : undefined,
       ),
     )
     .orderBy(listEntries.listId, listEntries.id);
-  return rows.flatMap((row) => {
-    const list = listOf.get(row.listId)!;
-    return row.collectionSlug === null
+  return rows.flatMap((row) =>
+    row.collectionSlug === null
       ? []
       : [
           {
             listId: row.listId,
-            listSlug: list.slug,
+            listSlug: row.listSlug,
             collectionSlug: row.collectionSlug,
             objektId: row.objektId,
-            hideSerial: list.hideSerial,
-            ratio: list.listType === "have" ? (row.ratio ?? list.ratio) : null,
+            hideSerial: row.hideSerial,
+            ratio: row.listType === "have" ? (row.entryRatio ?? row.listRatio) : null,
           },
-        ];
-  });
+        ],
+  );
 }
 
 /** Whether the partner has a list the sender must ask through. */

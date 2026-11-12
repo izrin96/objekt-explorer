@@ -35,9 +35,11 @@ import {
 
 /** The condition keeping what one of the sender's own have, sale or general lists names; null when it names nothing. */
 async function listWhere(me: string, slug: string) {
-  const [list] = await db
-    .select({ id: lists.id })
+  // a list with no entries is one row of nulls, so no row at all is no such list
+  const entries = await db
+    .select({ objektId: listEntries.objektId, collectionSlug: listEntries.collectionSlug })
     .from(lists)
+    .leftJoin(listEntries, eq(listEntries.listId, lists.id))
     .where(
       and(
         eq(lists.slug, slug),
@@ -45,11 +47,7 @@ async function listWhere(me: string, slug: string) {
         inArray(lists.listType, ["have", "sale", "general"]),
       ),
     );
-  if (!list) refuseOffer("not_allowed");
-  const entries = await db
-    .select({ objektId: listEntries.objektId, collectionSlug: listEntries.collectionSlug })
-    .from(listEntries)
-    .where(eq(listEntries.listId, list.id));
+  if (entries.length === 0) refuseOffer("not_allowed");
   const ids = entries.flatMap((e) => (e.objektId ? [e.objektId] : []));
   const slugs = entries.flatMap((e) =>
     e.objektId === null && e.collectionSlug ? [e.collectionSlug] : [],
@@ -134,20 +132,21 @@ export async function mineCandidates(
     .slice(0, CANDIDATE_PAGE_SIZE);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
-  const [reserved, holders, anchored] = await Promise.all([
+  const [reserved, holders, anchored, tags, collections] = await Promise.all([
     reservedIds(ids),
     openOfferHolders(ids, me),
     anchoredSerialIds(ids),
+    matchOnly
+      ? pickerTagsFor(me, addressed.partnerId, "give", [
+          ...page.map((o) => o.slug),
+          ...suggestedList.map((s) => s.objekt.slug),
+        ])
+      : undefined,
+    collectionsOf([...page, ...suggestedList.map((s) => s.objekt)].map((o) => o.slug)),
   ]);
   const flags = (objekt: IndexedObjekt) =>
     itemFlags(objekt, reserved, holders, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
-  const tags = matchOnly
-    ? await pickerTagsFor(me, addressed.partnerId, "give", [
-        ...page.map((o) => o.slug),
-        ...suggestedList.map((s) => s.objekt.slug),
-      ])
-    : undefined;
 
   return candidatesPage({
     items: page.map((objekt) =>
@@ -158,8 +157,6 @@ export async function mineCandidates(
     ),
     nextCursor,
     tags,
-    collections: await collectionsOf(
-      [...page, ...suggestedList.map((s) => s.objekt)].map((o) => o.slug),
-    ),
+    collections,
   });
 }

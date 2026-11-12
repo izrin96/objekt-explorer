@@ -59,7 +59,7 @@ async function myWantsIf(me: string, matchOnly: boolean | undefined) {
 }
 
 /** The allowed list entries resolved against the partner's current wallet. */
-async function resolveTheirItems(me: string, addressed: Addressed, fromList?: string) {
+export async function resolveTheirItems(me: string, addressed: Addressed, fromList?: string) {
   const { partnerId } = addressed;
   const [entries, linked, kept, hasLists] = await Promise.all([
     allowedEntries(addressed, undefined, fromList),
@@ -198,9 +198,11 @@ export async function theirPickerPage(
   offset: number,
   { filters, matchOnly, fromList }: PickerNarrowing,
 ) {
-  const { items, listed, partnerLists } = await resolveTheirItems(me, addressed, fromList);
+  const [{ items, listed, partnerLists }, wanted] = await Promise.all([
+    resolveTheirItems(me, addressed, fromList),
+    myWantsIf(me, matchOnly),
+  ]);
   let shown = items;
-  const wanted = await myWantsIf(me, matchOnly);
   if (wanted) shown = shown.filter((item) => wanted.has(item.collectionSlug));
   if (filters && Object.values(filters).some((value) => value?.length)) {
     const kept = await filterSlugs(unique(shown.map((item) => item.collectionSlug)), filters);
@@ -208,21 +210,24 @@ export async function theirPickerPage(
   }
   const end = offset + CANDIDATE_PAGE_SIZE;
   const slice = shown.slice(offset, end);
-  const tags = matchOnly
-    ? await pickerTagsFor(
-        me,
-        addressed.partnerId,
-        "get",
-        slice.map((item) => item.collectionSlug),
-      )
-    : undefined;
+  const [tags, collections] = await Promise.all([
+    matchOnly
+      ? pickerTagsFor(
+          me,
+          addressed.partnerId,
+          "get",
+          slice.map((item) => item.collectionSlug),
+        )
+      : undefined,
+    collectionsOf(slice.map((item) => item.collectionSlug)),
+  ]);
   return candidatesPage({
     items: slice,
     nextOffset: end < shown.length ? end : null,
     listed,
     partnerLists,
     tags,
-    collections: await collectionsOf(slice.map((item) => item.collectionSlug)),
+    collections,
   });
 }
 
@@ -253,11 +258,13 @@ export async function theirCollectionPage(
   narrowing: PickerNarrowing,
 ) {
   const { partnerId } = addressed;
-  if (await partnerHasLists(partnerId)) refuseOffer("not_listed");
-  const [addresses, myWants] = await Promise.all([
+  // the other two reads don't refuse, so `not_listed` is still the first refusal here
+  const [hasLists, addresses, myWants] = await Promise.all([
+    partnerHasLists(partnerId),
     collectionAddresses(partnerId),
     myWantsIf(me, narrowing.matchOnly),
   ]);
+  if (hasLists) refuseOffer("not_listed");
   const none = { page: [], nextCursor: null };
   const [{ page, nextCursor }, kept] = await Promise.all([
     addresses.length === 0 || myWants?.size === 0
@@ -273,10 +280,11 @@ export async function theirCollectionPage(
   const rest = page.filter((o) => !keptIds.has(o.id));
   const objekts = cursor ? rest : [...kept, ...rest];
   const ids = objekts.map((o) => o.id);
-  const [reserved, holders, anchored] = await Promise.all([
+  const [reserved, holders, anchored, collections] = await Promise.all([
     reservedIds(ids),
     openOfferHolders(ids, me),
     anchoredSerialIds(ids),
+    collectionsOf(objekts.map((o) => o.slug)),
   ]);
   return candidatesPage({
     items: objekts.map((objekt) =>
@@ -289,6 +297,6 @@ export async function theirCollectionPage(
     ),
     nextCursor,
     partnerLists: false,
-    collections: await collectionsOf(objekts.map((o) => o.slug)),
+    collections,
   });
 }
