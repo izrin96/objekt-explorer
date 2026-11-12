@@ -671,5 +671,15 @@ describe("closeAnchorGaps", () => {
     test("a range with too little room is left alone", () => {
       expect(close(batches, [objekt(1250, 0), objekt(1420, 120, PRE)])).toEqual(batches);
     });
+
+    test("a later mint in the tokens cut away brings the discovered range back", () => {
+      const closed = close(batches, rows);
+      const later = [...rows, objekt(1250, 0)];
+      const tokens = later.map((o) => parseInt(o.id));
+      // outside every closed range, so populate rescans and discovery gives
+      // `batches` again; the mint proves the room was the collection's own
+      expect(planRediscovery(closed, tokens)).toEqual({});
+      expect(close(batches, later)).toEqual(batches);
+    });
   });
 });
