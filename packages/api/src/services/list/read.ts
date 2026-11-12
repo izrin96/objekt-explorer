@@ -61,6 +61,12 @@ const linkedListWith = {
   with: { userAddress: ownerAddress },
 } as const;
 
+type LinkedRow<T> = T & { userAddress: Pick<UserAddress, "address" | "nickname"> | null };
+
+function toLinkedList<T>({ userAddress: owner, ...linked }: LinkedRow<T>) {
+  return { ...linked, profile: owner ? toPartialProfile(owner) : null };
+}
+
 type ListLookup = { slug: string } | { profileSlug: string; profileAddress: string };
 
 function listWhere(lookup: ListLookup) {
@@ -203,23 +209,7 @@ export async function fetchOwnedLists(
       ...rest,
       tradeHandle: needsTradeHandle({ ...rest, linkedList }) ? handle : null,
       profile: userAddress ? toPartialProfile(userAddress) : null,
-      linkedList: linkedList
-        ? {
-            id: linkedList.id,
-            slug: linkedList.slug,
-            name: linkedList.name,
-            listType: linkedList.listType,
-            isProfileBind: linkedList.isProfileBind,
-            profileSlug: linkedList.profileSlug,
-            profileAddress: linkedList.profileAddress,
-            currency: linkedList.currency,
-            discoverable: linkedList.discoverable,
-            matchSale: linkedList.matchSale,
-            matchHave: linkedList.matchHave,
-            takesSwaps: linkedList.takesSwaps,
-            profile: linkedList.userAddress ? toPartialProfile(linkedList.userAddress) : null,
-          }
-        : null,
+      linkedList: linkedList ? toLinkedList(linkedList) : null,
     };
   });
 }
