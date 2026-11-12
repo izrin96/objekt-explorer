@@ -17,35 +17,35 @@ import { publishChatChanged } from "./notify";
 
 /** Blocks between the pair, and the user's own chat mute in force. A deleted or banned partner reads as a block. */
 export async function chatSafety(userId: string, partnerId: string) {
-  const [blocks, mutes] = await Promise.all([
-    db.execute<{
-      blocked: boolean;
-      blocked_by_me: boolean;
-      trade_blocked: boolean;
-      partner_trade_blocked: boolean;
-      partner_deleted: boolean;
-      partner_banned: boolean;
-    }>(sql`
-      SELECT NOT ${notBlockedEither(userId, partnerId)} AS blocked,
-        EXISTS (
-          SELECT 1 FROM ${user} WHERE ${user.id} = ${partnerId} AND ${user.deletedAt} IS NOT NULL
-        ) AS partner_deleted,
-        ${banned(partnerId)} AS partner_banned,
-        NOT ${notBlockedBy(userId, partnerId)} AS blocked_by_me,
-        NOT ${notTradeSanctioned(userId)} AS trade_blocked,
-        NOT ${notTradeSanctioned(partnerId)} AS partner_trade_blocked
-    `),
-    db
-      .select({ reason: userSanction.reason, expiresAt: userSanction.expiresAt })
-      .from(userSanction)
-      .where(
-        and(
-          eq(userSanction.userId, userId),
-          eq(userSanction.type, "chat_mute"),
-          activeSanctionWhere,
-        ),
-      ),
-  ]);
+  // one statement, so a batch that reads safety holds one pool connection for it
+  const blocks = await db.execute<{
+    blocked: boolean;
+    blocked_by_me: boolean;
+    trade_blocked: boolean;
+    partner_trade_blocked: boolean;
+    partner_deleted: boolean;
+    partner_banned: boolean;
+    mutes: { reason: string; expiresAt: string | null }[];
+  }>(sql`
+    SELECT NOT ${notBlockedEither(userId, partnerId)} AS blocked,
+      EXISTS (
+        SELECT 1 FROM ${user} WHERE ${user.id} = ${partnerId} AND ${user.deletedAt} IS NOT NULL
+      ) AS partner_deleted,
+      ${banned(partnerId)} AS partner_banned,
+      NOT ${notBlockedBy(userId, partnerId)} AS blocked_by_me,
+      NOT ${notTradeSanctioned(userId)} AS trade_blocked,
+      NOT ${notTradeSanctioned(partnerId)} AS partner_trade_blocked,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'reason', ${userSanction.reason},
+          'expiresAt', ${userSanction.expiresAt}
+        ))
+        FROM ${userSanction}
+        WHERE ${userSanction.userId} = ${userId}
+          AND ${userSanction.type} = 'chat_mute'
+          AND ${activeSanctionWhere}
+      ), '[]'::json) AS mutes
+  `);
   const [row] = blocks.rows;
   return {
     blocked:
@@ -54,7 +54,7 @@ export async function chatSafety(userId: string, partnerId: string) {
     /** a block either way, apart from a deleted or banned partner */
     blockedEitherWay: row?.blocked ?? false,
     blockedByMe: row?.blocked_by_me ?? false,
-    mute: effectiveSanction(mutes),
+    mute: effectiveSanction(row?.mutes ?? []),
     tradeBlocked: row?.trade_blocked ?? false,
     partnerTradeBlocked: row?.partner_trade_blocked ?? false,
   };
