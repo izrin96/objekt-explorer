@@ -24,6 +24,11 @@ pre-commit:
       glob: "*.{ts,tsx,mts}"
       exclude: ["**/*.gen.ts", "**/paraglide/**"]
       run: bunx oxlint --type-aware --quiet --no-error-on-unmatched-pattern {staged_files}
+    - name: lint migrate
+      root: apps/migrate/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet --no-error-on-unmatched-pattern {staged_files}
     - name: lint api
       root: packages/api/
       glob: "*.{ts,tsx,mts}"
