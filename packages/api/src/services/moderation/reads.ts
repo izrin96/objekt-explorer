@@ -209,31 +209,6 @@ export async function accountDossier(userId: string) {
       reputationOf([userId]),
     ]);
 
-  // every event on an address this account held, so the history shows who held it before
-  const held = db
-    .select({ address: addressLinkEvent.address })
-    .from(addressLinkEvent)
-    .where(eq(addressLinkEvent.userId, userId));
-  const linkHistory = await linkEventsWhere(
-    or(
-      inArray(addressLinkEvent.address, held),
-      ...(addresses.length > 0
-        ? [
-            inArray(
-              addressLinkEvent.address,
-              addresses.map((row) => row.address),
-            ),
-          ]
-        : []),
-    )!,
-  );
-  const sharedHolders = await sharedHoldersOf(userId, [
-    ...new Set(linkHistory.map((event) => event.address)),
-  ]);
-  const attached = await attachedTrades(
-    userId,
-    reports.flatMap((r) => (r.status === "open" && r.tradeId !== null ? [r.tradeId] : [])),
-  );
   // resolved reports too: that is where staff look back when the account comes up again
   const reportedPosts = new Map(
     reports.flatMap((r) => {
@@ -241,14 +216,47 @@ export async function accountDossier(userId: string) {
       return post.success ? [[r.id, post.data] as const] : [];
     }),
   );
-  const postsNow = await staffPosts([
-    ...new Set([...reportedPosts.values()].map((post) => post.listId)),
-  ]);
-  const people = await fetchPartners([
-    ...attached.trades.map((t) => t.otherId),
-    ...reports.map((r) => r.reporterId),
-    ...sanctions.flatMap((s) => [s.issuedBy, s.revokedBy].filter((id) => id !== null)),
-    ...auditRows.flatMap((a) => (a.actorId ? [a.actorId] : [])),
+  const readLinks = async () => {
+    // every event on an address this account held, so the history shows who held it before
+    const held = db
+      .select({ address: addressLinkEvent.address })
+      .from(addressLinkEvent)
+      .where(eq(addressLinkEvent.userId, userId));
+    const linkHistory = await linkEventsWhere(
+      or(
+        inArray(addressLinkEvent.address, held),
+        ...(addresses.length > 0
+          ? [
+              inArray(
+                addressLinkEvent.address,
+                addresses.map((row) => row.address),
+              ),
+            ]
+          : []),
+      )!,
+    );
+    const sharedHolders = await sharedHoldersOf(userId, [
+      ...new Set(linkHistory.map((event) => event.address)),
+    ]);
+    return { linkHistory, sharedHolders };
+  };
+  const readPeople = async () => {
+    const attached = await attachedTrades(
+      userId,
+      reports.flatMap((r) => (r.status === "open" && r.tradeId !== null ? [r.tradeId] : [])),
+    );
+    const people = await fetchPartners([
+      ...attached.trades.map((t) => t.otherId),
+      ...reports.map((r) => r.reporterId),
+      ...sanctions.flatMap((s) => [s.issuedBy, s.revokedBy].filter((id) => id !== null)),
+      ...auditRows.flatMap((a) => (a.actorId ? [a.actorId] : [])),
+    ]);
+    return { attached, people };
+  };
+  const [{ linkHistory, sharedHolders }, { attached, people }, postsNow] = await Promise.all([
+    readLinks(),
+    readPeople(),
+    staffPosts([...new Set([...reportedPosts.values()].map((post) => post.listId))]),
   ]);
   const nameOf = (id: string | null) =>
     id === null ? null : (people.get(id) ?? { userId: id, user: null, identity: null });
