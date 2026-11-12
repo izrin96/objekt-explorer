@@ -17,7 +17,7 @@ The same holds for every read:
 
 - A set of ids is one statement, never a query per item: `inArray`, or `= ANY($1)` with one array parameter for a large set (`setEntryRatio`), through `chunkMap` when it can pass `TOKEN_CHUNK_SIZE`; a batch write is one `UPDATE … FROM unnest(…)` (`setEntryPrices`).
 - A read names the columns its caller uses (`columns: { id: true }`, `select({ … })`). A whole `lists` row carries its description, and a whole row read through a relation is built as JSON first.
-- Redis counts as a round trip: several keys are one `MGET` (`reputationOf`, `onlineAmong`), and a Redis read runs beside a database read that doesn't need it.
+- Redis counts as a round trip: a Redis read runs beside a database read that doesn't need it. Several keys are one `MGET` (`reputationOf`, `onlineAmong`, `fetchPostEntries`); Bun's client already pipelines commands sent in the same tick into one write, so that saves commands, not a trip.
 
 What parallel reads must keep:
 

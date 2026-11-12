@@ -163,9 +163,13 @@ export async function fetchPostEntries(
   { stale = false }: { stale?: boolean } = {},
 ): Promise<Map<number, FeedEntry[]>> {
   const result = new Map<number, FeedEntry[]>();
-  const cached = await Promise.all(
-    feedLists.map((list) => redisFailOpen("trade post", () => redis.get(postKey(list)))),
-  );
+  // MGET takes at least one key
+  const cached =
+    feedLists.length === 0
+      ? []
+      : (((await redisFailOpen("trade post", () => redis.send("MGET", feedLists.map(postKey)))) as
+          | (string | null)[]
+          | null) ?? []);
 
   const now = Date.now();
   const misses: typeof feedLists = [];
