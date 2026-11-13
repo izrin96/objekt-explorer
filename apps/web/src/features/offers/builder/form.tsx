@@ -1,5 +1,5 @@
 import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
@@ -15,7 +15,11 @@ import { type GetSource, sourceOf } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import { type Collections, type OfferPick, type OfferSide, pickKey } from "@/features/offers/pick";
 import { putBack, takeOut, takeOutAdded, takeOutAll } from "@/features/offers/quantity";
-import { myCopyOptions, myObjektsOptions, theirCandidatesOptions } from "@/features/offers/queries";
+import {
+  myAskCopiesOptions,
+  myObjektsOptions,
+  theirCandidatesOptions,
+} from "@/features/offers/queries";
 import { offerRefusalOf } from "@/features/offers/refusal";
 import { useCurrency } from "@/features/settings/use-currency";
 import { formatCount } from "@/lib/number";
@@ -155,13 +159,14 @@ export function BuilderForm({
 
   // a counter's any-copy asks: each takes one free copy of the viewer's own, when there is one
   const asks = asksOf(give);
-  const copies = useQueries({
-    queries: asks.map((pick) => myCopyOptions(to, collections[pick.collectionSlug])),
-  });
-  const loadingAsks = new Set(asks.filter((_, i) => copies[i]?.isPending).map((pick) => pick.key));
+  const askSlugs = [...new Set(asks.map((pick) => pick.collectionSlug))].toSorted();
+  const askCopies = useQuery(myAskCopiesOptions(to, askSlugs));
+  const loadingAsks = new Set(
+    asks.length > 0 && askCopies.isPending ? asks.map((pick) => pick.key) : [],
+  );
   const giveShown = resolveAsks(
     give,
-    copies.map((query) => query.data),
+    asks.map(() => askCopies.data),
   );
 
   // an ask for one collection of a list (Make offer for this objekt) takes a copy that list

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { CandidateItem } from "@repo/api/schemas/offer";
+import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 
 import {
   anyControlOf,
@@ -399,8 +399,8 @@ describe("dialogFooter and confirmOf", () => {
   const group = groupOf(...items);
 
   test("picked of available, and the side total with the draft in place of the saved picks", () => {
-    // 10 other picks on the side: room 40
-    const footer = dialogFooter(group, picks(items[0]!, items[1]!), 40);
+    // 10 other picks on the side
+    const footer = dialogFooter(group, picks(items[0]!, items[1]!), OFFER_SIDE_LIMIT - 10);
     expect(footer).toEqual({ picked: 2, available: 5, sideTotal: 12, full: false });
   });
 
@@ -454,7 +454,7 @@ describe("draftOf, dialogRoom, toggleAny and canSelectAll", () => {
 
   test("the room is the limit less the picks of other collections, any counts included", () => {
     const selection = new Map([...picks(a, other), ...withCount(anyOf("y", 4), 4)]);
-    expect(dialogRoom(group, selection)).toBe(50 - 1 - 4);
+    expect(dialogRoom(group, selection)).toBe(OFFER_SIDE_LIMIT - 1 - 4);
   });
 
   test("the Any serial checkbox ticks and unticks", () => {
@@ -654,7 +654,7 @@ describe("an any pick held through a list the group does not show", () => {
     expect(applied.get(anyKey("a"))?.count).toBe(2);
     expect(applied.has(shown!.objektId!)).toBe(true);
     expect(applyGroup(applied, narrowed, none).get(anyKey("a"))?.count).toBe(2);
-    expect(dialogRoom(narrowed, applied)).toBe(48);
+    expect(dialogRoom(narrowed, applied)).toBe(OFFER_SIDE_LIMIT - 2);
   });
 
   test("a pick through one of the group's lists is its own", () => {

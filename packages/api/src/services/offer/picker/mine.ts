@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray, or } from "drizzle-orm";
 
 import { orderByCollection, pageByCollection } from "../../../lib/offer-paging";
 import { giveNarrowing, itemFlags } from "../../../lib/offer-rules";
@@ -21,6 +21,7 @@ import {
   fetchCopies,
   fetchObjekts,
   linkedAddresses,
+  lowerOwner,
   openOfferHolders,
   refuseOffer,
   reservedIds,
@@ -31,6 +32,7 @@ import {
   collectionsOf,
   ownedGroupPage,
   ownedPage,
+  ownedQuery,
   toCandidate,
   wantListOf,
   wantSlugsOf,
@@ -74,12 +76,24 @@ async function listWhere(me: string, slug: string) {
   );
 }
 
+// `mineCandidates` names its collection map `collections`, which hides the table there
+const slugIn = (slugs: string[]) => inArray(collections.slug, slugs);
+
+/**
+ * Every copy of the collections `slugs` the addresses hold, unpaged: bounded by holdings. Lowest
+ * serial first, as a picker page orders a collection, since an any-copy ask takes the first free.
+ */
+async function copiesRead(addresses: string[], narrowing: Parameters<typeof ownedQuery>[1]) {
+  const rows = await ownedQuery(addresses, narrowing).orderBy(asc(objekts.serial), asc(objekts.id));
+  return { page: rows.map(lowerOwner), nextCursor: null };
+}
+
 /** The sender's own objekts, newest received first; on the first page, their have-list objekts too. */
 export async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: CandidateCursor | undefined,
-  { filters, matchOnly, wantList, fromList, objektIds }: PickerNarrowing,
+  { filters, matchOnly, wantList, fromList, objektIds, copiesOf }: PickerNarrowing,
 ) {
   const [linked, partnerWants, named, fromWhere] = await Promise.all([
     linkedAddresses([me]),
@@ -93,12 +107,14 @@ export async function mineCandidates(
     return candidatesPage({});
 
   const [{ page, nextCursor }, haveEntries] = await Promise.all([
-    // an objektIds read is flags for a few copies, not a grid, so it stays a flat page
-    (objektIds ? ownedPage : ownedGroupPage)(addresses, cursor, {
-      filters,
-      slugs: keptSlugs,
-      where: and(fromWhere, objektIds ? inArray(objekts.id, objektIds) : undefined),
-    }),
+    copiesOf
+      ? copiesRead(addresses, { filters, slugs: copiesOf, where: fromWhere })
+      : // an objektIds read is flags for a few copies, not a grid, so it stays a flat page
+        (objektIds ? ownedPage : ownedGroupPage)(addresses, cursor, {
+          filters,
+          slugs: keptSlugs,
+          where: and(fromWhere, objektIds ? inArray(objekts.id, objektIds) : undefined),
+        }),
     cursor || fromList !== undefined || objektIds !== undefined
       ? []
       : db
@@ -115,7 +131,7 @@ export async function mineCandidates(
 
   const mine = new Set(addresses);
   // the list-first section narrows by the picker's filters, as the page below does
-  const narrow = and(...collectionWhere(filters));
+  const narrow = and(...collectionWhere(filters), copiesOf ? slugIn(copiesOf) : undefined);
   const [haveTokens, haveCopies] = await Promise.all([
     fetchObjekts(
       haveEntries.flatMap((e) => (e.objektId ? [e.objektId] : [])),
@@ -141,21 +157,22 @@ export async function mineCandidates(
       }
     }
   }
-  const kept = keptSlugs ? new Set(keptSlugs) : null;
-  const suggestedList = pageByCollection(
-    orderByCollection(
-      [...suggestedObjekts.values()]
-        .filter((s) => !kept || kept.has(s.objekt.slug))
-        .map((s) => ({
-          suggestion: s,
-          collectionSlug: s.objekt.slug,
-          objektId: s.objekt.id,
-          serial: s.objekt.serial,
-        })),
-    ),
-    0,
-    CANDIDATE_PAGE_SIZE,
-  ).page.map((row) => row.suggestion);
+  const keptNow = copiesOf ?? keptSlugs;
+  const kept = keptNow ? new Set(keptNow) : null;
+  const ordered = orderByCollection(
+    [...suggestedObjekts.values()]
+      .filter((s) => !kept || kept.has(s.objekt.slug))
+      .map((s) => ({
+        suggestion: s,
+        collectionSlug: s.objekt.slug,
+        objektId: s.objekt.id,
+        serial: s.objekt.serial,
+      })),
+  );
+  // a copies read serves every ask at once, so no collection's have-list copies may be cut
+  const suggestedList = (
+    copiesOf ? ordered : pageByCollection(ordered, 0, CANDIDATE_PAGE_SIZE).page
+  ).map((row) => row.suggestion);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
   const [reserved, holders, anchored, tags, collections] = await Promise.all([

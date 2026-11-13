@@ -211,7 +211,13 @@ export async function reservedIds(ids: string[], tx: Tx | typeof db = db) {
   const rows = await tx
     .select({ objektId: tradeLeg.objektId })
     .from(tradeLeg)
-    .where(and(eq(tradeLeg.open, true), inArray(tradeLeg.objektId, unique(ids))));
+    // one array parameter: the ids are every copy a read or an offer names, which can pass the bind limit
+    .where(
+      and(
+        eq(tradeLeg.open, true),
+        sql`${tradeLeg.objektId} = ANY(${sql.param(unique(ids))}::text[])`,
+      ),
+    );
   return new Set(rows.flatMap((row) => (row.objektId ? [row.objektId] : [])));
 }
 
@@ -263,7 +269,7 @@ export async function openOfferHolders(ids: string[], me: string) {
     .innerJoin(offer, eq(offer.id, offerItem.offerId))
     .where(
       and(
-        inArray(offerItem.objektId, unique(ids)),
+        sql`${offerItem.objektId} = ANY(${sql.param(unique(ids))}::text[])`,
         eq(offer.status, "open"),
         gt(offer.expiresAt, sql`now()`),
         or(eq(offer.fromUserId, me), eq(offer.toUserId, me)),

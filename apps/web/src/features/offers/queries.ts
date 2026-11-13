@@ -1,8 +1,7 @@
 import type { ChatTarget } from "@repo/api/schemas/chat";
 import type { CollectionFilters } from "@repo/api/schemas/common/filters";
 import type { CandidateCursor, HistoryCursor, PickerNarrowing } from "@repo/api/schemas/offer";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient, keepPreviousData } from "@tanstack/react-query";
 
 import type { OfferMatches } from "@/features/offers/builder/types";
 import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
@@ -100,23 +99,15 @@ export const myCandidatesOptions = (
 export const theirCollectionOptions = (to: OfferAddress, filters: PickerFilters) =>
   cursorOptions("theirs-collection", to, filters);
 
-/** The viewer's copies of one collection, to stand in for a counter's any-copy ask. */
-export const myCopyOptions = (to: OfferAddress, collection: ValidObjekt | undefined) =>
+/** The viewer's copies of every collection `slugs`, in one read, to stand in for a counter's any-copy asks. */
+export const myAskCopiesOptions = (to: OfferAddress, slugs: string[]) =>
   orpc.offer.candidates.queryOptions({
-    input: {
-      ...to,
-      side: "mine",
-      filters: collection
-        ? {
-            member: [collection.member],
-            season: [collection.season],
-            collection: [collection.collectionNo],
-          }
-        : undefined,
-    },
-    enabled: collection !== undefined,
+    input: { ...to, side: "mine", copiesOf: slugs.length > 0 ? slugs : undefined },
+    enabled: slugs.length > 0,
     staleTime: 30_000,
     retry: retryUnlessRefused,
+    // removing an ask changes the key: the wider page still resolves the asks left, by collection
+    placeholderData: keepPreviousData,
   });
 
 /** The viewer's own objekts `objektIds`, read once for the flags a counter's give picks lack. */

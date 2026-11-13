@@ -241,6 +241,28 @@ describe("resolveAsks", () => {
     ]);
   });
 
+  test("asks of different collections share one page and each takes only its own copies", () => {
+    const first = ask(2);
+    const second = ask(1, "b");
+    const page = {
+      items: [
+        copy("a1"),
+        copy("b1", { collectionSlug: "b" }),
+        copy("a2"),
+        copy("c1", { collectionSlug: "c" }),
+        copy("a3"),
+        copy("b2", { collectionSlug: "b" }),
+        copy("c2", { collectionSlug: "c" }),
+      ],
+    };
+    const shown = resolveAsks([first, second], [page, page]);
+    expect(shown.map((p) => [p.key, p.replaces])).toEqual([
+      ["a1", first.key],
+      ["a2", first.key],
+      ["b1", second.key],
+    ]);
+  });
+
   test("a copy in both suggested and items is taken once", () => {
     const shown = resolveAsks([ask(2)], [{ suggested: [copy("c1")], items: [copy("c1")] }]);
     expect(keysOf(shown)).toEqual(["c1", `any:${SLUG}`]);
@@ -280,6 +302,17 @@ describe("resolveGetAsks", () => {
   test("an any-copy item on the list keeps the ask", () => {
     const a = getAsk();
     expect(resolveGetAsks([a], [theirs("c1"), theirs(null)])).toEqual([a]);
+  });
+
+  test("Any serial picked in the picker stays, beside copies the list names", () => {
+    const flags = { transferable: true, reserved: false, inOpenOffer: [], copies: 2 };
+    const picked = getAsk({ flags });
+    const items = [
+      theirs(null, { hidden: 0, bySerial: false, copies: 2 }),
+      theirs("c1"),
+      theirs("c2"),
+    ];
+    expect(resolveGetAsks([picked], items)).toEqual([picked]);
   });
 
   describe("entries that name copies", () => {

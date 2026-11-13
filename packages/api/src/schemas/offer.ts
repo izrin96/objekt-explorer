@@ -5,7 +5,7 @@ import { receivedAtCursorSchema, timestampTextSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { reputationSchema } from "./reputation";
 
-export const OFFER_SIDE_LIMIT = 50;
+export const OFFER_SIDE_LIMIT = 200;
 export const OFFER_NOTE_MAX_LENGTH = 280;
 export const OPEN_OFFER_LIMIT = 20;
 export const TOPUP_MAX = 9_999_999_999.99;
@@ -228,6 +228,8 @@ const pickerNarrowingSchema = z.object({
   fromList: z.string().min(1).max(12).optional(),
   /** mine: only these objekts, for the flags a counter's give picks come without */
   objektIds: z.array(objektIdSchema).min(1).max(OFFER_SIDE_LIMIT).optional(),
+  /** mine: every copy of these collections, unpaged, for a counter's any-copy asks */
+  copiesOf: z.array(slugSchema).min(1).max(OFFER_SIDE_LIMIT).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
 

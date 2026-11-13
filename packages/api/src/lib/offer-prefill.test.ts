@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { CandidateItem } from "../schemas/offer";
+import { type CandidateItem, OFFER_SIDE_LIMIT } from "../schemas/offer";
 import {
   chooseMatchPicks,
   fillMatches,
@@ -112,14 +112,14 @@ describe("chooseMatchPicks", () => {
     expect(ids(get)).toEqual(["302z-88"]);
   });
 
-  test("caps each side at 50 and counts every eligible match", () => {
-    const give = Array.from({ length: 60 }, (_, n) => ({
+  test("caps each side at the side limit and counts every eligible match", () => {
+    const give = Array.from({ length: OFFER_SIDE_LIMIT + 10 }, (_, n) => ({
       slug: `c${n}`,
       items: [item(`c${n}`, n + 1)],
     }));
     const picks = chooseMatchPicks(give, [{ slug: "302z", items: [item("302z", 5)] }]);
-    expect(picks.give).toHaveLength(50);
-    expect(picks.matched).toEqual({ give: 60, get: 1 });
+    expect(picks.give).toHaveLength(OFFER_SIDE_LIMIT);
+    expect(picks.matched).toEqual({ give: OFFER_SIDE_LIMIT + 10, get: 1 });
   });
 
   test("keeps the order the matches came in", () => {

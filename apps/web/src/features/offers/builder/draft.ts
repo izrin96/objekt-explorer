@@ -152,7 +152,7 @@ export function holdsDraft(d: Draft, prefill: OfferPrefill | undefined): boolean
   );
 }
 
-/** The viewer's candidates for one ask: what `myCopyOptions` returns. */
+/** The viewer's candidates for the asks: what `myAskCopiesOptions` returns, one page serving every ask. */
 type Page = { suggested?: readonly CandidateItem[]; items?: readonly CandidateItem[] };
 
 /** A counter's any-copy asks, in the order their pages are fetched. */
@@ -202,6 +202,7 @@ export function resolveAsks(
  * stands only beside copies the list names does not, since asking it for any copy is not what the
  * list says; else the first copies that can be sent, not already on the side, stand in for it;
  * else the ask stays, and `pickProblem` says it can't be sent. Only the ask's own list is read.
+ * Only an ask a link brought resolves; an any pick made in the picker stays as the sender made it.
  */
 export function resolveGetAsks(
   get: readonly OfferPick[],
@@ -210,6 +211,8 @@ export function resolveGetAsks(
   const taken = new Set(get.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
   return get.flatMap((pick) => {
     if (pick.objektId !== null || pick.listSlug === null) return [pick];
+    // picked in the picker (it carries the candidate's flags): the sender chose Any serial
+    if (pick.flags !== null) return [pick];
     const onList = items.filter(
       (item) => item.listSlug === pick.listSlug && item.collectionSlug === pick.collectionSlug,
     );
