@@ -70,6 +70,8 @@ services:
   postgres-indexer:
     restart: always
     image: postgres:18
+    # Docker's default 64 MB /dev/shm is too small for parallel query workers (Sentry WEB-2Z)
+    shm_size: 1g
     ports:
       - "127.0.0.1:5434:5432"
     environment:
@@ -191,6 +193,8 @@ services:
   postgres:
     restart: always
     image: postgres:18
+    # Docker's default 64 MB /dev/shm is too small for parallel query workers
+    shm_size: 1g
     volumes:
       - postgres-data:/var/lib/postgresql
     ports:
