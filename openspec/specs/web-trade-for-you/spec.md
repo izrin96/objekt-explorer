@@ -253,7 +253,7 @@ When a partner's objekts match the viewer's want lists only through the viewer's
 - **THEN** nothing shows under the strips, and the popover reads that rule with 35
 
 ### Requirement: A hidden post comes back
-A hidden post SHALL be unhidden, within the time a want-list alert takes, when its owner adds an entry by hand after the hide that matches a list of the user who hid it, in either direction, by the rules a want-list alert pairs lists with. The match SHALL be real when it is read: the offering side can trade a copy and the wanting side holds none. The user's alert settings SHALL not change this. The Hidden dialog and Account's Hidden page SHALL say so.
+A hidden post SHALL be unhidden, within the time a want-list alert takes, when its owner adds an entry by hand after the hide that matches a list of the user who hid it, in either direction, by the rules a want-list alert pairs lists with. The match SHALL be real when it is read: the offering side can trade a copy, whether or not the wanting side already holds one. The user's alert settings SHALL not change this. The Hidden dialog and Account's Hidden page SHALL say so.
 
 #### Scenario: A new objekt the user wants
 - **WHEN** the user hid rin.trades's post, and rin.trades then adds SeoYeon 204Z, which is on the user's want list and which rin.trades holds, to that post's have list
@@ -281,7 +281,7 @@ A hidden post SHALL be unhidden, within the time a want-list alert takes, when i
 
 #### Scenario: Already held
 - **WHEN** the owner of a hidden post adds an objekt on the user's want list of which the user already holds a copy
-- **THEN** the post stays hidden
+- **THEN** the post is no longer hidden, as for an objekt the user does not hold yet
 
 #### Scenario: Not owned yet
 - **WHEN** the owner of a hidden post adds an objekt on the user's want list that the owner does not hold, and receives it 3 hours later

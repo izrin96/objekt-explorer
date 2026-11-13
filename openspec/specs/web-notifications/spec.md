@@ -236,8 +236,9 @@ The alert's target SHALL be For you with Compare with naming that want list (see
 No alert SHALL be created for:
 - the user's own lists;
 - a hidden partner;
-- an entry its have or sale list's owner cannot trade, because none of their linked addresses holds it or it is not transferable;
-- a collection the user already owns a copy of.
+- an entry its have or sale list's owner cannot trade, because none of their linked addresses holds it or it is not transferable.
+
+Whether the user already owns a copy of the collection SHALL not matter, as on For you: a want list can ask for another copy.
 
 An entry left out only because its owner cannot trade it yet, or, under Can swap, only because the match is not mutual yet, SHALL be checked again on every alert run for 24 hours after the run that first left it out (for an entry added to a list already on Trade, about 24 hours after it was added). It SHALL alert on the first run that finds it passes, and after those 24 hours it SHALL not alert.
 
@@ -294,8 +295,8 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 - **THEN** no new alert is created for it
 
 #### Scenario: Already owned
-- **WHEN** a matching objekt is listed but the user already owns a copy of that collection
-- **THEN** no alert is created
+- **WHEN** the user has "Someone has what you want" on Any, another account adds SeoYeon 204Z to a have list on Trade, SeoYeon 204Z is on the user's want list "Binary hunt", and the user already owns a copy of it
+- **THEN** within 10 minutes the user has an alert for "Binary hunt" naming that objekt, as For you counts the match
 
 #### Scenario: Sale listing and a Trade only want list
 - **WHEN** another account adds SeoYeon 204Z to a sale list set to Sell only and shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps only
