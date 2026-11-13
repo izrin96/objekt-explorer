@@ -92,20 +92,13 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
   const noAddresses = new Set<string>();
   const holdings = await fetchHoldings(
     unique(pairs.flatMap((pair) => (pair.objektId ? [pair.objektId] : []))),
-    // what judging an alert reads: whether the wanter holds any copy, and the offer's own entry
+    // the offer's side only: a copy the wanter already holds never stops an alert, as on For you
     copyPairsOf(
-      pairs.flatMap((pair) => [
-        {
-          slug: pair.slug,
-          objektId: null,
-          addresses: addressesOfList.get(pair.wantListId) ?? noAddresses,
-        },
-        {
-          slug: pair.slug,
-          objektId: pair.objektId,
-          addresses: addressesOfList.get(pair.offerListId) ?? noAddresses,
-        },
-      ]),
+      pairs.map((pair) => ({
+        slug: pair.slug,
+        objektId: pair.objektId,
+        addresses: addressesOfList.get(pair.offerListId) ?? noAddresses,
+      })),
     ),
   );
 

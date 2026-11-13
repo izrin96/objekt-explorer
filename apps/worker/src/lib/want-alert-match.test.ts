@@ -129,16 +129,16 @@ describe("selectAlerts, forward", () => {
     expect(token).toEqual([]);
   });
 
-  test("a wanter who already owns a copy is skipped, even a non-transferable one", () => {
+  test("a wanter who already owns a copy is still alerted, as For you counts the match", () => {
     const result = alertsOf(
       input({
         holdings: holdings([
           [SELLER_ADDR, SLUG, true],
-          [WANTER_ADDR, SLUG, false],
+          [WANTER_ADDR, SLUG, true],
         ]),
       }),
     );
-    expect(result).toEqual([]);
+    expect(result).toEqual(alertsOf(input()));
   });
 
   test("want_match off is skipped", () => {
@@ -202,6 +202,19 @@ describe("selectAlerts, reverse", () => {
     const on = new Map([[prefKey(SELLER, "have_wanted"), true]]);
     expect(alertsOf(input({ pairs: [reverse], prefs: on, holdings: holdings([]) }))).toEqual([]);
   });
+
+  test("a wanter who already owns a copy still alerts the have side's owner", () => {
+    const held = holdings([
+      [SELLER_ADDR, SLUG, true],
+      [WANTER_ADDR, SLUG, true],
+    ]);
+    expect(
+      alertsOf(input({ pairs: [reverse], holdings: held })).map((alert) => [
+        alert.userId,
+        alert.type,
+      ]),
+    ).toEqual([[SELLER, "have_wanted"]]);
+  });
 });
 
 describe("selectAlerts, unowned", () => {
@@ -225,15 +238,18 @@ describe("selectAlerts, unowned", () => {
     ).toEqual([reverse]);
   });
 
-  test("an alert, a pref switched off or a wanter holding a copy is never unowned", () => {
+  test("an alert or a pref switched off is never unowned", () => {
     expect(selectAlerts(input()).unowned).toEqual([]);
     const off = new Map([[prefKey(SELLER, "have_wanted"), false]]);
     expect(
       selectAlerts(input({ pairs: [reverse], prefs: off, holdings: holdings([]) })).unowned,
     ).toEqual([]);
+  });
+
+  test("a wanter's own copy does not stop a pair the seller cannot trade yet from being read again", () => {
     expect(
-      selectAlerts(input({ holdings: holdings([[WANTER_ADDR, SLUG, false]]) })).unowned,
-    ).toEqual([]);
+      selectAlerts(input({ holdings: holdings([[WANTER_ADDR, SLUG, true]]) })).unowned,
+    ).toEqual([forward()]);
   });
 });
 
@@ -435,15 +451,19 @@ describe("selectUnhides", () => {
     });
   });
 
-  test("a wanter who already holds a copy keeps the post hidden", () => {
+  test("a wanter who already holds a copy still gets the post back, with its alert", () => {
     const held = holdings([
       [SELLER_ADDR, SLUG, true],
       [WANTER_ADDR, SLUG, true],
     ]);
     expect(selectUnhides(input({ pairs: [hidden], holdings: held }))).toEqual({
-      unhides: [],
+      unhides: [{ userId: WANTER, listId: SALE.id }],
       unowned: [],
     });
+    expect(alertsOf(input({ pairs: [hidden], holdings: held }))).toHaveLength(1);
+    expect(selectUnhides(input({ pairs: [hiddenReverse], holdings: held })).unhides).toEqual([
+      { userId: SELLER, listId: WANT.id },
+    ]);
   });
 
   test("two lists of one person never unhide anything", () => {

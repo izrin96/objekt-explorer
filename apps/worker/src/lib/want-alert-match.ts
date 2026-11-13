@@ -1,4 +1,4 @@
-import { collectionVerdict, copyKey, type Holdings } from "@repo/api/lib/trade-rank";
+import { collectionVerdict, type Holdings } from "@repo/api/lib/trade-rank";
 import {
   ALERT_MATCH_DEFAULT,
   type AlertMatch,
@@ -121,9 +121,7 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
     mode = "any";
   }
 
-  const held = tradable(input, group, offer, want);
-  if (held === "skip") return { kind: "skip" };
-  if (held === "unowned") return { kind: "unowned", group };
+  if (tradable(input, group, offer) === "unowned") return { kind: "unowned", group };
 
   return {
     kind: "ok",
@@ -144,20 +142,15 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
   };
 }
 
-/** Whether the match is real today: the wanter holds no copy, and the offer's owner can trade one. */
+/**
+ * Whether the match is real today: the offer's owner can trade a copy. A copy the wanter already
+ * holds never counts against it, as For you never reads the wanter's copies.
+ */
 function tradable<P extends AlertPair>(
   input: AlertInput<P>,
   group: P[],
   offer: AlertList,
-  want: AlertList,
-): "ok" | "skip" | "unowned" {
-  const slug = group[0]?.slug;
-  if (slug === undefined) return "skip";
-  const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
-    input.holdings.copies.has(copyKey(address, slug)),
-  );
-  if (wanterHolds) return "skip";
-
+): "ok" | "unowned" {
   const { verdict } = collectionVerdict(
     group.map((pair) => ({ listId: pair.offerListId, slug: pair.slug, objektId: pair.objektId })),
     input.addresses.get(offer.userId) ?? none,
@@ -186,9 +179,10 @@ export function selectUnhides<P extends AlertPair>(
     const want = input.lists.get(first.wantListId);
     if (!offer || !want || offer.userId === want.userId) continue;
 
-    const held = tradable(input, group, offer, want);
-    if (held === "unowned") unowned.push(...group);
-    if (held !== "ok") continue;
+    if (tradable(input, group, offer) === "unowned") {
+      unowned.push(...group);
+      continue;
+    }
     const forward = first.direction === "forward";
     const userId = (forward ? want : offer).userId;
     const listId = (forward ? offer : want).id;
