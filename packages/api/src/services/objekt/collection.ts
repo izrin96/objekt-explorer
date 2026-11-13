@@ -12,7 +12,7 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
 
-import { nextModifiedAt } from "../../lib/collection-bump";
+import { listModifiedMs, nextModifiedAt } from "../../lib/collection-bump";
 import { type ListShape, type ShapedList, shapeRows } from "../../lib/collection-shape";
 import { tokenIdWindow } from "../../lib/token-id-window";
 import type {
@@ -94,9 +94,9 @@ async function queryCollections(whereQuery: SQL | undefined): Promise<Collection
 }
 
 /**
- * Every collection in scope, newest first. Last-Modified is the newest
- * collection or the latest override, whichever is later, to the second, so a
- * caller holding that copy (`ifModifiedSinceMs`) is told it is current.
+ * Every collection in scope, newest first. Last-Modified is `listModifiedMs` (the latest bump, or
+ * when the newest collection was minted or written) to the second, so a caller holding that copy
+ * (`ifModifiedSinceMs`) is told it is current.
  */
 export async function fetchCollectionList(
   query: CollectionListQuery,
@@ -110,12 +110,10 @@ export async function fetchCollectionList(
   ];
   const whereQuery = and(...filters);
 
-  const [overrideStr, [latest]] = await Promise.all([
+  const [stored, [latest]] = await Promise.all([
     redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
     indexer
-      .select({
-        createdAt: collections.createdAt,
-      })
+      .select({ id: collections.id, createdAt: collections.createdAt })
       .from(collections)
       .where(whereQuery)
       .orderBy(desc(collections.id))
@@ -124,9 +122,7 @@ export async function fetchCollectionList(
 
   if (!latest) return { notModified: false, lastModifiedMs: 0, result: { collections: [] } };
 
-  const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
-  const createdAtMs = new Date(latest.createdAt).getTime();
-  const lastModifiedMs = Math.floor(Math.max(createdAtMs, overrideMs) / 1000) * 1000;
+  const lastModifiedMs = Math.floor(listModifiedMs(stored, latest, Date.now()) / 1000) * 1000;
 
   if (ifModifiedSinceMs > 0 && ifModifiedSinceMs >= lastModifiedMs) {
     return { notModified: true, lastModifiedMs };
@@ -151,22 +147,31 @@ const LEAD_COLLECTIONS = 21;
 const LEAD_TTL_MS = 60 * 1000;
 // the home page waits on this, and it is only a head start: past this, the page goes without it
 const LEAD_WAIT_MS = 150;
-const leadCache = new Map<string, { expiresAt: number; rows: Promise<ShapedList> }>();
+const leadCache = new Map<
+  string,
+  { expiresAt: number; version: string | null; rows: Promise<ShapedList> }
+>();
 const NO_LEAD: ShapedList = { collections: [] };
 
 export async function fetchLeadCollections(artist: CollectionListInput["artist"]) {
+  const timeout = new Promise<ShapedList>((resolve) => setTimeout(resolve, LEAD_WAIT_MS, NO_LEAD));
+  return Promise.race([leadRows(artist).catch(() => NO_LEAD), timeout]);
+}
+
+async function leadRows(artist: CollectionListInput["artist"]) {
   const key = artist.toSorted().join(",");
+  // the list's own freshness, so a new collection or a bump shows at once instead of after the TTL
+  const version = await collectionListModifiedAt().catch(() => null);
   let entry = leadCache.get(key);
-  if (!entry || entry.expiresAt <= Date.now()) {
+  if (!entry || entry.expiresAt <= Date.now() || entry.version !== version) {
     const rows = queryLeadCollections(artist);
-    entry = { expiresAt: Date.now() + LEAD_TTL_MS, rows };
+    entry = { expiresAt: Date.now() + LEAD_TTL_MS, version, rows };
     leadCache.set(key, entry);
     void rows.catch(() => {
       if (leadCache.get(key)?.rows === rows) leadCache.delete(key);
     });
   }
-  const timeout = new Promise<ShapedList>((resolve) => setTimeout(resolve, LEAD_WAIT_MS, NO_LEAD));
-  return Promise.race([entry.rows.catch(() => NO_LEAD), timeout]);
+  return entry.rows;
 }
 
 async function queryLeadCollections(artist: CollectionListInput["artist"]) {
@@ -185,29 +190,29 @@ async function queryLeadCollections(artist: CollectionListInput["artist"]) {
  * Call it after the change commits; `refreshed: false` means Redis did not take it.
  */
 export async function bumpCollectionList() {
-  const written = await redisFailOpen("collection modified-at bump", async () => {
-    const previous = await redis.get(MODIFIED_AT_KEY);
-    const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
-    await redis.set(MODIFIED_AT_KEY, next);
-    return next;
-  });
-  return { refreshed: written !== null, modifiedAt: written };
+  // past the list's last change, a new row's write included, not only the stored bump: a browser
+  // given a time in this second would otherwise get a 304
+  const previous = await collectionListModifiedAt().catch(() =>
+    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+  );
+  const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
+  const written = await redisFailOpen("collection modified-at bump", () =>
+    redis.set(MODIFIED_AT_KEY, next),
+  );
+  return { refreshed: written !== null, modifiedAt: written === null ? null : next };
 }
 
-/** When the full collection list last changed: the later of the last bump and the newest collection. */
+/** When the full collection list last changed, as `fetchCollectionList` reads it, unfloored. */
 export async function collectionListModifiedAt() {
   const [stored, [latest]] = await Promise.all([
     redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
     indexer
-      .select({ createdAt: collections.createdAt })
+      .select({ id: collections.id, createdAt: collections.createdAt })
       .from(collections)
       .orderBy(desc(collections.id))
       .limit(1),
   ]);
-  const ms = Math.max(
-    stored ? Date.parse(stored) || 0 : 0,
-    latest ? new Date(latest.createdAt).getTime() : 0,
-  );
+  const ms = listModifiedMs(stored, latest, Date.now());
   return ms > 0 ? new Date(ms).toISOString() : null;
 }
 
