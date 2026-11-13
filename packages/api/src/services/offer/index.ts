@@ -4,6 +4,7 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
 import {
+  anyAsksFit,
   askCandidates,
   closedCollectionAsks,
   onePostVerdict,
@@ -215,6 +216,18 @@ export async function createOffer(
       });
     }
     chosen = verdict.ok ? verdict.listId : null;
+    if (
+      chosen !== null &&
+      rules.multiPostAsks &&
+      !anyAsksFit(
+        getRows.map((row) => row.item),
+        entries.filter((entry) => entry.listId === chosen),
+      )
+    ) {
+      // the any asks need copies from more than this list, which this recipient allows
+      chosen = null;
+      onPost = null;
+    }
     const onChosen = entries.filter((entry) => entry.listId === chosen);
     for (const row of getRows) {
       // a kept objekt stays on its own list: the recipient offered it, wherever it sits

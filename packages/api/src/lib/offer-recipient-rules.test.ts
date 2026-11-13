@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   NOTHING_ASKED,
+  anyAsksFit,
   askCandidates,
   closedCollectionAsks,
   notWanted,
@@ -254,5 +255,35 @@ describe("askCandidates", () => {
       },
     ];
     expect(onePostVerdict(asks, null)).toEqual({ ok: false, listId: SPARES, refused: ["any"] });
+  });
+});
+
+describe("anyAsksFit", () => {
+  const any = { collectionSlug: "a" };
+  const named = (id: string) => ({ collectionSlug: "a", objektId: id });
+
+  test("as many any asks as the list names copies fit", () => {
+    expect(anyAsksFit([any, any], [named("1"), named("2")])).toBe(true);
+  });
+
+  test("more any asks than the list names do not fit", () => {
+    expect(anyAsksFit([any, any, any], [named("1"), named("2")])).toBe(false);
+  });
+
+  test("a copy asked for by serial is not left for an any ask", () => {
+    expect(anyAsksFit([named("1"), any, any], [named("1"), named("2")])).toBe(false);
+    expect(anyAsksFit([named("1"), any], [named("1"), named("2")])).toBe(true);
+  });
+
+  test("a whole-collection entry covers any number", () => {
+    expect(anyAsksFit([any, any, any], [{ collectionSlug: "a", objektId: null }])).toBe(true);
+  });
+
+  test("an offer with no any ask fits", () => {
+    expect(anyAsksFit([named("9")], [])).toBe(true);
+  });
+
+  test("a collection the list does not hold does not fit", () => {
+    expect(anyAsksFit([any], [{ collectionSlug: "b", objektId: "1" }])).toBe(false);
   });
 });
