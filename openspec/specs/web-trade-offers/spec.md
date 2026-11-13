@@ -14,7 +14,7 @@ Where an offer starts (a Trade row, a Market listing, a conversation) SHALL not 
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
-An offer SHALL hold at least one objekt, and at most 50 on each side. On the offer card, a side longer than 6 SHALL show the first 6 and a control to show the rest. Either side may be empty. An offer MAY carry:
+An offer SHALL hold at least one objekt, and at most 200 on each side. On the offer card, a side longer than 6 SHALL show the first 6 and a control to show the rest. Either side may be empty. An offer MAY carry:
 - a money top-up with an amount, a currency and which side pays, always shown as "paid outside, not verified";
 - a note of up to 280 characters.
 
@@ -266,11 +266,11 @@ A request asking for a specific objekt SHALL be refused unless that objekt is re
 
 Asking for any copy SHALL draw only on the copies the recipient's entries open, while the recipient still holds them, transferable and unreserved: an entry for the whole collection, on any list, opens every copy the recipient holds; otherwise the entries open the specific objekts they name, on a list that hides serials or on one that shows them. Copies the same offer asks for by serial SHALL not count toward its any-copy asks. The picker's "N available" and the most copies a request may ask for SHALL count only what is left.
 
-An any-copy item SHALL read "Any serial · N available" in You get's picker and "Any serial · N held" in You give, N being the copies the holder spares. When the same copies are not also offered by serial, as on a list that hides serials, the picked item SHALL show a count from 1 up to N under its tile, with − and + buttons and "They choose the serial"; − at 1 takes it out, and + stops at N or at the side's 50. When the collection also has copies shown by serial, that count SHALL sit in the serial dialog (see Any serial in the serial dialog), the tile SHALL read "Any serial · N more", N counting only the copies no shown serial stands for, and serials checked beside it SHALL not lower N. When every copy the ask could take is also offered by serial, the item SHALL stay a single pick, the "Any serial" checkbox in the serial dialog, and more copies are picked by serial; a count above 1 already held there SHALL show as a count that can only come down. Each copy SHALL count toward the 50, and You get SHALL list the item once with "× N" when N is more than 1, as the sent offer's card does. The offer asks for each copy as its own item. When the holder now spares fewer copies than the count, the item SHALL read "Only N available" and block Send until the count comes down. On You give, a counter's any-copy ask for several copies SHALL take that many of the sender's own copies; when they hold fewer, the copies found and the rest still waiting SHALL each be removable on their own.
+An any-copy item SHALL read "Any serial · N available" in You get's picker and "Any serial · N held" in You give, N being the copies the holder spares. When the same copies are not also offered by serial, as on a list that hides serials, the picked item SHALL show a count from 1 up to N under its tile, with − and + buttons and "They choose the serial"; − at 1 takes it out, and + stops at N or at the side's 200. When the collection also has copies shown by serial, that count SHALL sit in the serial dialog (see Any serial in the serial dialog), the tile SHALL read "Any serial · N more", N counting only the copies no shown serial stands for, and serials checked beside it SHALL not lower N. When every copy the ask could take is also offered by serial, the item SHALL stay a single pick, the "Any serial" checkbox in the serial dialog, and more copies are picked by serial; a count above 1 already held there SHALL show as a count that can only come down. Each copy SHALL count toward the 200, and You get SHALL list the item once with "× N" when N is more than 1, as the sent offer's card does. The offer asks for each copy as its own item. When the holder now spares fewer copies than the count, the item SHALL read "Only N available" and block Send until the count comes down. On You give, a counter's any-copy ask for several copies SHALL take that many of the sender's own copies; when they hold fewer, the copies found and the rest still waiting SHALL each be removable on their own.
 
 #### Scenario: Several copies of one collection
 - **WHEN** rin.trades lists SeoYeon 204Z for the whole collection on a list that hides serials, spares three copies, and the user picks it and presses + twice
-- **THEN** the picker reads 3, + is disabled, You get shows "SeoYeon 204Z × 3", the side counts 3 of 50, and the offer asks for three copies
+- **THEN** the picker reads 3, + is disabled, You get shows "SeoYeon 204Z × 3", the side counts 3 of 200, and the offer asks for three copies
 
 #### Scenario: Copies shown by serial
 - **WHEN** rin.trades lists SeoYeon 204Z for the whole collection on a list that shows serials, and spares three copies, #537, #812 and #904
@@ -516,7 +516,7 @@ Opened from a Trade row's Make offer, the builder SHALL add the sender's matches
 - when the sender can swap with the partner (the row reads "You can swap N"), only the matches inside the pair of posts that score counts: You give gets one copy of each collection on the sender's post there that the partner's post wants, and You get one of each on the partner's post there that the sender's post wants;
 - otherwise, only the direction with more matches, swaps and sales alike: one copy of each collection the sender has that the partner wants under You give, or one of each the partner has that the sender wants under You get, the other side left empty. When both directions match equally, You get SHALL be filled.
 
-The matches SHALL be read live, by the rules and the Compare with list the row counts with, up to 50 a side. What may be sent is not narrowed: the pickers still offer every list on Trade.
+The matches SHALL be read live, by the rules and the Compare with list the row counts with, up to 200 a side. What may be sent is not narrowed: the pickers still offer every list on Trade.
 
 #### Scenario: A person the sender can swap with
 - **WHEN** the sender's post P2 pairs have list "yooyeon spares" with want list "hyerin and kaede", jun.p's post holds Hyerin 302Z and wants Yooyeon 205Z, jun.p also holds 3 DCOs that the sender's other post P1 wants through its rule, and the sender chooses Make offer on jun.p's row, which reads "You can swap 1"
@@ -539,8 +539,8 @@ The matches SHALL be read live, by the rules and the Compare with list the row c
 - **THEN** You get holds only the collections on "ARTMS wants" that rin.trades has, as the row counted them
 
 #### Scenario: Over the limit
-- **WHEN** the sender can swap with rin.trades inside one pair of posts, the sender's post there has 60 collections rin.trades's post wants, and rin.trades's post has 5 the sender's post wants
-- **THEN** You give holds 50 of them, the line says more matched than fit, and the side limit doesn't keep Send disabled
+- **WHEN** the sender can swap with rin.trades inside one pair of posts, the sender's post there has 210 collections rin.trades's post wants, and rin.trades's post has 5 the sender's post wants
+- **THEN** You give holds 200 of them, the line says more matched than fit, and the side limit doesn't keep Send disabled
 
 #### Scenario: Adding what was left out
 - **WHEN** the builder opened for mina.k with only You get filled
@@ -619,8 +619,8 @@ When matches were added, the status line SHALL say how many it added to each sid
 - **THEN** the line reads "Added 1 you get from your match"
 
 #### Scenario: More matched than fit
-- **WHEN** 60 of the sender's collections match rin.trades's wants, and 5 of rin.trades's match the sender's
-- **THEN** the line reads "Added 50 you give and 5 you get from your matches. Only 50 of the 60 that matched fit on You give."
+- **WHEN** 210 of the sender's collections match rin.trades's wants, and 5 of rin.trades's match the sender's
+- **THEN** the line reads "Added 200 you give and 5 you get from your matches. Only 200 of the 210 that matched fit on You give."
 
 ### Requirement: Remove matches and Undo
 Remove matches SHALL take out every pick the matches added that is still there and keep the picks the sender added. The line SHALL then keep its slot and read "Took out {count} matches" ("1 match" for one) with Undo, and focus SHALL move to Undo. Undo SHALL put those picks back and show the line as it read when the builder opened. Once the sender has removed every added pick one by one, the line SHALL go.
@@ -754,11 +754,11 @@ A signed-out visitor SHALL be sent to sign in and back. A handle other than the 
 From `lg` up, the page SHALL hold a narrow column, the title over a sticky part with the top-up, the note, Sending as, the send hint and Send, beside a main area with the status line across its width and then You get and You give side by side. The title scrolls with the page. Back to <name> SHALL lead the page. Add SHALL open the picker in a sheet from the end edge, as wide as the main area, with the column still in view.
 
 #### Scenario: Desktop
-- **WHEN** the sender opens rin.trades's offer page at 1440 px with 50 matches added under You get
-- **THEN** the column shows the title, top-up, note and Send, the line "Added 50 you get…" spans the main area, and You get and You give sit side by side under it
+- **WHEN** the sender opens rin.trades's offer page at 1440 px with 200 matches added under You get
+- **THEN** the column shows the title, top-up, note and Send, the line "Added 200 you get…" spans the main area, and You get and You give sit side by side under it
 
 #### Scenario: Scrolled
-- **WHEN** the sender scrolls down to the last rows of the 50 picks at 1440 px
+- **WHEN** the sender scrolls down to the last rows of the 200 picks at 1440 px
 - **THEN** the title has scrolled away, and the top-up, note and Send stay in view beside the sides
 
 #### Scenario: Picker
@@ -1216,7 +1216,7 @@ In You get over lists, the serial dialog SHALL put an "Any serial" control above
 - **THEN** "Any serial" shows as a count at 3 whose + is disabled, so it can only come down
 
 ### Requirement: Confirming or leaving the serial dialog
-The serial dialog's footer SHALL read "{picked} of {count} picked" and "{count} of 50 on this side", with Cancel and a confirm button reading "Pick 1 copy" or "Pick {count} copies"; with nothing picked, "Remove all" when the collection had picks, else a disabled "Pick copies". Confirming SHALL set the picks of the copies the dialog shows in the picker's selection, and Done writes them to the builder. Enter SHALL never confirm: Space checks a row.
+The serial dialog's footer SHALL read "{picked} of {count} picked" and "{count} of 200 on this side", with Cancel and a confirm button reading "Pick 1 copy" or "Pick {count} copies"; with nothing picked, "Remove all" when the collection had picks, else a disabled "Pick copies". Confirming SHALL set the picks of the copies the dialog shows in the picker's selection, and Done writes them to the builder. Enter SHALL never confirm: Space checks a row.
 
 #### Scenario: Confirm
 - **WHEN** the sender checks SeoYeon 204Z #537 and #812 and chooses "Pick 2 copies"
@@ -1235,14 +1235,14 @@ The serial dialog's footer SHALL read "{picked} of {count} picked" and "{count} 
 - **THEN** only the dialog closes
 
 ### Requirement: Side limit in the serial dialog
-The serial dialog's room SHALL be 50 less the side's other picks in the picker. When its picks reach the room, each unchecked available row, an unchecked "Any serial", the count's + and "Select all" SHALL be disabled, and the footer SHALL read "This side is full. Remove one to pick another." On a full side, a tile with no picks SHALL do nothing when chosen; a tile with picks SHALL open the dialog, where copies can only be taken out.
+The serial dialog's room SHALL be 200 less the side's other picks in the picker. When its picks reach the room, each unchecked available row, an unchecked "Any serial", the count's + and "Select all" SHALL be disabled, and the footer SHALL read "This side is full. Remove one to pick another." On a full side, a tile with no picks SHALL do nothing when chosen; a tile with picks SHALL open the dialog, where copies can only be taken out.
 
 #### Scenario: Room runs out
-- **WHEN** the side holds 47 other picks and the sender chooses "Select all" in the twelve-copy HeeJin 101Z dialog
+- **WHEN** the side holds 197 other picks and the sender chooses "Select all" in the twelve-copy HeeJin 101Z dialog
 - **THEN** #8, #73 and #140 are checked, every other row is disabled, and the footer reads "This side is full. Remove one to pick another."
 
 #### Scenario: Full side
-- **WHEN** You get holds 50, two of them SeoYeon 204Z serials
+- **WHEN** You get holds 200, two of them SeoYeon 204Z serials
 - **THEN** choosing an unpicked tile does nothing, and the SeoYeon 204Z dialog lets the sender uncheck its two rows but check none
 
 ### Requirement: Serial dialog across posts

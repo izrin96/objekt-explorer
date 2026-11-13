@@ -110,8 +110,8 @@ When the builder adds matches, near matches of the same person, or of the same p
 - **THEN** the builder opens empty with the near line and Add it
 
 #### Scenario: A full side
-- **WHEN** You give already holds 50 and the viewer activates Add it on a near line for that side
-- **THEN** nothing past 50 is added, so Send is not blocked by the side limit
+- **WHEN** You give already holds 200 and the viewer activates Add it on a near line for that side
+- **THEN** nothing past 200 is added, so Send is not blocked by the side limit
 
 #### Scenario: Make offer with it, no copy to offer
 - **WHEN** the viewer activates Make offer with it and their copy is reserved or can't be sent

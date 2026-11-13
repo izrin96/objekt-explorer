@@ -14,5 +14,5 @@ Each task ends with `bun run lint`, `bun run typecheck` and `bun run build` pass
 
 ## 3. Close
 
-- [ ] 3.1 If `slim-list-entries` lands first, carry `address` through `listEntryRows` and its loader; if this lands first, note it in that change's task 5.1.
-- [ ] 3.2 `AGENTS.md`: none changed. `apps/web/AGENTS.md` already carries the loader round-trip rule (commit `8e5c357c`).
+- [x] 3.1 If `slim-list-entries` lands first, carry `address` through `listEntryRows` and its loader; if this lands first, note it in that change's task 5.1. This landed first; noted there on 2026-11-13.
+- [x] 3.2 `AGENTS.md`: none changed. `apps/web/AGENTS.md` already carries the loader round-trip rule (commit `8e5c357c`).
