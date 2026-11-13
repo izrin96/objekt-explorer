@@ -12,6 +12,8 @@ export const CHANGELOG = [
       "New want list setting: Remove objekts I get in a trade. It is on for new want lists.",
       "A post you hid on Trade comes back when its owner adds something that matches your lists.",
       "Compare on the Marketplace and on list pages can now use one of your own lists.",
+      "A want list that is not on Trade shows its Open to, and you can change it when you edit the list.",
+      "Want alerts now also come for a collection you already hold a copy of.",
     ],
   },
   {
