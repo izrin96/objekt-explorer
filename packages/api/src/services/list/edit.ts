@@ -1,16 +1,32 @@
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import type { EditListInput } from "../../schemas/list";
+import { type OpenToFlags, openToEdit, pairRefusesOpenTo } from "../../schemas/open-to";
 import { takesRatio } from "../../schemas/trade-ratio";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { assertProfileOwned } from "../profile";
-import { generateProfileSlug } from "./create";
+import { generateProfileSlug, PAIR_MESSAGES } from "./create";
 import { findOwnedList } from "./read";
 import { lockTradeLists, touchList } from "./shared";
+
+/**
+ * A want list's Open to as `list.edit` writes it. The UPDATE reads the row again: a list put on
+ * Trade since it was read keeps its post's flags, and one linked since keeps its own rather than
+ * become a Buying only pair. Both columns share one condition, so `lists_open_to_something` holds.
+ */
+function openToColumns(flags: OpenToFlags) {
+  const keep = pairRefusesOpenTo(flags)
+    ? sql`(${lists.discoverable} OR ${lists.linkedListId} IS NOT NULL)`
+    : sql`${lists.discoverable}`;
+  return {
+    matchSale: sql<boolean>`CASE WHEN ${keep} THEN ${lists.matchSale} ELSE ${flags.matchSale}::boolean END`,
+    matchHave: sql<boolean>`CASE WHEN ${keep} THEN ${lists.matchHave} ELSE ${flags.matchHave}::boolean END`,
+  };
+}
 
 export async function editList(userId: string, input: EditListInput) {
   // the profile check counts only for an unbound list, so its refusal waits for the list
@@ -27,6 +43,10 @@ export async function editList(userId: string, input: EditListInput) {
   }
   if (input.ratio != null && !takesRatio(list.listType)) {
     refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
+  }
+  const openTo = openToEdit(list, input.openTo);
+  if (openTo.action === "refuse") {
+    refuse("BAD_REQUEST", "list_pair_buying_only", PAIR_MESSAGES.list_pair_buying_only);
   }
 
   // address changes are ignored on a bound list, so only an unbound one is checked
@@ -50,7 +70,7 @@ export async function editList(userId: string, input: EditListInput) {
       : await generateProfileSlug(input.name, list.slug, address, list.id);
   }
 
-  // no Trade state: every list's is its post's, which `trade.savePost` writes
+  // no link or Trade state, which are the post's (`trade.savePost`); Open to only off Trade
   await db
     .update(lists)
     .set({
@@ -69,6 +89,7 @@ export async function editList(userId: string, input: EditListInput) {
         ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
       ratio: takesRatio(list.listType) ? input.ratio : undefined,
       removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
+      ...(openTo.action === "write" && openToColumns(openTo.flags)),
     })
     .where(eq(lists.id, list.id));
   await touchList([list.id]);

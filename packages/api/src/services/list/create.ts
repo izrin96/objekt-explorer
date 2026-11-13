@@ -23,7 +23,7 @@ export function resolveDiscoverable(
 }
 
 // English for tabs opened before a deploy and `/api/v1`; the web shows `refusalText`
-const PAIR_MESSAGES: Record<PairRefusal, string> = {
+export const PAIR_MESSAGES: Record<PairRefusal, string> = {
   list_have_links_want: "Have lists can only link to Want lists",
   list_want_links_have: "Want lists can only link to Have lists",
   list_sale_links_sell_only: "Only a sale list open to swaps can be linked to a want list",

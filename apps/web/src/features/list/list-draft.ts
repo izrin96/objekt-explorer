@@ -1,6 +1,6 @@
 import { normalizeUserText } from "@repo/api/schemas/common/user-text";
 import type { ListType } from "@repo/api/schemas/list";
-import type { OpenToFlags } from "@repo/api/schemas/open-to";
+import { type OpenTo, type OpenToFlags, openToOf } from "@repo/api/schemas/open-to";
 import { takesRatio } from "@repo/api/schemas/trade-ratio";
 import * as z from "zod";
 
@@ -35,7 +35,7 @@ export const EMPTY_DRAFT: ListDraft = {
   linkedListId: null,
   profileAddress: null,
   isProfileBind: false,
-  // a new want list is open to swaps and buying until a post narrows it
+  // a new want list is open to swaps and buying until its form or a post narrows it
   matchSale: true,
   matchHave: true,
   gridColumns: null,
@@ -102,10 +102,16 @@ export function toCreateInput(draft: ListDraft) {
 }
 
 /**
- * `list.edit`'s input. A list's link, Trade state and Open to belong to its post, so they are left
- * out and the list keeps them. Ratio for all goes only when it differs from `storedRatio`.
+ * `list.edit`'s input. A list's link and Trade state belong to its post, so they are left out and
+ * the list keeps them. Ratio for all goes only when it differs from `storedRatio`, and a want
+ * list's Open to only when it differs from `storedOpenTo`, null where the post sets it.
  */
-export function toEditInput(slug: string, draft: ListDraft, storedRatio: number | null = null) {
+export function toEditInput(
+  slug: string,
+  draft: ListDraft,
+  storedRatio: number | null = null,
+  storedOpenTo: OpenTo | null = null,
+) {
   const {
     listType: _type,
     isProfileBind: _bind,
@@ -114,12 +120,16 @@ export function toEditInput(slug: string, draft: ListDraft, storedRatio: number 
     matchHave: _have,
     ...rest
   } = toCreateInput(draft);
+  const openTo = openToOf(draft);
   return {
     slug,
     ...rest,
     gridColumns: draft.gridColumns,
     regenerateSlug: draft.regenerateSlug,
     ...(takesRatio(draft.listType) && draft.ratio !== storedRatio && { ratio: draft.ratio }),
+    ...(draft.listType === "want" &&
+      storedOpenTo !== null &&
+      openTo !== storedOpenTo && { openTo }),
   };
 }
 

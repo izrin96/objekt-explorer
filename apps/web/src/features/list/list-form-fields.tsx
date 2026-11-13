@@ -1,4 +1,11 @@
 import type { ListType } from "@repo/api/schemas/list";
+import {
+  flagsOf,
+  type OpenTo,
+  type OpenToFlags,
+  openToOf,
+  pairRefusesOpenTo,
+} from "@repo/api/schemas/open-to";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
@@ -6,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
+import { Radio, RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -34,7 +41,7 @@ import {
   slugFieldValue,
 } from "./list-draft";
 import { ListTypeBadge } from "./list-type-badge";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE, OPEN_TO_LABEL } from "./list-type-labels";
 
 export function ListTypeField({
   id,
@@ -82,6 +89,63 @@ export function ListTypeField({
           {m.list_edit_type_locked_hint()}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+const OPEN_TO_ORDER: OpenTo[] = ["swaps", "both", "buying"];
+
+const OPEN_TO_DESC: Record<OpenTo, () => string> = {
+  swaps: m.list_open_to_swaps_desc,
+  both: m.list_open_to_both_desc,
+  buying: m.list_open_to_buying_desc,
+};
+
+/** A want list's Open to; a paired want list must take swaps, so Buying only is disabled with why. */
+export function OpenToField({
+  id,
+  value,
+  paired,
+  onChange,
+}: {
+  id: (field: string) => string;
+  value: OpenToFlags;
+  paired: boolean;
+  onChange: (flags: OpenToFlags) => void;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <Label render={<span />} id={id("open-to")}>
+        {m.list_open_to_label()}
+      </Label>
+      <RadioGroup
+        aria-labelledby={id("open-to")}
+        aria-describedby={id("open-to-desc")}
+        value={openToOf(value)}
+        onValueChange={(next) => {
+          const picked = OPEN_TO_ORDER.find((openTo) => openTo === next);
+          if (picked) onChange(flagsOf(picked));
+        }}
+        className="gap-2.5"
+      >
+        {OPEN_TO_ORDER.map((openTo) => {
+          const refused = paired && pairRefusesOpenTo(flagsOf(openTo));
+          return (
+            <Field key={openTo} disabled={refused} className="w-full flex-row items-start gap-2.5">
+              <Radio value={openTo} disabled={refused} className="mt-0.5" />
+              <FieldLabel className="flex-col items-start gap-0.5 font-normal">
+                <span className="font-medium">{OPEN_TO_LABEL[openTo]()}</span>
+                <FieldDescription render={<span />}>
+                  {refused ? m.list_open_to_pair_hint() : OPEN_TO_DESC[openTo]()}
+                </FieldDescription>
+              </FieldLabel>
+            </Field>
+          );
+        })}
+      </RadioGroup>
+      <span id={id("open-to-desc")} className="text-muted-foreground text-xs text-pretty">
+        {m.list_open_to_desc()}
+      </span>
     </div>
   );
 }

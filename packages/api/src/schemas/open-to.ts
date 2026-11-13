@@ -38,6 +38,28 @@ export function resolveOpenTo(listType: ListType, input: OpenToFlags): OpenToFla
   return { matchSale: input.matchSale, matchHave: input.matchSale ? input.matchHave : true };
 }
 
+export type OpenToEdit =
+  | { action: "keep" }
+  | { action: "refuse" }
+  | { action: "write"; flags: OpenToFlags };
+
+/**
+ * What `list.edit` does with the Open to it is sent. Only a want list off Trade takes one: on Trade
+ * its post sets it, and an old tab or a post that went up meanwhile must not fail the whole save.
+ * A pair's want side can't be Buying only.
+ */
+export function openToEdit(
+  list: { listType: ListType; discoverable: boolean; linkedListId: number | null },
+  openTo: OpenTo | undefined,
+): OpenToEdit {
+  if (openTo === undefined || list.listType !== "want" || list.discoverable) {
+    return { action: "keep" };
+  }
+  const flags = flagsOf(openTo);
+  if (list.linkedListId !== null && pairRefusesOpenTo(flags)) return { action: "refuse" };
+  return { action: "write", flags };
+}
+
 /** A sale list's Open to: Sell only, or Sell or swap (`takes_swaps`). */
 export type SaleOpenTo = "sell" | "both";
 

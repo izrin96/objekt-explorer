@@ -181,7 +181,14 @@ describe("toEditInput", () => {
         regenerateSlug: true,
       }),
     );
-    for (const key of ["listType", "isProfileBind", "linkedListId", "matchSale", "matchHave"]) {
+    for (const key of [
+      "listType",
+      "isProfileBind",
+      "linkedListId",
+      "matchSale",
+      "matchHave",
+      "openTo",
+    ]) {
       expect(input).not.toHaveProperty(key);
     }
     expect(input).toMatchObject({ slug: "my-list", gridColumns: 6, regenerateSlug: true });
@@ -199,6 +206,30 @@ describe("toEditInput", () => {
     for (const listType of ["sale", "general"] as const) {
       const input = toEditInput("my-list", draft({ listType, currency: "USD", ratio: 2 }), null);
       expect(input).not.toHaveProperty("ratio");
+    }
+  });
+
+  test("sends a want list's Open to only when the form may change it and it changed", () => {
+    const swaps = draft({ listType: "want", matchSale: false, matchHave: true });
+    expect(toEditInput("my-list", swaps, null, "both")).toMatchObject({ openTo: "swaps" });
+    expect(toEditInput("my-list", swaps, null, "swaps")).not.toHaveProperty("openTo");
+    // on Trade or inside the composer the post sets it, so the caller passes null
+    expect(toEditInput("my-list", swaps, null, null)).not.toHaveProperty("openTo");
+    expect(toEditInput("my-list", swaps)).not.toHaveProperty("openTo");
+    expect(editListInputSchema.parse(toEditInput("my-list", swaps, null, "both")).openTo).toBe(
+      "swaps",
+    );
+  });
+
+  test("a paired want list saved as Buying only before pairs took swaps saves untouched", () => {
+    const legacy = draft({ listType: "want", linkedListId: 3, matchSale: true, matchHave: false });
+    expect(toEditInput("my-list", legacy, null, "buying")).not.toHaveProperty("openTo");
+  });
+
+  test("never sends Open to for another type", () => {
+    for (const listType of ["general", "have", "sale"] as const) {
+      const other = draft({ listType, currency: "USD", matchSale: false, matchHave: true });
+      expect(toEditInput("my-list", other, null, "both")).not.toHaveProperty("openTo");
     }
   });
 

@@ -138,6 +138,7 @@ export function CreateListDialog({
                 onChange={setEdited}
                 profiles={profiles}
                 lockBind={lockType}
+                showOpenTo={!lockType}
               />
             </DialogPanel>
             <DialogFooter>

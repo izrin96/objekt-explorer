@@ -39,7 +39,12 @@ import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
-import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
+import {
+  ListBoundBadge,
+  ListCurrencyBadge,
+  ListOpenToBadge,
+  ListTypeBadge,
+} from "./list-type-badge";
 import { partnerSwitch } from "./partner-switch";
 import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
@@ -85,6 +90,7 @@ export function ListHeader() {
             </h1>
             {list.isProfileBind ? <ListBoundBadge /> : null}
             {list.listType !== "general" ? <ListTypeBadge type={list.listType} /> : null}
+            <ListOpenToBadge list={list} />
             {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
               <Badge
                 variant="outline"

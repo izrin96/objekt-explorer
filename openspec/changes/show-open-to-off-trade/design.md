@@ -1,0 +1,24 @@
+# Design
+
+## Context
+
+Open to is two booleans on `lists` (`match_sale`, `match_have`), decoded once by `openToOf` (`packages/api/src/schemas/open-to.ts`). The web shows it only as post tags: `listPostTags` returns none while a list is off Trade, so the header (`list-header.tsx`) and the row (`list-rows.tsx`, `ListTradeMark`) show nothing for an off-Trade want list. The owner's own matching (`services/trade/feed/viewer.ts`) reads every want list of theirs, posted or not; other people's matching reads only `discoverable` lists (`services/trade/matches/candidates.ts`, and `postsCte` joins partners only from lists on Trade). Today only `trade.savePost` changes it after create; `list.edit` takes no Trade state. The composer has no Open to control of its own: the post kind and "also pay" decide it (`composerWrites`).
+
+## Decisions
+
+1. **Owner only.** Off Trade, Open to affects only the owner's matches, so only the owner is shown it. The flags are public in every list read, so this is a display choice, not a privacy one.
+2. **Off Trade only.** On Trade the tags (WTT, WTB) already say it; words beside them would repeat it.
+3. **Header and row.** Both already carry the list's badges in one place. The Lists tab reuses `ListRow`, so the owner sees it there too.
+4. **Reuse the Badge and the three labels.** A neutral outline `Badge`, since amber means Want and WTB. The visible text is the short label (`list_create_match_*_label`); `title` and `sr-only` read "Open to: <choice>" through one new key, as `ListCurrencyBadge` does with its label. `Badge` is `whitespace-nowrap`, and the labels are short in all three locales; the badge rows already wrap.
+5. **One pure helper.** `offTradeOpenTo(list)` in `features/list/list-open-to.ts` returns the `OpenTo` of a want list off Trade, or null. A want list can always be on Trade (`canBeOnTrade`), so `discoverable` alone decides, and missing flags read as the default, Swaps or buying, as `listPostTags` reads them. One component, `ListOpenToBadge`, checks the owner itself with `useIsListOwner`, so the header and the row each add one line.
+6. **The form edits it off Trade.** The composer has no Open to control to reuse, so the form brings back the radio group the list form had before the composer (`RadioGroup` with `Field`, `Radio`, `FieldLabel`, `FieldDescription`, the pattern Messages settings use): `OpenToField` in `list-form-fields.tsx`, after the Trade line, the three labels reused, each with a description worded from the match-help table. `ListForm` shows it only with `showOpenTo`: create and copy from the lists pages, and the edit of a want list off Trade. Forms opened from the composer pass none, since Post sets Open to there and a choice in them would be overwritten.
+7. **Send only a change.** `toEditInput` sends `openTo` only when the form may change it and the draft differs from what it was seeded with, as Ratio for all does. A linked want list saved as Buying only before pairs had to take swaps therefore still saves when its owner edits only its name.
+8. **One server rule, pure.** `openToEdit(list, openTo)` in `schemas/open-to.ts`: keep when nothing is sent, for any other type, and on Trade; refuse Buying only for a linked want list (`list_pair_buying_only`, with `PAIR_MESSAGES` from `create.ts`); otherwise write. On Trade it ignores rather than refuses, so an old tab or a post that went up after the form opened still saves the rest. `list.edit` takes `openTo` as an enum, so it is both flags or neither and never open to nothing.
+9. **Race-safe without a lock.** `editList` writes both flags as `CASE WHEN <keep> THEN stored ELSE new END` in its one UPDATE, `<keep>` being `discoverable`, and for Buying only also `linked_list_id IS NOT NULL`. Under READ COMMITTED a blocked UPDATE re-evaluates SET against the committed row, so a post or a link made since the read keeps its flags. One condition serves both columns, so `lists_open_to_something` holds.
+10. **No new cache work.** `trade.savePost` calls only `touchList` after writing Open to; `editList` already does. `useEditList` already invalidates the current user's lists, the list reads, `trade.key()` and `list.find`, so the badge, the rows and the owner's matches refresh.
+
+## Risks
+
+- An owner may read "Buying only" on an unposted list as something others see. Mitigated by owner-only display; the sr label says "Open to", and the form's description says it decides the owner's own matches.
+- Posting replaces the form's choice with the composer's. The form's description says the post sets it once the list is on Trade; Post it is disabled while the choice is unsaved (the Trade line's save-first note).
+- `responsive-objekt-thumbnails` edits `list-rows.tsx` in the thumbnail components; this change edits the meta line and the imports. Expect a textual merge only.

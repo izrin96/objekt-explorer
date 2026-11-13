@@ -1,5 +1,5 @@
 import { CheckIcon, CoinsIcon } from "@phosphor-icons/react";
-import type { ListType } from "@repo/api/schemas/list";
+import type { ListType, PublicList } from "@repo/api/schemas/list";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
@@ -7,7 +7,9 @@ import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
+import { offTradeOpenTo } from "./list-open-to";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE, OPEN_TO_LABEL } from "./list-type-labels";
+import { useIsListOwner } from "./use-list-owned";
 
 export function ListTypeBadge({
   type,
@@ -53,6 +55,27 @@ export function ListCurrencyBadge({ currency }: { currency: string }) {
     <Badge variant="outline" size="sm" title={label}>
       <CoinsIcon aria-hidden />
       <span aria-hidden>{currency}</span>
+      <span className="sr-only">{label}</span>
+    </Badge>
+  );
+}
+
+/** A want list's Open to, shown to its owner only while the list is off Trade; on Trade its post's tags say it. */
+export function ListOpenToBadge({
+  list,
+  className,
+}: {
+  list: Pick<PublicList, "slug" | "listType" | "discoverable" | "matchSale" | "matchHave">;
+  className?: string;
+}) {
+  const owned = useIsListOwner(list.slug);
+  const openTo = owned ? offTradeOpenTo(list) : null;
+  if (!openTo) return null;
+  const choice = OPEN_TO_LABEL[openTo]();
+  const label = m.list_open_to_badge_label({ choice });
+  return (
+    <Badge variant="outline" size="sm" title={label} className={className}>
+      <span aria-hidden>{choice}</span>
       <span className="sr-only">{label}</span>
     </Badge>
   );

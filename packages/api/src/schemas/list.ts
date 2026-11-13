@@ -225,6 +225,8 @@ export const editListInputSchema = z.object({
   ratio: tradeRatioSchema.nullable().optional(),
   /** want lists only; omitted keeps the stored one, as a tab from before it sends it */
   removeOnReceive: z.boolean().optional(),
+  /** a want list's, taken only while it is off Trade; omitted keeps the stored one, as a tab from before it sends it */
+  openTo: z.enum(["swaps", "both", "buying"]).optional(),
 });
 export type EditListInput = z.infer<typeof editListInputSchema>;
 
