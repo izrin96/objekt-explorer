@@ -7,6 +7,7 @@ import type {
   CosmoObjektMetadataV3,
   MetadataVersion,
 } from "../types/metadata";
+import { cosmoProxyOptions } from "./http";
 
 /**
  * Fetch objekt metadata from the v3 API.
@@ -15,7 +16,7 @@ import type {
 export async function fetchMetadataV3(tokenId: string) {
   return await ofetch<CosmoObjektMetadataV3>(
     `https://api.cosmo.fans/bff/v3/objekts/nft-metadata/${tokenId}`,
-    { retry: 2, retryDelay: 500, timeout: 10_000 }, // 500ms backoff
+    { retry: 2, retryDelay: 500, timeout: 10_000, ...cosmoProxyOptions }, // 500ms backoff
   );
 }
 

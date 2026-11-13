@@ -1,3 +1,4 @@
+import { cosmoProxyOptions } from "@repo/cosmo/server/http";
 import { indexer } from "@repo/db/indexer";
 import { transfers } from "@repo/db/indexer/schema";
 import { desc } from "drizzle-orm";
@@ -43,6 +44,7 @@ async function fetchCosmoStatus() {
   const up = await ofetch("https://api.cosmo.fans/bff/v3/artists", {
     method: "HEAD",
     timeout: 5000,
+    ...cosmoProxyOptions,
   }).then(
     () => true,
     () => false,
