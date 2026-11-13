@@ -4,6 +4,7 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
 import {
+  askCandidates,
   closedCollectionAsks,
   onePostVerdict,
   unwantedGives,
@@ -186,12 +187,17 @@ export async function createOffer(
   let chosen: number | null = null;
   if (hasLists) {
     const listIdOf = new Map(entries.map((entry) => [entry.listSlug, entry.listId]));
-    const asks = getRows.map((row) => ({
-      item: row,
-      kept: keptObjekt(row.item),
-      candidates: unique(entriesFitting(row.item, entries).map((entry) => entry.listId)),
-      preferred: row.item.listSlug === undefined ? undefined : listIdOf.get(row.item.listSlug),
-    }));
+    const asks = getRows.map((row) => {
+      const preferred =
+        row.item.listSlug === undefined ? undefined : listIdOf.get(row.item.listSlug);
+      const fitting = unique(entriesFitting(row.item, entries).map((entry) => entry.listId));
+      return {
+        item: row,
+        kept: keptObjekt(row.item),
+        candidates: askCandidates(row.item, fitting, preferred),
+        preferred,
+      };
+    });
     let verdict = onePostVerdict(asks, postListId);
     if (!verdict.ok && rules.multiPostAsks && postListId !== null) {
       // asks across posts are allowed, so a named post they don't fit only loses its say

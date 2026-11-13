@@ -1,8 +1,10 @@
 import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray, or } from "drizzle-orm";
 
+import { orderByCollection, pageByCollection } from "../../../lib/offer-paging";
 import { giveNarrowing, itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
 import {
@@ -27,13 +29,17 @@ import {
   candidatesPage,
   collectionWhere,
   collectionsOf,
+  ownedGroupPage,
   ownedPage,
   toCandidate,
   wantListOf,
   wantSlugsOf,
 } from "./shared";
 
-/** The condition keeping what one of the sender's own have, sale or general lists names; null when it names nothing. */
+/**
+ * The condition, on objekt columns only, keeping what one of the sender's own have, sale or
+ * general lists names; null when it names nothing.
+ */
 async function listWhere(me: string, slug: string) {
   // a list with no entries is one row of nulls, so no row at all is no such list
   const entries = await db
@@ -55,7 +61,15 @@ async function listWhere(me: string, slug: string) {
   return (
     or(
       ids.length > 0 ? inArray(objekts.id, ids) : undefined,
-      slugs.length > 0 ? inArray(collections.slug, slugs) : undefined,
+      slugs.length > 0
+        ? inArray(
+            objekts.collectionId,
+            indexer
+              .select({ id: collections.id })
+              .from(collections)
+              .where(inArray(collections.slug, slugs)),
+          )
+        : undefined,
     ) ?? null
   );
 }
@@ -79,7 +93,8 @@ export async function mineCandidates(
     return candidatesPage({});
 
   const [{ page, nextCursor }, haveEntries] = await Promise.all([
-    ownedPage(addresses, cursor, {
+    // an objektIds read is flags for a few copies, not a grid, so it stays a flat page
+    (objektIds ? ownedPage : ownedGroupPage)(addresses, cursor, {
       filters,
       slugs: keptSlugs,
       where: and(fromWhere, objektIds ? inArray(objekts.id, objektIds) : undefined),
@@ -127,9 +142,20 @@ export async function mineCandidates(
     }
   }
   const kept = keptSlugs ? new Set(keptSlugs) : null;
-  const suggestedList = [...suggestedObjekts.values()]
-    .filter((s) => !kept || kept.has(s.objekt.slug))
-    .slice(0, CANDIDATE_PAGE_SIZE);
+  const suggestedList = pageByCollection(
+    orderByCollection(
+      [...suggestedObjekts.values()]
+        .filter((s) => !kept || kept.has(s.objekt.slug))
+        .map((s) => ({
+          suggestion: s,
+          collectionSlug: s.objekt.slug,
+          objektId: s.objekt.id,
+          serial: s.objekt.serial,
+        })),
+    ),
+    0,
+    CANDIDATE_PAGE_SIZE,
+  ).page.map((row) => row.suggestion);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
   const [reserved, holders, anchored, tags, collections] = await Promise.all([

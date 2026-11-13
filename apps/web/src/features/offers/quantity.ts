@@ -1,3 +1,5 @@
+import type { CandidateItem } from "@repo/api/schemas/offer";
+
 /**
  * An offer pick as the counts read it: a key, how many copies an any-copy pick asks for, and the
  * copies taken off it, which it never resolves to again.
@@ -25,6 +27,44 @@ export function copiesLeft(
   let named = 0;
   for (const pick of picks) if (pick.objektId !== null && pick.collectionSlug === slug) named += 1;
   return Math.max(0, copies - named);
+}
+
+/**
+ * The most copies an any-copy pick of `item`'s collection may ask for: the copies only Any serial
+ * reaches (`hidden`), else one, either while a copy is left beyond those `picks` name by serial,
+ * which a send counts only once. Never below a count already held, so it can only come down. A
+ * server from before `hidden` read as `bySerial ? 0 : copies`.
+ */
+export function anyTop(
+  item: Pick<CandidateItem, "collectionSlug" | "copies" | "bySerial" | "hidden">,
+  picks: Iterable<{ collectionSlug: string; objektId: string | null; count?: number }>,
+) {
+  const copies = item.copies ?? 1;
+  const hidden = item.hidden ?? (item.bySerial ? 0 : copies);
+  const list = [...picks];
+  const held = list.find(
+    (pick) => pick.objektId === null && pick.collectionSlug === item.collectionSlug,
+  );
+  const left = copiesLeft(list, item.collectionSlug, copies);
+  const top = Math.min(hidden > 0 ? hidden : 1, left);
+  return Math.max(top, held ? countOf(held) : 0);
+}
+
+/**
+ * A side's picks with each collection's together, in the order the collections first appear: the
+ * any-copy pick first, then the copies by ascending serial, one without a serial last.
+ */
+export function byCollection<
+  P extends { collectionSlug: string; objektId: string | null; serial: number | null },
+>(picks: readonly P[]): P[] {
+  const groups = new Map<string, P[]>();
+  for (const pick of picks) {
+    const group = groups.get(pick.collectionSlug);
+    if (group) group.push(pick);
+    else groups.set(pick.collectionSlug, [pick]);
+  }
+  const rank = (pick: P) => (pick.objektId === null ? -1 : (pick.serial ?? Infinity));
+  return [...groups.values()].flatMap((group) => group.toSorted((a, b) => rank(a) - rank(b)));
 }
 
 /**

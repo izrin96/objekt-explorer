@@ -282,6 +282,39 @@ describe("resolveGetAsks", () => {
     expect(resolveGetAsks([a], [theirs("c1"), theirs(null)])).toEqual([a]);
   });
 
+  describe("entries that name copies", () => {
+    test("an any item standing only beside named copies does not keep the ask", () => {
+      const shown = resolveGetAsks(
+        [getAsk()],
+        [
+          theirs(null, { hidden: 0, bySerial: false, copies: 2 }),
+          theirs("c12", { reserved: true }),
+          theirs("c40"),
+        ],
+      );
+      expect(keysOf(shown)).toEqual(["c40"]);
+    });
+
+    test("a whole entry on a list that shows serials keeps the ask", () => {
+      const a = getAsk();
+      expect(
+        resolveGetAsks([a], [theirs(null, { hidden: 0, bySerial: true }), theirs("c40")]),
+      ).toEqual([a]);
+    });
+
+    test("the mixed collection: an ask on the list naming copies resolves, one on the hidden list keeps", () => {
+      const items = [
+        theirs(null, { listSlug: "quiet haves", hidden: 2, copies: 4 }),
+        theirs("c615", { listSlug: "spares" }),
+        theirs("c1077", { listSlug: "spares" }),
+      ];
+      const onSpares = resolveGetAsks([getAsk({ listSlug: "spares" })], items);
+      expect(keysOf(onSpares)).toEqual(["c615"]);
+      const onQuiet = getAsk({ listSlug: "quiet haves" });
+      expect(resolveGetAsks([onQuiet], items)).toEqual([onQuiet]);
+    });
+  });
+
   test("the first copy that can be sent stands in for the ask", () => {
     const shown = resolveGetAsks([getAsk()], [theirs("c1"), theirs("c2")]);
     expect(keysOf(shown)).toEqual(["c1"]);
@@ -386,12 +419,43 @@ describe("pickProblem", () => {
     expect(pickProblem("get", { ...ask(9), kept: true }, ctx())).toBeNull();
   });
 
-  test("copies the get side also names by serial count against the spare", () => {
-    const live = liveOf(copy(null, { copies: 2 }));
+  test("copies the get side also names by serial count against the spare, for an any over shown copies", () => {
+    const live = liveOf(copy(null, { copies: 2, bySerial: true, hidden: 0 }));
     const named = pick({ key: "o1", objektId: "o1", serial: 1 });
     expect(pickProblem("get", ask(2), ctx({ live, get: [named] }))).toBe(
       m.offer_flag_too_many({ count: 1 }),
     );
+  });
+
+  test("SooMin: both serials and any x 2 beside hidden copies is not blocked", () => {
+    const live = liveOf(copy(null, { copies: 4, hidden: 2 }));
+    const serials = [1, 2].map((n) => pick({ key: `s${n}`, objektId: `s${n}`, serial: n }));
+    expect(pickProblem("get", ask(2), ctx({ live, get: [...serials, ask(2)] }))).toBeNull();
+    expect(pickProblem("get", ask(3), ctx({ live, get: [...serials, ask(3)] }))).toBe(
+      m.offer_flag_too_many({ count: 2 }),
+    );
+  });
+
+  test("a held any x 3 over a shown-only collection the server accepts is not blocked", () => {
+    const live = liveOf(copy(null, { copies: 3, bySerial: true, hidden: 0 }));
+    expect(pickProblem("get", ask(3), ctx({ live, get: [ask(3)] }))).toBeNull();
+  });
+
+  test("a serial of that collection also picked leaves two available", () => {
+    const live = liveOf(copy(null, { copies: 3, bySerial: true, hidden: 0 }));
+    const named = pick({ key: "o1", objektId: "o1", serial: 1 });
+    expect(pickProblem("get", ask(3), ctx({ live, get: [named, ask(3)] }))).toBe(
+      m.offer_flag_too_many({ count: 2 }),
+    );
+  });
+
+  test("a shown-only any beside every serial is blocked", () => {
+    const live = liveOf(copy(null, { copies: 2, hidden: 0 }));
+    const serials = [1, 2].map((n) => pick({ key: `s${n}`, objektId: `s${n}`, serial: n }));
+    expect(pickProblem("get", ask(1), ctx({ live, get: [...serials, ask(1)] }))).toBe(
+      m.offer_flag_too_many({ count: 0 }),
+    );
+    expect(pickProblem("get", ask(1), ctx({ live, get: [ask(1)] }))).toBeNull();
   });
 
   test("own flags win over live ones, and live ones are the fallback", () => {

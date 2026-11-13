@@ -29,6 +29,7 @@ import {
   holdsDraft as holdsDraftOf,
   initialTopup,
   offerInput,
+  anyAvailable,
   pickEstimated,
   pickFlags,
   pickProblem,
@@ -382,6 +383,9 @@ export function BuilderForm({
                     picks={shown[side]}
                     collections={collections}
                     flagsOf={flagsOf}
+                    anyLeft={(pick) =>
+                      side === "get" ? anyAvailable(pick, getShown, theirFlags) : null
+                    }
                     estimatedOf={estimatedOf}
                     reasonOf={(pick) => reasonOf(side, pick)}
                     refused={refused}

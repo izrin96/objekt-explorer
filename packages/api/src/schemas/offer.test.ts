@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { noteObjekts, offerPayloadSchema, tradePayloadSchema, tradeViewSchema } from "./offer";
+import {
+  type CandidateItem,
+  listedAsAny,
+  noteObjekts,
+  offerPayloadSchema,
+  tradePayloadSchema,
+  tradeViewSchema,
+} from "./offer";
 
 const item = (side: "give" | "get", collectionSlug: string) => ({ side, collectionSlug });
 // the creator gives seoyeon and gets jiwoo and kaede
@@ -109,5 +116,41 @@ describe("tradeViewSchema", () => {
     });
     expect(parsed.cancelRequests).toEqual([request]);
     expect(parsed.cancelReason).toBe("agreed");
+  });
+});
+
+describe("listedAsAny", () => {
+  const anyItem = (overrides: Partial<CandidateItem>): CandidateItem => ({
+    collectionSlug: "divine01-jiwoo-312z",
+    objektId: null,
+    serial: null,
+    serialEstimated: false,
+    transferable: true,
+    reserved: false,
+    inOpenOffer: [],
+    listSlug: "doubles",
+    copies: 3,
+    bySerial: false,
+    ...overrides,
+  });
+
+  test("a whole entry on a list that shows serials is listed", () => {
+    expect(listedAsAny(anyItem({ bySerial: true, hidden: 0 }))).toBe(true);
+  });
+
+  test("copies only Any serial reaches are listed", () => {
+    expect(listedAsAny(anyItem({ hidden: 2 }))).toBe(true);
+  });
+
+  test("an any item that exists only because entries name shown copies is not", () => {
+    expect(listedAsAny(anyItem({ hidden: 0, bySerial: false }))).toBe(false);
+  });
+
+  test("a server from before `hidden` is read as listed", () => {
+    expect(listedAsAny(anyItem({}))).toBe(true);
+  });
+
+  test("a copy is never an any copy", () => {
+    expect(listedAsAny(anyItem({ objektId: "5745609", hidden: 2 }))).toBe(false);
   });
 });

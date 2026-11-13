@@ -268,12 +268,21 @@ const candidateItemSchema = z.object({
   listSlug: z.string().nullable(),
   /** any copy only: the transferable, unreserved copies held */
   copies: z.number().nullable(),
-  /** any copy only: the same copies are also offered by serial, so more than one is asked for that way */
+  /** any copy only: an entry names the whole collection on a list that shows serials */
   bySerial: z.boolean(),
+  /** any copy only: of `copies`, those no serial in this read stands for, which only Any serial reaches */
+  hidden: z.number().int().optional(),
   /** theirs from a have list: the trade ratio its entry asks (the entry's, else the list's); shown, never checked */
   ratio: z.number().int().optional(),
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
+
+/**
+ * An any copy the partner listed as one (whole collection or hidden serials), not one over shown
+ * copies. A server from before `hidden` never emitted the latter, so a missing `hidden` is listed.
+ */
+export const listedAsAny = (item: CandidateItem) =>
+  item.objektId === null && (item.bySerial || (item.hidden ?? 1) > 0);
 
 /** One of the partner's have or sale lists on Trade: a post the offer can be on. */
 export type PartnerList = {

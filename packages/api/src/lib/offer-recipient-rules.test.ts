@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   NOTHING_ASKED,
+  askCandidates,
   closedCollectionAsks,
   notWanted,
   onePostVerdict,
@@ -222,5 +223,36 @@ describe("rowPost", () => {
 
   test("no matches, no post", () => {
     expect(rowPost(new Map(), [DOUBLES, SPARES], DOUBLES)).toBe(null);
+  });
+});
+
+describe("askCandidates", () => {
+  test("an any-copy ask stays on the list it was picked from", () => {
+    expect(askCandidates({}, [SPARES, DOUBLES], DOUBLES)).toEqual([DOUBLES]);
+  });
+
+  test("an any-copy ask with no list, or a list that does not fit, keeps every list", () => {
+    expect(askCandidates({}, [SPARES, DOUBLES], undefined)).toEqual([SPARES, DOUBLES]);
+    expect(askCandidates({}, [SPARES], DOUBLES)).toEqual([SPARES]);
+  });
+
+  test("a serial ask keeps every list that names it", () => {
+    expect(askCandidates({ objektId: "537" }, [SPARES, DOUBLES], DOUBLES)).toEqual([
+      SPARES,
+      DOUBLES,
+    ]);
+  });
+
+  test("a shown serial beside any copies picked from another list is across posts", () => {
+    const asks = [
+      { item: "200", kept: false, candidates: [SPARES], preferred: SPARES },
+      {
+        item: "any",
+        kept: false,
+        candidates: askCandidates({}, [SPARES, DOUBLES], DOUBLES),
+        preferred: DOUBLES,
+      },
+    ];
+    expect(onePostVerdict(asks, null)).toEqual({ ok: false, listId: SPARES, refused: ["any"] });
   });
 });

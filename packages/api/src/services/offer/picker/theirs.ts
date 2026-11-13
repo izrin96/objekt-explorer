@@ -5,6 +5,8 @@ import { listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { anyCopyItem, anyEntryOf } from "../../../lib/offer-any-item";
+import { orderByCollection, pageByCollection } from "../../../lib/offer-paging";
 import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
 import { copyKey } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
@@ -38,7 +40,7 @@ import {
   collectionWhere,
   collectionsOf,
   counteredGives,
-  ownedPage,
+  ownedGroupPage,
   toCandidate,
   wantSlugsOf,
 } from "./shared";
@@ -70,19 +72,22 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
   const keptIds = [...(kept?.objekts.keys() ?? [])];
   const theirs = linked.get(partnerId) ?? new Set<string>();
   const addresses = [...theirs];
-  const anySlugs = unique(
-    entries.flatMap((e) => (entryObjektId(e) === null ? [e.collectionSlug] : [])),
-  );
+  // an any-copy ask fits every entry of its collection, so every listed collection can carry one
+  const anySlugs = unique(entries.map((e) => e.collectionSlug));
+  const entriesBySlug = Map.groupBy(entries, (e) => e.collectionSlug);
   const scope = anyCopyScope(entries);
   // a whole-collection entry on a list that shows serials offers every copy by serial, so its
   // any copy asks for one and more go by serial; a single listed objekt doesn't cover the rest
   const bySerial = new Set(
     entries.flatMap((e) => (entryObjektId(e) === null && !e.hideSerial ? [e.collectionSlug] : [])),
   );
+  const listedAsAny = new Set(
+    entries.flatMap((e) => (entryObjektId(e) === null ? [e.collectionSlug] : [])),
+  );
 
   const [tokens, copies, promised] = await Promise.all([
     fetchObjekts([...entries.flatMap((e) => entryObjektId(e) ?? []), ...keptIds]),
-    fetchCopies(anySlugs, addresses),
+    fetchCopies([...listedAsAny], addresses),
     openAnyCopyLegs([{ userId: partnerId, slugs: anySlugs }]),
   ]);
   const ids = unique([...tokens.keys(), ...copies.map((o) => o.id)]);
@@ -94,42 +99,39 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
   const flags = (objekt: IndexedObjekt) =>
     itemFlags(objekt, reserved, holders, addressed.conversationId);
 
+  // a collection no entry lists as any copy is asked from the copies its entries name, which
+  // are the tokens already read
+  const named = [...tokens.values()].filter((o) => theirs.has(o.owner) && !listedAsAny.has(o.slug));
+  const spareIds = new Map<string, string[]>();
+  for (const o of [...copies, ...named]) {
+    if (o.transferable && !reserved.has(o.id) && inAnyCopyScope(scope, o)) {
+      spareIds.set(o.slug, [...(spareIds.get(o.slug) ?? []), o.id]);
+    }
+  }
+
   const items: CandidateItem[] = [];
+  // where each collection's any item goes: before the items of its first entry
+  const anyAt: { slug: string; at: number }[] = [];
   const seen = new Set<string>();
+  const started = new Set<string>();
   for (const entry of entries) {
+    const slug = entry.collectionSlug;
+    if (!started.has(slug)) {
+      started.add(slug);
+      anyAt.push({ slug, at: items.length });
+    }
     const objektId = entryObjektId(entry);
     if (objektId !== null) {
       const objekt = tokens.get(objektId);
-      if (!objekt || !theirs.has(objekt.owner) || objekt.slug !== entry.collectionSlug) continue;
+      if (!objekt || !theirs.has(objekt.owner) || objekt.slug !== slug) continue;
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
       items.push(toCandidate(objekt, flags(objekt), anchored, entry.listSlug, entry.ratio));
       continue;
     }
-    const held = copies.filter((o) => o.slug === entry.collectionSlug);
-    const spare =
-      held.filter((o) => o.transferable && !reserved.has(o.id) && inAnyCopyScope(scope, o)).length -
-      (promised.get(copyKey(partnerId, entry.collectionSlug)) ?? 0);
-    const anyKey = `any:${entry.collectionSlug}`;
-    if (spare > 0 && !seen.has(anyKey)) {
-      seen.add(anyKey);
-      items.push({
-        collectionSlug: entry.collectionSlug,
-        objektId: null,
-        serial: null,
-        serialEstimated: false,
-        transferable: true,
-        reserved: false,
-        inOpenOffer: [],
-        listSlug: entry.listSlug,
-        copies: spare,
-        bySerial: bySerial.has(entry.collectionSlug),
-        ...(entry.ratio !== null && { ratio: entry.ratio }),
-      });
-    }
     if (entry.hideSerial) continue;
-    for (const objekt of held) {
-      if (seen.has(objekt.id)) continue;
+    for (const objekt of copies) {
+      if (objekt.slug !== slug || seen.has(objekt.id)) continue;
       seen.add(objekt.id);
       items.push(toCandidate(objekt, flags(objekt), anchored, entry.listSlug, entry.ratio));
     }
@@ -143,8 +145,57 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
     items.push(toCandidate(objekt, flags(objekt), anchored, null));
   }
 
+  const shownBySlug = Map.groupBy(
+    items.filter((item) => item.objektId !== null),
+    (item) => item.collectionSlug,
+  );
+  const placed: { at: number; item: CandidateItem }[] = [];
+  for (const { slug, at } of anyAt) {
+    const slugEntries = entriesBySlug.get(slug)!;
+    const decided = anyCopyItem({
+      entries: slugEntries,
+      spareIds: spareIds.get(slug) ?? [],
+      promised: promised.get(copyKey(partnerId, slug)) ?? 0,
+      shown: (shownBySlug.get(slug) ?? []).map((item) => ({
+        id: item.objektId!,
+        transferable: item.transferable,
+        reserved: item.reserved,
+        inScope: inAnyCopyScope(scope, { id: item.objektId!, slug }),
+      })),
+    });
+    if (!decided) continue;
+    const ratio = anyEntryOf(slugEntries)!.ratio;
+    placed.push({
+      at,
+      item: {
+        collectionSlug: slug,
+        objektId: null,
+        serial: null,
+        serialEstimated: false,
+        transferable: true,
+        reserved: false,
+        inOpenOffer: [],
+        listSlug: decided.listSlug,
+        copies: decided.copies,
+        bySerial: bySerial.has(slug),
+        hidden: decided.hidden,
+        ...(ratio !== null && { ratio }),
+      },
+    });
+  }
+  const ordered: CandidateItem[] = [];
+  let next = 0;
+  for (let i = 0; i <= items.length; i++) {
+    while (next < placed.length && placed[next]!.at === i) ordered.push(placed[next++]!.item);
+    if (i < items.length) ordered.push(items[i]!);
+  }
+
   // whether the partner listed anything at all, so an empty picker can say why
-  return { items, listed: entries.length > 0 || keptIds.length > 0, partnerLists: hasLists };
+  return {
+    items: ordered,
+    listed: entries.length > 0 || keptIds.length > 0,
+    partnerLists: hasLists,
+  };
 }
 
 /** The partner's lists on Trade, for the picker's List choice. */
@@ -208,8 +259,11 @@ export async function theirPickerPage(
     const kept = await filterSlugs(unique(shown.map((item) => item.collectionSlug)), filters);
     shown = shown.filter((item) => kept.has(item.collectionSlug));
   }
-  const end = offset + CANDIDATE_PAGE_SIZE;
-  const slice = shown.slice(offset, end);
+  const { page: slice, nextOffset } = pageByCollection(
+    orderByCollection(shown),
+    offset,
+    CANDIDATE_PAGE_SIZE,
+  );
   const [tags, collections] = await Promise.all([
     matchOnly
       ? pickerTagsFor(
@@ -223,7 +277,7 @@ export async function theirPickerPage(
   ]);
   return candidatesPage({
     items: slice,
-    nextOffset: end < shown.length ? end : null,
+    nextOffset,
     listed,
     partnerLists,
     tags,
@@ -232,14 +286,12 @@ export async function theirPickerPage(
 }
 
 /** What the countered offer gave, still with the partner, whatever address it sits at. */
-async function keptItems(
-  me: string,
-  addressed: Addressed,
+async function keptObjekts(
+  kept: Awaited<ReturnType<typeof counteredGives>>,
   addresses: string[],
   filters: PickerNarrowing["filters"],
   wanted: ReadonlySet<string> | null,
 ) {
-  const kept = await counteredGives(addressed.conversationId, me);
   if (!kept) return [];
   const found = await fetchObjekts([...kept.objekts.keys()]);
   const held = new Set(addresses);
@@ -250,6 +302,19 @@ async function keptItems(
   return mine.filter((objekt) => !slugs || slugs.has(objekt.slug));
 }
 
+/** Every copy the partner holds of `slugs`, the collections the countered offer gave, which lead the first page. */
+async function keptCollections(slugs: string[], addresses: string[]) {
+  const copies = await fetchCopies(slugs, addresses);
+  return orderByCollection(
+    copies.map((objekt) => ({
+      objekt,
+      collectionSlug: objekt.slug,
+      objektId: objekt.id,
+      serial: objekt.serial,
+    })),
+  ).map((row) => row.objekt);
+}
+
 /** Refused for a partner with lists, so this side cannot bypass them. */
 export async function theirCollectionPage(
   me: string,
@@ -258,27 +323,31 @@ export async function theirCollectionPage(
   narrowing: PickerNarrowing,
 ) {
   const { partnerId } = addressed;
-  // the other two reads don't refuse, so `not_listed` is still the first refusal here
-  const [hasLists, addresses, myWants] = await Promise.all([
+  // the other reads don't refuse, so `not_listed` is still the first refusal here
+  const [hasLists, addresses, myWants, countered] = await Promise.all([
     partnerHasLists(partnerId),
     collectionAddresses(partnerId),
     myWantsIf(me, narrowing.matchOnly),
+    counteredGives(addressed.conversationId, me),
   ]);
   if (hasLists) refuseOffer("not_listed");
+  // the kept objekts' collections lead the first page whole, so every page leaves them out; the
+  // page read waits only for their slugs, which no counter makes an immediate answer
+  const keptSlugs = unique(
+    (await keptObjekts(countered, addresses, narrowing.filters, myWants)).map((o) => o.slug),
+  );
   const none = { page: [], nextCursor: null };
   const [{ page, nextCursor }, kept] = await Promise.all([
     addresses.length === 0 || myWants?.size === 0
       ? none
-      : ownedPage(addresses, cursor, {
+      : ownedGroupPage(addresses, cursor, {
           filters: narrowing.filters,
           slugs: myWants && [...myWants],
+          exclude: keptSlugs,
         }),
-    keptItems(me, addressed, addresses, narrowing.filters, myWants),
+    cursor || keptSlugs.length === 0 ? [] : keptCollections(keptSlugs, addresses),
   ]);
-  // kept objekts lead the first page, so later pages leave them out
-  const keptIds = new Set(kept.map((o) => o.id));
-  const rest = page.filter((o) => !keptIds.has(o.id));
-  const objekts = cursor ? rest : [...kept, ...rest];
+  const objekts = [...kept, ...page];
   const ids = objekts.map((o) => o.id);
   const [reserved, holders, anchored, collections] = await Promise.all([
     reservedIds(ids),

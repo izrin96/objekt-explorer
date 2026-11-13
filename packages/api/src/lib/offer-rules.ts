@@ -540,14 +540,13 @@ export type ListEntryRef = {
 /** The token an entry offers by serial: none on a list that hides serials, which offers any copy. */
 export const entryObjektId = (entry: ListEntryRef) => (entry.hideSerial ? null : entry.objektId);
 
-/** Every entry an ask may come through, in `entries`' order. */
+/** Every entry an ask may come through, in `entries`' order: an any-copy ask fits every entry of its collection. */
 export function entriesFitting<E extends ListEntryRef>(item: GetItemInput, entries: E[]): E[] {
   return entries.filter(
     (entry) =>
       entry.collectionSlug === item.collectionSlug &&
-      (item.objektId === undefined
-        ? entryObjektId(entry) === null
-        : !entry.hideSerial && (entry.objektId === null || entry.objektId === item.objektId)),
+      (item.objektId === undefined ||
+        (!entry.hideSerial && (entry.objektId === null || entry.objektId === item.objektId))),
   );
 }
 
@@ -559,14 +558,14 @@ export function matchEntry<E extends ListEntryRef>(item: GetItemInput, entries: 
 
 /**
  * The copies an any-copy ask may draw on, per collection: null for every copy, when an entry
- * covers the collection; else only the tokens that hidden-serial entries name, still held.
+ * covers the collection; else the tokens its entries name, whatever their list shows, still held.
  */
 export function anyCopyScope(entries: ListEntryRef[]) {
   const scope = new Map<string, Set<string> | null>();
-  for (const { collectionSlug: slug, objektId, hideSerial } of entries) {
+  for (const { collectionSlug: slug, objektId } of entries) {
     if (scope.get(slug) === null) continue;
     if (objektId === null) scope.set(slug, null);
-    else if (hideSerial) scope.set(slug, new Set([...(scope.get(slug) ?? []), objektId]));
+    else scope.set(slug, new Set([...(scope.get(slug) ?? []), objektId]));
   }
   return scope;
 }

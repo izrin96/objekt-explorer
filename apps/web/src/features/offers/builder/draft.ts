@@ -1,6 +1,7 @@
 import {
   type CandidateItem,
   type CreateOfferInput,
+  listedAsAny,
   OFFER_NOTE_MAX_LENGTH,
   OFFER_SIDE_LIMIT,
   TOPUP_MAX,
@@ -15,7 +16,7 @@ import { m } from "@/paraglide/messages";
 import type { GetSource } from "../get-source";
 import { nearPayer } from "../near-picks";
 import { blockedReason, type OfferPick, type OfferSide, toPick } from "../pick";
-import { copiesLeft, countOf, totalOf } from "../quantity";
+import { anyTop, copiesLeft, countOf, totalOf } from "../quantity";
 import type { AddedMatches, OfferPrefill } from "./types";
 
 type Draft = {
@@ -197,8 +198,9 @@ export function resolveAsks(
 
 /**
  * The get side as shown: an any-copy ask (from one collection of a Trade post's list) asks for a
- * copy that list offers. An any-copy entry on that list keeps the ask, since the list may be asked
- * for any copy; else the first copies that can be sent, not already on the side, stand in for it;
+ * copy that list offers. An any item the list offers as one (`listedAsAny`) keeps the ask; one that
+ * stands only beside copies the list names does not, since asking it for any copy is not what the
+ * list says; else the first copies that can be sent, not already on the side, stand in for it;
  * else the ask stays, and `pickProblem` says it can't be sent. Only the ask's own list is read.
  */
 export function resolveGetAsks(
@@ -211,7 +213,7 @@ export function resolveGetAsks(
     const onList = items.filter(
       (item) => item.listSlug === pick.listSlug && item.collectionSlug === pick.collectionSlug,
     );
-    if (onList.some((item) => item.objektId === null)) return [pick];
+    if (onList.some(listedAsAny)) return [pick];
     const found: OfferPick[] = [];
     for (const copy of onList) {
       if (found.length >= countOf(pick)) break;
@@ -243,6 +245,32 @@ export function pickFlags(pick: OfferPick, live: Live) {
 export const pickEstimated = (pick: OfferPick, live: Live) =>
   pick.serialEstimated ?? live.get(pick.key)?.serialEstimated ?? false;
 
+/**
+ * The most copies the any-copy `pick` may ask for beside the rest of `picks`: the hidden copies its
+ * live item has (`anyTop`, never raised to the count it holds), or with none the copies spare less
+ * the serials named, which is the server's bound; else the copies its own flags remember; null when
+ * neither says.
+ */
+export function anyAvailable(
+  pick: OfferPick,
+  picks: readonly OfferPick[],
+  live: Live,
+): number | null {
+  const found = live.get(pick.key);
+  const copies = found?.copies ?? pick.flags?.copies;
+  if (copies == null) return null;
+  const item: Pick<CandidateItem, "collectionSlug" | "copies" | "bySerial" | "hidden"> = found ?? {
+    collectionSlug: pick.collectionSlug,
+    copies,
+    bySerial: false,
+  };
+  const others = picks.filter((other) => other.key !== pick.key);
+  // a held count is bounded by what a send accepts, not by the picker's "worth one" rule
+  const hidden = item.hidden ?? (item.bySerial ? 0 : copies);
+  if (hidden === 0) return copiesLeft(others, pick.collectionSlug, copies);
+  return anyTop(item, others);
+}
+
 /** Why a pick can't go in the offer, or null. `get` is the side's picks, for the copies they name. */
 export function pickProblem(
   side: OfferSide,
@@ -269,12 +297,12 @@ export function pickProblem(
   ) {
     return m.offer_flag_not_listed();
   }
-  // the copies they spare now, which may have dropped since the count was set, less those
-  // this offer also asks for by serial
-  const spare = ctx.live.get(pick.key)?.copies ?? pick.flags?.copies;
-  if (side === "get" && pick.objektId === null && spare != null) {
-    const left = copiesLeft(ctx.get, pick.collectionSlug, spare);
-    if (countOf(pick) > left) return m.offer_flag_too_many({ count: formatCount(left) });
+  // what Any serial may still take, which may have dropped since the count was set
+  if (side === "get" && pick.objektId === null) {
+    const left = anyAvailable(pick, ctx.get, ctx.live);
+    if (left !== null && countOf(pick) > left) {
+      return m.offer_flag_too_many({ count: formatCount(left) });
+    }
   }
   return blockedReason(pickFlags(pick, ctx.live));
 }

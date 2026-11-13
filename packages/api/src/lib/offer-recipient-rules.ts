@@ -43,6 +43,20 @@ export type OnePostAsk<T> = {
   preferred?: number;
 };
 
+/**
+ * The lists one ask can come through. An any-copy ask picked from a list stays on it: every entry
+ * of its collection fits such an ask, so a list that only names copies by serial would otherwise
+ * carry the whole offer and cut the ask to copies already asked for by serial.
+ */
+export function askCandidates(
+  item: { objektId?: string },
+  fitting: readonly number[],
+  preferred: number | undefined,
+): readonly number[] {
+  const picked = item.objektId === undefined && preferred !== undefined;
+  return picked && fitting.includes(preferred) ? [preferred] : fitting;
+}
+
 export type OnePostVerdict<T> =
   | { ok: true; listId: number | null }
   | { ok: false; listId: number | null; refused: T[] };

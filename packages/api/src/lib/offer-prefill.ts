@@ -1,7 +1,7 @@
 import type { ListType } from "../schemas/list";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "../schemas/offer";
 import type { MatchCounts, NearVerb } from "../schemas/trade";
-import { type ListEntryRef, matchEntry } from "./offer-rules";
+import { entryObjektId, type ListEntryRef, matchEntry } from "./offer-rules";
 import type { PostOf } from "./trade-person";
 import type { Match } from "./trade-rank";
 
@@ -137,7 +137,9 @@ export type PartnerEntry = ListEntryRef & {
  * Of the partner's items on `slug`, those a list in `listIds` offers, each carrying that list.
  * An item is matched to an entry by the rule sending uses (`matchEntry`), so an item read from a
  * list outside the match lands on the match's list that also offers it, and an any copy on a list
- * that hides serials lands on the entry naming one.
+ * that hides serials lands on the entry naming one. An any copy lands only on an entry that lists
+ * the collection as any copy: one over entries that name shown copies is dropped, so the match
+ * adds one of those copies.
  */
 export function itemsOnLists(
   items: readonly CandidateItem[],
@@ -146,6 +148,7 @@ export function itemsOnLists(
   listIds: ReadonlySet<number>,
 ) {
   const offered = entries.filter((e) => e.collectionSlug === slug && listIds.has(e.listId));
+  const asAny = offered.filter((e) => entryObjektId(e) === null);
   return items.flatMap((item) => {
     if (item.collectionSlug !== slug) return [];
     const entry = matchEntry(
@@ -154,7 +157,7 @@ export function itemsOnLists(
         objektId: item.objektId ?? undefined,
         listSlug: item.listSlug ?? undefined,
       },
-      offered,
+      item.objektId === null ? asAny : offered,
     );
     if (!entry) return [];
     const { ratio: _, ...rest } = item;

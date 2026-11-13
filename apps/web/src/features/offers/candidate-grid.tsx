@@ -10,7 +10,8 @@ import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { m } from "@/paraglide/messages";
 
 import { CandidateTile } from "./candidate-tile";
-import { type Collections, pickKey } from "./pick";
+import { groupItems } from "./copy-groups";
+import type { Collections } from "./pick";
 import { type PickerSelection, PickerSelectionContext } from "./picker-selection";
 
 function usePickerSelection(): PickerSelection {
@@ -36,7 +37,7 @@ export function CandidateGrid({
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   tagOf?: (item: CandidateItem) => PickerTag | undefined;
 }) {
-  const { isSelected, countOf, copiesOf, full, fullId, onToggle, onCount } = usePickerSelection();
+  const { selection, room, full, lists, fullId, onToggle, onCount, onOpen } = usePickerSelection();
   if (pending) {
     return <CardGridSkeleton />;
   }
@@ -77,21 +78,30 @@ export function CandidateGrid({
 
   return (
     <VirtualCardGrid
-      sections={sections}
-      getKey={pickKey}
+      // one tile per collection, per section: a collection in both has a tile in each, told apart by
+      // the section's place
+      sections={sections.map((section, index) => ({
+        ...section,
+        items: groupItems(section.items, lists).map((group) => ({
+          group,
+          key: `${index}:${group.slug}`,
+        })),
+      }))}
+      getKey={(entry) => entry.key}
       more={more}
-      renderItem={(item) => (
+      renderItem={({ group, key }) => (
         <CandidateTile
-          item={item}
-          collection={collections[item.collectionSlug]}
-          selected={isSelected(item)}
-          count={countOf(item)}
-          copies={copiesOf(item)}
+          group={group}
+          groupKey={key}
+          collection={collections[group.slug]}
+          selection={selection}
+          room={room}
           full={full}
           fullId={fullId}
-          onToggle={() => onToggle(item, collections)}
-          onCount={(next) => onCount(item, next, collections)}
-          tag={tagOf?.(item)}
+          onToggle={(item) => onToggle(item, collections)}
+          onCount={(item, next) => onCount(item, next, collections)}
+          onOpen={(opener) => onOpen(group, collections, opener, key)}
+          tag={tagOf?.(group.shown[0] ?? group.any!)}
         />
       )}
     />

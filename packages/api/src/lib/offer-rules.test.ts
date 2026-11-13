@@ -5,6 +5,7 @@ import {
   actionRefusal,
   allowedActions,
   anyCopyScope,
+  entriesFitting,
   anyCopyShortfall,
   collectionAskAllowed,
   overPromisedCopies,
@@ -724,7 +725,18 @@ describe("matchEntry", () => {
     expect(matchEntry(specific, [entry({ objektId: "5745609" })])).not.toBeNull();
     expect(matchEntry(specific, [entry({})])).not.toBeNull();
     expect(matchEntry(anyCopy, [entry({})])).not.toBeNull();
-    expect(matchEntry(anyCopy, [entry({ objektId: "5745609" })])).toBeNull();
+  });
+
+  test("an any-copy ask fits an entry that names a copy on a list that shows serials", () => {
+    const named = entry({ objektId: "5745609" });
+    expect(matchEntry(anyCopy, [named])).toBe(named);
+    expect(entriesFitting(anyCopy, [named, entry({ collectionSlug: "other" })])).toEqual([named]);
+  });
+
+  test("an any-copy ask still prefers the named list", () => {
+    const first = entry({ objektId: "1", listSlug: "first" });
+    const second = entry({ objektId: "2", listSlug: "second" });
+    expect(matchEntry({ ...anyCopy, listSlug: "second" }, [first, second])).toBe(second);
   });
 
   test("a hidden-serial entry never matches a specific token", () => {
@@ -743,13 +755,16 @@ describe("matchEntry", () => {
     expect(matchEntry({ ...specific, listSlug: "hidden" }, [hidden, visible])).toBe(visible);
   });
 
-  test("any-copy scope: a collection entry opens every copy, hidden token entries only theirs", () => {
+  test("any-copy scope: a collection entry opens every copy, token entries only theirs", () => {
     const slug = "divine01-jiwoo-312z";
     const hidden = (objektId: string) => entry({ objektId, hideSerial: true });
     const scoped = anyCopyScope([hidden("1"), hidden("2"), entry({ objektId: "3" })]);
-    expect(scoped.get(slug)).toEqual(new Set(["1", "2"]));
+    expect(scoped.get(slug)).toEqual(new Set(["1", "2", "3"]));
     expect(inAnyCopyScope(scoped, { id: "1", slug })).toBe(true);
-    expect(inAnyCopyScope(scoped, { id: "3", slug })).toBe(false);
+    expect(inAnyCopyScope(scoped, { id: "3", slug })).toBe(true);
+    expect(inAnyCopyScope(scoped, { id: "4", slug })).toBe(false);
+    const mixed = anyCopyScope([hidden("1"), entry({ objektId: "2" })]);
+    expect(mixed.get(slug)).toEqual(new Set(["1", "2"]));
     const open = anyCopyScope([hidden("1"), entry({ listSlug: "sale" })]);
     expect(open.get(slug)).toBeNull();
     expect(inAnyCopyScope(open, { id: "9", slug })).toBe(true);

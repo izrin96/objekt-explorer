@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  anyTop,
+  byCollection,
   copiesLeft,
   countOf,
   groupRows,
@@ -167,5 +169,78 @@ describe("groupRows", () => {
 describe("mergeCounts", () => {
   test("the same any copy twice is one pick of two", () => {
     expect(mergeCounts([any, specific, any])).toEqual([{ ...any, count: 2 }, specific]);
+  });
+});
+
+describe("anyTop", () => {
+  const slug = "204z";
+  const named = (...ids: string[]) => ids.map((id) => ({ collectionSlug: slug, objektId: id }));
+  const mixed = { collectionSlug: slug, copies: 4, bySerial: false, hidden: 2 };
+  const shownOnly = { collectionSlug: slug, copies: 3, bySerial: false, hidden: 0 };
+
+  test("copies only Any serial reaches stay the top whatever serials are picked", () => {
+    expect(anyTop(mixed, [])).toBe(2);
+    expect(anyTop(mixed, named("615", "1077"))).toBe(2);
+  });
+
+  test("a shown-only collection allows one until every serial is picked, then none", () => {
+    expect(anyTop(shownOnly, [])).toBe(1);
+    expect(anyTop(shownOnly, named("1", "2"))).toBe(1);
+    expect(anyTop(shownOnly, named("1", "2", "3"))).toBe(0);
+  });
+
+  test("serials the side names take from the hidden count, which stays the cap", () => {
+    const all = { collectionSlug: slug, copies: 4, bySerial: false, hidden: 4 };
+    expect(anyTop(all, named("1", "2"))).toBe(2);
+  });
+
+  test("serials checked beside the hidden count leave it when the copies still cover it", () => {
+    const shown = { collectionSlug: slug, copies: 4, bySerial: false, hidden: 2 };
+    expect(anyTop(shown, named("615", "1077"))).toBe(2);
+  });
+
+  test("a count already held can only come down", () => {
+    const held = { collectionSlug: slug, objektId: null, count: 3 };
+    expect(anyTop(shownOnly, [held])).toBe(3);
+    expect(anyTop(shownOnly, [held, ...named("1", "2", "3")])).toBe(3);
+  });
+
+  test("a server from before `hidden` is read as bySerial ? 0 : copies", () => {
+    const { hidden: _, ...old } = mixed;
+    expect(anyTop(old, [])).toBe(4);
+    expect(anyTop({ ...old, bySerial: true }, [])).toBe(1);
+  });
+
+  test("picks of another collection change nothing", () => {
+    expect(anyTop(shownOnly, [{ collectionSlug: "other", objektId: "9" }])).toBe(1);
+  });
+});
+
+describe("byCollection", () => {
+  const pick = (collectionSlug: string, serial: number | null, objektId?: string | null) => ({
+    collectionSlug,
+    serial,
+    objektId: objektId === undefined ? `${collectionSlug}-${serial}` : objektId,
+  });
+
+  test("collections keep the order they first appear, each with its any pick first", () => {
+    const picks = [pick("b", 9), pick("a", 2), pick("b", null, null), pick("a", 1)];
+    expect(byCollection(picks).map((p) => [p.collectionSlug, p.serial])).toEqual([
+      ["b", null],
+      ["b", 9],
+      ["a", 1],
+      ["a", 2],
+    ]);
+  });
+
+  test("serials ascend, and a copy without one comes last", () => {
+    const picks = [pick("a", 300), pick("a", null, "t1"), pick("a", 12)];
+    expect(byCollection(picks).map((p) => p.serial)).toEqual([12, 300, null]);
+  });
+
+  test("leaves the picks it was given as they were", () => {
+    const picks = [pick("a", 2), pick("a", 1)];
+    byCollection(picks);
+    expect(picks.map((p) => p.serial)).toEqual([2, 1]);
   });
 });

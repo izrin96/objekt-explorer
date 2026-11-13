@@ -372,6 +372,72 @@ describe("itemsOnLists", () => {
   });
 });
 
+describe("which copy a match adds", () => {
+  const entry = (
+    listId: number,
+    listSlug: string,
+    slug: string,
+    objektId: string | null,
+    hideSerial = false,
+  ): PartnerEntry => ({
+    listId,
+    listSlug,
+    collectionSlug: slug,
+    objektId,
+    hideSerial,
+    ratio: null,
+  });
+  const copyOf = (
+    items: CandidateItem[],
+    entries: PartnerEntry[],
+    slug: string,
+    listIds: number[],
+  ) =>
+    chooseMatchPicks([], [{ slug, items: itemsOnLists(items, entries, slug, new Set(listIds)) }])
+      .get;
+  const shownOnly = { hidden: 0 };
+
+  test("serials named on a list beat the any item that stands beside them", () => {
+    const items = [
+      item("302z", null, { listSlug: "doubles", copies: 2, ...shownOnly }),
+      item("302z", 140, { listSlug: "doubles" }),
+      item("302z", 88, { listSlug: "doubles" }),
+    ];
+    const entries = [
+      entry(1, "doubles", "302z", "302z-88"),
+      entry(1, "doubles", "302z", "302z-140"),
+    ];
+    expect(ids(copyOf(items, entries, "302z", [1]))).toEqual(["302z-88"]);
+  });
+
+  describe("a collection with shown and hidden copies", () => {
+    const items = [
+      item("204z", null, { listSlug: "quiet haves", copies: 4, hidden: 2 }),
+      item("204z", 615, { listSlug: "spares" }),
+      item("204z", 1077, { listSlug: "spares" }),
+    ];
+    const entries = [
+      entry(1, "spares", "204z", "204z-615"),
+      entry(1, "spares", "204z", "204z-1077"),
+      entry(2, "quiet haves", "204z", "204z-1", true),
+      entry(2, "quiet haves", "204z", "204z-2", true),
+    ];
+
+    test("a match through the list that names serials adds the lowest of them", () => {
+      expect(ids(copyOf(items, entries, "204z", [1]))).toEqual(["204z-615"]);
+    });
+
+    test("a match through the list that hides serials adds any serial", () => {
+      expect(ids(copyOf(items, entries, "204z", [2]))).toEqual([null]);
+    });
+  });
+
+  test("a whole-collection entry still adds any serial", () => {
+    const items = [item("302z", null, { copies: 2, bySerial: true, hidden: 0 }), item("302z", 88)];
+    expect(ids(copyOf(items, [entry(1, "doubles", "302z", null)], "302z", [1]))).toEqual([null]);
+  });
+});
+
 describe("nearGroups", () => {
   const none = new Set<string>();
   const index = new Map([

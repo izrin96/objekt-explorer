@@ -15,12 +15,14 @@ import {
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
+import { type CopyGroup, applyGroup } from "./copy-groups";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { MineGrid, TheirCollectionGrid, TheirsGrid } from "./offer-picker-grids";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
 import { PickerSelectionContext } from "./picker-selection";
-import { copiesLeft, countOf, totalOf, withCount } from "./quantity";
+import { anyTop, totalOf, withCount } from "./quantity";
 import type { OfferAddress } from "./queries";
+import { SerialDialog } from "./serial-dialog";
 
 /** The partner's offer rules the pickers follow. */
 export type PickerRules = {
@@ -104,19 +106,25 @@ function PickerBody({
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
   const [selection, setSelection] = useState(() => new Map(picked.map((p) => [p.key, p])));
+  const [dialog, setDialog] = useState<{
+    group: CopyGroup;
+    collections: Collections;
+    /** the tile's `data-group` */
+    groupKey: string;
+    open: boolean;
+  } | null>(null);
+  // each open mounts a fresh draft, even within the last one's exit animation
+  const [opens, setOpens] = useState(0);
   const seen = useRef<Record<string, ValidObjekt>>({});
+  const opener = useRef<HTMLElement | null>(null);
   const total = totalOf(selection.values());
   const full = total >= OFFER_SIDE_LIMIT;
   const fullId = useId();
 
-  const remember = (item: CandidateItem, collections: Collections) => {
-    const collection = collections[item.collectionSlug];
-    if (collection) seen.current[item.collectionSlug] = collection;
+  const remember = (slug: string, collections: Collections) => {
+    const collection = collections[slug];
+    if (collection) seen.current[slug] = collection;
   };
-
-  // an any-copy item asks for as many copies as they spare, bar those picked by serial
-  const copiesOf = (picks: Map<string, OfferPick>, item: CandidateItem) =>
-    copiesLeft(picks.values(), item.collectionSlug, item.copies ?? 1);
 
   const toggle = (item: CandidateItem, collections: Collections) => {
     const key = pickKey(item);
@@ -125,30 +133,36 @@ function PickerBody({
       if (next.has(key)) next.delete(key);
       else if (
         totalOf(next.values()) < OFFER_SIDE_LIMIT &&
-        (item.objektId !== null || copiesOf(next, item) > 0)
+        (item.objektId !== null || anyTop(item, next.values()) > 0)
       ) {
         next.set(key, toPick(item));
       }
       return next;
     });
-    remember(item, collections);
+    remember(item.collectionSlug, collections);
   };
 
   const setCount = (item: CandidateItem, count: number, collections: Collections) => {
     setSelection((current) =>
-      withCount(current, toPick(item), count, copiesOf(current, item), OFFER_SIDE_LIMIT),
+      withCount(current, toPick(item), count, anyTop(item, current.values()), OFFER_SIDE_LIMIT),
     );
-    remember(item, collections);
+    remember(item.collectionSlug, collections);
   };
 
   const selected = {
-    isSelected: (item: CandidateItem) => selection.has(pickKey(item)),
-    countOf: (item: CandidateItem) => countOf(selection.get(pickKey(item)) ?? { count: 0 }),
-    copiesOf: (item: CandidateItem) => copiesOf(selection, item),
+    selection,
+    room: OFFER_SIDE_LIMIT - total,
     full,
+    // a group's lists only name where You get's copies come from
+    lists: side === "get" && source === "lists" ? theirLists : [],
     fullId,
     onToggle: toggle,
     onCount: setCount,
+    onOpen: (group: CopyGroup, collections: Collections, from: HTMLElement, groupKey: string) => {
+      opener.current = from;
+      setOpens((count) => count + 1);
+      setDialog({ group, collections, groupKey, open: true });
+    },
   };
 
   return (
@@ -193,6 +207,32 @@ function PickerBody({
           {m.offer_picker_done()}
         </Button>
       </SheetFooter>
+      {dialog ? (
+        <SerialDialog
+          open={dialog.open}
+          group={dialog.group}
+          collection={dialog.collections[dialog.group.slug]}
+          side={side}
+          name={name}
+          lists={theirLists}
+          selection={selection}
+          opens={opens}
+          // the virtual grid may have replaced the tile's node while the dialog was open
+          finalFocus={() =>
+            document.querySelector<HTMLElement>(
+              `[data-slot="sheet-popup"] [data-group="${CSS.escape(dialog.groupKey)}"]`,
+            ) ??
+            opener.current ??
+            true
+          }
+          onOpenChange={(open) => setDialog((current) => current && { ...current, open })}
+          onClosed={() => setDialog(null)}
+          onConfirm={(draft) => {
+            setSelection((current) => applyGroup(current, dialog.group, draft));
+            remember(dialog.group.slug, dialog.collections);
+          }}
+        />
+      ) : null}
     </PickerSelectionContext>
   );
 }

@@ -10,7 +10,7 @@ import { itemLabel, offerNo } from "@/features/offers/format";
 import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
-import { countOf, totalOf } from "@/features/offers/quantity";
+import { byCollection, countOf, totalOf } from "@/features/offers/quantity";
 import { AnySerial } from "@/features/offers/wrong-copy";
 import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
@@ -18,11 +18,15 @@ import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-/** A clean pick's lines under its tile: how many copies an ask covers, and the open offers it is in. */
-function notesOf(side: OfferSide, pick: OfferPick, flags: OfferPick["flags"]) {
+/**
+ * A clean pick's lines under its tile: how many copies an ask may take (`left`, else the copies it
+ * remembers), and the open offers it is in.
+ */
+function notesOf(side: OfferSide, pick: OfferPick, flags: OfferPick["flags"], left: number | null) {
   const notes: TileNote[] = [];
-  if (pick.objektId === null && flags?.copies != null) {
-    const count = formatCount(flags.copies);
+  const copies = side === "get" ? (left ?? flags?.copies) : flags?.copies;
+  if (pick.objektId === null && copies != null) {
+    const count = formatCount(copies);
     notes.push({
       text:
         side === "get" ? m.offer_any_copy_ask_count({ count }) : m.offer_any_copy_count({ count }),
@@ -41,6 +45,7 @@ export function SideColumn({
   picks,
   collections,
   flagsOf,
+  anyLeft,
   estimatedOf,
   reasonOf,
   refused,
@@ -59,6 +64,8 @@ export function SideColumn({
   picks: OfferPick[];
   collections: Collections;
   flagsOf: (pick: OfferPick) => OfferPick["flags"];
+  /** an any-copy pick's copies it may take beside the side's picks; null when unknown */
+  anyLeft: (pick: OfferPick) => number | null;
   estimatedOf: (pick: OfferPick) => boolean;
   reasonOf: (pick: OfferPick) => string | null;
   refused: ReadonlySet<string>;
@@ -88,6 +95,8 @@ export function SideColumn({
       ? null
       : (reasonOf(pick) ??
         (refused.has(pick.key) ? (refusedLabel ?? m.offer_flag_refused()) : null));
+  // a collection's cards sit together; the caller's picks keep their own order
+  const ordered = byCollection(picks);
   const problems = new Map(picks.map((pick) => [pick.key, problemOf(pick)]));
   const blockedPicks = picks.filter((pick) => problems.get(pick.key) !== null);
   const blockedReasons = [...new Set(blockedPicks.map((pick) => problems.get(pick.key)))];
@@ -161,10 +170,10 @@ export function SideColumn({
           </div>
         ) : null}
       </div>
-      {picks.length > 0 ? (
+      {ordered.length > 0 ? (
         // the picks grow with the page; the sticky column (a bar on a phone) keeps Send in reach
         <ul ref={listRef} className="grid grid-cols-4 gap-1 p-0.5 @sm:grid-cols-6">
-          {picks.map((pick, i) => {
+          {ordered.map((pick, i) => {
             const estimated = estimatedOf(pick);
             const label = itemLabel({ ...pick, serialEstimated: estimated }, collections);
             const problem = problems.get(pick.key) ?? null;
@@ -183,7 +192,7 @@ export function SideColumn({
                   label={label}
                   times={countOf(pick)}
                   problem={problem}
-                  notes={problem ? [] : notesOf(side, pick, flagsOf(pick))}
+                  notes={problem ? [] : notesOf(side, pick, flagsOf(pick), anyLeft(pick))}
                   badge={
                     side === "get" && pick.ratio !== undefined ? (
                       <RatioChip ratio={pick.ratio} side="have" owner={false} />

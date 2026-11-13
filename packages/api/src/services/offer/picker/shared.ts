@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, offer, offerItem } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
-import { type SQL, and, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { type SQL, and, asc, desc, eq, gt, inArray, lt, notInArray, or, sql } from "drizzle-orm";
 
 import { NOTHING_ASKED } from "../../../lib/offer-recipient-rules";
 import type { itemFlags } from "../../../lib/offer-rules";
@@ -285,5 +285,87 @@ export async function ownedPage(
       rows.length > CANDIDATE_PAGE_SIZE && last
         ? { receivedAt: new Date(last.receivedAt).toISOString(), id: last.id }
         : null,
+  };
+}
+
+/**
+ * The addresses' objekts as whole collections, newest-received collection first, one page after
+ * `cursor`: collections are added while they fit `CANDIDATE_PAGE_SIZE`, and one over it is a page
+ * of its own. The cursor is the last collection's newest `receivedAt` and its slug.
+ * `where` narrows objekt columns, so the aggregate counts exactly the rows the page returns; the
+ * filters, `slugs` and `exclude` narrow collections, before the window sum, so a page never comes
+ * back short of what it counted.
+ */
+export async function ownedGroupPage(
+  addresses: string[],
+  cursor: CandidateCursor | undefined,
+  { filters, slugs, where, exclude }: OwnedNarrowing & { exclude?: readonly string[] },
+) {
+  const mine = and(inArray(objekts.owner, addresses), where);
+  // aggregated over `objekt` alone: joining `collection` first makes the planner scan it
+  const g = indexer.$with("g").as(
+    indexer
+      .select({
+        collectionId: objekts.collectionId,
+        received: sql<string>`max(${objekts.receivedAt})`.as("received"),
+        n: sql<number>`count(*)::int`.as("n"),
+      })
+      .from(objekts)
+      .where(mine)
+      .groupBy(objekts.collectionId),
+  );
+  // the slug is text, as the cursor holds it: `collection.id` is a uuid, which an old cursor's
+  // objekt id would fail to cast
+  const w = indexer.$with("w").as(
+    indexer
+      .select({
+        collectionId: g.collectionId,
+        slug: collections.slug,
+        received: g.received,
+        n: g.n,
+        before:
+          sql<number>`coalesce(sum(${g.n}) over (order by ${g.received} desc, ${collections.slug} desc rows between unbounded preceding and 1 preceding), 0)::int`.as(
+            "before",
+          ),
+      })
+      .from(g)
+      .innerJoin(collections, eq(collections.id, g.collectionId))
+      .where(
+        and(
+          ...collectionWhere(filters),
+          slugs ? inArray(collections.slug, [...slugs]) : undefined,
+          exclude?.length ? notInArray(collections.slug, [...exclude]) : undefined,
+          cursor
+            ? sql`(${g.received}, ${collections.slug}) < (${cursor.receivedAt}::timestamptz, ${cursor.id}::text)`
+            : undefined,
+        ),
+      ),
+  );
+  const p = indexer.$with("p").as(
+    indexer
+      .select()
+      .from(w)
+      .where(sql`${w.before} = 0 or ${w.before} + ${w.n} <= ${CANDIDATE_PAGE_SIZE}`),
+  );
+  const rows = await indexer
+    .with(g, w, p)
+    .select({
+      id: objekts.id,
+      owner: objekts.owner,
+      transferable: objekts.transferable,
+      serial: objekts.serial,
+      mintedAt: objekts.mintedAt,
+      slug: p.slug,
+      receivedAt: objekts.receivedAt,
+      groupReceivedAt: sql<string>`${p.received}::text`,
+      more: sql<boolean>`exists (select 1 from ${w} where ${w.before} > 0 and ${w.before} + ${w.n} > ${CANDIDATE_PAGE_SIZE})`,
+    })
+    .from(p)
+    .innerJoin(objekts, and(eq(objekts.collectionId, p.collectionId), mine))
+    .orderBy(desc(p.received), desc(p.slug), asc(objekts.serial), asc(objekts.id));
+  const last = rows.at(-1);
+  return {
+    page: rows.map(({ groupReceivedAt: _, more: __, ...row }) => lowerOwner(row)),
+    nextCursor: last?.more ? { receivedAt: last.groupReceivedAt, id: last.slug } : null,
   };
 }
