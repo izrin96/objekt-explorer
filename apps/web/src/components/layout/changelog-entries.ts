@@ -5,6 +5,16 @@
  */
 export const CHANGELOG = [
   {
+    date: "2026-11-12 - 2026-11-13",
+    items: [
+      "Make offer pickers show one tile per collection. With several copies, pick a serial, or Any serial on You get.",
+      "Each side of an offer can now hold up to 200 objekts.",
+      "New want list setting: Remove objekts I get in a trade. It is on for new want lists.",
+      "A post you hid on Trade comes back when its owner adds something that matches your lists.",
+      "Compare on the Marketplace and on list pages can now use one of your own lists.",
+    ],
+  },
+  {
     date: "2026-11-05 - 2026-11-11",
     items: [
       "New offer settings in Account › General: Only offers with what I want, Let people ask from more than one post, and Let people ask for anything I hold.",
