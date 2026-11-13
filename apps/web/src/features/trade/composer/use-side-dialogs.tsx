@@ -13,7 +13,8 @@ import type { EntryActions } from "./preview-entries";
 const THUMBS = "[data-entry-thumb], [data-entry-more]";
 
 /** where an action's dialog returns focus: looked up when it closes, since a remove can remount the thumbnails */
-type FocusTarget = {
+type EntryTarget = {
+  kind: "entry";
   grid: Element | null;
   id: string;
   /** the next thumbnail's objekt; null when `thumb` was the last thumbnail or sat before "+N" */
@@ -22,8 +23,19 @@ type FocusTarget = {
   removed: boolean;
 };
 
+/** a bulk action's: the control that opened the dialog, which a remove leaves disabled */
+type BulkTarget = { kind: "bulk"; from: HTMLElement | null; removed: boolean };
+
+type FocusTarget = EntryTarget | BulkTarget;
+
 function focusTarget(target: FocusTarget | null, fallback: HTMLElement | null) {
-  if (!target?.grid) return fallback;
+  if (!target) return fallback;
+  if (target.kind === "bulk") {
+    const { from, removed } = target;
+    const usable = !removed && from?.isConnected === true && !from.matches(":disabled");
+    return usable ? from : fallback;
+  }
+  if (!target.grid) return fallback;
   const thumbs = [...target.grid.querySelectorAll<HTMLElement>(THUMBS)];
   const byId = (id: string | null) =>
     id === null ? undefined : thumbs.find((el) => el.dataset.entryThumb === id);
@@ -36,7 +48,7 @@ function focusTarget(target: FocusTarget | null, fallback: HTMLElement | null) {
 /**
  * The list page's Set price, Set ratio and Remove dialogs for one side, mounted once, not per
  * thumbnail. Focus returns to the objekt's thumbnail, or after a remove to the next one, else
- * `fallback`.
+ * `fallback`. A bulk action returns it to the control it names, or after a remove to `fallback`.
  */
 export function useSideDialogs({
   slug,
@@ -59,6 +71,7 @@ export function useSideDialogs({
     const thumbs = grid ? [...grid.querySelectorAll<HTMLElement>(THUMBS)] : [];
     const index = thumbs.indexOf(thumb);
     target.current = {
+      kind: "entry",
       grid,
       id: String(entry.entryId),
       next: thumbs[index + 1]?.dataset.entryThumb ?? null,
@@ -67,16 +80,25 @@ export function useSideDialogs({
     };
     open([entry]);
   };
-  // a bulk action has no thumbnail to return to, so focus goes to `fallback`
-  const openAll = (open: (objekts: ListObjekt[]) => void, objekts: ListObjekt[]) => {
-    target.current = null;
+  const openAll = (
+    open: (objekts: ListObjekt[]) => void,
+    objekts: ListObjekt[],
+    from: HTMLElement | null,
+  ) => {
+    target.current = { kind: "bulk", from, removed: false };
     open(objekts);
   };
   const finalFocus = () => focusTarget(target.current, fallback.current);
   const bulkActions = {
-    price: currency === null ? null : (objekts: ListObjekt[]) => openAll(openPrice, objekts),
-    ratio: side === null ? null : (objekts: ListObjekt[]) => openAll(openRatio, objekts),
-    remove: (objekts: ListObjekt[]) => openAll(openRemove, objekts),
+    price:
+      currency === null
+        ? null
+        : (objekts: ListObjekt[], from: HTMLElement | null) => openAll(openPrice, objekts, from),
+    ratio:
+      side === null
+        ? null
+        : (objekts: ListObjekt[], from: HTMLElement | null) => openAll(openRatio, objekts, from),
+    remove: (objekts: ListObjekt[], from: HTMLElement | null) => openAll(openRemove, objekts, from),
   };
   const actions: EntryActions = {
     price: currency === null ? null : (entry, thumb) => openAt(openPrice, entry, thumb),

@@ -1,13 +1,11 @@
-import { CardsThreeIcon, CaretUpIcon, InfoIcon, LinkIcon, XIcon } from "@phosphor-icons/react";
+import { CardsThreeIcon, CaretUpIcon, InfoIcon, LinkIcon } from "@phosphor-icons/react";
 import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -21,17 +19,14 @@ import type { StoredList } from "@/features/list/list-draft";
 import { PriceFields, type PriceValue } from "@/features/list/price-fields";
 import { listFindOptions } from "@/features/list/queries";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
-import { collectionName } from "@/features/objekt/collection-name";
-import { ObjektCard } from "@/features/objekt/objekt-card";
-import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { formatCurrency } from "@/features/settings/currency-format";
 import { useUserProfiles } from "@/features/user/hooks";
 import { formatCount } from "@/lib/number";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { CollectionGrid, OwnedGrid, type Ticked } from "./add-objekts-grids";
+import { CollectionGrid, OwnedGrid } from "./add-objekts-grids";
 import { addObjektsRequest, addSourceOf } from "./add-objekts-request";
+import { type Ticked, TickedTray } from "./ticked-tray";
 
 /**
  * Add objekts on a picked side: the filters across the top, the grid, and the Ticked tray beside
@@ -42,27 +37,31 @@ export function AddObjektsSheet({
   slug,
   name,
   onDone,
+  focusTitle = false,
 }: {
   slug: string;
   name: string;
   onDone: () => void;
+  /** set when this replaces another sheet's content: no popup opens, so nothing else moves focus */
+  focusTitle?: boolean;
 }) {
   const stored = useQuery(listFindOptions(slug, true));
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focusTitle) title.current?.focus();
+  }, [focusTitle]);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 p-4 sm:p-6">
+      {/* one element through loading and loaded, so focus on it survives the list arriving */}
+      <SheetTitle ref={title} tabIndex={-1} className="font-display pe-8 text-lg outline-none">
+        {m.trade_composer_add_title({ list: name })}
+      </SheetTitle>
       {stored.data ? (
         <AddObjektsBody list={stored.data} name={name} onDone={onDone} />
+      ) : stored.isError ? (
+        <LoadError onRetry={() => void stored.refetch()} />
       ) : (
-        <>
-          <SheetTitle className="font-display pe-8 text-lg">
-            {m.trade_composer_add_title({ list: name })}
-          </SheetTitle>
-          {stored.isError ? (
-            <LoadError onRetry={() => void stored.refetch()} />
-          ) : (
-            <CardGridSkeleton />
-          )}
-        </>
+        <CardGridSkeleton />
       )}
     </div>
   );
@@ -133,19 +132,15 @@ function AddObjektsBody({
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <SheetTitle className="font-display pe-8 text-lg">
-          {m.trade_composer_add_title({ list: name })}
-        </SheetTitle>
-        {/* a phone needs the room for the grid; screen readers still get it */}
-        <SheetDescription className="text-pretty max-md:sr-only">
-          {owner !== null
-            ? m.trade_composer_add_source_owned({ profile: profileName(owner) })
-            : source === "collections"
-              ? m.trade_composer_add_source_want()
-              : m.trade_composer_add_unbound()}
-        </SheetDescription>
-      </div>
+      {/* a phone needs the room for the grid; screen readers still get it */}
+      {/* -mt-2: the title is a sibling in the sheet's gap-3 column, and the pair reads as one block */}
+      <SheetDescription className="-mt-2 text-pretty max-md:sr-only">
+        {owner !== null
+          ? m.trade_composer_add_source_owned({ profile: profileName(owner) })
+          : source === "collections"
+            ? m.trade_composer_add_source_want()
+            : m.trade_composer_add_unbound()}
+      </SheetDescription>
       {onTrade ? (
         <>
           <Alert variant="warning" role="status" className="max-md:hidden">
@@ -170,7 +165,7 @@ function AddObjektsBody({
           )}
         </div>
         <aside className="flex min-h-0 flex-col gap-3 border-s ps-4 max-md:hidden">
-          <Tray {...tray} scrollClassName="flex-1" listClassName="grid-cols-3" />
+          <TickedTray {...tray} scrollClassName="flex-1" listClassName="grid-cols-3" />
           {priceFields ? <div className="flex flex-col gap-3">{priceFields}</div> : null}
           <div className="flex gap-2">
             <SheetClose render={<Button variant="outline" className="flex-1" />}>
@@ -190,7 +185,7 @@ function AddObjektsBody({
             </PopoverTrigger>
             <PopoverPopup side="top" align="start" className="w-80 max-w-full">
               <div className="flex flex-col gap-3">
-                <Tray {...tray} scrollClassName="max-h-64" listClassName="grid-cols-4" />
+                <TickedTray {...tray} scrollClassName="max-h-64" listClassName="grid-cols-4" />
               </div>
             </PopoverPopup>
           </Popover>
@@ -234,112 +229,5 @@ function PriceButtonLabel({ summary }: { summary: string | null }) {
       <span className="sr-only">{m.trade_composer_add_price_note()}: </span>
       {summary}
     </span>
-  );
-}
-
-/** The Ticked heading, count and Clear over the ticked cards; beside the grid, or in the bar's popover. */
-function Tray({
-  ticked,
-  onUntick,
-  onClear,
-  scrollClassName,
-  listClassName,
-}: {
-  ticked: Ticked;
-  onUntick: (key: string, objekt: ValidObjekt) => void;
-  onClear: () => void;
-  /** sizes the scroll area: it fills a column, or stops at a height in the popover */
-  scrollClassName: string;
-  listClassName: string;
-}) {
-  // where focus lands when the control holding it leaves the tray
-  const heading = useRef<HTMLSpanElement>(null);
-  const count = ticked.size;
-  return (
-    <>
-      <div className="flex items-center gap-2">
-        <span ref={heading} tabIndex={-1} className="text-sm font-medium outline-none">
-          {m.trade_composer_add_ticked()}
-        </span>
-        <Badge variant="outline">{formatCount(count)}</Badge>
-        <Button
-          variant="ghost"
-          size="xs"
-          className="ms-auto"
-          disabled={count === 0}
-          onClick={() => {
-            heading.current?.focus();
-            onClear();
-          }}
-        >
-          {m.trade_composer_add_clear()}
-        </Button>
-      </div>
-      {count === 0 ? (
-        <p className="text-muted-foreground text-xs text-pretty">
-          {m.trade_composer_add_tray_empty()}
-        </p>
-      ) : (
-        <TickedList
-          ticked={ticked}
-          onUntick={onUntick}
-          onEmptied={() => heading.current?.focus()}
-          scrollClassName={scrollClassName}
-          className={listClassName}
-        />
-      )}
-    </>
-  );
-}
-
-/** "Lynn SCO #12": two copies of one collection read apart by their serial. */
-function tickedName(objekt: ValidObjekt) {
-  const base = collectionName(objekt.slug, objekt);
-  return isObjektOwned(objekt) ? `${base} #${objekt.serial}` : base;
-}
-
-function TickedList({
-  ticked,
-  onUntick,
-  onEmptied,
-  scrollClassName,
-  className,
-}: {
-  ticked: Ticked;
-  onUntick: (key: string, objekt: ValidObjekt) => void;
-  onEmptied: () => void;
-  scrollClassName: string;
-  className: string;
-}) {
-  const listRef = useRef<HTMLUListElement>(null);
-  // the pressed button leaves with its card, so focus moves to a neighbour that stays
-  const untick = (index: number, key: string, objekt: ValidObjekt) => {
-    const buttons = listRef.current?.querySelectorAll("button") ?? [];
-    const next = buttons[index + 1] ?? buttons[index - 1];
-    if (next) next.focus();
-    else onEmptied();
-    onUntick(key, objekt);
-  };
-  return (
-    <FadeScrollArea className={scrollClassName}>
-      <ul
-        ref={listRef} // clear of the scrollbar, which takes clicks even while hidden
-        className={cn("grid content-start gap-1.5 pe-2.5", className)}
-      >
-        {[...ticked].map(([key, objekt], index) => (
-          <li key={key} className="relative min-w-0">
-            <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
-            <button
-              type="button"
-              aria-label={m.trade_composer_add_untick({ name: tickedName(objekt) })}
-              onClick={() => untick(index, key, objekt)}
-              className="bg-background hover:bg-muted focus-visible:ring-ring absolute end-0.5 top-0.5 z-10 grid size-6 place-items-center rounded-full border shadow-xs outline-none focus-visible:ring-2"
-            >
-              <XIcon className="size-3" />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </FadeScrollArea>
   );
 }

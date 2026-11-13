@@ -25,7 +25,8 @@ import { matchLines, previewTags } from "../post-kind-text";
 import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
-import { AllObjekts, EntryThumb, ListRatioControl, SideAddToList } from "./preview-entries";
+import { AllObjektsSheet } from "./all-objekts";
+import { EntryThumb, ListRatioControl, SideAddToList } from "./preview-entries";
 import { PreviewRules, type Rule, RuleObjektsSheet } from "./preview-rules";
 import { type PreviewSide, previewSides } from "./preview-sides";
 import { useSideDialogs } from "./use-side-dialogs";
@@ -34,7 +35,13 @@ import { useSideDialogs } from "./use-side-dialogs";
 const SHOWN = 22;
 
 type SheetView =
-  | { view: "add"; slug: string; name: string }
+  | {
+      view: "add";
+      slug: string;
+      name: string;
+      /** opened from All objekts, whose focused button leaves with it */
+      focusTitle?: boolean;
+    }
   | {
       view: "rule";
       slug: string;
@@ -45,7 +52,7 @@ type SheetView =
       rule?: Rule;
     }
   | { view: "rule-objekts"; slug: string; rule: Rule }
-  | { view: "all"; slug: string; name: string; ratio: RatioSide | null; select: boolean };
+  | { view: "all"; slug: string; name: string; ratio: RatioSide | null };
 
 /**
  * The post as Trade will show it, built from the picks: its tags, who it matches, and each side's
@@ -67,6 +74,17 @@ export function ComposerPreview({
   const [sheetOpen, setSheetOpen] = useState(false);
   // opened from code, not a trigger, so the sheet is told where focus goes back to
   const opener = useRef<HTMLElement | null>(null);
+  const section = useRef<HTMLElement>(null);
+  const bottom = sheet?.view === "add" || sheet?.view === "all";
+  // a remove inside All objekts can take "+N" or Select away, so focus falls to the side's Add tile
+  const finalFocus = () => {
+    if (opener.current?.isConnected) return opener.current;
+    if (!sheet || (sheet.view !== "all" && sheet.view !== "add")) return null;
+    return (
+      section.current?.querySelector<HTMLElement>(`[data-add-tile="${CSS.escape(sheet.slug)}"]`) ??
+      null
+    );
+  };
   const openSheet = (view: SheetView, from?: HTMLElement | null) => {
     opener.current =
       from ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
@@ -89,6 +107,7 @@ export function ComposerPreview({
 
   return (
     <section
+      ref={section}
       aria-labelledby={`${id}-heading`}
       className={cn(
         "flex min-w-0 flex-col gap-4 rounded-xl border p-4 max-md:**:scroll-mb-24 sm:p-5",
@@ -129,22 +148,23 @@ export function ComposerPreview({
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetPopup
-          side={sheet?.view === "add" ? "bottom" : "right"}
+          side={bottom ? "bottom" : "right"}
           // a set height gives the picker's grid a bounded scroller; a phone takes all but the viewport's top gap
           className={
-            sheet?.view === "add"
+            bottom
               ? "h-[88dvh] max-sm:h-[calc(100dvh-(--spacing(12)))]"
-              : sheet?.view === "all" || sheet?.view === "rule-objekts"
+              : sheet?.view === "rule-objekts"
                 ? "sm:max-w-3xl"
                 : "sm:max-w-lg"
           }
-          finalFocus={opener}
+          finalFocus={finalFocus}
         >
           {sheet?.view === "add" ? (
             <AddObjektsSheet
               key={sheet.session}
               slug={sheet.slug}
               name={sheet.name}
+              focusTitle={sheet.focusTitle}
               onDone={() => setSheetOpen(false)}
             />
           ) : sheet?.view === "rule" ? (
@@ -159,12 +179,17 @@ export function ComposerPreview({
               onDone={() => setSheetOpen(false)}
             />
           ) : sheet?.view === "all" ? (
-            <AllObjekts
+            <AllObjektsSheet
               key={sheet.session}
               slug={sheet.slug}
               name={sheet.name}
               ratio={sheet.ratio}
-              select={sheet.select}
+              onAdd={() =>
+                openSheet(
+                  { view: "add", slug: sheet.slug, name: sheet.name, focusTitle: true },
+                  opener.current,
+                )
+              }
             />
           ) : sheet?.view === "rule-objekts" ? (
             <RuleObjektsSheet key={sheet.session} slug={sheet.slug} rule={sheet.rule} />
@@ -264,7 +289,9 @@ function PickedSide({
                 className="shrink-0"
                 aria-label={m.trade_composer_select_list({ list: name })}
                 title={m.trade_composer_select_list({ list: name })}
-                onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: true })}
+                onClick={(event) =>
+                  onOpenSheet({ view: "all", slug, name, ratio }, event.currentTarget)
+                }
               >
                 <CheckSquareIcon />
               </Button>
@@ -309,9 +336,10 @@ function PickedSide({
               <button
                 ref={addTile}
                 type="button"
+                data-add-tile={slug}
                 aria-label={m.trade_composer_add_tile({ list: name })}
                 title={m.trade_composer_add_tile({ list: name })}
-                onClick={() => onOpenSheet({ view: "add", slug, name })}
+                onClick={(event) => onOpenSheet({ view: "add", slug, name }, event.currentTarget)}
                 className={cn(
                   TILE,
                   "hover:text-foreground hover:border-foreground/40 hover:bg-muted focus-visible:ring-ring w-full border border-dashed bg-transparent outline-none focus-visible:ring-2",
@@ -330,7 +358,9 @@ function PickedSide({
                 <button
                   type="button"
                   data-entry-more=""
-                  onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: false })}
+                  onClick={(event) =>
+                    onOpenSheet({ view: "all", slug, name, ratio }, event.currentTarget)
+                  }
                   className={cn(
                     TILE,
                     "hover:text-foreground focus-visible:ring-ring w-full text-xs outline-none focus-visible:ring-2",

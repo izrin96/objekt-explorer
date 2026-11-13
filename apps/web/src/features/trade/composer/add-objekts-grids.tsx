@@ -13,14 +13,12 @@ import {
   toFilterSearch,
 } from "@/features/filters/picker-filters";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
-import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionOptions } from "@/features/objekt/queries";
-import { SelectedMark } from "@/features/objekt/selected-mark";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
-import { activateOnKey } from "@/lib/a11y";
 import { m } from "@/paraglide/messages";
 
-export type Ticked = ReadonlyMap<string, ValidObjekt>;
+import { TickTile } from "./tick-tile";
+import type { Ticked } from "./ticked-tray";
 
 export type GridProps = {
   filters: PickerFacetFilters;
@@ -83,32 +81,6 @@ export function CollectionGrid({ filters, ticked, onToggle }: GridProps) {
         />
       )}
     />
-  );
-}
-
-/** A tile ticks as the offer picker's do, never with the collection's indigo selection ring. */
-function TickTile({
-  objekt,
-  ticked,
-  onToggle,
-}: {
-  objekt: ValidObjekt;
-  ticked: boolean;
-  onToggle: () => void;
-}) {
-  // not a `<button>`: WebKit collapses the card's `aspect-ratio` box inside one
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={ticked}
-      onClick={onToggle}
-      onKeyDown={(event) => activateOnKey(event, onToggle)}
-      className="focus-visible:ring-ring @container relative cursor-pointer rounded-md outline-none focus-visible:ring-2"
-    >
-      <ObjektCard objekt={objekt} image="thumbnail" />
-      {ticked ? <SelectedMark /> : null}
-    </div>
   );
 }
 
