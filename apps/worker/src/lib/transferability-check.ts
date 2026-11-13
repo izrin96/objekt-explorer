@@ -55,7 +55,7 @@ export function decodeAggregate3(result: string, count: number): (boolean | null
 
 export type CheckedObjekt = { id: string; class: string | null; transferable: boolean };
 
-export type Direction = "true-in-db" | "false-in-db";
+type Direction = "true-in-db" | "false-in-db";
 
 export type Mismatch<T extends CheckedObjekt = CheckedObjekt> = T & {
   chain: boolean;

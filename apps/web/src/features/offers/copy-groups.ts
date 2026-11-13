@@ -215,7 +215,7 @@ const groupKeys = (group: CopyGroup, selection: Selection) => [
 ];
 
 /** A shown-only any pick leaves once every copy is picked by serial, which the server would refuse. */
-export function settle(group: CopyGroup, draft: Selection): Map<string, OfferPick> {
+function settle(group: CopyGroup, draft: Selection): Map<string, OfferPick> {
   const next = new Map(draft);
   const any = group.any;
   if (
