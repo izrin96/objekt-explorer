@@ -90,7 +90,7 @@ Each group ends with `bun run check` (lint, typecheck and test across the repo) 
   - Record the longest `duration` for each, and the tile count on the page.
   - If any of them is over 200 ms, stop here and report the numbers to the owner (design, Open Questions). Do not continue to 5.3 or group 6.
   - Leave Send unclicked.
-- [ ] 5.3 Trade page at 200 legs.
+- [x] 5.3 Trade page at 200 legs. Measured 2026-11-13 on local trade T-93 (offer O-306, localtest1 with localtest3, 400 legs; made with the owner's OK, accepted through `offer.accept` with a local session row for localtest3). Development build, 4x throttle: 400 tiles drawn 1.25 s after navigation, 9,515 DOM nodes; selecting a tile 584 to 1,080 ms in the grid and 432 to 520 ms in the list; Grid to List 1,640 to 2,016 ms; scrolling leaves no gaps. Over the bar, as 5.2; the owner chose to ship 200 with virtualising as a follow-up. The trade could not be cancelled through the app locally (`offer.cancelTrade` answers `indexer_behind`, since the local env has no chain RPC), so T-93 stays in progress in the local database.
   - First check the local database for a trade with at least 200 legs: run `select trade_id, count(*) from trade_leg group by 1 order by 2 desc limit 1` against the `.env.local` `DATABASE_URL`.
   - If none exists, ask the owner before creating one. It would write local data only: an offer from localtest1, accepted as `localtest3-noprofile`. That account has no password, so ask the owner how to sign in as it locally.
   - With their OK and a sign-in:
@@ -103,7 +103,7 @@ Each group ends with `bun run check` (lint, typecheck and test across the repo) 
   - If the 5.3 offer exists, open the 200-ask offer's Counter as `localtest3-noprofile`. Otherwise use any local offer to localtest1 whose You get holds an any-copy ask.
   - Confirm in the network panel that the builder sends one `offer.candidates` call with `copiesOf` for You give's asks, not one per collection, and that each ask resolves to the sender's copies.
   - Leave Send unclicked.
-- [ ] 5.5 Offer card in `/messages`.
+- [x] 5.5 Offer card in `/messages`. Checked 2026-11-13 in conversation 399: the expanded card shows 11 tiles and "+189" a side; "+189" opens "You give · 200" and "You get · 200", each listing 200 items, unvirtualised (312 and 392 ms to open, unthrottled).
   - Open the localtest1 conversation that holds the 5.3 offer. If 5.3 created none, skip this with a note.
   - Verify that each side over 12 shows 11 tiles and a "+N" tile, and that "+N" opens the sheet listing every item.
   - Then `bun run check` and `bun run build --filter=web` pass on the final tree.
