@@ -7,6 +7,7 @@ import {
   ListPlusIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
+  ShareNetworkIcon,
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
@@ -47,14 +48,15 @@ import {
 } from "./list-type-badge";
 import { partnerSwitch } from "./partner-switch";
 import { RuleDialog } from "./rules/rule-dialog";
-import { ShareListButton } from "./share-list-button";
 import { TagBadges } from "./tag-label";
+import { useCopyListLink } from "./use-copy-list-link";
 import { useListOwned } from "./use-list-owned";
 import { useListTarget } from "./use-list-target";
 
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
+  const copyLink = useCopyListLink(list);
   const side = tradeSideOf(list.listType);
   const canTradeMatch = isOwner && (side === "want" || (side === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
@@ -158,7 +160,6 @@ export function ListHeader() {
           {list.messageable && !isOwner ? (
             <MessageButton target={{ kind: "list", slug: list.slug }} />
           ) : null}
-          <ShareListButton list={list} />
           <Menu>
             <MenuTrigger
               render={
@@ -168,6 +169,10 @@ export function ListHeader() {
               <DotsThreeIcon weight="bold" />
             </MenuTrigger>
             <MenuPopup align="end" className="min-w-44">
+              <MenuItem onClick={() => void copyLink()}>
+                <ShareNetworkIcon />
+                {m.list_copy_link()}
+              </MenuItem>
               <MenuItem onClick={() => setCompareOpen(true)}>
                 <MagnifyingGlassIcon />
                 {m.common_actions_compare()}

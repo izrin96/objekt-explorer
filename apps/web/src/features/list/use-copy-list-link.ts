@@ -7,7 +7,7 @@ import { m } from "@/paraglide/messages";
 
 import { getListLinkOption } from "./list-link";
 
-export type ShareableList = Pick<PublicList, "slug" | "profileSlug" | "profileAddress" | "profile">;
+type ShareableList = Pick<PublicList, "slug" | "profileSlug" | "profileAddress" | "profile">;
 
 /** Copies the address the list actually lives at — the profile-scoped one when it is bound. */
 export function useCopyListLink(list: ShareableList) {
