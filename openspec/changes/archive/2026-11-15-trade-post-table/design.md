@@ -253,6 +253,7 @@ These are findings from the review, each with the fix it proposed, kept so that 
 
 - **Read on production, read-only, 2026-11-14:** `max(lists.id)` is 17,395. Every guard count is zero. The backfill would write 1,312 rows: 649 pairs, 464 lone have or sale lists, 199 lone want lists.
 - **Checked:** drizzle-kit 1.0.0-rc.5 renders the identity with `START WITH 1000000`.
+- **After the production deploy, 2026-11-15:** the owner ran the migrate and deployed. The drift script, read-only against production, found 1,321 rows and zero on all six checks.
 
 ## As built
 

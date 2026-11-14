@@ -79,7 +79,7 @@ These rules hold for every task:
 
 - [x] 6.1 Run `bun run check` and `bun run build --filter=web` from the root. Both pass.
 - [x] 6.2 Run the drift script against the local database after all of group 5. Every count is zero. Record the output.
-- [ ] 6.3 Stop. Report to the owner what this change contains, task 1's production numbers and task 6.2's output. The owner approves and runs the production migrate and deploy separately. After it, with their go-ahead, run the drift script read-only against production and report its output. Verify the approval is recorded before anything touches production.
+- [x] 6.3 Stop. Report to the owner what this change contains, task 1's production numbers and task 6.2's output. The owner approves and runs the production migrate and deploy separately. After it, with their go-ahead, run the drift script read-only against production and report its output. Verify the approval is recorded before anything touches production.
 
 ## 7. Agent docs
 
