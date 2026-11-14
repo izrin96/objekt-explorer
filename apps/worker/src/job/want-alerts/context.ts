@@ -1,7 +1,7 @@
 import { addressesByUser, copyPairsOf, toPartnerIdentity } from "@repo/api/lib/trade-rank";
 import { offersSwapsSql } from "@repo/api/lib/trade-sql";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
-import { matchableListSql } from "@repo/api/services/trade/lists";
+import { matchableListSql, postPartnerSql } from "@repo/api/services/trade/lists";
 import { fetchHoldings } from "@repo/api/services/trade/matches/holdings";
 import { db } from "@repo/db";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";
@@ -27,7 +27,7 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       // they would bind to `p`
       swapPair: sql<boolean>`exists (
         SELECT 1 FROM lists p
-        WHERE p.id = lists.linked_list_id AND p.user_id = lists.user_id
+        WHERE p.id = ${postPartnerSql("lists")} AND p.user_id = lists.user_id
           AND ${matchableListSql("p")}
           AND (p.list_type = 'want') <> (lists.list_type = 'want')
           AND CASE WHEN p.list_type = 'want' THEN ${offersSwapsSql("lists")} AND p.match_have

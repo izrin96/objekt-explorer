@@ -18,6 +18,7 @@ import {
 } from "../../../schemas/offer";
 import type { PickerTag } from "../../../schemas/trade";
 import { fetchCollectionsBySlug } from "../../list/collections";
+import { postPartnerSql } from "../../trade/lists";
 import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 
 export function toCandidate(
@@ -167,7 +168,7 @@ export async function wantedAmong(userId: string, slugs: string[]) {
  */
 export async function postWantedAmong(postListId: number, slugs: string[]) {
   const [post] = await db
-    .select({ want: lists.linkedListId })
+    .select({ want: postPartnerSql("lists") })
     .from(lists)
     .where(eq(lists.id, postListId));
   if (post?.want == null) return null;

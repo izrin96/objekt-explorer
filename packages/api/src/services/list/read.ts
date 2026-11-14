@@ -75,7 +75,24 @@ function listWhere(lookup: ListLookup) {
     : { slug: lookup.slug };
 }
 
-const listWith = { userAddress: ownerAddress, linkedList: linkedListWith } as const;
+/**
+ * A list's pair, read from its `trade_post` row: a lead's want list, or a want list's lead. The
+ * lowest row id answers, as `postPartnerSql` does.
+ */
+const pairWith = {
+  postLed: { columns: { id: true }, orderBy: { id: "asc" }, with: { wantList: linkedListWith } },
+  postWanted: { columns: { id: true }, orderBy: { id: "asc" }, with: { leadList: linkedListWith } },
+} as const;
+
+type PairRow<L> = {
+  postLed: { wantList: L | null } | null;
+  postWanted: { leadList: L | null } | null;
+};
+
+const pairedListOf = <L>(row: PairRow<L>) =>
+  row.postLed?.wantList ?? row.postWanted?.leadList ?? null;
+
+const listWith = { userAddress: ownerAddress, ...pairWith } as const;
 
 function readList(lookup: ListLookup) {
   return db.query.lists.findFirst({
@@ -96,10 +113,13 @@ type ListRow = NonNullable<Awaited<ReturnType<typeof readList>>>;
 type ViewerListRow = NonNullable<Awaited<ReturnType<typeof readListForViewer>>>;
 
 function listTradeHandle(row: ListRow) {
-  return needsTradeHandle(row) ? ownerTradeHandle(row.userId) : null;
+  return needsTradeHandle({ ...row, linkedList: pairedListOf(row) })
+    ? ownerTradeHandle(row.userId)
+    : null;
 }
 
 function toPublicList(result: ListRow, handle: PublicList["tradeHandle"]): PublicList {
+  const linked = pairedListOf(result);
   return {
     id: result.id,
     slug: result.slug,
@@ -122,7 +142,7 @@ function toPublicList(result: ListRow, handle: PublicList["tradeHandle"]): Publi
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description ? normalizeUserText(result.description) : null,
     tradeHandle: handle,
-    linkedList: result.linkedList ? toLinkedList(result.linkedList) : null,
+    linkedList: linked ? toLinkedList(linked) : null,
   };
 }
 
@@ -168,7 +188,7 @@ export async function fetchOwnedLists(
   column: "userId" | "profileAddress",
   identifier: string,
 ): Promise<PublicList[]> {
-  const result = await db.query.lists.findMany({
+  const found = await db.query.lists.findMany({
     columns: {
       // partial
       id: true,
@@ -186,21 +206,21 @@ export async function fetchOwnedLists(
       bumpedAt: true,
     },
     where: column === "userId" ? { userId: identifier } : heldProfileLists(identifier),
-    with: {
-      userAddress: ownerAddress,
-      linkedList: linkedListWith,
-    },
+    with: { userAddress: ownerAddress, ...pairWith },
     orderBy: { id: "desc" },
   });
-
   // a profile's lists carry its address, so only an account's own can need the handle
   const handle =
-    column === "userId" && result.some(needsTradeHandle)
+    column === "userId" &&
+    found.some((row) => needsTradeHandle({ ...row, linkedList: pairedListOf(row) }))
       ? await ownerTradeHandle(identifier)
       : null;
 
+  // `postLed` and `postWanted` stay out of the result: it is spread into the output, and
+  // `user.currentUser` has no output schema to strip them
   // oxlint-disable-next-line oxc/no-map-spread
-  return result.map(({ userAddress, linkedList, ...rest }) => {
+  return found.map(({ userAddress, postLed, postWanted, ...rest }) => {
+    const linkedList = pairedListOf({ postLed, postWanted });
     return {
       ...rest,
       tradeHandle: needsTradeHandle({ ...rest, linkedList }) ? handle : null,

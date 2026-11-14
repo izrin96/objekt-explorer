@@ -7,6 +7,7 @@ import { tradeHandle } from "../../schemas/trade-person";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { toPublicUser } from "../profile";
 import { postsCte } from "./feed/query";
+import { postPartnerSql } from "./lists";
 import { fetchAddresses } from "./matches/holdings";
 
 /** A no-op unless the partner has a list For you or Browse can show (see `trade.hidePartner`). */
@@ -113,7 +114,7 @@ export async function fetchHiddenPosts(viewerId: string) {
       profileAddress: lists.profileAddress,
       partnerName: sql<string | null>`(
         SELECT ${partner}.name FROM lists ${partner}
-        WHERE ${partner}.id = ${lists.linkedListId} AND ${partner}.user_id = ${lists.userId}
+        WHERE ${partner}.id = ${postPartnerSql("lists")} AND ${partner}.user_id = ${lists.userId}
           AND ${lists.listType} <> 'want' AND ${partner}.list_type = 'want'
       )`,
       user,

@@ -17,7 +17,7 @@ import {
 } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { mutualOf, type TradeFilter } from "../../../schemas/trade";
-import { matchableList } from "../lists";
+import { matchableList, postPartnerSql } from "../lists";
 import { type CandidateOptions, fetchTradeCandidates } from "./candidates";
 import { fetchAddresses, fetchHoldings } from "./holdings";
 
@@ -40,7 +40,7 @@ export async function resolveTradeSides(
       id: lists.id,
       slug: lists.slug,
       listType: lists.listType,
-      linkedListId: lists.linkedListId,
+      linkedListId: postPartnerSql("lists"),
       takesSwaps: lists.takesSwaps,
     })
     .from(lists)

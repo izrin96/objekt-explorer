@@ -6,17 +6,17 @@ import { IDLE_DAYS } from "../../../lib/trade-rank";
 import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { leadsPairSql, matchableListSql } from "../lists";
+import { matchableListSql, postPairsSql } from "../lists";
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
- * links to it (a have list, or a sale list that takes swaps) when both are on Trade. A post's bump
- * and change times are the latest of its lists.
+ * its `trade_post` row pairs it with (a have list, or a sale list that takes swaps) when both are
+ * on Trade. A post's bump and change times are the latest of its lists.
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, takes_swaps, bumped_at,
-      updated_at, created_at
+    SELECT id, user_id, list_type, match_sale, match_have, takes_swaps, bumped_at, updated_at,
+      created_at
     FROM lists
     WHERE discoverable AND ${matchableListSql()}
   ),
@@ -39,8 +39,12 @@ export const postsCte = sql`
       ) AS bumped_at,
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
-    LEFT JOIN on_trade p ON ${leadsPairSql("a", "p")}
-    WHERE NOT EXISTS (SELECT 1 FROM on_trade h WHERE ${leadsPairSql("h", "a")})
+    LEFT JOIN trade_post tp ON tp.lead_list_id = a.id
+    LEFT JOIN on_trade p ON ${postPairsSql("tp", "a", "p")}
+    WHERE NOT EXISTS (
+      SELECT 1 FROM trade_post th JOIN on_trade h ON h.id = th.lead_list_id
+      WHERE ${postPairsSql("th", "h", "a")}
+    )
   )
 `;
 

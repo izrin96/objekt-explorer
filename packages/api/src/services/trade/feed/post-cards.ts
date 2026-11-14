@@ -1,6 +1,7 @@
 import { db } from "@repo/db";
 import { listEntries, lists, user } from "@repo/db/schema";
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { listOnTrade } from "../../../lib/report-post";
 import { pairPosts, type PostTag, previewSide } from "../../../lib/trade-feed";
@@ -8,6 +9,7 @@ import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../..
 import { unique } from "../../../lib/unique";
 import type { PostCardView } from "../../../schemas/chat";
 import { tradeHandle } from "../../../schemas/trade-person";
+import { postPartnerSql } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
 import { type FeedList, feedListColumns, fetchPostEntries } from "./entries";
 import { visibleOnTrade } from "./shared";
@@ -16,17 +18,14 @@ const POST_CARD_LIMIT = 6;
 
 type PostCardPost = NonNullable<PostCardView["post"]>;
 
-/** The named lists and the other half of each one's pair, whichever row names the link. */
+/** The named lists and the other half of each one's pair, whichever half is named. */
 function inPostsOf(listIds: number[]) {
+  const named = alias(lists, "named");
   const partnerIds = db
-    .select({ id: lists.linkedListId })
-    .from(lists)
-    .where(inArray(lists.id, listIds));
-  return or(
-    inArray(lists.id, listIds),
-    inArray(lists.id, partnerIds),
-    inArray(lists.linkedListId, listIds),
-  );
+    .select({ id: postPartnerSql("named") })
+    .from(named)
+    .where(inArray(named.id, listIds));
+  return or(inArray(lists.id, listIds), inArray(lists.id, partnerIds));
 }
 
 /**

@@ -40,7 +40,7 @@ export function planPostRows(rows: readonly PostRow[], lists: readonly RowList[]
     else kept.set(row.leadListId, row);
   }
 
-  // the link read from the have or sale side, as `leadsPairSql` reads it; two lists naming one
+  // the link read from the have or sale side, as `syncPostRows` hands it over; two lists naming one
   // want list should not happen, and the lower id keeps it so no list sits in two rows
   const wantOf = new Map<number, number>();
   const taken = new Set<number>();

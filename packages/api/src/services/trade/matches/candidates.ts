@@ -7,9 +7,9 @@ import type { TradeFilter } from "../../../schemas/trade";
 import { listedCte, postsCte } from "../feed/query";
 import {
   inHiddenPostSql,
-  leadsPairSql,
   offerMatchesWantSql,
   matchableListSql,
+  postPairsSql,
   tradePartnerSql,
 } from "../lists";
 
@@ -85,8 +85,7 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at,
-        l.linked_list_id
+      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at
       FROM lists l
       WHERE l.discoverable
         AND ${matchableListSql("l")}
@@ -97,12 +96,13 @@ export async function fetchTradeCandidates(
         AND ${tradePartnerSql(userId, sql`l.user_id`)}
         ${skipHiddenPosts ? sql`AND NOT ${inHiddenPostSql(userId, "l")}` : sql``}
     ),
-    -- a post is a linked pair whose offering half can swap, keyed by that half's id; both halves
-    -- must take part, so a list linked to an unlisted one keys to no post
+    -- a post is a pair in one trade_post row whose offering half can swap, keyed by that half's
+    -- id; both halves must take part, so a list paired with an unlisted one keys to no post
     partner_post AS (
       SELECT half.id, o.id AS post_key
       FROM partner_lists o
-      JOIN partner_lists w ON ${leadsPairSql("o", "w")}
+      JOIN trade_post tp ON tp.lead_list_id = o.id
+      JOIN partner_lists w ON ${postPairsSql("tp", "o", "w")}
       CROSS JOIN LATERAL (VALUES (o.id), (w.id)) AS half(id)
     ),
     matched AS (

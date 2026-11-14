@@ -18,6 +18,7 @@ import {
   publishCancelled,
 } from "../offer/cancel";
 import { fetchOffers } from "../offer/view";
+import { postPartnerSql } from "../trade/lists";
 import { findAccount, refuseModeration } from "./core";
 
 const REPORTS_PER_DAY = 20;
@@ -69,7 +70,7 @@ const snapshotColumns = {
   id: lists.id,
   userId: lists.userId,
   listType: lists.listType,
-  linkedListId: lists.linkedListId,
+  linkedListId: postPartnerSql("lists"),
   takesSwaps: lists.takesSwaps,
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,

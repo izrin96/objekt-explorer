@@ -32,26 +32,45 @@ export const offerMatchesWantSql = (offer: string, want: string) =>
   sql`((${offersSwapsSql(offer)} AND ${column(want, "match_have")}) OR (${column(offer, "list_type")} = 'sale' AND ${column(want, "match_sale")}))`;
 
 /**
- * Whether `offer` leads `want` as one post: the same owner's linked want list, with `offer`
- * offering swaps. The one pairing rule `postsCte`, match candidates and hidden posts share; a
- * link is written to both rows, so reading it from the offer's side is enough.
+ * Whether the `trade_post` row `post` pairs `lead` with the want list `want` as one post: the
+ * same owner's want list, with `lead` offering swaps. The one pairing rule `postsCte`, match
+ * candidates and hidden posts share. The caller joins `trade_post` as `post` itself, so the
+ * pairing stays a plain equality the planner can hash.
  */
-export const leadsPairSql = (offer: string, want: string) =>
-  sql`(${column(want, "list_type")} = 'want'
-    AND ${column(offer, "linked_list_id")} = ${column(want, "id")}
-    AND ${column(offer, "user_id")} = ${column(want, "user_id")}
-    AND ${offersSwapsSql(offer)})`;
+export const postPairsSql = (post: string, lead: string, want: string) =>
+  sql`(${column(post, "lead_list_id")} = ${column(lead, "id")}
+    AND ${column(post, "want_list_id")} = ${column(want, "id")}
+    AND ${column(want, "list_type")} = 'want'
+    AND ${column(lead, "user_id")} = ${column(want, "user_id")}
+    AND ${offersSwapsSql(lead)})`;
+
+/**
+ * The other list of the `trade_post` row the list `alias` is in, or null: a lead's want list, a
+ * want list's lead. It carries no other condition, as `lists.linked_list_id` carried none. The
+ * lowest row id answers, as `planPostRows` keeps it, so a list in two rows gives one partner
+ * rather than an error.
+ */
+export const postPartnerSql = (alias: string) =>
+  sql<number | null>`coalesce(
+    (SELECT partner_row.want_list_id FROM trade_post partner_row
+      WHERE partner_row.lead_list_id = ${column(alias, "id")} ORDER BY partner_row.id LIMIT 1),
+    (SELECT partner_row.lead_list_id FROM trade_post partner_row
+      WHERE partner_row.want_list_id = ${column(alias, "id")} ORDER BY partner_row.id LIMIT 1)
+  )`;
 
 /** `viewer`'s hides of the post the list `alias` belongs to, as `hp`, from FROM onwards. */
 export const hidesOfSql = (viewer: UserRef, alias: string) =>
   sql`FROM hidden_trade_post hp
     WHERE hp.user_id = ${ref(viewer)}
       AND (hp.list_id = ${column(alias, "id")}
-        OR hp.list_id IN (SELECT lead.id FROM lists lead WHERE ${leadsPairSql("lead", alias)}))`;
+        OR hp.list_id IN (
+          SELECT hide_lead.id FROM trade_post hide_row
+          JOIN lists hide_lead ON hide_lead.id = hide_row.lead_list_id
+          WHERE ${postPairsSql("hide_row", "hide_lead", alias)}))`;
 
 /**
  * Whether the list `alias` belongs to a post `viewer` hid: the hide names the post's lead, so a
- * want half is found through the list leading it.
+ * want half is found through the row pairing it with its lead, on Trade or off.
  */
 export const inHiddenPostSql = (viewer: UserRef, alias: string) =>
   sql`EXISTS (SELECT 1 ${hidesOfSql(viewer, alias)})`;

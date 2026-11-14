@@ -260,8 +260,9 @@ export const hiddenTradePost = pgTable(
 /**
  * A Trade post: its lead list (a have or sale list, or a Buy post's want list) and at most one
  * want list. Kept in step with `lists.linked_list_id` and `discoverable` by `planPostRows`
- * (`packages/api/src/lib/trade-post-rows.ts`) and read by nothing yet. No unique index on either
- * list: one list may sit in more than one post later.
+ * (`packages/api/src/lib/trade-post-rows.ts`), and read for a post's pairing by every read
+ * outside a write path. No unique index on either list: one list may sit in more than one post
+ * later.
  */
 export const tradePost = pgTable(
   "trade_post",

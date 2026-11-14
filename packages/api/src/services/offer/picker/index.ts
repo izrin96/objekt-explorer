@@ -28,7 +28,7 @@ import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
 import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { personNear } from "../../trade/feed/near";
-import { askableOnTrade, matchableList } from "../../trade/lists";
+import { askableOnTrade, matchableList, postPartnerSql } from "../../trade/lists";
 import { recountPartners, resolveCompareSides } from "../../trade/matches";
 import {
   type Addressed,
@@ -372,7 +372,10 @@ async function postListsOf(partnerId: string, slug: string) {
           eq(lists.slug, slug),
           inArray(
             lists.id,
-            db.select({ id: named.linkedListId }).from(named).where(eq(named.slug, slug)),
+            db
+              .select({ id: postPartnerSql("named") })
+              .from(named)
+              .where(eq(named.slug, slug)),
           ),
         ),
       ),

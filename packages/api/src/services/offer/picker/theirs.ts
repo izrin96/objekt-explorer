@@ -20,7 +20,7 @@ import {
 } from "../../../schemas/offer";
 import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { pickerTagsFor } from "../../trade/feed/near";
-import { askableOnTrade } from "../../trade/lists";
+import { askableOnTrade, postPartnerSql } from "../../trade/lists";
 import {
   type Addressed,
   type IndexedObjekt,
@@ -207,7 +207,7 @@ export async function partnerListChoices(addressed: Addressed): Promise<PartnerL
     .leftJoin(
       wantHalf,
       and(
-        eq(wantHalf.id, lists.linkedListId),
+        eq(wantHalf.id, postPartnerSql("lists")),
         eq(wantHalf.listType, "want"),
         eq(wantHalf.discoverable, true),
         // an empty want list takes anything, as `postWantedAmong` reads it

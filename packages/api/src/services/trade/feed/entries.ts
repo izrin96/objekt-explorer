@@ -7,6 +7,7 @@ import { type FeedEntry, tradeableEntries, untradeableKey } from "../../../lib/t
 import { unique } from "../../../lib/unique";
 import type { ListType } from "../../../schemas/list";
 import { redis, redisFailOpen } from "../../redis";
+import { postPartnerSql } from "../lists";
 
 const POST_FRESH_SECONDS = 60;
 /** how long a copy stays stored after its last refresh, to be served stale */
@@ -20,7 +21,8 @@ export const feedListColumns = {
   name: lists.name,
   description: lists.description,
   listType: lists.listType,
-  linkedListId: lists.linkedListId,
+  // the other half of the list's pair, from its `trade_post` row
+  linkedListId: postPartnerSql("lists"),
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,
   takesSwaps: lists.takesSwaps,
