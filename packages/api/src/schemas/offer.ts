@@ -347,6 +347,10 @@ const offerViewSchema = z.object({
   post: z.object({ slug: z.string(), name: z.string() }).nullable().default(null),
   /** recipient only: a decline may offer Only offers with what I want */
   suggestWantedOnly: z.boolean().optional(),
+  /** recipient only: the posts an offer on no post asks from, when two or more */
+  askPosts: z.object({ slug: z.string(), name: z.string() }).array().optional(),
+  /** recipient only: a decline may offer to turn Let people ask from more than one post off */
+  suggestOnePost: z.boolean().optional(),
   createdAt: z.string(),
   expiresAt: z.string(),
   respondedAt: z.string().nullable(),

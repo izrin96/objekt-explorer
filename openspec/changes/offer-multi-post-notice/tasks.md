@@ -1,0 +1,37 @@
+No task commits, pushes, migrates or writes to production. `@repo/api` has no build of its own: "build" for it means `bun run build --filter=web`, which bundles it. The root `.env` is production: read it only with `PGOPTIONS='-c default_transaction_read_only=on'`, and verify a write up to the request boundary.
+
+## 1. API read and schema
+
+- [x] 1.1 In `packages/api/src/services/offer/view.ts`, add `ask_posts` and `rule_one_post_suggestable` to the `fetchOffers` statement and to `HydratedOffer` (design decisions 1 and 2): both inside `CASE WHEN forReader AND o.post_list_id IS NULL`, never behind a bare `AND`; `ask_posts` grouped per list over non-kept `get` items, ordered by first item id; the kept test mirrors the give-side `asked` check (parent sent by `o.to_user_id`, its `give` item with the same `objekt_id`); the lists count uses `boundOfferListSql` with `discoverable` and `LIMIT 2`. Verify the statement runs read-only against a local database (or production with `PGOPTIONS='-c default_transaction_read_only=on'`) for one offer on a post, one across posts, and a counter that keeps an objekt, and returns the expected `ask_posts`, in the order of the asks, still naming a list taken off Trade since; `bun test apps/worker/src/import-boundary.test.ts` passes; lint, typecheck and build pass for `@repo/api`.
+- [x] 1.2 In `packages/api/src/lib/offer-recipient-rules.ts`, add the pure `askPostsMark({ viewerIsRecipient, posts, suggestable })` beside `notWanted` (design decision 2), and in `offer-recipient-rules.test.ts` cover: not the recipient → neither field; one post → neither; two posts with the gate off → `askPosts` only; two posts with the gate on → both. In `toOfferView` (`view.ts`), spread its result beside `suggestWantedOnly`. In `packages/api/src/schemas/offer.ts`, add `askPosts: z.object({ slug: z.string(), name: z.string() }).array().optional()` and `suggestOnePost: z.boolean().optional()` to `offerViewSchema`, each with a one-line "recipient only" comment like `suggestWantedOnly`'s. Verify `bun test packages/api/src/lib/offer-recipient-rules.test.ts` passes and the sender's view of the same offer carries neither field; lint and typecheck pass for `@repo/api`, and `bun run build --filter=web` passes.
+- [x] 1.3 Update `packages/api/docs/offers.md` (The recipient's offer rules): where `post_list_id` is described, add that the recipient's view reads the posts an offer on no post asked through from its non-kept `get` items' `list_id`, and that `fetchOffers` computes `ask_posts` and the one-post notice's gate only for the recipient, beside the label and wanted-nudge checks. Verify the doc names `ask_posts`, `rule_one_post_suggestable` and the kept test, and says no column stores the span; lint, typecheck and build pass for `@repo/api`.
+
+## 2. Notice choice (pure)
+
+- [x] 2.1 Add `apps/web/src/features/offers/decline-nudge.ts` (design decision 3): `WANTED_RULE_NUDGE` (moved from `wanted-rule.ts`, same value `offer-rule-only-wanted-nudge`), `ONE_POST_NUDGE = "offer-rule-one-post-nudge"`, and `declineNudge(offer, dismissed)`. Point `wanted-rule.ts` at the moved constant. Add `decline-nudge.test.ts`: neither flag → null; wanted only; one-post only; both with nothing dismissed → wanted; both with the wanted id dismissed → one-post; both dismissed → null; wanted flag only with its id dismissed → null; one-post flag with its id dismissed → null. Verify `bun test apps/web/src/features/offers/decline-nudge.test.ts` passes (run `bun run paraglide:compile` in `apps/web` first if needed), and lint, typecheck and build pass for `web`.
+
+## 3. Messages
+
+- [x] 3.1 Add the six keys of design decision 6 to `apps/web/messages/en.json`, `ko.json` and `ja.json`, next to `offer_on_post` and the `offer_rule_*` keys, with the texts in the table. Check the ko/ja tone rules (ko 합니다체, "~할까요?" title; ja full-width ？, 。 only where en has a period). Never edit `src/paraglide/` by hand. Verify `bun run paraglide:compile` in `apps/web` succeeds, each key exists in all three files, and lint, typecheck and build pass for `web`.
+
+## 4. Web card
+
+- [x] 4.1 Load the `vercel-react-best-practices` skill before editing any `.tsx` (the project hook requires it). In `apps/web/src/features/offers/offer-body.tsx`, render `m.offer_asks_from_posts({ count: formatCount(offer.askPosts.length), posts: joinList(offer.askPosts.map((p) => p.name)) })` in the header slot "Offer on {post}" uses, with the same classes, when `offer.askPosts` has two or more entries (design decision 4). Verify on a local or read-only page that a received offer across posts reads the mark on every status, a sent one does not, and an offer on a post still reads "Offer on {post}"; lint, typecheck and build pass for `web`.
+
+## 5. Web notice
+
+- [x] 5.1 Add `apps/web/src/features/offers/one-post-rule.ts` (design, Saving from the notice): `turnOffMultiPostAsks(queryClient)` and `nudgeOnePostRule(queryClient)`, mirroring `turnOnWantedRule` and `nudgeWantedRule` with the new messages and `ONE_POST_NUDGE`. Verify lint, typecheck and build pass for `web`.
+- [x] 5.2 In `offer-body.tsx`, replace the decline `.then` body with `declineNudge(offer, useNoticesStore.getState().dismissed)` and call `nudgeWantedRule` or `nudgeOnePostRule` for its answer. Keep the promise shape, so the notice survives the thread unmounting. Verify read-only that declining an offer across posts would show the notice (stop at the request boundary on production; see 6.2), and lint, typecheck and build pass for `web`.
+
+## 5b. Remove the Messages notice
+
+- [x] 5.3 Delete `apps/web/src/features/offers/wanted-rule-notice.tsx` and its use in `apps/web/src/features/chat/conversation-list.tsx`; drop `WANTED_RULE_NOTICE` and the export of `turnOnWantedRule` from `wanted-rule.ts`; remove `offer_notice_wanted_title`, `offer_notice_wanted_desc` and `offer_rule_not_now` from the three message files; update `apps/web/docs/offers.md`, `packages/api/docs/offers.md` and the comment on `user.setOfferRules` (design decision 8). Verify nothing references the removed names, and `bun run check` and `bun run build --filter=web` pass.
+
+## 6. Checks
+
+- [x] 6.1 Run `bun run check` and `bun run build --filter=web` from the root. Both pass.
+- [x] 6.2 Browser pass with `browser-use` on a tab of your own (rules in `~/.claude/CLAUDE.md`, Browser automation: own tab by target id, wait for hydration before any login submit, never print the `SMOKE_TEST1_*` values). On production, read only: if the signed-in account has a received offer across posts, check the mark at 1280 px and 390 px and that the sender side has none; do not decline. Check the notice and Turn off only up to the request boundary: the `user.setOfferRules` input would be `{ multiPostAsks: false }`. A full decline-and-turn-off flow runs only on a local database with local test accounts, after the owner approves creating them; then check the toast, Account › General showing the switch off, the notice not showing again, and the both-notices order. Record what was checked, on which database, and mark production checks "read-only verified".
+
+## 7. Agent docs
+
+- [x] 7.1 Check `packages/api/AGENTS.md` and `apps/web/AGENTS.md` against the change. Expected: neither changes, since the offer rules' details live in `packages/api/docs/offers.md` (task 1.3) and no convention, trap or workflow moves. State the result; if a line does change, edit it and verify lint passes for that package.

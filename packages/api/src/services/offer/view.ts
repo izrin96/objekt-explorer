@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
-import { notWanted } from "../../lib/offer-recipient-rules";
+import { askPostsMark, notWanted } from "../../lib/offer-recipient-rules";
 import {
   type ActorLimits,
   allowedActions,
@@ -20,6 +20,7 @@ import type {
   ShownSerial,
   TradeStatus,
 } from "../../schemas/offer";
+import { boundOfferListSql } from "../trade/lists";
 
 type HydratedOffer = {
   id: number;
@@ -46,6 +47,10 @@ type HydratedOffer = {
   post_name: string | null;
   /** the recipient's Only offers with what I want is off and they have a want list on Trade */
   rule_suggestable: boolean;
+  /** recipient only, an offer on no post: the posts its asks were stored against, in ask order */
+  ask_posts: { slug: string; name: string }[] | null;
+  /** the recipient takes asks across posts and has two or more posts on Trade */
+  rule_one_post_suggestable: boolean;
   items: [
     side: "give" | "get",
     slug: string,
@@ -70,6 +75,8 @@ export async function fetchOffers(
 ): Promise<Map<number, HydratedOffer>> {
   if (offerIds.length === 0) return new Map();
   const forReader = reader === null ? sql`false` : sql`o.to_user_id = ${reader}`;
+  // a CASE, not an AND: Postgres may evaluate both sides of an AND, and most offers are on a post
+  const acrossPosts = sql`${forReader} AND o.post_list_id IS NULL`;
   const result = await db.execute<HydratedOffer>(sql`
     SELECT o.id, o.conversation_id, o.from_user_id, o.to_user_id, o.parent_id, o.status,
       o.cancel_reason, o.topup_amount::text AS topup_amount, o.topup_currency, o.topup_payer,
@@ -88,6 +95,28 @@ export async function fetchOffers(
         SELECT 1 FROM lists wl
         WHERE wl.user_id = o.to_user_id AND wl.list_type = 'want' AND wl.discoverable
       )) AS rule_suggestable,
+      CASE WHEN ${acrossPosts} THEN (
+        SELECT json_agg(json_build_object('slug', g.slug, 'name', g.name) ORDER BY g.first_item)
+        FROM (
+          SELECT al.slug, al.name, min(ai.id) AS first_item
+          FROM offer_item ai JOIN lists al ON al.id = ai.list_id
+          WHERE ai.offer_id = o.id AND ai.side = 'get'
+            -- an objekt the recipient offered in the countered offer keeps its own list
+            AND NOT EXISTS (
+              SELECT 1 FROM offer p JOIN offer_item pg ON pg.offer_id = p.id AND pg.side = 'give'
+              WHERE p.id = o.parent_id AND p.from_user_id = o.to_user_id
+                AND pg.objekt_id = ai.objekt_id
+            )
+          GROUP BY al.id
+        ) g
+      ) END AS ask_posts,
+      coalesce(CASE WHEN ${acrossPosts} THEN ru.multi_post_asks AND (
+        SELECT count(*) FROM (
+          SELECT 1 FROM lists tl
+          WHERE tl.user_id = o.to_user_id AND ${boundOfferListSql("tl")} AND tl.discoverable
+          LIMIT 2
+        ) two
+      ) >= 2 END, false) AS rule_one_post_suggestable,
       coalesce((
         SELECT json_agg(
           json_build_array(
@@ -206,6 +235,11 @@ export function toOfferView(
     latest: row.latest,
     post: row.post_slug && row.post_name ? { slug: row.post_slug, name: row.post_name } : null,
     ...(row.to_user_id === viewerId && { suggestWantedOnly: suggestsWantedOnly(row) }),
+    ...askPostsMark({
+      viewerIsRecipient: row.to_user_id === viewerId,
+      posts: row.ask_posts ?? [],
+      suggestable: row.rule_one_post_suggestable,
+    }),
     createdAt: iso(row.created_at)!,
     expiresAt: iso(row.expires_at)!,
     respondedAt: iso(row.responded_at),

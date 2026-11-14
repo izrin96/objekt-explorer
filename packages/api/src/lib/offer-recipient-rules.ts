@@ -141,6 +141,21 @@ export function notWanted(i: {
 }
 
 /**
+ * The recipient-only "Asks from N of your posts" mark on an offer on no post, and whether a
+ * decline may offer to turn Let people ask from more than one post off.
+ */
+export function askPostsMark<T>(i: {
+  viewerIsRecipient: boolean;
+  /** the posts the offer's asks were stored against, kept objekts left out */
+  posts: readonly T[];
+  /** the recipient takes asks across posts and has two or more posts on Trade */
+  suggestable: boolean;
+}): { askPosts?: T[]; suggestOnePost?: true } {
+  if (!i.viewerIsRecipient || i.posts.length < 2) return {};
+  return { askPosts: [...i.posts], ...(i.suggestable && { suggestOnePost: true as const }) };
+}
+
+/**
  * Which of the partner's posts a Trade row's matches come from under Only asks from one post: the
  * one with the most matches, a tie going to the row's lead post, then to list order.
  */

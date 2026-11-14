@@ -4,6 +4,7 @@ import {
   NOTHING_ASKED,
   anyAsksFit,
   askCandidates,
+  askPostsMark,
   closedCollectionAsks,
   notWanted,
   onePostVerdict,
@@ -179,6 +180,28 @@ describe("notWanted", () => {
 
   test("the sender sees no label", () => {
     expect(notWanted({ ...base, viewerIsRecipient: false })).toBe(false);
+  });
+});
+
+describe("askPostsMark", () => {
+  const base = { viewerIsRecipient: true, posts: ["doubles", "spares"], suggestable: true };
+
+  test("two posts with the switch on: the mark and the notice", () => {
+    expect(askPostsMark(base)).toEqual({ askPosts: ["doubles", "spares"], suggestOnePost: true });
+  });
+
+  test("two posts with the gate off: the mark alone", () => {
+    expect(askPostsMark({ ...base, suggestable: false })).toEqual({
+      askPosts: ["doubles", "spares"],
+    });
+  });
+
+  test("one post left has neither", () => {
+    expect(askPostsMark({ ...base, posts: ["doubles"] })).toEqual({});
+  });
+
+  test("the sender sees neither", () => {
+    expect(askPostsMark({ ...base, viewerIsRecipient: false })).toEqual({});
   });
 });
 

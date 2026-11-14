@@ -23,8 +23,9 @@ Part of `packages/api/AGENTS.md`, which points here.
 - A counter's kept objekts are exempt from all three, keyed by objekt id, since a kept objekt that is also listed gets a `list_id` from `matchEntry`; a give the recipient asked for in the countered offer is exempt from the wanted rule (`counteredAsks`).
 - `offer.post_list_id` records the post: the client's `post` (resolved by `resolvePostList`, null rather than a refusal) while every ask fits it, else the one list the asks came through, for "Offer on {post}"; null for an offer that asks nothing or asks across posts, where `multi_post_asks` allows it (a named post the asks don't fit is retried as none).
 - The builder's whole theirs page (`offer.candidates`, side `theirs`, no offset) carries `partnerRules` (`partnerRulesOf`), which the builder follows; scroll pages don't, and a closed collection is checked by `allow_collection_asks` alone.
-- `fetchOffers(ids, reader)` runs the label and nudge checks only for offers sent to `reader`.
-- `user.setOfferRules` sets them one at a time for the decline nudge and the Messages notice; `user.updateAccount` needs the whole General form.
+- No column stores that an offer asks across posts. For an offer on no post, `fetchOffers` reads `ask_posts` from the `list_id` of its `get` items, in ask order, lists off Trade included and deleted ones gone. It leaves out kept objekts by the parent test the give-side `asked` check uses (the parent was sent by the recipient and gives that objekt id). `rule_one_post_suggestable` is the decline notice's gate: `multi_post_asks` on and two or more `askableOnTrade` lists. The pure `askPostsMark` turns both into the view's `askPosts` ("Asks from N of your posts") and `suggestOnePost`.
+- `fetchOffers(ids, reader)` runs the label, mark and nudge checks only for offers sent to `reader`, and the two post checks only for an offer on no post, inside a `CASE`.
+- `user.setOfferRules` sets them one at a time for the two decline notices; `user.updateAccount` needs the whole General form.
 
 ### Suggested offers
 

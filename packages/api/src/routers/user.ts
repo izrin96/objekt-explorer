@@ -132,7 +132,7 @@ export const userRouter = {
       await updateAccount(session.user.id, input);
     }),
 
-  /** One offer rule switched outside the General form: the decline nudge and the Messages notice. */
+  /** One offer rule switched outside the General form: the decline notices. */
   setOfferRules: authed
     .input(offerRulesInputSchema)
     .handler(async ({ input, context: { session } }) => {
