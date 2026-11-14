@@ -431,6 +431,8 @@ Built on 2026-11-15, on top of `2637a7a3`. Departures from the decisions above, 
   - The pair join: 4.2 ms by the link (Merge Join), 4.1 ms by the rows (Hash Join, then an index nested loop).
   - The hide rule over every list on Trade, for the person with the most hides (291): 766 ms by the link, 885 ms by the rows. Both are the same Nested Loop Anti Join with a subplan per (list, hide) pair, 472,230 pairs, and about 220 to 320 ms of each run is spent before the first row (JIT, by the look of it; not confirmed). The shape was slow before this change and is about 15% slower after it. For you applies the rule to `partner_lists` only, after its other filters, so a request pays less than this; it is a cost to look at in `trade-post-keys`, where the hide is keyed by post and the subplan goes.
 
+- **After the production deploy, 2026-11-15:** the owner pushed `56b04e99` and deployed web and worker. The drift script, read-only against production, found 1,329 rows and zero on all twelve checks.
+
 ## Open Questions
 
 None that change the approach or the tasks. Two go-aheads are needed and are tasks, not questions: the production drift run, and the production `EXPLAIN`. The order in which this change and `trade-active-hours` land is free (Risks).

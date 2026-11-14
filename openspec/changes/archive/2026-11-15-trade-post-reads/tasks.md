@@ -138,7 +138,7 @@ These rules hold for every task:
   - all twelve checks must read zero, and the new `posts` plan must be no worse in shape than the legacy one.
 
   Verify that the go-ahead is recorded before anything touches production. If any check is above zero, stop and report it.
-- [ ] 6.5 The owner approves and runs the commit, push and deploy of web and worker (design decision 7). With a further go-ahead afterwards, run the drift script read-only against production and report it. Verify that every count is zero.
+- [x] 6.5 The owner approves and runs the commit, push and deploy of web and worker (design decision 7). With a further go-ahead afterwards, run the drift script read-only against production and report it. Verify that every count is zero.
 
 ## 7. Agent docs
 
