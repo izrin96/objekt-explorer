@@ -12,7 +12,7 @@ import {
   postHolding,
   postsOf,
 } from "../../schemas/trade-post";
-import { lockTradeLists, touchList, tradeColumns } from "../list/shared";
+import { lockTradeLists, syncPostRows, touchList, tradeColumns } from "../list/shared";
 
 const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_list_in_post: "That list is already in another post on Trade",
@@ -84,6 +84,7 @@ export async function savePost(userId: string, choice: PostChoice) {
       for (const id of plan.off) touched.add(id);
     }
 
+    await syncPostRows(tx, userId);
     return [...touched];
   });
   await touchList(changed);
@@ -98,6 +99,7 @@ export async function takeDownPost(userId: string, slug: string) {
     if (!post) throw new ORPCError("NOT_FOUND");
     const ids = membersOf(post).map((member) => member.id);
     await tx.update(lists).set(tradeColumns(false)).where(inArray(lists.id, ids));
+    await syncPostRows(tx, userId);
     return ids;
   });
   await touchList(changed);

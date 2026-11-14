@@ -12,7 +12,7 @@ import { refuse } from "../../lib/refuse";
 import { canBeOnTrade, type createListInputSchema, type ListType } from "../../schemas/list";
 import { type OpenToFlags, resolveOpenTo } from "../../schemas/open-to";
 import { assertProfileOwned } from "../profile";
-import { lockTradeLists, tradeColumns, turnOnBumpedAt } from "./shared";
+import { lockTradeLists, syncPostRows, tradeColumns, turnOnBumpedAt } from "./shared";
 
 export function resolveDiscoverable(
   type: ListType,
@@ -154,8 +154,11 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
   // the partner checked in prepareList may have changed or gained a link since, so it is
   // checked again under the lock that list create and trade.savePost share
   let partner = prepared.partner;
+  // a have, sale or want list can be created on Trade without a link, and its post row is
+  // written under the same lock
+  const own = input.listType === "general" ? [] : await lockTradeLists(tx, userId);
   if (linkedListId !== null) {
-    const locked = (await lockTradeLists(tx, userId)).find((list) => list.id === linkedListId);
+    const locked = own.find((list) => list.id === linkedListId);
     if (!locked) refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
     const reason = pairRefusal(
       input.listType,
@@ -214,6 +217,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
     }
   }
 
+  if (input.listType !== "general") await syncPostRows(tx, userId);
   return { id: inserted.id, slug, changed };
 }
 

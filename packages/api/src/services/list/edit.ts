@@ -11,7 +11,7 @@ import { bumpTradeVersions } from "../moderation/safety-cache";
 import { assertProfileOwned } from "../profile";
 import { generateProfileSlug, PAIR_MESSAGES } from "./create";
 import { findOwnedList } from "./read";
-import { lockTradeLists, touchList } from "./shared";
+import { lockTradeLists, syncPostRows, touchList } from "./shared";
 
 /**
  * A want list's Open to as `list.edit` writes it. The UPDATE reads the row again: a list put on
@@ -106,6 +106,8 @@ export async function deleteList(userId: string, slug: string) {
       .from(lists)
       .where(eq(lists.linkedListId, list.id));
     await tx.delete(lists).where(eq(lists.id, list.id));
+    // the partner of a deleted lead stands alone now, and may need a row of its own
+    if (list.listType !== "general") await syncPostRows(tx, userId);
     return partners.map((partner) => partner.id);
   });
   // the partner loses its link through the foreign key, which leaves its updated_at alone

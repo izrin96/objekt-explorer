@@ -35,6 +35,18 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.lists.id,
     }),
   },
+  tradePost: {
+    leadList: r.one.lists({
+      from: r.tradePost.leadListId,
+      to: r.lists.id,
+      alias: "trade_post_lead",
+    }),
+    wantList: r.one.lists({
+      from: r.tradePost.wantListId,
+      to: r.lists.id,
+      alias: "trade_post_want",
+    }),
+  },
   listEntries: {
     list: r.one.lists({
       from: r.listEntries.listId,

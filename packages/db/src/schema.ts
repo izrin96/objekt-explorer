@@ -257,6 +257,38 @@ export const hiddenTradePost = pgTable(
   ],
 );
 
+/**
+ * A Trade post: its lead list (a have or sale list, or a Buy post's want list) and at most one
+ * want list. Kept in step with `lists.linked_list_id` and `discoverable` by `planPostRows`
+ * (`packages/api/src/lib/trade-post-rows.ts`) and read by nothing yet. No unique index on either
+ * list: one list may sit in more than one post later.
+ */
+export const tradePost = pgTable(
+  "trade_post",
+  {
+    // far above any list id, so a list id is never mistaken for a post id
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity({ startWith: 1_000_000 }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    leadListId: integer("lead_list_id")
+      .notNull()
+      .references(() => lists.id, { onDelete: "cascade" }),
+    wantListId: integer("want_list_id").references(() => lists.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("trade_post_user_id_idx").on(t.userId),
+    index("trade_post_lead_list_id_idx").on(t.leadListId),
+    index("trade_post_want_list_id_idx")
+      .on(t.wantListId)
+      .where(sql`want_list_id IS NOT NULL`),
+    check("trade_post_want_not_lead", sql`${t.wantListId} <> ${t.leadListId}`),
+  ],
+);
+
 export const notification = pgTable(
   "notification",
   {

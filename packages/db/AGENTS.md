@@ -15,6 +15,10 @@ Pending migrations run before the new code is live: on the VPS, `docker compose 
 
 A column can leave `schema.ts` before it leaves the database: generate the migration so its snapshot drops the column, then replace its SQL with a no-op (`20261024135516_retire_privacy_columns`). Otherwise the next `db:generate` writes the `DROP COLUMN` into whatever change comes next. `user_address.private_profile`, `private_serial`, `hide_transfer` and `hide_nickname` are kept that way, values intact, until the owner approves their drop.
 
+## Trade posts
+
+`trade_post` is one row per Trade post: `lead_list_id` (a have or sale list, or a Buy post's want list) and at most one `want_list_id`. It is written and not yet read: the API keeps it in step with `lists.linked_list_id` and `discoverable` through `planPostRows` (`packages/api/docs/trade.md`, Trade posts), and `20261114104128_trade_post_backfill` filled it once, on an empty table, after a guard that fails the migration on any link that is not a mutual have-or-sale to want pair of one owner. Its ids start at 1,000,000, above any list id. Neither list column is unique, on purpose: one list may sit in more than one post later. `apps/worker/src/script/trade-post-drift.ts` checks the rows against `lists`, read-only.
+
 ## Serial columns
 
 `collection.serial_batches`, `serial_anchors` and `grid_fitted_at` are Drizzle-owned columns the worker writes (see `apps/worker/AGENTS.md`, Offline serials). `grid_fitted_at` (`20261108000000_add_grid_fitted_at`) is set while a collection's stored ranges come from a fitted grid and cleared when a rewrite no longer fits; the API's serial estimate reads it.

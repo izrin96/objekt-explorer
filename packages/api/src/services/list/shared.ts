@@ -1,9 +1,10 @@
 import { type Tx } from "@repo/db";
-import { lists } from "@repo/db/schema";
+import { lists, tradePost } from "@repo/db/schema";
 import { touchListWith } from "@repo/lib/server/list-touch";
 import { type SQL, and, eq, inArray, sql } from "drizzle-orm";
 
 import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-feed";
+import { type PostId, type PostRow, planPostRows } from "../../lib/trade-post-rows";
 import type { PlanList } from "../../schemas/trade-post";
 import { versionCounter } from "../moderation/safety-cache";
 
@@ -46,8 +47,9 @@ export function touchList(listIds: number[]) {
 
 /**
  * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
- * put one list in two posts. Every writer of a link takes it first, in this order: list create when
- * it links, `list.delete`, `anonymizeUser`, and `trade.savePost` / `takeDownPost`.
+ * put one list in two posts. Every writer of a link, of `discoverable` or of a `trade_post` row
+ * takes it first: list create and copy, `list.delete`, `anonymizeUser`, and `trade.savePost` /
+ * `takeDownPost`.
  */
 export async function lockTradeLists(tx: Tx, userId: string): Promise<PlanList[]> {
   return tx
@@ -67,4 +69,49 @@ export async function lockTradeLists(tx: Tx, userId: string): Promise<PlanList[]
     .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
     .orderBy(lists.id)
     .for("update");
+}
+
+/**
+ * Brings the person's `trade_post` rows in step with their lists as the transaction has left them
+ * (`planPostRows`). Call it after the list writes, under `lockTradeLists`. A new writer of a link,
+ * of `discoverable`, or one that deletes a have, sale or want list must call it too. Deleting every
+ * list needs no call: the rows go with their lead lists.
+ */
+export async function syncPostRows(tx: Tx, userId: string) {
+  const found = await tx
+    .select({
+      id: lists.id,
+      listType: lists.listType,
+      discoverable: lists.discoverable,
+      linkedListId: lists.linkedListId,
+      rowId: tradePost.id,
+      wantListId: tradePost.wantListId,
+    })
+    .from(lists)
+    .leftJoin(tradePost, eq(tradePost.leadListId, lists.id))
+    .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
+    .orderBy(lists.id);
+
+  const rows: PostRow[] = found.flatMap((row) =>
+    row.rowId === null
+      ? []
+      : [{ id: row.rowId as PostId, leadListId: row.id, wantListId: row.wantListId }],
+  );
+  // one entry per list: a list leading two rows comes back twice
+  const own = [...new Map(found.map((row) => [row.id, row])).values()].flatMap((row) =>
+    row.listType === "general" ? [] : [{ ...row, listType: row.listType }],
+  );
+  const ops = planPostRows(rows, own);
+
+  if (ops.deletes.length > 0) await tx.delete(tradePost).where(inArray(tradePost.id, ops.deletes));
+  for (const { id, wantListId } of ops.updates) {
+    await tx.update(tradePost).set({ wantListId }).where(eq(tradePost.id, id));
+  }
+  if (ops.inserts.length > 0) {
+    await tx
+      .insert(tradePost)
+      .values(
+        ops.inserts.map(({ leadListId, wantListId }) => ({ userId, leadListId, wantListId })),
+      );
+  }
 }
