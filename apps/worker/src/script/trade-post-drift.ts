@@ -4,7 +4,10 @@
  * still derive them from `lists.linked_list_id`, so drift changes what people see.
  *
  * From the seventh check on, each compares a read over the rows with the read over the link it
- * replaced; the legacy SQL lives only here. They go when `trade-post-contract` drops the link.
+ * replaced; the legacy SQL lives only here. They go when `trade-post-contract` drops the link,
+ * and so do the hide plans of `EXPLAIN=1`, which time the hide rule and the feed's hide filter
+ * against the ones `trade-post-hides` replaced. No check compares hides with rows: a hide names
+ * a list and is valid whatever the rows say.
  *
  * Plain reads only, and it refuses to start unless the connection is read-only:
  *
@@ -16,7 +19,7 @@
 import { column, offersSwapsSql } from "@repo/api/lib/trade-sql";
 import { listedPost, postsCte } from "@repo/api/services/trade/feed/query";
 import {
-  hidesOfSql,
+  inHiddenPostSql,
   matchableListSql,
   postPairsSql,
   postPartnerSql,
@@ -73,12 +76,15 @@ const legacyPostsCte = sql`
   )
 `;
 
-const legacyHidesOf = (viewer: SQL, alias: string) =>
-  sql`FROM hidden_trade_post legacy_hp
-    WHERE legacy_hp.user_id = ${viewer}
-      AND (legacy_hp.list_id = ${column(alias, "id")}
-        OR legacy_hp.list_id IN (
-          SELECT legacy_lead.id FROM lists legacy_lead WHERE ${legacyLeadsPair("legacy_lead", alias)}))`;
+/** The hide rule before `trade-post-hides`: the hide's own list, or the want list it leads. */
+const previousHidesOf = (viewer: SQL, alias: string) =>
+  sql`FROM hidden_trade_post previous_hp
+    WHERE previous_hp.user_id = ${viewer}
+      AND (previous_hp.list_id = ${column(alias, "id")}
+        OR previous_hp.list_id IN (
+          SELECT previous_lead.id FROM trade_post previous_row
+          JOIN lists previous_lead ON previous_lead.id = previous_row.lead_list_id
+          WHERE ${postPairsSql("previous_row", "previous_lead", alias)}))`;
 
 const legacyPairs = sql`SELECT o.id, w.id AS want_id FROM lists o JOIN lists w ON ${legacyLeadsPair("o", "w")}`;
 const rowPairs = sql`SELECT o.id, w.id AS want_id FROM trade_post tp
@@ -146,22 +152,6 @@ const CHECKS: [label: string, query: SQL][] = [
           (${legacyPairs} EXCEPT ALL ${rowPairs}) UNION ALL (${rowPairs} EXCEPT ALL ${legacyPairs})
         ) d`,
   ],
-  [
-    "a list one hide rule hides from its hider and the other does not (list ids)",
-    // a hide reaches its own list and the want list its list leads, by the link or by the row
-    sql`SELECT cand.id FROM (
-          SELECT hp.user_id, hp.list_id AS id FROM hidden_trade_post hp
-          UNION
-          SELECT hp.user_id, l.linked_list_id FROM hidden_trade_post hp
-            JOIN lists l ON l.id = hp.list_id WHERE l.linked_list_id IS NOT NULL
-          UNION
-          SELECT hp.user_id, tp.want_list_id FROM hidden_trade_post hp
-            JOIN trade_post tp ON tp.lead_list_id = hp.list_id WHERE tp.want_list_id IS NOT NULL
-        ) cand
-        JOIN lists l ON l.id = cand.id
-        WHERE EXISTS (SELECT 1 ${hidesOfSql(sql`cand.user_id`, "l")})
-          IS DISTINCT FROM EXISTS (SELECT 1 ${legacyHidesOf(sql`cand.user_id`, "l")})`,
-  ],
 ];
 
 if (process.env.EXPLAIN === "1") {
@@ -173,21 +163,35 @@ if (process.env.EXPLAIN === "1") {
     sql`SELECT user_id FROM hidden_trade_post GROUP BY user_id ORDER BY count(*) DESC LIMIT 1`,
   );
   const hider = hiders[0]?.user_id;
-  const hiddenCount = (hides: SQL) =>
-    sql`SELECT count(*) FROM lists l WHERE l.discoverable AND NOT EXISTS (SELECT 1 ${hides})`;
+  const notHidden = (hidden: SQL) =>
+    sql`SELECT count(*) FROM lists l WHERE l.discoverable AND NOT ${hidden}`;
+  // the shape of the feed's people read: listed posts by owner, less the viewer's hidden ones
+  const feedPeople = (hidden: SQL) =>
+    sql`WITH ${postsCte}
+        SELECT posts.user_id, max(posts.bumped_at) FROM posts
+        WHERE ${listedPost} AND NOT ${hidden} GROUP BY posts.user_id`;
+  const anchorOnly = (viewer: string) =>
+    sql`EXISTS (SELECT 1 FROM hidden_trade_post previous_hp
+          WHERE previous_hp.user_id = ${viewer} AND previous_hp.list_id = posts.id)`;
   const plans: [label: string, query: SQL][] = [
     ["listed posts, by the link", listedCount(legacyPostsCte, "legacy_posts")],
     ["listed posts, by the rows", listedCount(postsCte, "posts")],
     ["pairs, by the link", sql`SELECT count(*) FROM (${legacyPairs}) pairs`],
     ["pairs, by the rows", sql`SELECT count(*) FROM (${rowPairs}) pairs`],
   ];
-  if (hider) {
+  const viewers: [who: string, id: string][] = [["a viewer with no hides", "no-such-user"]];
+  if (hider) viewers.push(["the heaviest hider", hider]);
+  else console.log("[trade-post-drift] no hides here, so only the no-hide plans show");
+  for (const [who, id] of viewers) {
     plans.push(
-      ["lists not hidden, by the link", hiddenCount(legacyHidesOf(sql`${hider}`, "l"))],
-      ["lists not hidden, by the rows", hiddenCount(hidesOfSql(hider, "l"))],
+      [
+        `lists not hidden, the rule before, ${who}`,
+        notHidden(sql`EXISTS (SELECT 1 ${previousHidesOf(sql`${id}`, "l")})`),
+      ],
+      [`lists not hidden, the rule now, ${who}`, notHidden(inHiddenPostSql(id, "l"))],
+      [`feed people, anchor-only before, ${who}`, feedPeople(anchorOnly(id))],
+      [`feed people, the rule now, ${who}`, feedPeople(inHiddenPostSql(id, "posts"))],
     );
-  } else {
-    console.log("[trade-post-drift] no hides here, so the hide rule has no plan to show");
   }
   for (const [label, query] of plans) {
     const { rows } = await db.execute<{ "QUERY PLAN": string }>(

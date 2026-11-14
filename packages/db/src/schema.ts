@@ -237,7 +237,10 @@ export const hiddenTradePartner = pgTable(
   ],
 );
 
-/** A Trade post the viewer hid, keyed by the post's lead list (see `postsCte`). */
+/**
+ * A Trade post the viewer hid. It names the list the post was hidden by, its anchor then (see
+ * `postsCte`), and covers the post that list is in now (`hidesOfSql`).
+ */
 export const hiddenTradePost = pgTable(
   "hidden_trade_post",
   {

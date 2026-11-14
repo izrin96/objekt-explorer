@@ -6,7 +6,7 @@ import { IDLE_DAYS } from "../../../lib/trade-rank";
 import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { matchableListSql, postPairsSql } from "../lists";
+import { inHiddenPostSql, matchableListSql, postPairsSql } from "../lists";
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
@@ -103,10 +103,6 @@ export type FeedQuery = {
   skipHiddenPosts: boolean;
 };
 
-const hiddenPost = (viewerId: string) => sql`EXISTS (
-  SELECT 1 FROM hidden_trade_post hp WHERE hp.user_id = ${viewerId} AND hp.list_id = posts.id
-)`;
-
 /** The predicates every feed read shares: listed, visible to the viewer, and the filters. */
 export function feedWhere(query: FeedQuery): SQL[] {
   const where: SQL[] = [listedPost, notTradeSanctioned(sql`posts.user_id`)];
@@ -116,7 +112,7 @@ export function feedWhere(query: FeedQuery): SQL[] {
       SELECT 1 FROM hidden_trade_partner h
       WHERE h.user_id = ${query.viewerId} AND h.hidden_user_id = posts.user_id
     )`);
-    if (query.skipHiddenPosts) where.push(sql`NOT ${hiddenPost(query.viewerId)}`);
+    if (query.skipHiddenPosts) where.push(sql`NOT ${inHiddenPostSql(query.viewerId, "posts")}`);
   }
   if (query.type !== "all") where.push(TAG_WHERE[query.type]);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
@@ -204,7 +200,7 @@ export async function fetchPersonRows(query: FeedQuery, ownerIds: string[]): Pro
       posts.user_id,
       posts.bumped_at::text AS cursor_at,
       mp.allow AS message_allow,
-      ${query.viewerId === null ? sql`false` : hiddenPost(query.viewerId)} AS hidden
+      ${query.viewerId === null ? sql`false` : inHiddenPostSql(query.viewerId, "posts")} AS hidden
     FROM posts
     LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}

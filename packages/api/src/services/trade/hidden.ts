@@ -2,12 +2,13 @@ import { db } from "@repo/db";
 import { hiddenTradePartner, hiddenTradePost, lists, user, userAddress } from "@repo/db/schema";
 import { realNickname } from "@repo/lib/address";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { tradeHandle } from "../../schemas/trade-person";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { toPublicUser } from "../profile";
 import { postsCte } from "./feed/query";
-import { postPartnerSql } from "./lists";
+import { hidesOfSql, inHiddenPostSql, matchableListSql } from "./lists";
 import { fetchAddresses } from "./matches/holdings";
 
 /** A no-op unless the partner has a list For you or Browse can show (see `trade.hidePartner`). */
@@ -83,48 +84,76 @@ export async function fetchHiddenPartners(viewerId: string) {
 
 /**
  * A no-op unless `listId` leads another account's post on Trade (see `trade.hidePost`). Idle
- * posts count, so a post can be hidden from its page before its owner bumps it.
+ * posts count, so a post can be hidden from its page before its owner bumps it. A post a hide
+ * already covers through its other list gets no second hide.
  */
 export async function hidePost(viewerId: string, listId: number) {
   const inserted = await db.execute<{ list_id: number }>(sql`
     WITH ${postsCte}
     INSERT INTO hidden_trade_post (user_id, list_id)
-    SELECT ${viewerId}, posts.id FROM posts WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId}
+    SELECT ${viewerId}, posts.id FROM posts
+    WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId}
+      AND NOT ${inHiddenPostSql(viewerId, "posts")}
     ON CONFLICT DO NOTHING
     RETURNING list_id
   `);
   if (inserted.rows.length > 0) await bumpTradeVersions([viewerId]);
 }
 
+/** Removes every hide of the viewer's that covers `listId`, whichever list of the post it names. */
 export async function unhidePost(viewerId: string, listId: number) {
-  await db
-    .delete(hiddenTradePost)
-    .where(and(eq(hiddenTradePost.userId, viewerId), eq(hiddenTradePost.listId, listId)));
+  await db.execute(sql`
+    DELETE FROM hidden_trade_post gone
+    USING (VALUES (${listId}::int)) AS named(id)
+    WHERE gone.user_id = ${viewerId}
+      AND gone.list_id IN (SELECT hp.list_id ${hidesOfSql(viewerId, "named")})
+  `);
   await bumpTradeVersions([viewerId]);
 }
 
-/** The posts the viewer hid, newest first, each with its lists' names and its owner. */
+/**
+ * The posts the viewer hid, newest hide first, each named by the lists its row pairs now, on
+ * Trade or off, and its owner. One entry per post: two hides on one post show as the newer.
+ */
 export async function fetchHiddenPosts(viewerId: string) {
-  const partner = sql.raw("partner");
-  const rows = await db
+  const named = alias(lists, "named");
+  const lead = alias(lists, "lead");
+  const want = alias(lists, "want");
+  const found = await db
     .select({
-      listId: lists.id,
-      slug: lists.slug,
-      name: lists.name,
-      profileAddress: lists.profileAddress,
-      partnerName: sql<string | null>`(
-        SELECT ${partner}.name FROM lists ${partner}
-        WHERE ${partner}.id = ${postPartnerSql("lists")} AND ${partner}.user_id = ${lists.userId}
-          AND ${lists.listType} <> 'want' AND ${partner}.list_type = 'want'
-      )`,
+      listId: hiddenTradePost.listId,
+      leadId: lead.id,
+      // a list of the post that is on Trade, so the link opens the post page
+      slug: sql<string>`CASE
+        WHEN ${lead.discoverable} AND ${matchableListSql("lead")} THEN ${lead.slug}
+        WHEN ${want.discoverable} THEN ${want.slug}
+        ELSE ${named.slug} END`,
+      name: lead.name,
+      wantName: want.name,
+      profileAddress: lead.profileAddress,
       user,
       hiddenAt: hiddenTradePost.createdAt,
     })
     .from(hiddenTradePost)
-    .innerJoin(lists, eq(lists.id, hiddenTradePost.listId))
-    .innerJoin(user, eq(user.id, lists.userId))
+    .innerJoin(named, eq(named.id, hiddenTradePost.listId))
+    .innerJoin(
+      lead,
+      sql`${lead.id} = coalesce(
+        (SELECT r.lead_list_id FROM trade_post r
+          WHERE r.want_list_id = ${named.id} ORDER BY r.id LIMIT 1),
+        ${named.id})`,
+    )
+    .leftJoin(
+      want,
+      sql`${want.id} = (SELECT r.want_list_id FROM trade_post r
+          WHERE r.lead_list_id = ${lead.id} ORDER BY r.id LIMIT 1)
+        AND ${want.userId} = ${lead.userId}`,
+    )
+    .innerJoin(user, eq(user.id, lead.userId))
     .where(eq(hiddenTradePost.userId, viewerId))
     .orderBy(desc(hiddenTradePost.createdAt));
+  const posts = new Set<number>();
+  const rows = found.filter((row) => !posts.has(row.leadId) && posts.add(row.leadId));
 
   const addresses = await fetchAddresses([...new Set(rows.map((row) => row.user.id))]);
   return rows.map((row) => {
@@ -133,7 +162,7 @@ export async function fetchHiddenPosts(viewerId: string) {
     return {
       listId: row.listId,
       slug: row.slug,
-      names: row.partnerName === null ? [row.name] : [row.name, row.partnerName],
+      names: row.wantName === null ? [row.name] : [row.name, row.wantName],
       userId: row.user.id,
       user: toPublicUser(row.user),
       handle: tradeHandle(owned),

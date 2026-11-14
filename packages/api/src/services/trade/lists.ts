@@ -33,9 +33,9 @@ export const offerMatchesWantSql = (offer: string, want: string) =>
 
 /**
  * Whether the `trade_post` row `post` pairs `lead` with the want list `want` as one post: the
- * same owner's want list, with `lead` offering swaps. The one pairing rule `postsCte`, match
- * candidates and hidden posts share. The caller joins `trade_post` as `post` itself, so the
- * pairing stays a plain equality the planner can hash.
+ * same owner's want list, with `lead` offering swaps. The one pairing rule `postsCte` and match
+ * candidates share. The caller joins `trade_post` as `post` itself, so the pairing stays a plain
+ * equality the planner can hash.
  */
 export const postPairsSql = (post: string, lead: string, want: string) =>
   sql`(${column(post, "lead_list_id")} = ${column(lead, "id")}
@@ -58,22 +58,37 @@ export const postPartnerSql = (alias: string) =>
       WHERE partner_row.want_list_id = ${column(alias, "id")} ORDER BY partner_row.id LIMIT 1)
   )`;
 
-/** `viewer`'s hides of the post the list `alias` belongs to, as `hp`, from FROM onwards. */
+/**
+ * The lists `viewer`'s hides cover, as `id`: each hidden list and the other list of the
+ * `trade_post` row it is in, on Trade or off. A hide names a list and covers the post that list
+ * is in now. The same rule as {@link hidesOfSql}, as a set the planner builds once and hashes
+ * for a fixed viewer; the two change together.
+ */
+export const coveredListsSql = (viewer: UserRef) =>
+  sql`SELECT hp.list_id AS id FROM hidden_trade_post hp WHERE hp.user_id = ${ref(viewer)}
+    UNION ALL
+    SELECT hide_row.want_list_id FROM hidden_trade_post hp
+      JOIN trade_post hide_row ON hide_row.lead_list_id = hp.list_id
+      WHERE hp.user_id = ${ref(viewer)}
+    UNION ALL
+    SELECT hide_row.lead_list_id FROM hidden_trade_post hp
+      JOIN trade_post hide_row ON hide_row.want_list_id = hp.list_id
+      WHERE hp.user_id = ${ref(viewer)}`;
+
+/**
+ * `viewer`'s hides that cover the list `alias`, as `hp`, from FROM onwards: a hide of that list
+ * or of the other list of its row. For a read that needs the hides themselves, per viewer and
+ * list; a read asking about many lists for one viewer takes {@link inHiddenPostSql}.
+ */
 export const hidesOfSql = (viewer: UserRef, alias: string) =>
   sql`FROM hidden_trade_post hp
     WHERE hp.user_id = ${ref(viewer)}
-      AND (hp.list_id = ${column(alias, "id")}
-        OR hp.list_id IN (
-          SELECT hide_lead.id FROM trade_post hide_row
-          JOIN lists hide_lead ON hide_lead.id = hide_row.lead_list_id
-          WHERE ${postPairsSql("hide_row", "hide_lead", alias)}))`;
+      AND hp.list_id IN (${column(alias, "id")}, ${postPartnerSql(alias)})`;
 
-/**
- * Whether the list `alias` belongs to a post `viewer` hid: the hide names the post's lead, so a
- * want half is found through the row pairing it with its lead, on Trade or off.
- */
+/** Whether the list `alias` is in a post `viewer` hid ({@link coveredListsSql}). */
 export const inHiddenPostSql = (viewer: UserRef, alias: string) =>
-  sql`EXISTS (SELECT 1 ${hidesOfSql(viewer, alias)})`;
+  sql`EXISTS (
+    SELECT 1 FROM (${coveredListsSql(viewer)}) covered WHERE covered.id = ${column(alias, "id")})`;
 
 /** When `viewer` last hid the post the list `alias` belongs to, or null when it is not hidden. */
 export const hiddenPostAtSql = (viewer: UserRef, alias: string) =>
