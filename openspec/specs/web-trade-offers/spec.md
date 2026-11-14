@@ -1010,22 +1010,72 @@ When the recipient declines an offer holding a "Not on your wants" item, while t
 
 #### Scenario: Shown once
 - **WHEN** the notice has shown, and rin.trades declines another such offer in the same browser
-- **THEN** no notice shows
+- **THEN** no notice to turn on Only offers with what I want shows
 
 #### Scenario: No nudge for wanted gives
 - **WHEN** rin.trades declines an offer whose gives are all on their want lists
-- **THEN** no notice shows
+- **THEN** no notice to turn on Only offers with what I want shows
 
 #### Scenario: No nudge without a want list on Trade
 - **WHEN** rin.trades has no want list shown on Trade and declines an offer with a "Not on your wants" item
-- **THEN** no notice shows, since the setting would not filter anything
+- **THEN** no notice to turn on Only offers with what I want shows, since the setting would not filter anything
 
 #### Scenario: Setting already on
 - **WHEN** rin.trades has the setting on and declines an offer that was open before they turned it on, holding a "Not on your wants" item
-- **THEN** no notice shows
+- **THEN** no notice to turn on Only offers with what I want shows
+
+### Requirement: Notice after declining an offer across posts
+When the recipient declines an offer with the "Asks from" mark, while their "Let people ask from more than one post" is on and they have two or more have or sale lists on Trade, a notice SHALL offer Turn off, which saves the setting off, unless One notice per decline shows another notice instead. Once it has shown, that browser SHALL not show it again. Turning it off SHALL not touch open offers.
+
+#### Scenario: Notice shown
+- **WHEN** rin.trades, with the setting on and "doubles" and "spares" on Trade, declines an offer that reads "Asks from 2 of your posts: doubles and spares" and holds no "Not on your wants" item
+- **THEN** a notice asks whether each offer should ask from one post, says that with Let people ask from more than one post off each offer asks from one post the sender chooses, and offers Turn off
+
+#### Scenario: Turn it off
+- **WHEN** rin.trades chooses Turn off in that notice
+- **THEN** the setting is saved off, the notice closes, a message says it is off, Account › General shows Let people ask from more than one post off, and the next offer asking from "doubles" and "spares" is refused as from another post
+
+#### Scenario: Save fails
+- **WHEN** rin.trades chooses Turn off and the save fails
+- **THEN** a message says it couldn't be turned off and to try again in Account › General, and the setting stays on
+
+#### Scenario: Shown once
+- **WHEN** the notice has shown, and rin.trades declines another offer across posts in the same browser
+- **THEN** no notice about posts shows
+
+#### Scenario: Setting already off
+- **WHEN** rin.trades has the setting off and declines an offer across posts that was open before they turned it off
+- **THEN** no notice about posts shows
+
+#### Scenario: Offer on one post
+- **WHEN** rin.trades declines an offer on "doubles"
+- **THEN** no notice about posts shows
+
+#### Scenario: One post left on Trade
+- **WHEN** rin.trades has taken "spares" off Trade, so only "doubles" is on Trade, and declines an offer that reads "Asks from 2 of your posts: doubles and spares"
+- **THEN** no notice about posts shows, since the setting would refuse nothing
+
+#### Scenario: Open offers stay
+- **WHEN** rin.trades turns the setting off from the notice while another user's offer asking from "doubles" and "spares" is open
+- **THEN** that offer stays open, still reads the mark, and rin.trades may still accept it
+
+### Requirement: One notice per decline
+A decline SHALL show at most one notice about offer rules. When a declined offer qualifies for both the nudge to turn on Only offers with what I want and the notice to turn off Let people ask from more than one post, the nudge SHALL show if that browser has not shown it before, else the notice. The one not shown SHALL count as not shown, so a later decline can still show it.
+
+#### Scenario: Both apply
+- **WHEN** rin.trades, with Only offers with what I want off, "hunting" on Trade and Let people ask from more than one post on, declines an offer whose HyeRin 301Z #1203 reads "Not on your wants" and that reads "Asks from 2 of your posts: doubles and spares"
+- **THEN** only the nudge to turn on Only offers with what I want shows
+
+#### Scenario: The other one next
+- **WHEN** rin.trades then declines another offer across posts in the same browser
+- **THEN** the notice to turn off Let people ask from more than one post shows
+
+#### Scenario: Nudge already shown
+- **WHEN** the nudge to turn on Only offers with what I want has shown in this browser before, and rin.trades declines an offer that qualifies for both
+- **THEN** the notice to turn off Let people ask from more than one post shows
 
 ### Requirement: The post an offer is on
-An offer SHALL store the post its asks all come from: the Offer on choice or the post it started from, else the one list they fit. An offer asking across posts, giving only, or asking only for objekts the recipient offered, is on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no line, and a post deleted later SHALL drop it.
+An offer SHALL store the post its asks all come from: the Offer on choice or the post it started from, else the one list they fit. An offer asking across posts, giving only, or asking only for objekts the recipient offered, is on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line, and a post deleted later SHALL drop it.
 
 #### Scenario: Both sides see it
 - **WHEN** an offer on "doubles" is sent
@@ -1043,24 +1093,44 @@ An offer SHALL store the post its asks all come from: the Offer on choice or the
 - **WHEN** rin.trades deletes "doubles" after the offer was sent
 - **THEN** neither card reads "Offer on"
 
-### Requirement: Notice of Only offers with what I want
-A user whose "Only offers with what I want" is off and who has a want list shown on Trade SHALL see one notice at the top of Messages introducing it, with Turn on, which saves the setting, and Not now. Once either is chosen, that browser SHALL not show it again.
+#### Scenario: Across posts
+- **WHEN** an offer to rin.trades asks from "doubles" and "spares"
+- **THEN** neither card reads "Offer on", and rin.trades's card reads the Asks from your posts mark instead
 
-#### Scenario: Shown once
-- **WHEN** rin.trades, with "hunting" on Trade and the setting off, opens Messages
-- **THEN** the notice introduces Only offers with what I want, with Turn on and Not now
+### Requirement: Asks from your posts mark
+On an offer card, the recipient (never the sender) SHALL see "Asks from {count} of your posts: {posts}", in the place of "Offer on {post}", on an offer on no post whose asks were stored against two or more of their posts. The posts SHALL read by their current names, in the order of the asks, on Trade or not. A post deleted since, and an objekt the recipient offered in the offer being countered, SHALL not count. The mark SHALL block nothing.
 
-#### Scenario: Turn on from the notice
-- **WHEN** rin.trades chooses Turn on
-- **THEN** the setting is saved on, the notice closes, and Account › General shows it on
+#### Scenario: Mark shown
+- **WHEN** rin.trades, with Let people ask from more than one post on, opens an offer that asks for one objekt on "doubles" and SeoYeon 204Z #537, which is only on "spares"
+- **THEN** the card reads "Asks from 2 of your posts: doubles and spares", it has no "Offer on" line, and rin.trades can still accept
 
-#### Scenario: Not now
-- **WHEN** rin.trades chooses Not now, then opens Messages again in the same browser
-- **THEN** no notice shows
+#### Scenario: Sender sees no mark
+- **WHEN** the user who sent that offer opens it
+- **THEN** their card reads neither "Asks from" nor "Offer on"
 
-#### Scenario: No want list on Trade
-- **WHEN** a user with the setting off and no want list on Trade opens Messages
-- **THEN** no notice shows, since the setting would not filter anything
+#### Scenario: Offer on one post
+- **WHEN** rin.trades opens an offer on "doubles" whose asks are all on "doubles"
+- **THEN** the card reads "Offer on doubles" and no "Asks from" mark
+
+#### Scenario: Counter keeps their objekt
+- **WHEN** rin.trades, with Let people ask from more than one post on, offered HyeRin 301Z #1203, which is on their have list "extras", and the user counters, keeping #1203 and asking for one objekt on "doubles" and SeoYeon 204Z #537, only on "spares"
+- **THEN** rin.trades's card reads "Asks from 2 of your posts: doubles and spares": #1203 counts toward no post, since rin.trades offered it
+
+#### Scenario: Counter keeps their objekt on one post
+- **WHEN** rin.trades offered HyeRin 301Z #1203, which is on "extras", and the user counters on "doubles", keeping #1203 and asking for one objekt on "doubles"
+- **THEN** rin.trades's card reads "Offer on doubles" and no "Asks from" mark
+
+#### Scenario: Post deleted
+- **WHEN** rin.trades deletes "spares" after an offer asking from "doubles" and "spares" was sent
+- **THEN** the card reads neither "Asks from" nor "Offer on"
+
+#### Scenario: Post taken off Trade
+- **WHEN** rin.trades takes "spares" off Trade after an offer asking from "doubles" and "spares" was sent
+- **THEN** the card still reads "Asks from 2 of your posts: doubles and spares"
+
+#### Scenario: Closed offer
+- **WHEN** rin.trades declines an offer asking from "doubles" and "spares", or it expires, is withdrawn or is accepted
+- **THEN** the card still reads "Asks from 2 of your posts: doubles and spares"
 
 ### Requirement: Confirm a lopsided accept
 An offer is lopsided when both sides hold objekts and one side holds at least 5 times as many as the other, each copy counting as one. Accept on a lopsided open offer SHALL open a confirmation before any request is sent. It SHALL state how many objekts the recipient gets and gives, and that accepting trades all of them. When the card offers Counter, it SHALL say Counter trades only some, and offer Counter beside Cancel and Accept. Any other offer SHALL accept on one press.
