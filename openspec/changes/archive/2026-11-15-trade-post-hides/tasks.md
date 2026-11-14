@@ -149,7 +149,7 @@ These rules hold for every task:
   - every count is zero;
   - the per-list rule is a hash anti join, with no subplan per (list, hide), far under the 0.9 s figure;
   - the feed form takes no more than 1.5 times the anchor-only one, for both viewers, over three runs each. If it does, stop and report the plans to the owner.
-- [ ] 5.3 The owner approves and runs the commit, push and deploy of web and of the worker, rebuilt on the VPS (design, Migration Plan). With a further go-ahead afterwards, run the drift script read-only against production and report it. Verify that every count is zero.
+- [x] 5.3 The owner approves and runs the commit, push and deploy of web and of the worker, rebuilt on the VPS (design, Migration Plan). With a further go-ahead afterwards, run the drift script read-only against production and report it. Verify that every count is zero.
 
 ## 6. Agent docs
 

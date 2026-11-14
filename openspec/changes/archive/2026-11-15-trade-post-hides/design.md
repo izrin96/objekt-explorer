@@ -314,6 +314,8 @@ Built on 2026-11-15, on top of `f8f6d2b6`. What was run, and the departures from
   - Cleanup: no hide left; both lists on Trade, unlinked, `match_have` and `match_sale` true, `takes_swaps` false. `lt2 wants` is in a new row (1000421, was 1000407), and both lists' `updated_at` and `bumped_at` moved.
 - **Scratch scripts** (`apps/worker/.scratch-hides/`) are deleted. After the build, `git status --short -- apps packages` lists only `apps/worker/AGENTS.md`, `apps/worker/src/script/trade-post-drift.ts`, `packages/api/docs/trade.md`, three files under `packages/api/src/services/trade/` and `packages/db/src/schema.ts`.
 
+- **After the production deploy, 2026-11-15:** the owner pushed `ffd37a0b` and deployed web and worker. The drift script, read-only against production, found 1,341 rows and zero on all eleven checks.
+
 ## Open Questions
 
 None that change the specs, the approach or the tasks. The go-aheads, for the local rows and for each production run, are tasks.

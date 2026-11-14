@@ -80,6 +80,10 @@ The person page and the post page SHALL show a post the signed-in viewer hid as 
 - **WHEN** the viewer activates Unhide post on that post on `/trade/@rin.trades`
 - **THEN** the post is listed again on rin.trades's row on Browse
 
+#### Scenario: A post hidden through its other list
+- **WHEN** the viewer hid rin.trades's Buy post "Looking for", rin.trades then paired it with "Binary dupes", and the viewer opens that post's page
+- **THEN** the post "Binary dupes · Looking for" is shown, its ⋯ menu offers Unhide post, and Unhide post lists it again on Browse
+
 ### Requirement: Post page
 `/trade/@<handle>/<slug>`, where the slug is a post's anchor list (the have or sale list of a pair, else its only list), SHALL show the person's row holding only that post, outlined, and below it "Show N more posts from <name>", which adds the rest in the row's order. The header's counts SHALL still count the whole person. The row's Make offer SHALL open the builder addressed to that post's anchor list, with that post as its matches' post, Message SHALL attach that post's card, and the row menu's Report… SHALL name that post (see `web-moderation` Reports with a Trade post attached).
 
