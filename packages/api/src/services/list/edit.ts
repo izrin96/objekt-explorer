@@ -117,7 +117,8 @@ export async function deleteList(userId: string, slug: string) {
   }
 
   const unpaired = await db.transaction(async (tx) => {
-    // ON DELETE SET NULL also locks the partner, so take the shared lock in id order first
+    // the delete changes the person's rows through their foreign keys, so it runs under the lock
+    // every post writer takes
     const locked = await lockPosts(tx, userId);
     await tx.delete(lists).where(eq(lists.id, list.id));
     // the partner of a deleted lead stands alone now, and may need a row of its own
