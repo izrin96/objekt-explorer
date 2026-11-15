@@ -3,9 +3,9 @@ import { flagsOf, offersSwaps, type OpenToFlags, openToOf } from "./open-to";
 import type { PostType, TradePostRefusal } from "./trade";
 
 /**
- * What a Trade post is, in one place: its kind, its tags, and what posting one writes. A post is
- * still its lists (`discoverable`, the link, a want list's Open to), so every rule here reads
- * and writes those columns. The server validates `trade.savePost` with `planPost`, and the web
+ * What a Trade post is, in one place: its kind, its tags, and what posting one writes. A post's
+ * Trade state and tags are still its lists' (`discoverable`, a want list's Open to), and each
+ * list's `linkedListId` here is its partner by its `trade_post` row. The server validates `trade.savePost` with `planPost`, and the web
  * composer draws its rows and prompts from the same functions.
  */
 

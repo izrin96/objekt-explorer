@@ -15,7 +15,6 @@ import {
 import type { ListType } from "../../schemas/list";
 import type { PlanList } from "../../schemas/trade-post";
 import { versionCounter } from "../moderation/safety-cache";
-import { postPartnerSql } from "../trade/lists";
 
 const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
 
@@ -138,11 +137,10 @@ const tradeStates = ({ id, listType, discoverable }: WrittenList): TradeListStat
   listType === "general" ? [] : [{ id, listType, discoverable }];
 
 /**
- * Plans the write over the rows `lockPosts` read (`planPostWrite`), writes the row operations,
- * and then mirrors `lists.linked_list_id` from the rows, which nothing reads but a build from
- * before the rows led. Call it after the list writes. Returns the lists whose partner changed,
- * for `touchList`. A new writer of a pairing, of `discoverable`, or one that deletes a have,
- * sale or want list goes through it and never writes `linked_list_id`.
+ * Plans the write over the rows `lockPosts` read (`planPostWrite`) and writes the row
+ * operations. Call it after the list writes. Returns the lists whose partner changed, for
+ * `touchList`. A new writer of a pairing, of `discoverable`, or one that deletes a have, sale
+ * or want list goes through it: the rows are the only place a pairing is stored.
  */
 export async function writePosts(
   tx: Tx,
@@ -150,7 +148,7 @@ export async function writePosts(
   locked: LockedPosts,
   write: Omit<PostWrite, "written"> & { written?: WrittenList[] },
 ): Promise<number[]> {
-  const { ops, relinked, mirror } = planPostWrite(locked.current, {
+  const { ops, relinked } = planPostWrite(locked.current, {
     ...write,
     written: write.written?.flatMap(tradeStates),
   });
@@ -165,18 +163,6 @@ export async function writePosts(
       .values(
         ops.inserts.map(({ leadListId, wantListId }) => ({ userId, leadListId, wantListId })),
       );
-  }
-  if (mirror) {
-    await tx.execute(sql`
-      UPDATE lists SET linked_list_id = mirror.partner_id
-      FROM (
-        SELECT l.id, ${postPartnerSql("l")} AS partner_id
-        FROM lists l
-        WHERE l.user_id = ${userId} AND l.list_type IN ('have', 'sale', 'want')
-      ) mirror
-      WHERE lists.id = mirror.id
-        AND lists.linked_list_id IS DISTINCT FROM mirror.partner_id
-    `);
   }
   return relinked;
 }

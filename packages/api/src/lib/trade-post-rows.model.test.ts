@@ -26,10 +26,10 @@ import {
 //
 // The differential run keeps two worlds. `legacy` applies the link writes as the build before
 // `trade-post-writes` ran them in SQL (transcribed below, and kept only here), then derives the
-// rows from the link. `rows` plans each write with `planPostWrite` and mirrors the link from the
-// rows. After every write both must hold the same lists, rows and touched lists, so the two
-// builds can take turns on one person. Neither side runs SQL: the statements themselves are
-// proven by running them.
+// rows from the link. `rows` plans each write with `planPostWrite`, and its lists show the partner
+// the rows give. After every write both must hold the same lists, rows and touched lists: the
+// link writes stay the reference for what pair and unpair mean. Neither side runs SQL: the
+// statements themselves are proven by running them.
 //
 // The healing run corrupts the rows before each write and checks that one plan repairs them.
 
@@ -251,7 +251,7 @@ function legacy(world: World, write: Write): Outcome {
   return done([]);
 }
 
-// ---- rows: the write is planned over the rows, and the link mirrors them
+// ---- rows: the write is planned over the rows, and a list's partner is read from them
 
 /** `postPartnerSql`: the want list of the lowest row a list leads, else the lead of the lowest row it is the want list of. */
 function partnerByRows(rows: ModelRow[], id: number) {
@@ -278,7 +278,7 @@ function locked(world: World, userId: string) {
   };
 }
 
-/** `writePosts`: the plan, its row operations and the mirror. */
+/** `writePosts`: the plan and its row operations. */
 function writePosts(
   world: World,
   userId: string,
@@ -287,10 +287,9 @@ function writePosts(
 ) {
   const plan = planPostWrite(current, write);
   applyOps(world, userId, plan.ops);
-  if (plan.mirror) {
-    for (const list of world.lists.filter((entry) => entry.userId === userId)) {
-      list.linkedListId = partnerByRows(world.rows, list.id);
-    }
+  // what a read gives: the partner is the rows', and no write keeps a link
+  for (const list of world.lists.filter((entry) => entry.userId === userId)) {
+    list.linkedListId = partnerByRows(world.rows, list.id);
   }
   return plan.relinked;
 }
@@ -542,14 +541,6 @@ function differential(seed: number, counts: Counts) {
 
     expect(sorted(rows), at).toEqual(sorted(link));
     check(rows, at);
-    for (const userId of USERS) {
-      const partners = partnersOf(rowsOf(rows, userId));
-      for (const list of ownOf(rows, userId)) {
-        expect(list.linkedListId, `${at}: list ${list.id} mirror`).toBe(
-          partners.get(list.id) ?? null,
-        );
-      }
-    }
   }
 }
 

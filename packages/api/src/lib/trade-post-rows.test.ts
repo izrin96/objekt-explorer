@@ -218,13 +218,13 @@ describe("planPostWrite", () => {
   const lists = [state(1, "have"), state(2, "want"), state(3, "have"), state(4, "want")];
   const rows = [row(10, 1, 2), row(11, 3, 4)];
   const write = (change: PostWrite, before = { lists, rows }) => {
-    const { ops, relinked, mirror } = planPostWrite(before, change);
-    return { ops: ops as PlainOps, relinked, mirror };
+    const { ops, relinked } = planPostWrite(before, change);
+    return { ops: ops as PlainOps, relinked };
   };
 
-  test("no change: nothing to write, nothing to mirror", () => {
-    expect(write({})).toEqual({ ops: NONE, relinked: [], mirror: false });
-    expect(write({ pair: null, unpair: [] }).mirror).toBe(false);
+  test("no change: nothing to write", () => {
+    expect(write({})).toEqual({ ops: NONE, relinked: [] });
+    expect(write({ pair: null, unpair: [] })).toEqual({ ops: NONE, relinked: [] });
   });
 
   test("pairing across two pairs rehomes both old partners", () => {
@@ -239,12 +239,11 @@ describe("planPostWrite", () => {
         inserts: [{ leadListId: 2, wantListId: null }],
       },
       relinked: [1, 2, 3, 4],
-      mirror: true,
     });
   });
 
-  test("the same pair again mirrors, and writes no row", () => {
-    expect(write({ pair: [1, 2] })).toEqual({ ops: NONE, relinked: [], mirror: true });
+  test("the same pair again writes no row", () => {
+    expect(write({ pair: [1, 2] })).toEqual({ ops: NONE, relinked: [] });
   });
 
   test("an unpair gives the want list on Trade its own row", () => {
@@ -255,7 +254,6 @@ describe("planPostWrite", () => {
         inserts: [{ leadListId: 2, wantListId: null }],
       },
       relinked: [1, 2],
-      mirror: true,
     });
   });
 
@@ -267,7 +265,6 @@ describe("planPostWrite", () => {
         inserts: [{ leadListId: 5, wantListId: 2 }],
       },
       relinked: [1, 2, 5],
-      mirror: true,
     });
   });
 
@@ -275,20 +272,18 @@ describe("planPostWrite", () => {
     expect(write({ removed: [1] })).toEqual({
       ops: { ...NONE, inserts: [{ leadListId: 2, wantListId: null }] },
       relinked: [2],
-      mirror: true,
     });
   });
 
   test("a removed want list: the row stays without it, with nothing to write", () => {
-    expect(write({ removed: [2] })).toEqual({ ops: NONE, relinked: [1], mirror: false });
+    expect(write({ removed: [2] })).toEqual({ ops: NONE, relinked: [1] });
   });
 
-  test("a list in two rows: the planner empties the later row, so the mirror runs", () => {
+  test("a list in two rows: the planner empties the later row", () => {
     const before = { lists: lists.slice(0, 3), rows: [row(10, 1, 2), row(11, 3, 2)] };
     expect(write({}, before)).toEqual({
       ops: { ...NONE, updates: [{ id: 11, wantListId: null }] },
       relinked: [],
-      mirror: true,
     });
   });
 
@@ -297,7 +292,6 @@ describe("planPostWrite", () => {
     expect(write({ written: [state(1, "have", false), state(5, "want")] })).toEqual({
       ops: { ...NONE, inserts: [{ leadListId: 5, wantListId: null }] },
       relinked: [],
-      mirror: true,
     });
   });
 });

@@ -135,8 +135,6 @@ export type PostWritePlan = {
   ops: PostRowOps;
   /** lists still there whose partner the write changed: the ones to `touchList` */
   relinked: number[];
-  /** the write asked for a pair or an unpair, or the plan has a row operation */
-  mirror: boolean;
 };
 
 /**
@@ -179,11 +177,5 @@ export function planPostWrite(
   return {
     ops,
     relinked: lists.flatMap((list) => (was.get(list.id) === after.get(list.id) ? [] : [list.id])),
-    // not a comparison of partners: the planner can empty a later row of a list in two rows,
-    // which changes what the rows say with the same partners
-    mirror:
-      !!write.pair ||
-      (write.unpair?.length ?? 0) > 0 ||
-      ops.deletes.length + ops.updates.length + ops.inserts.length > 0,
   };
 }

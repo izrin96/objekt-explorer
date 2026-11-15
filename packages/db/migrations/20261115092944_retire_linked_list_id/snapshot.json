@@ -1,0 +1,83 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "d71307e0-e94c-4054-ad50-5d20298c6277",
+  "prevIds": [
+    "85876ec0-6206-4b6f-abcc-6b2a628305a2"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "lists"
+      ],
+      "writes": [
+        "s|fk|public.lists.lists_linked_list_id_lists_id_fkey",
+        "n|fk|public.lists.lists_linked_list_id_lists_id_fkey",
+        "e|fk|public.lists.lists_linked_list_id_lists_id_fkey",
+        "n|con|public.lists.lists_linked_list_id_lists_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "e|col|public.lists.linked_list_id"
+      ]
+    },
+    {
+      "statementType": "drop_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "lists",
+        "lists_linked_list_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.lists_linked_list_id_idx",
+        "n|idx|public.lists_linked_list_id_idx",
+        "e|idx|public.lists_linked_list_id_idx",
+        "n|rel|public.lists_linked_list_id_idx"
+      ],
+      "reads": [
+        "e|tbl|public.lists",
+        "n|sch|public",
+        "e|col|public.lists.linked_list_id"
+      ],
+      "sharedWrites": []
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "linked_list_id"
+      ],
+      "writes": [
+        "s|col|public.lists.linked_list_id",
+        "n|col|public.lists.linked_list_id",
+        "e|col|public.lists.linked_list_id"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"lists\",\"linked_list_id\"]"
+    },
+    {
+      "op": "drop",
+      "key": "indexes\u0000[\"public\",\"lists_linked_list_id_idx\"]"
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"lists\",\"lists_linked_list_id_lists_id_fkey\"]"
+    }
+  ]
+}

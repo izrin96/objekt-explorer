@@ -46,7 +46,7 @@ export const postPairsSql = (post: string, lead: string, want: string) =>
 
 /**
  * The other list of the `trade_post` row the list `alias` is in, or null: a lead's want list, a
- * want list's lead. It carries no other condition, as `lists.linked_list_id` carried none. The
+ * want list's lead. It carries no other condition. The
  * lowest row id answers, as `planPostRows` keeps it, so a list in two rows gives one partner
  * rather than an error.
  */

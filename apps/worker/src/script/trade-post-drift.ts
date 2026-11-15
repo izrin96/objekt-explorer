@@ -1,30 +1,15 @@
 /**
- * Checks that `trade_post` says what `lists` says: every link and every list on Trade has its
- * row, and no row says more. Posts, pairs and partners are read from the rows, and writers write
- * the rows and mirror `lists.linked_list_id` from them. So a check that reads the link catches a
- * wrong mirror, which only a redeploy of an older build would read, and no longer a wrong row.
- *
- * From the seventh check on, each compares a read over the rows with the read over the link it
- * replaced; the legacy SQL lives only here. They go when `trade-post-contract` drops the link,
- * and so do the hide plans of `EXPLAIN=1`, which time the hide rule and the feed's hide filter
- * against the ones `trade-post-hides` replaced. No check compares hides with rows: a hide names
- * a list and is valid whatever the rows say.
+ * Checks what `trade_post` must hold whatever a post's pairing is: every have, sale or want list
+ * on Trade is in a row, no list is in two rows, and a row holds only its owner's lists, with a
+ * want list only where one belongs. The rows are the only place a pairing is stored, so nothing
+ * here compares them with a second copy.
  *
  * Plain reads only, and it refuses to start unless the connection is read-only:
  *
  *   PGOPTIONS='-c default_transaction_read_only=on' bun run --env-file=../../.env --env-file=../../.env.local src/script/trade-post-drift.ts
  *
  * Drop the second `--env-file` to read production. Exits 1 when any count is above zero.
- * `EXPLAIN=1` prints the plans of the legacy and the new statements instead.
  */
-import { column, offersSwapsSql } from "@repo/api/lib/trade-sql";
-import { listedPost, postsCte } from "@repo/api/services/trade/feed/query";
-import {
-  inHiddenPostSql,
-  matchableListSql,
-  postPairsSql,
-  postPartnerSql,
-} from "@repo/api/services/trade/lists";
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
@@ -40,70 +25,8 @@ if (mode[0]?.transaction_read_only !== "on") {
   process.exit(1);
 }
 
-const offering = sql`o.list_type IN ('have', 'sale')`;
-
-const legacyLeadsPair = (offer: string, want: string) =>
-  sql`(${column(want, "list_type")} = 'want'
-    AND ${column(offer, "linked_list_id")} = ${column(want, "id")}
-    AND ${column(offer, "user_id")} = ${column(want, "user_id")}
-    AND ${offersSwapsSql(offer)})`;
-
-const legacyPostsCte = sql`
-  legacy_on_trade AS (
-    SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, takes_swaps, bumped_at,
-      updated_at, created_at
-    FROM lists
-    WHERE discoverable AND ${matchableListSql()}
-  ),
-  legacy_posts AS (
-    SELECT
-      a.id,
-      a.user_id,
-      a.list_type AS type,
-      a.match_sale,
-      a.match_have,
-      a.takes_swaps,
-      p.id AS partner_id,
-      p.match_sale AS partner_match_sale,
-      p.match_have AS partner_match_have,
-      date_trunc(
-        'milliseconds',
-        coalesce(greatest(a.bumped_at, p.bumped_at), greatest(a.updated_at, p.updated_at))
-      ) AS bumped_at,
-      greatest(a.updated_at, p.updated_at) AS updated_at
-    FROM legacy_on_trade a
-    LEFT JOIN legacy_on_trade p ON ${legacyLeadsPair("a", "p")}
-    WHERE NOT EXISTS (SELECT 1 FROM legacy_on_trade h WHERE ${legacyLeadsPair("h", "a")})
-  )
-`;
-
-/** The hide rule before `trade-post-hides`: the hide's own list, or the want list it leads. */
-const previousHidesOf = (viewer: SQL, alias: string) =>
-  sql`FROM hidden_trade_post previous_hp
-    WHERE previous_hp.user_id = ${viewer}
-      AND (previous_hp.list_id = ${column(alias, "id")}
-        OR previous_hp.list_id IN (
-          SELECT previous_lead.id FROM trade_post previous_row
-          JOIN lists previous_lead ON previous_lead.id = previous_row.lead_list_id
-          WHERE ${postPairsSql("previous_row", "previous_lead", alias)}))`;
-
-const legacyPairs = sql`SELECT o.id, w.id AS want_id FROM lists o JOIN lists w ON ${legacyLeadsPair("o", "w")}`;
-const rowPairs = sql`SELECT o.id, w.id AS want_id FROM trade_post tp
-  JOIN lists o ON o.id = tp.lead_list_id JOIN lists w ON ${postPairsSql("tp", "o", "w")}`;
-
 /** Each check selects the ids of what is wrong, as `id`. */
 const CHECKS: [label: string, query: SQL][] = [
-  [
-    "a have or sale list linked to a want list, with no row holding the pair (list ids)",
-    sql`SELECT o.id FROM lists o JOIN lists w ON w.id = o.linked_list_id AND w.list_type = 'want'
-        WHERE ${offering} AND NOT EXISTS (
-          SELECT 1 FROM trade_post tp WHERE tp.lead_list_id = o.id AND tp.want_list_id = w.id)`,
-  ],
-  [
-    "a row whose want list differs from its lead's link (row ids)",
-    sql`SELECT tp.id FROM trade_post tp JOIN lists o ON o.id = tp.lead_list_id
-        WHERE ${offering} AND tp.want_list_id IS DISTINCT FROM o.linked_list_id`,
-  ],
   [
     "a list on Trade that is in no row (list ids)",
     sql`SELECT l.id FROM lists l
@@ -125,83 +48,7 @@ const CHECKS: [label: string, query: SQL][] = [
           OR (w.id IS NOT NULL AND (w.user_id <> tp.user_id OR w.list_type <> 'want'
             OR o.list_type = 'want'))`,
   ],
-  [
-    "a row led by a want list that a have or sale list links to (row ids)",
-    sql`SELECT tp.id FROM trade_post tp JOIN lists w ON w.id = tp.lead_list_id
-        WHERE w.list_type = 'want' AND EXISTS (
-          SELECT 1 FROM lists o WHERE o.linked_list_id = w.id AND ${offering})`,
-  ],
-  [
-    "a list whose partner by its row differs from its link (list ids)",
-    sql`SELECT l.id FROM lists l WHERE ${postPartnerSql("l")} IS DISTINCT FROM l.linked_list_id`,
-  ],
-  [
-    "a post by the link that the rows lack or change (anchor ids)",
-    sql`SELECT d.id FROM (
-          WITH ${postsCte}, ${legacyPostsCte}
-          SELECT * FROM legacy_posts EXCEPT ALL SELECT * FROM posts) d`,
-  ],
-  [
-    "a post by the rows that the link lacks or changes (anchor ids)",
-    sql`SELECT d.id FROM (
-          WITH ${postsCte}, ${legacyPostsCte}
-          SELECT * FROM posts EXCEPT ALL SELECT * FROM legacy_posts) d`,
-  ],
-  [
-    "a pair the link and the rows do not both make, on Trade or off (lead ids)",
-    sql`SELECT d.id FROM (
-          (${legacyPairs} EXCEPT ALL ${rowPairs}) UNION ALL (${rowPairs} EXCEPT ALL ${legacyPairs})
-        ) d`,
-  ],
 ];
-
-if (process.env.EXPLAIN === "1") {
-  const listedCount = (cte: SQL, name: string) =>
-    sql`WITH ${cte}, counted AS (
-          SELECT 1 FROM ${sql.raw(name)} posts WHERE ${listedPost}
-        ) SELECT count(*) FROM counted`;
-  const { rows: hiders } = await db.execute<{ user_id: string }>(
-    sql`SELECT user_id FROM hidden_trade_post GROUP BY user_id ORDER BY count(*) DESC LIMIT 1`,
-  );
-  const hider = hiders[0]?.user_id;
-  const notHidden = (hidden: SQL) =>
-    sql`SELECT count(*) FROM lists l WHERE l.discoverable AND NOT ${hidden}`;
-  // the shape of the feed's people read: listed posts by owner, less the viewer's hidden ones
-  const feedPeople = (hidden: SQL) =>
-    sql`WITH ${postsCte}
-        SELECT posts.user_id, max(posts.bumped_at) FROM posts
-        WHERE ${listedPost} AND NOT ${hidden} GROUP BY posts.user_id`;
-  const anchorOnly = (viewer: string) =>
-    sql`EXISTS (SELECT 1 FROM hidden_trade_post previous_hp
-          WHERE previous_hp.user_id = ${viewer} AND previous_hp.list_id = posts.id)`;
-  const plans: [label: string, query: SQL][] = [
-    ["listed posts, by the link", listedCount(legacyPostsCte, "legacy_posts")],
-    ["listed posts, by the rows", listedCount(postsCte, "posts")],
-    ["pairs, by the link", sql`SELECT count(*) FROM (${legacyPairs}) pairs`],
-    ["pairs, by the rows", sql`SELECT count(*) FROM (${rowPairs}) pairs`],
-  ];
-  const viewers: [who: string, id: string][] = [["a viewer with no hides", "no-such-user"]];
-  if (hider) viewers.push(["the heaviest hider", hider]);
-  else console.log("[trade-post-drift] no hides here, so only the no-hide plans show");
-  for (const [who, id] of viewers) {
-    plans.push(
-      [
-        `lists not hidden, the rule before, ${who}`,
-        notHidden(sql`EXISTS (SELECT 1 ${previousHidesOf(sql`${id}`, "l")})`),
-      ],
-      [`lists not hidden, the rule now, ${who}`, notHidden(inHiddenPostSql(id, "l"))],
-      [`feed people, anchor-only before, ${who}`, feedPeople(anchorOnly(id))],
-      [`feed people, the rule now, ${who}`, feedPeople(inHiddenPostSql(id, "posts"))],
-    );
-  }
-  for (const [label, query] of plans) {
-    const { rows } = await db.execute<{ "QUERY PLAN": string }>(
-      sql`EXPLAIN (ANALYZE, BUFFERS) ${query}`,
-    );
-    console.log(`\n== ${label}\n${rows.map((row) => row["QUERY PLAN"]).join("\n")}`);
-  }
-  process.exit(0);
-}
 
 const { rows: total } = await db.execute<{ n: number }>(
   sql`SELECT count(*)::int AS n FROM trade_post`,
@@ -224,25 +71,6 @@ for (const [label, query] of CHECKS) {
     label,
   );
 }
-
-// the relations `PublicList.linkedList` is read through, with the partner rule of
-// `services/list/read.ts` inlined: that module's imports reach `env.ts`
-const related = await db.query.lists.findMany({
-  columns: { id: true, linkedListId: true },
-  with: {
-    postLed: { columns: { wantListId: true }, orderBy: { id: "asc" } },
-    postWanted: { columns: { leadListId: true }, orderBy: { id: "asc" } },
-  },
-  orderBy: { id: "asc" },
-});
-const unrelated = related
-  .filter(
-    (list) =>
-      (list.postLed?.wantListId ?? list.postWanted?.leadListId ?? null) !== list.linkedListId,
-  )
-  .map((list) => list.id);
-drift += unrelated.length;
-report(unrelated, "a list whose partner by its relations differs from its link (list ids)");
 
 console.log(drift === 0 ? "[trade-post-drift] in step" : `[trade-post-drift] ${drift} out of step`);
 process.exit(drift === 0 ? 0 : 1);

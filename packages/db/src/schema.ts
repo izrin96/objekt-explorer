@@ -94,9 +94,6 @@ export const lists = pgTable(
     listType: listTypeEnum("list_type").notNull().default("general"),
     isProfileBind: boolean("is_profile_bind").notNull().default(false),
     hideSerial: boolean("hide_serial").notNull().default(false),
-    linkedListId: integer("linked_list_id").references((): AnyPgColumn => lists.id, {
-      onDelete: "set null",
-    }),
     profileAddress: citext("profile_address", { length: 42 }),
     profileSlug: varchar("profile_slug", { length: 100 }),
     description: text("description"),
@@ -126,9 +123,6 @@ export const lists = pgTable(
     index("lists_profile_address_idx")
       .on(t.profileAddress)
       .where(sql`profile_address IS NOT NULL`),
-    index("lists_linked_list_id_idx")
-      .on(t.linkedListId)
-      .where(sql`linked_list_id IS NOT NULL`),
     index("lists_trade_discoverable_idx")
       .on(t.listType)
       .where(sql`list_type IN ('have', 'want') AND discoverable = true`),
@@ -262,9 +256,9 @@ export const hiddenTradePost = pgTable(
 
 /**
  * A Trade post: its lead list (a have or sale list, or a Buy post's want list) and at most one
- * want list. The source of a post's pairing for reads and writes alike: `writePosts`
- * (`packages/api/src/services/list/shared.ts`) writes it and mirrors `lists.linked_list_id` from
- * it. No unique index on either list: one list may sit in more than one post later.
+ * want list. The only place a post's pairing is stored: `writePosts`
+ * (`packages/api/src/services/list/shared.ts`) writes it. No unique index on either list: one
+ * list may sit in more than one post later.
  */
 export const tradePost = pgTable(
   "trade_post",
