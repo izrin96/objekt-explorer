@@ -658,6 +658,9 @@ Built on 2026-11-15, on top of `2bd2b71c`. What was run, and the departures from
   - (p) taken off Trade again: both off, still paired, row kept.
   The full local drift script then read zero on all eleven checks.
 - **Local data after the pass**, against the starting state: every list has the Trade state, link, Open to and `takes_swaps` it had. `lt2 wants` leads a new row (`1000423`, was `1000421`). `updated_at` moved on 13140, 13142, 13168, 13169 and 13175, and `bumped_at` on 13140 and 13175. The four lists the pass created are gone.
+- **CI:** the first push (`4f2ad06c`) failed its checks, so `:latest` did not move. The differential test took 11.8 s on the runner against bun's 5 s default; it takes 0.65 s locally. Both long tests got a 60 s timeout (`b5c5965c`), and that run passed.
+- **Production after the deploy** (task 8.2), read-only, 2026-11-15 05:50 UTC: 1,346 rows, zero on all eleven checks. The run came about a minute after the image was built, and no `trade_post` row had been created since, so it shows the deploy broke nothing at rest. It does not show a write by the new code on production.
+- **Production, second run**, read-only, 2026-11-15 06:10 UTC, about 20 minutes after the deploy: 1,344 rows, zero on all eleven checks. Two rows were removed since the deploy, 15 have, sale or want lists had `updated_at` moved (8 of them linked), and no row was created. So the new code removed rows on production and the mirror agreed afterwards; a row created by the new code, and a pair or unpair, were not seen in this window (`updated_at` also moves on writes that touch no post).
 - **Still not run:** two writers of one person at the same time. The fresh read after the lock (decision 3) rests on reasoning.
 
 ## Open Questions

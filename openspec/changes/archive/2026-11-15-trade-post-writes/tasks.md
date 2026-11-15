@@ -292,7 +292,7 @@ In this group, W is 13142, H1 13168, H2 13169, S 13170 and H3 13173 (`localtest2
   This is the gate in design.md's Risks. After the deploy the rows overwrite the link, so this is the last moment the link can still correct the rows.
 
   Verify that the go-ahead is recorded before the run, and that all eleven counts are zero. Any other count stops the rollout and goes to the owner.
-- [ ] 8.2 The owner approves and runs the commit, the push and the deploy of the web image; the worker may stay as it is (design decision 8). With a further go-ahead afterwards, run the drift script read-only against production and record it in design.md. Verify that all eleven counts are zero.
+- [x] 8.2 The owner approves and runs the commit, the push and the deploy of the web image; the worker may stay as it is (design decision 8). With a further go-ahead afterwards, run the drift script read-only against production and record it in design.md. Verify that all eleven counts are zero.
 
 ## 9. Agent docs
 
