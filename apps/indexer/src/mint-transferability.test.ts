@@ -11,10 +11,10 @@ import {
   type ChunkTransfer,
   type RpcCall,
   decodeReads,
-  latestChangeAfterRead,
   mintReads,
   planReads,
   readTransferability,
+  transferableAfterRead,
 } from "./mint-transferability";
 
 const HASH_A = `0x${"a".repeat(64)}`;
@@ -221,28 +221,35 @@ describe("decodeReads", () => {
   });
 });
 
-describe("latestChangeAfterRead", () => {
+describe("transferableAfterRead", () => {
   const change = (blockNumber: number, transactionIndex: number, transferable: boolean) => ({
     blockNumber,
     transactionIndex,
     transferable,
   });
 
-  test("ignores a change sent before the mint", () => {
-    expect(latestChangeAfterRead([change(86423017, 0, false)], 86423025)).toBeUndefined();
+  test("a false sent before the mint wins over a true read at the mint", () => {
+    const read = { readBlock: 86423025, transferable: true };
+    expect(transferableAfterRead(read, [change(86423017, 0, false)])).toBe(false);
   });
 
-  test("ignores a change in the read block, which the read already covers", () => {
-    expect(latestChangeAfterRead([change(100, 9, false)], 100)).toBeUndefined();
+  test("a true sent before the mint never turns a false read true", () => {
+    const read = { readBlock: 100, transferable: false };
+    expect(transferableAfterRead(read, [change(99, 0, true)])).toBe(false);
   });
 
-  test("takes the latest change after the read block", () => {
-    const changes = [
-      change(102, 0, true),
-      change(99, 5, false),
-      change(102, 3, false),
-      change(101, 7, true),
-    ];
-    expect(latestChangeAfterRead(changes, 100)).toEqual(change(102, 3, false));
+  test("the latest change before the read is the one that counts", () => {
+    const read = { readBlock: 100, transferable: true };
+    expect(transferableAfterRead(read, [change(98, 0, false), change(100, 2, true)])).toBe(true);
+  });
+
+  test("keeps the read with no change", () => {
+    expect(transferableAfterRead({ readBlock: 100, transferable: true }, [])).toBe(true);
+  });
+
+  test("the latest change after the read wins either way", () => {
+    const read = { readBlock: 100, transferable: true };
+    const changes = [change(99, 0, false), change(102, 3, true), change(101, 7, false)];
+    expect(transferableAfterRead(read, changes)).toBe(true);
   });
 });

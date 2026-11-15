@@ -131,25 +131,35 @@ export async function readTransferability(client: BatchClient, tokens: TokenRead
   return decodeReads(reads, results);
 }
 
-type Change = { blockNumber: number; transactionIndex: number };
+type Change = { blockNumber: number; transactionIndex: number; transferable: boolean };
 
-/**
- * The change an objekt ends on, out of those recorded before the indexer created it. The chain
- * read that set its value covers every change up to the end of `readBlock`, and Cosmo sends one
- * before the mint that the mint itself overrides, so only a change after `readBlock` counts.
- */
-export function latestChangeAfterRead<T extends Change>(changes: readonly T[], readBlock: number) {
-  let latest: T | undefined;
+function latest<T extends Change>(changes: readonly T[]) {
+  let found: T | undefined;
   for (const change of changes) {
-    if (change.blockNumber <= readBlock) continue;
     if (
-      !latest ||
-      change.blockNumber > latest.blockNumber ||
-      (change.blockNumber === latest.blockNumber &&
-        change.transactionIndex > latest.transactionIndex)
+      !found ||
+      change.blockNumber > found.blockNumber ||
+      (change.blockNumber === found.blockNumber && change.transactionIndex > found.transactionIndex)
     ) {
-      latest = change;
+      found = change;
     }
   }
-  return latest;
+  return found;
+}
+
+/**
+ * A new objekt's transferable, from the chain read at `readBlock` and the changes recorded for its
+ * token id up to then. Cosmo often marks a token id non-transferable a few blocks before minting
+ * it, and `isObjektTransferable` reads true after that mint although such objekts never move, so a
+ * change at or before the read block can only turn the value false. The latest change after the
+ * read block wins as usual.
+ */
+export function transferableAfterRead(
+  read: { readBlock: number; transferable: boolean },
+  changes: readonly Change[],
+) {
+  const after = latest(changes.filter((change) => change.blockNumber > read.readBlock));
+  if (after) return after.transferable;
+  const before = latest(changes.filter((change) => change.blockNumber <= read.readBlock));
+  return read.transferable && (before?.transferable ?? true);
 }

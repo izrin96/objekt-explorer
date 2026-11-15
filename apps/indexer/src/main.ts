@@ -10,9 +10,9 @@ import { fetchMetadata } from "./metadata";
 import {
   type TokenRead,
   isMint,
-  latestChangeAfterRead,
   mintReads,
   readTransferability,
+  transferableAfterRead,
 } from "./mint-transferability";
 import {
   Collection,
@@ -377,9 +377,9 @@ function chainValue(transferable: Map<string, boolean>, tokenId: string) {
  * immediately when the objekt already exists. Updates for objekts that don't
  * exist yet (e.g. their mint transfer hasn't been seen) are left pending
  * (appliedAt = null) and picked up later by applyPendingTransferabilityUpdates
- * once the objekt is minted, instead of being silently dropped. An update at or before the block
- * whose chain read created an objekt in this batch is recorded as applied without a write: the read
- * already holds it, and Cosmo's change sent before a mint is overridden by the mint.
+ * once the objekt is minted, instead of being silently dropped. For an objekt created in this
+ * batch, an update at or before the block of its chain read can only turn it false
+ * (`transferableAfterRead`).
  */
 async function handleTransferabilityUpdates(
   ctx: ProcessorContext<Store>,
@@ -388,13 +388,26 @@ async function handleTransferabilityUpdates(
 ) {
   const objektBatch = new Map<string, Objekt>();
   const updateRows: TransferabilityUpdate[] = [];
+  const created = new Map<
+    string,
+    { read: { readBlock: number; transferable: boolean }; changes: TransferabilityUpdateEvent[] }
+  >();
 
   for (const update of updates) {
     const objekt = await ctx.store.get(Objekt, update.tokenId);
     const appliedNow = objekt !== undefined;
     const readBlock = readBlocks.get(update.tokenId);
 
-    if (objekt && (readBlock === undefined || update.blockNumber > readBlock)) {
+    if (objekt && readBlock !== undefined) {
+      let entry = created.get(objekt.id);
+      if (!entry) {
+        entry = { read: { readBlock, transferable: objekt.transferable }, changes: [] };
+        created.set(objekt.id, entry);
+      }
+      entry.changes.push(update);
+      objekt.transferable = transferableAfterRead(entry.read, entry.changes);
+      objektBatch.set(objekt.id, objekt);
+    } else if (objekt) {
       objekt.transferable = update.transferable;
       objektBatch.set(objekt.id, objekt);
     } else {
@@ -429,7 +442,7 @@ async function handleTransferabilityUpdates(
  * minted, now that the objekt(s) in `newlyMintedIds` exist. Mutates the
  * matching entries in `objektBatch` in place so the caller's upsert picks up
  * the corrected transferable value in the same write. Every pending update is
- * stamped, but only one after the objekt's read block changes its value.
+ * stamped; together they can only turn the chain read false (`transferableAfterRead`).
  */
 async function applyPendingTransferabilityUpdates(
   ctx: ProcessorContext<Store>,
@@ -457,10 +470,10 @@ async function applyPendingTransferabilityUpdates(
     const objekt = objektBatch.get(tokenId);
     const readBlock = readBlocks.get(tokenId);
     if (!objekt || readBlock === undefined) continue;
-    const latest = latestChangeAfterRead(updates, readBlock);
-    if (latest) {
-      objekt.transferable = latest.transferable;
-    }
+    objekt.transferable = transferableAfterRead(
+      { readBlock, transferable: objekt.transferable },
+      updates,
+    );
   }
 }
 
