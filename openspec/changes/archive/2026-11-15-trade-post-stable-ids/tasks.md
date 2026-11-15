@@ -25,4 +25,4 @@ No task commits, pushes or runs a migration. The root `.env` is production; loca
 
 ## 5. Rollout
 
-- [ ] 5.1 The owner commits, pushes and deploys web. With a go-ahead afterwards, the drift script read-only on production reads zero; record it in design.md.
+- [x] 5.1 The owner commits, pushes and deploys web. With a go-ahead afterwards, the drift script read-only on production reads zero; record it in design.md.

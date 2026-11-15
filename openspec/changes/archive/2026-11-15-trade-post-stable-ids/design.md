@@ -83,6 +83,7 @@ Revised during apply, with the owner's agreement. `savePost` refuses a list that
 - **Local data after the runs:** every list has the Trade state it had. `lt2 wants` leads row `1000439` (was `1000423`): in the last round its lead was deleted while it was off Trade, so the row went, and posting it again made a new one.
 - **Found while testing:** the first build kept the lead's row on every merge, which changed the id of the live Buy post in the one merge the composer allows. The owner agreed to keep the live post's row; decision 5 and its tests are the result.
 - **Also by rule, not changed:** a pair off Trade whose lead is deleted loses its row, since an off-Trade want list leads none; posting that want list later makes a new id.
+- **Rollout** (task 5.1): pushed as `e99390cb`; CI passed and moved `:latest`. The owner deployed web. Production, read-only, 2026-11-15 15:28 UTC: 1,360 rows, zero on the three drift checks, with 3 rows created and 46 lists written in the half hour before. The check cannot tell which build wrote them, and a re-led row looks like any other row, so it shows the rows are sound, not that a re-lead has happened on production yet.
 - **Not run:** the composer's clicks in a browser.
 
 ## Open Questions
