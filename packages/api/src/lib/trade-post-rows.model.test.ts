@@ -553,26 +553,34 @@ function differential(seed: number, counts: Counts) {
   }
 }
 
-test("the row writes leave what the link writes left, over 1,000 runs of 40 writes", () => {
-  const counts: Counts = {
-    post: 0,
-    takeDown: 0,
-    pair: 0,
-    unpair: 0,
-    swapWant: 0,
-    deleteLead: 0,
-    deleteWant: 0,
-    createOnTrade: 0,
-    createLinked: 0,
-    createLinkedToPaired: 0,
-    account: 0,
-  };
-  for (let seed = 1; seed <= 1000; seed++) differential(seed, counts);
-  if (process.env.COUNTS) console.log(counts);
-  for (const [transition, n] of Object.entries(counts)) {
-    expect(n, `${transition} ran ${n} times`).toBeGreaterThanOrEqual(100);
-  }
-});
+// Under a second locally, but 12 s on the CI runner beside lint and typecheck: bun's default
+// 5 s is too short there.
+const CI_TIMEOUT = 60_000;
+
+test(
+  "the row writes leave what the link writes left, over 1,000 runs of 40 writes",
+  () => {
+    const counts: Counts = {
+      post: 0,
+      takeDown: 0,
+      pair: 0,
+      unpair: 0,
+      swapWant: 0,
+      deleteLead: 0,
+      deleteWant: 0,
+      createOnTrade: 0,
+      createLinked: 0,
+      createLinkedToPaired: 0,
+      account: 0,
+    };
+    for (let seed = 1; seed <= 1000; seed++) differential(seed, counts);
+    if (process.env.COUNTS) console.log(counts);
+    for (const [transition, n] of Object.entries(counts)) {
+      expect(n, `${transition} ran ${n} times`).toBeGreaterThanOrEqual(100);
+    }
+  },
+  CI_TIMEOUT,
+);
 
 /** Rows as a build without the planner, or a missed writer, could have left them. */
 function corrupt(world: World, rand: () => number) {
@@ -597,20 +605,24 @@ function corrupt(world: World, rand: () => number) {
   }
 }
 
-test("one plan over the link repairs corrupted rows, over 1,000 runs of 30 writes", () => {
-  for (let seed = 1; seed <= 1000; seed++) {
-    const rand = mulberry32(seed);
-    const world: World = { lists: [], rows: [], nextRow: 1_000_000 };
-    let lastList = 0;
-    for (let i = 0; i < 30; i++) {
-      corrupt(world, rand);
-      legacy(
-        world,
-        pickWrite(world, rand, () => ++lastList),
-      );
-      // both people had rows corrupted
-      for (const userId of USERS) legacySync(world, userId);
-      check(world, `seed ${seed} step ${i}`);
+test(
+  "one plan over the link repairs corrupted rows, over 1,000 runs of 30 writes",
+  () => {
+    for (let seed = 1; seed <= 1000; seed++) {
+      const rand = mulberry32(seed);
+      const world: World = { lists: [], rows: [], nextRow: 1_000_000 };
+      let lastList = 0;
+      for (let i = 0; i < 30; i++) {
+        corrupt(world, rand);
+        legacy(
+          world,
+          pickWrite(world, rand, () => ++lastList),
+        );
+        // both people had rows corrupted
+        for (const userId of USERS) legacySync(world, userId);
+        check(world, `seed ${seed} step ${i}`);
+      }
     }
-  }
-});
+  },
+  CI_TIMEOUT,
+);
