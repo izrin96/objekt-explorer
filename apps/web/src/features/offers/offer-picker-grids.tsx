@@ -259,7 +259,7 @@ function theirsEmpty(
   onFilters: (filters: Filters) => void,
   fromList: string | undefined,
 ) {
-  if (!listed && !fromList) {
+  if (!listed) {
     return {
       title: m.offer_picker_theirs_none_listed({ name }),
       hint: m.offer_picker_theirs_none_listed_hint(),

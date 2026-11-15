@@ -24,14 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CautionLine } from "@/features/moderation/caution-line";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
-import { formatCount } from "@/lib/number";
 import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
-import { useNoticesStore } from "@/stores/notices";
 import { cancelOfferHold, holdOfferAction, useOfferHolds } from "@/stores/offer-holds";
 
 import { useOfferActions } from "./actions";
-import { declineNudge } from "./decline-nudge";
 import {
   cancelReasonText,
   expiresLabel,
@@ -45,7 +42,6 @@ import { type HeldAction, holdLine } from "./hold";
 import { isLopsided } from "./lopsided";
 import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
-import { nudgeOnePostRule } from "./one-post-rule";
 import { type Collections, pickKey } from "./pick";
 import { allSent } from "./sent";
 import { nudgeWantedRule } from "./wanted-rule";
@@ -97,9 +93,7 @@ export function OfferBody({
     void actions.decline
       .mutateAsync(input)
       .then(() => {
-        const nudge = declineNudge(offer, useNoticesStore.getState().dismissed);
-        if (nudge === "wanted") nudgeWantedRule(queryClient);
-        else if (nudge === "one-post") nudgeOnePostRule(queryClient);
+        if (offer.suggestWantedOnly) nudgeWantedRule(queryClient);
       })
       .catch(() => {});
   const busy = actions.accept.isPending || actions.decline.isPending || actions.withdraw.isPending;
@@ -123,13 +117,6 @@ export function OfferBody({
           {offer.post ? (
             <span className="text-muted-foreground text-xs break-words">
               {m.offer_on_post({ post: offer.post.name })}
-            </span>
-          ) : offer.askPosts ? (
-            <span className="text-muted-foreground text-xs break-words">
-              {m.offer_asks_from_posts({
-                count: formatCount(offer.askPosts.length),
-                posts: joinList(offer.askPosts.map((post) => post.name)),
-              })}
             </span>
           ) : null}
         </p>

@@ -169,13 +169,6 @@ export const auth = betterAuth({
         returned: true,
         input: false,
       },
-      multiPostAsks: {
-        type: "boolean",
-        required: false,
-        defaultValue: true,
-        returned: true,
-        input: false,
-      },
     },
     deleteUser: {
       enabled: true,

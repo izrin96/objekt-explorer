@@ -1,13 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  chosenPostOf,
-  giveRule,
-  openPostOf,
-  postProblem,
-  startedPostOf,
-  wantPostOf,
-} from "./post-choice";
+import { chosenPostOf, giveRule, givesPostOf, openPostOf, postProblem } from "./post-choice";
 
 const posts = [{ slug: "doubles" }, { slug: "spares" }];
 
@@ -51,10 +44,6 @@ describe("chosenPostOf", () => {
     expect(chosenPostOf(posts, "spares", "doubles")).toBe("spares");
   });
 
-  test("No post", () => {
-    expect(chosenPostOf(posts, null, "doubles")).toBeNull();
-  });
-
   test("a chosen post taken off Trade falls back", () => {
     expect(chosenPostOf(posts, "gone", "doubles")).toBe("doubles");
   });
@@ -73,12 +62,8 @@ describe("postProblem", () => {
     expect(postProblem({ listSlug: "spares" }, true, "doubles")).toBe("other_post");
   });
 
-  test("any pick under No post", () => {
-    expect(postProblem({ listSlug: "doubles" }, true, null)).toBe("no_post");
-  });
-
   test("a kept objekt goes on any post", () => {
-    expect(postProblem({ listSlug: null, kept: true }, true, null)).toBeNull();
+    expect(postProblem({ listSlug: null, kept: true }, true, "doubles")).toBeNull();
     expect(postProblem({ listSlug: "spares", kept: true }, true, "doubles")).toBeNull();
   });
 
@@ -112,46 +97,20 @@ describe("giveRule", () => {
   });
 });
 
-describe("startedPostOf", () => {
-  test("the post the builder started from", () => {
-    expect(startedPostOf(posts, { startList: "spares" })).toBe("spares");
-    expect(startedPostOf(posts, { matchesPost: "doubles" })).toBe("doubles");
-    expect(startedPostOf(posts, { addedPost: "spares" })).toBe("spares");
+describe("givesPostOf", () => {
+  test("no pick is no post", () => {
+    expect(givesPostOf("doubles", [])).toBeNull();
   });
 
-  test("from chat or a row with no post, none", () => {
-    expect(startedPostOf(posts, {})).toBeNull();
+  test("only kept picks is no post", () => {
+    expect(givesPostOf("doubles", [{ kept: true }, { kept: true }])).toBeNull();
   });
 
-  test("a WTB post is no post to ask from", () => {
-    expect(startedPostOf(posts, { startList: "hunting" })).toBeNull();
-  });
-});
-
-describe("wantPostOf", () => {
-  test("asking nothing stays on the post it started from", () => {
-    expect(wantPostOf("doubles", [])).toBe("doubles");
-    expect(wantPostOf(null, [{ listSlug: null, kept: true }])).toBeNull();
+  test("one pick that is not kept gives the post", () => {
+    expect(givesPostOf("doubles", [{}])).toBe("doubles");
   });
 
-  test("every ask on the started post", () => {
-    expect(wantPostOf("doubles", [{ listSlug: "doubles" }, { listSlug: "doubles" }])).toBe(
-      "doubles",
-    );
-  });
-
-  test("every ask on one other list moves to it", () => {
-    expect(wantPostOf("doubles", [{ listSlug: "spares" }])).toBe("spares");
-    expect(wantPostOf(null, [{ listSlug: "spares" }, { listSlug: "spares" }])).toBe("spares");
-  });
-
-  test("asks across posts are on none", () => {
-    expect(wantPostOf("doubles", [{ listSlug: "doubles" }, { listSlug: "spares" }])).toBeNull();
-  });
-
-  test("a kept objekt doesn't count", () => {
-    expect(
-      wantPostOf("doubles", [{ listSlug: "spares", kept: true }, { listSlug: "doubles" }]),
-    ).toBe("doubles");
+  test("a mix gives the post", () => {
+    expect(givesPostOf("doubles", [{ kept: true }, {}])).toBe("doubles");
   });
 });

@@ -406,11 +406,10 @@ export async function offerRulesOf(userId: string) {
     .select({
       onlyWantedOffers: user.onlyWantedOffers,
       allowCollectionAsks: user.allowCollectionAsks,
-      multiPostAsks: user.multiPostAsks,
     })
     .from(user)
     .where(eq(user.id, userId));
-  return row ?? { onlyWantedOffers: false, allowCollectionAsks: false, multiPostAsks: true };
+  return row ?? { onlyWantedOffers: false, allowCollectionAsks: false };
 }
 
 /** The partner's have or sale list on Trade a `post` slug names, else null: a post never refuses. */

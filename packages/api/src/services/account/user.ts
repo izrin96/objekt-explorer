@@ -43,7 +43,6 @@ export async function updateAccount(
       showOnline: input.showOnline,
       onlyWantedOffers: input.onlyWantedOffers,
       allowCollectionAsks: input.allowCollectionAsks,
-      multiPostAsks: input.multiPostAsks,
       image: input.removePic ? null : undefined,
       removeImage: input.removePic,
     })
@@ -57,7 +56,6 @@ export async function setOfferRules(userId: string, input: z.infer<typeof offerR
     .set({
       onlyWantedOffers: input.onlyWantedOffers,
       allowCollectionAsks: input.allowCollectionAsks,
-      multiPostAsks: input.multiPostAsks,
     })
     .where(eq(userSchema.id, userId));
 }

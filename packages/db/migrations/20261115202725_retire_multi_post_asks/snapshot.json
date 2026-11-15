@@ -1,0 +1,35 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "806ca64c-c1bc-4a27-8b3c-090230113214",
+  "prevIds": [
+    "d1d9490d-1479-463e-a2ec-9b5c954763c5"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "multi_post_asks"
+      ],
+      "writes": [
+        "s|col|public.user.multi_post_asks",
+        "n|col|public.user.multi_post_asks",
+        "e|col|public.user.multi_post_asks"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"user\",\"multi_post_asks\"]"
+    }
+  ]
+}

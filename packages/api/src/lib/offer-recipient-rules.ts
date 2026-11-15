@@ -57,34 +57,6 @@ export function askCandidates(
   return picked && fitting.includes(preferred) ? [preferred] : fitting;
 }
 
-/**
- * Whether one list's entries hold enough copies for the any-copy asks: per collection, the copies
- * the list names, less those asked for by serial, cover the asks; a whole-collection entry covers
- * any number. A recipient taking asks across posts gets an offer on no one post when they don't,
- * since the picker counts a collection's copies over every list.
- */
-export function anyAsksFit(
-  asks: readonly { collectionSlug: string; objektId?: string }[],
-  entries: readonly { collectionSlug: string; objektId: string | null }[],
-): boolean {
-  const wanted = new Map<string, number>();
-  for (const ask of asks) {
-    if (ask.objektId === undefined) {
-      wanted.set(ask.collectionSlug, (wanted.get(ask.collectionSlug) ?? 0) + 1);
-    }
-  }
-  for (const [slug, count] of wanted) {
-    const own = entries.filter((entry) => entry.collectionSlug === slug);
-    if (own.some((entry) => entry.objektId === null)) continue;
-    const named = new Set(own.map((entry) => entry.objektId));
-    for (const ask of asks) {
-      if (ask.collectionSlug === slug && ask.objektId !== undefined) named.delete(ask.objektId);
-    }
-    if (named.size < count) return false;
-  }
-  return true;
-}
-
 export type OnePostVerdict<T> =
   | { ok: true; listId: number | null }
   | { ok: false; listId: number | null; refused: T[] };
@@ -141,18 +113,11 @@ export function notWanted(i: {
 }
 
 /**
- * The recipient-only "Asks from N of your posts" mark on an offer on no post, and whether a
- * decline may offer to turn Let people ask from more than one post off.
+ * The post an offer is stored on, which is also the post its gives are checked against: the
+ * post its asks came through, or none when every ask is a kept objekt or there is none.
  */
-export function askPostsMark<T>(i: {
-  viewerIsRecipient: boolean;
-  /** the posts the offer's asks were stored against, kept objekts left out */
-  posts: readonly T[];
-  /** the recipient takes asks across posts and has two or more posts on Trade */
-  suggestable: boolean;
-}): { askPosts?: T[]; suggestOnePost?: true } {
-  if (!i.viewerIsRecipient || i.posts.length < 2) return {};
-  return { askPosts: [...i.posts], ...(i.suggestable && { suggestOnePost: true as const }) };
+export function storedPostOf(post: number | null, asks: readonly { kept: boolean }[]) {
+  return asks.some((ask) => !ask.kept) ? post : null;
 }
 
 /**

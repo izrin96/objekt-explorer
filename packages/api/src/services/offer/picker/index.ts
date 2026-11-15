@@ -122,7 +122,7 @@ async function partnerRulesOf(partnerId: string): Promise<PartnerRules> {
   return {
     wantedOnly: rules.onlyWantedOffers,
     wantsOnTrade: wants !== null,
-    onePost: hasLists && !rules.multiPostAsks,
+    onePost: hasLists,
     asksClosed: !hasLists && !rules.allowCollectionAsks,
   };
 }
@@ -174,7 +174,7 @@ export async function suggestOffer(
   if (!held && pref.allow === "nobody") return empty;
   if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return empty;
 
-  const [{ recounted }, nearLists, rules] = await Promise.all([
+  const [{ recounted }, nearLists] = await Promise.all([
     // an offer aims at this person on purpose, so a post the viewer hid still fills it
     recountPartners(me, sides, "all", { ownerIds: [partnerId], skipHiddenPosts: false }),
     // the strips' near matches, narrowed as the strips are: by Compare with when a list is named
@@ -184,8 +184,6 @@ export async function suggestOffer(
       list === undefined ? null : sides,
       postLists ? new Set([...postLists.offerIds, ...postLists.wantIds]) : undefined,
     ),
-    // read here, not in `onePostOf`, so the one-post check costs no round trip of its own
-    offerRulesOf(partnerId),
   ]);
   // a person with near matches only still gets them
   const partner = recounted.find((row) => row.userId === partnerId);
@@ -193,10 +191,10 @@ export async function suggestOffer(
   const filled = partner
     ? fillMatches(partner, swapPair, postLists ?? undefined)
     : { get: [], give: [] };
-  // a row's You get matches outside a Can swap pair come from one post, when the partner asks that
+  // a row's You get matches outside a Can swap pair come from one post
   const leadPost =
     post === undefined && !swapPair && filled.get.length > 0
-      ? await onePostOf(partnerId, rules, filled.get, lead)
+      ? await onePostOf(partnerId, filled.get, lead)
       : null;
   const onPostGet = leadPost
     ? filled.get.filter((match) => match.partnerListIds.includes(leadPost.id))
@@ -284,14 +282,12 @@ type Suggestion = {
   collections: Awaited<ReturnType<typeof collectionsOf>>;
 };
 
-/** The one post a row's get matches come from when the partner takes asks from one post, else null. */
+/** The one post a row's get matches come from, or null when none is on a list askable on Trade. */
 async function onePostOf(
   partnerId: string,
-  rules: { multiPostAsks: boolean },
   getMatches: readonly { partnerListIds: readonly number[] }[],
   lead: string | undefined,
 ) {
-  if (rules.multiPostAsks) return null;
   const counts = new Map<number, number>();
   for (const match of getMatches) {
     for (const id of new Set(match.partnerListIds)) counts.set(id, (counts.get(id) ?? 0) + 1);

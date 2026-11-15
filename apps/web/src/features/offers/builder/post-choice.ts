@@ -27,27 +27,15 @@ export function openPostOf(
 }
 
 /**
- * For a partner who takes asks from several posts: the post the builder started from (a post, a
- * Market listing or a row's matches), else none.
- */
-export function startedPostOf(
-  posts: readonly Post[],
-  from: { startList?: string; matchesPost?: string; addedPost?: string | null },
-): string | null {
-  const started = [from.startList, from.matchesPost, from.addedPost];
-  return started.find((slug) => slug != null && posts.some((post) => post.slug === slug)) ?? null;
-}
-
-/**
- * The post the offer is on: the sender's choice (`null` is No post, `undefined` not chosen yet),
- * else where it opened; none while the partner has no posts.
+ * The post the offer is on: the sender's choice (`undefined` not chosen yet), else where it
+ * opened; none while the partner has no posts.
  */
 export function chosenPostOf(
   posts: readonly Post[],
-  chosen: string | null | undefined,
+  chosen: string | undefined,
   open: string | undefined,
 ): string | null {
-  if (posts.length === 0 || chosen === null) return null;
+  if (posts.length === 0) return null;
   return posts.some((post) => post.slug === chosen) ? chosen! : (open ?? null);
 }
 
@@ -56,27 +44,20 @@ export function postProblem(
   pick: Pick<OfferPick, "listSlug" | "kept">,
   hasPosts: boolean,
   post: string | null,
-): "no_post" | "other_post" | null {
+): "other_post" | null {
   if (!hasPosts || pick.kept) return null;
-  if (post === null) return "no_post";
   return pick.listSlug !== null && pick.listSlug !== post ? "other_post" : null;
 }
 
 /**
- * For a partner who takes asks from several posts, the post `createOffer` checks gives against:
- * the post the builder started from while every ask is on it, else the one list every ask is on,
- * else none (asks across posts). An offer that asks nothing stays on the post it started from.
+ * The post the server checks gives against: the post while You get holds a pick that is not a
+ * kept objekt, else none, so an offer that asks for nothing is held to every want list on Trade.
  */
-export function wantPostOf(
-  started: string | null,
-  get: readonly Pick<OfferPick, "listSlug" | "kept">[],
+export function givesPostOf(
+  postSlug: string | null,
+  get: readonly Pick<OfferPick, "kept">[],
 ): string | null {
-  const lists = new Set(
-    get.flatMap((pick) => (pick.kept || pick.listSlug === null ? [] : [pick.listSlug])),
-  );
-  if (lists.size === 0) return started;
-  if (started !== null && lists.size === 1 && lists.has(started)) return started;
-  return lists.size === 1 ? [...lists][0]! : null;
+  return get.some((pick) => !pick.kept) ? postSlug : null;
 }
 
 /**

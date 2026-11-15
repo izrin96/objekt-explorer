@@ -47,7 +47,6 @@ export const userSearchInputSchema = z.object({ query: z.string().default("") })
 export const offerRulesInputSchema = z.object({
   onlyWantedOffers: z.boolean().optional(),
   allowCollectionAsks: z.boolean().optional(),
-  multiPostAsks: z.boolean().optional(),
 });
 
 export const updateAccountInputSchema = offerRulesInputSchema.extend({

@@ -4,10 +4,10 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
 import {
-  anyAsksFit,
   askCandidates,
   closedCollectionAsks,
   onePostVerdict,
+  storedPostOf,
   unwantedGives,
 } from "../../lib/offer-recipient-rules";
 import {
@@ -181,8 +181,7 @@ export async function createOffer(
       ),
     });
   }
-  // one post per offer, for a recipient with a list on Trade and Let people ask from more than
-  // one post off (web-trade-offers); with it on, an offer across posts is on no one post
+  // one post per offer, for a recipient with a list on Trade (web-trade-offers)
   let onPost = postListId;
   // the list every ask comes through, once one post per offer has chosen it
   let chosen: number | null = null;
@@ -199,15 +198,8 @@ export async function createOffer(
         preferred,
       };
     });
-    let verdict = onePostVerdict(asks, postListId);
-    if (!verdict.ok && rules.multiPostAsks && postListId !== null) {
-      // asks across posts are allowed, so a named post they don't fit only loses its say
-      onPost = null;
-      verdict = onePostVerdict(asks, null);
-    }
-    if (!verdict.ok && rules.multiPostAsks) {
-      onPost = null;
-    } else if (!verdict.ok) {
+    const verdict = onePostVerdict(asks, postListId);
+    if (!verdict.ok) {
       refuseOffer("other_post", {
         objektIds: verdict.refused.flatMap((row) => (row.item.objektId ? [row.item.objektId] : [])),
         collectionSlugs: verdict.refused.flatMap((row) =>
@@ -215,19 +207,7 @@ export async function createOffer(
         ),
       });
     }
-    chosen = verdict.ok ? verdict.listId : null;
-    if (
-      chosen !== null &&
-      rules.multiPostAsks &&
-      !anyAsksFit(
-        getRows.map((row) => row.item),
-        entries.filter((entry) => entry.listId === chosen),
-      )
-    ) {
-      // the any asks need copies from more than this list, which this recipient allows
-      chosen = null;
-      onPost = null;
-    }
+    chosen = verdict.listId;
     const onChosen = entries.filter((entry) => entry.listId === chosen);
     for (const row of getRows) {
       // a kept objekt stays on its own list: the recipient offered it, wherever it sits
@@ -240,11 +220,18 @@ export async function createOffer(
     }
     onPost ??= chosen;
   }
+  // an offer that asks for nothing new is on no post, so its gives are read against every want list
+  const storedPostListId = storedPostOf(
+    onPost,
+    getRows.map((row) => ({ kept: keptObjekt(row.item) })),
+  );
   if (rules.onlyWantedOffers) {
     const slugs = input.give.map((item) => item.collectionSlug);
     // on a post, its own want list; a post without one takes anything; no post, every want list
     const [wanted, asked] = await Promise.all([
-      onPost !== null ? postWantedAmong(onPost, slugs) : wantedAmong(partnerId, slugs),
+      storedPostListId !== null
+        ? postWantedAmong(storedPostListId, slugs)
+        : wantedAmong(partnerId, slugs),
       counteredAsks(addressed.conversationId, me),
     ]);
     const unwanted = unwantedGives(input.give, wanted, asked);
@@ -329,8 +316,6 @@ export async function createOffer(
   const note = input.note ? input.note : null;
   const caution: FlagCategory[] = note === null ? [] : scanMessage(note);
 
-  // an offer that asks for nothing is on no post, though its post chose the wants above
-  const storedPostListId = getRows.some((row) => !keptObjekt(row.item)) ? onPost : null;
   const result = await db
     .transaction(async (tx) => {
       await lockParties(tx, [me, partnerId]);

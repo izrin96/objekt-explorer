@@ -8,12 +8,11 @@ import { m } from "@/paraglide/messages";
 
 import { SwitchRow } from "./switch-row";
 
-type OfferRule = "onlyWantedOffers" | "allowCollectionAsks" | "multiPostAsks";
+type OfferRule = "onlyWantedOffers" | "allowCollectionAsks";
 // a column added after the session was read is unknown until then: its default stands in
 const RULE_DEFAULTS: Record<OfferRule, boolean> = {
   onlyWantedOffers: false,
   allowCollectionAsks: false,
-  multiPostAsks: true,
 };
 
 /** The offer rules; each switch saves on change, like Messages. */
@@ -51,13 +50,6 @@ export function TradeSection({ user }: { user: User }) {
         description={m.auth_account_only_wanted_desc()}
         checked={rule("onlyWantedOffers")}
         onCheckedChange={editRule("onlyWantedOffers")}
-      />
-      <SwitchRow
-        id="account-multi-post-asks"
-        label={m.auth_account_multi_post_label()}
-        description={m.auth_account_multi_post_desc()}
-        checked={rule("multiPostAsks")}
-        onCheckedChange={editRule("multiPostAsks")}
       />
       <SwitchRow
         id="account-allow-collection-asks"

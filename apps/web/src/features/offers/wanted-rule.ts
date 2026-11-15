@@ -6,7 +6,8 @@ import { client } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { useNoticesStore } from "@/stores/notices";
 
-import { WANTED_RULE_NUDGE } from "./decline-nudge";
+// a toast closes on its timeout as on a dismissal, so a nudge counts as answered once shown
+const WANTED_RULE_NUDGE = "offer-rule-only-wanted-nudge";
 
 /** Saves Only offers with what I want, then refreshes every query that read the account. */
 async function turnOnWantedRule(queryClient: QueryClient) {
