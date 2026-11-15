@@ -7,8 +7,13 @@ import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { offTradeOpenTo } from "./list-open-to";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE, OPEN_TO_LABEL } from "./list-type-labels";
+import { offTradeOpenTo, offTradeSaleOpenTo } from "./list-open-to";
+import {
+  LIST_TYPE_LABEL,
+  LIST_TYPE_TONE,
+  OPEN_TO_LABEL,
+  SALE_OPEN_TO_LABEL,
+} from "./list-type-labels";
 import { useIsListOwner } from "./use-list-owned";
 
 export function ListTypeBadge({
@@ -60,18 +65,32 @@ export function ListCurrencyBadge({ currency }: { currency: string }) {
   );
 }
 
-/** A want list's Open to, shown to its owner only while the list is off Trade; on Trade its post's tags say it. */
+/** A want or bound sale list's Open to, shown to its owner only while the list is off Trade; on Trade its post's tags say it. */
 export function ListOpenToBadge({
   list,
   className,
 }: {
-  list: Pick<PublicList, "slug" | "listType" | "discoverable" | "matchSale" | "matchHave">;
+  list: Pick<
+    PublicList,
+    | "slug"
+    | "listType"
+    | "discoverable"
+    | "matchSale"
+    | "matchHave"
+    | "isProfileBind"
+    | "takesSwaps"
+  >;
   className?: string;
 }) {
   const owned = useIsListOwner(list.slug);
-  const openTo = owned ? offTradeOpenTo(list) : null;
-  if (!openTo) return null;
-  const choice = OPEN_TO_LABEL[openTo]();
+  const wantOpenTo = owned ? offTradeOpenTo(list) : null;
+  const saleOpenTo = owned ? offTradeSaleOpenTo(list) : null;
+  const choice = wantOpenTo
+    ? OPEN_TO_LABEL[wantOpenTo]()
+    : saleOpenTo
+      ? SALE_OPEN_TO_LABEL[saleOpenTo]()
+      : null;
+  if (choice === null) return null;
   const label = m.list_open_to_badge_label({ choice });
   return (
     <Badge variant="outline" size="sm" title={label} className={className}>

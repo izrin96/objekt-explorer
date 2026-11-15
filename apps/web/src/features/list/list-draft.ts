@@ -1,6 +1,11 @@
 import { normalizeUserText } from "@repo/api/schemas/common/user-text";
 import type { ListType } from "@repo/api/schemas/list";
-import { type OpenTo, type OpenToFlags, openToOf } from "@repo/api/schemas/open-to";
+import {
+  type OpenTo,
+  type OpenToFlags,
+  openToOf,
+  type SaleOpenTo,
+} from "@repo/api/schemas/open-to";
 import { takesRatio } from "@repo/api/schemas/trade-ratio";
 import * as z from "zod";
 
@@ -25,6 +30,8 @@ export type ListDraft = OpenToFlags & {
   ratio: number | null;
   /** a want list drops a hand-added objekt once a trade delivers it */
   removeOnReceive: boolean;
+  /** a bound sale list is open to swaps too (Sell or swap) */
+  takesSwaps: boolean;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
@@ -44,6 +51,7 @@ export const EMPTY_DRAFT: ListDraft = {
   ratio: null,
   // a new want list starts with it on; lists made before it existed are off
   removeOnReceive: true,
+  takesSwaps: false,
 };
 
 /** Built per submit: the message functions read the request's locale. */
@@ -98,19 +106,23 @@ export function toCreateInput(draft: ListDraft) {
     matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
     removeOnReceive: draft.listType === "want" && draft.removeOnReceive,
+    takesSwaps: draft.listType === "sale" && isProfileBind && draft.takesSwaps,
   };
 }
 
 /**
  * `list.edit`'s input. A list's link and Trade state belong to its post, so they are left out and
  * the list keeps them. Ratio for all goes only when it differs from `storedRatio`, and a want
- * list's Open to only when it differs from `storedOpenTo`, null where the post sets it.
+ * list's Open to only when it differs from `storedOpenTo`, null where the post sets it; a sale
+ * list's Open to likewise against `storedSaleOpenTo`, sent as `saleOpenTo` since `takesSwaps` is
+ * create's field.
  */
 export function toEditInput(
   slug: string,
   draft: ListDraft,
   storedRatio: number | null = null,
   storedOpenTo: OpenTo | null = null,
+  storedSaleOpenTo: SaleOpenTo | null = null,
 ) {
   const {
     listType: _type,
@@ -118,9 +130,11 @@ export function toEditInput(
     linkedListId: _link,
     matchSale: _sale,
     matchHave: _have,
+    takesSwaps: _swaps,
     ...rest
   } = toCreateInput(draft);
   const openTo = openToOf(draft);
+  const saleOpenTo: SaleOpenTo = draft.takesSwaps ? "both" : "sell";
   return {
     slug,
     ...rest,
@@ -130,6 +144,9 @@ export function toEditInput(
     ...(draft.listType === "want" &&
       storedOpenTo !== null &&
       openTo !== storedOpenTo && { openTo }),
+    ...(draft.listType === "sale" &&
+      storedSaleOpenTo !== null &&
+      saleOpenTo !== storedSaleOpenTo && { saleOpenTo }),
   };
 }
 
@@ -229,5 +246,6 @@ export function toDraft(list: StoredList): ListDraft {
     regenerateSlug: false,
     ratio: list.ratio,
     removeOnReceive: list.removeOnReceive,
+    takesSwaps: list.takesSwaps ?? false,
   };
 }

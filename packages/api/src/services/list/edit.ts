@@ -5,7 +5,12 @@ import { eq, sql } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import type { EditListInput } from "../../schemas/list";
-import { type OpenToFlags, openToEdit, pairRefusesOpenTo } from "../../schemas/open-to";
+import {
+  type OpenToFlags,
+  openToEdit,
+  pairRefusesOpenTo,
+  saleOpenToEdit,
+} from "../../schemas/open-to";
 import { takesRatio } from "../../schemas/trade-ratio";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { assertProfileOwned } from "../profile";
@@ -30,6 +35,17 @@ function openToColumns(flags: OpenToFlags) {
   };
 }
 
+/**
+ * A sale list's Open to as `list.edit` writes it. Read again like `openToColumns`: a list put on
+ * Trade since keeps its post's value, and a Sell only write also leaves a list paired since.
+ */
+function takesSwapsColumn(takesSwaps: boolean) {
+  const keep = takesSwaps
+    ? sql`${lists.discoverable}`
+    : sql`(${lists.discoverable} OR ${postPartnerSql("lists")} IS NOT NULL)`;
+  return sql<boolean>`CASE WHEN ${keep} THEN ${lists.takesSwaps} ELSE ${takesSwaps}::boolean END`;
+}
+
 export async function editList(userId: string, input: EditListInput) {
   // the profile check counts only for an unbound list, so its refusal waits for the list
   const [found, profileCheck] = await Promise.allSettled([
@@ -49,6 +65,10 @@ export async function editList(userId: string, input: EditListInput) {
   const openTo = openToEdit(list, input.openTo);
   if (openTo.action === "refuse") {
     refuse("BAD_REQUEST", "list_pair_buying_only", PAIR_MESSAGES.list_pair_buying_only);
+  }
+  const saleOpenTo = saleOpenToEdit(list, input.saleOpenTo);
+  if (saleOpenTo.action === "refuse") {
+    refuse("BAD_REQUEST", "list_sale_links_sell_only", PAIR_MESSAGES.list_sale_links_sell_only);
   }
 
   // address changes are ignored on a bound list, so only an unbound one is checked
@@ -93,9 +113,15 @@ export async function editList(userId: string, input: EditListInput) {
         ratio: takesRatio(list.listType) ? input.ratio : undefined,
         removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
         ...(openTo.action === "write" && openToColumns(openTo.flags)),
+        ...(saleOpenTo.action === "write" && {
+          takesSwaps: takesSwapsColumn(saleOpenTo.takesSwaps),
+        }),
       })
       .where(eq(lists.id, list.id));
-  if (openTo.action === "write" && pairRefusesOpenTo(openTo.flags)) {
+  const guardsPair =
+    (openTo.action === "write" && pairRefusesOpenTo(openTo.flags)) ||
+    (saleOpenTo.action === "write" && !saleOpenTo.takesSwaps);
+  if (guardsPair) {
     // the guard reads the pair from `trade_post`, which a statement that waited on a pairing
     // writer would read from before the wait; under the lock it starts after that writer
     await db.transaction(async (tx) => {

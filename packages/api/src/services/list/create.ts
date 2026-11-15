@@ -192,6 +192,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
         input.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
       discoverable,
       ...resolveOpenTo(input.listType, input),
+      takesSwaps: input.listType === "sale" && isProfileBind && input.takesSwaps,
       removeOnReceive: input.listType === "want" && input.removeOnReceive,
       bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })

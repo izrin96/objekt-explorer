@@ -191,6 +191,8 @@ export const createListInputSchema = z.object({
   matchHave: z.boolean().default(true),
   /** want lists only; a tab from before it sends none, and gets a list with it off */
   removeOnReceive: z.boolean().default(false),
+  /** a bound sale list's Sell or swap; a tab from before it sends none, and gets Sell only */
+  takesSwaps: z.boolean().default(false),
 });
 
 export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
@@ -227,6 +229,8 @@ export const editListInputSchema = z.object({
   removeOnReceive: z.boolean().optional(),
   /** a want list's, taken only while it is off Trade; omitted keeps the stored one, as a tab from before it sends it */
   openTo: z.enum(["swaps", "both", "buying"]).optional(),
+  /** a bound sale list's, taken only while it is off Trade; omitted keeps the stored one, as a tab from before it sends it */
+  saleOpenTo: z.enum(["sell", "both"]).optional(),
 });
 export type EditListInput = z.infer<typeof editListInputSchema>;
 

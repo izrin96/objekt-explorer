@@ -63,6 +63,37 @@ export function openToEdit(
 /** A sale list's Open to: Sell only, or Sell or swap (`takes_swaps`). */
 export type SaleOpenTo = "sell" | "both";
 
+export type SaleOpenToEdit =
+  | { action: "keep" }
+  | { action: "refuse" }
+  | { action: "write"; takesSwaps: boolean };
+
+/**
+ * What `list.edit` does with the sale Open to it is sent. Only a sale list bound to a profile and
+ * off Trade takes one (an unbound one never matches; on Trade its post sets it), and an old tab
+ * or a post that went up meanwhile must not fail the whole save. A paired sale list takes swaps.
+ */
+export function saleOpenToEdit(
+  list: {
+    listType: ListType;
+    discoverable: boolean;
+    isProfileBind: boolean;
+    linkedListId: number | null;
+  },
+  saleOpenTo: SaleOpenTo | undefined,
+): SaleOpenToEdit {
+  if (
+    saleOpenTo === undefined ||
+    list.listType !== "sale" ||
+    !list.isProfileBind ||
+    list.discoverable
+  ) {
+    return { action: "keep" };
+  }
+  if (saleOpenTo === "sell" && list.linkedListId !== null) return { action: "refuse" };
+  return { action: "write", takesSwaps: saleOpenTo === "both" };
+}
+
 export const saleOpenToOf = (list: { takesSwaps?: boolean | null }): SaleOpenTo =>
   list.takesSwaps ? "both" : "sell";
 

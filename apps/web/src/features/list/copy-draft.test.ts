@@ -23,6 +23,7 @@ const source = (patch: Partial<CopySource> = {}): CopySource => ({
   gridColumns: 4,
   hideSerial: true,
   removeOnReceive: false,
+  takesSwaps: false,
   ...patch,
 });
 
@@ -49,6 +50,7 @@ describe("toCopyDraft without a fixed type", () => {
       regenerateSlug: false,
       ratio: null,
       removeOnReceive: true,
+      takesSwaps: false,
     });
   });
 
@@ -169,5 +171,22 @@ describe("toCopyDraft, Remove objekts I get in a trade", () => {
     expect(toCopyDraft(source(), { fixedType: "want", profiles: PROFILES }).removeOnReceive).toBe(
       EMPTY_DRAFT.removeOnReceive,
     );
+  });
+});
+
+describe("toCopyDraft, Sell or swap", () => {
+  const sale = source({ listType: "sale", currency: "USD", takesSwaps: true });
+
+  test("a sale source keeps it in a sale copy", () => {
+    expect(toCopyDraft(sale, { profiles: PROFILES }).takesSwaps).toBe(true);
+    expect(toCopyDraft(sale, { fixedType: "sale", profiles: PROFILES }).takesSwaps).toBe(true);
+  });
+
+  test("any other copy starts without it", () => {
+    expect(toCopyDraft(sale, { fixedType: "have", profiles: PROFILES }).takesSwaps).toBe(false);
+    expect(
+      toCopyDraft(source({ takesSwaps: true }), { fixedType: "sale", profiles: PROFILES })
+        .takesSwaps,
+    ).toBe(false);
   });
 });

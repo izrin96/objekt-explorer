@@ -3,6 +3,7 @@ import {
   flagsOf,
   type OpenTo,
   type OpenToFlags,
+  type SaleOpenTo,
   openToOf,
   pairRefusesOpenTo,
 } from "@repo/api/schemas/open-to";
@@ -41,7 +42,12 @@ import {
   slugFieldValue,
 } from "./list-draft";
 import { ListTypeBadge } from "./list-type-badge";
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE, OPEN_TO_LABEL } from "./list-type-labels";
+import {
+  LIST_TYPE_LABEL,
+  LIST_TYPE_TONE,
+  OPEN_TO_LABEL,
+  SALE_OPEN_TO_LABEL,
+} from "./list-type-labels";
 
 export function ListTypeField({
   id,
@@ -101,6 +107,54 @@ const OPEN_TO_DESC: Record<OpenTo, () => string> = {
   buying: m.list_open_to_buying_desc,
 };
 
+/** The radio group both Open to fields draw, so their markup cannot drift. */
+function OpenToRadios<T extends string>({
+  id,
+  value,
+  options,
+  onPick,
+}: {
+  id: (field: string) => string;
+  value: T;
+  options: { value: T; label: string; description: string; refused: boolean }[];
+  onPick: (next: T) => void;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <Label render={<span />} id={id("open-to")}>
+        {m.list_open_to_label()}
+      </Label>
+      <RadioGroup
+        aria-labelledby={id("open-to")}
+        aria-describedby={id("open-to-desc")}
+        value={value}
+        onValueChange={(next) => {
+          const picked = options.find((option) => option.value === next);
+          if (picked) onPick(picked.value);
+        }}
+        className="gap-2.5"
+      >
+        {options.map((option) => (
+          <Field
+            key={option.value}
+            disabled={option.refused}
+            className="w-full flex-row items-start gap-2.5"
+          >
+            <Radio value={option.value} disabled={option.refused} className="mt-0.5" />
+            <FieldLabel className="flex-col items-start gap-0.5 font-normal">
+              <span className="font-medium">{option.label}</span>
+              <FieldDescription render={<span />}>{option.description}</FieldDescription>
+            </FieldLabel>
+          </Field>
+        ))}
+      </RadioGroup>
+      <span id={id("open-to-desc")} className="text-muted-foreground text-xs text-pretty">
+        {m.list_open_to_desc()}
+      </span>
+    </div>
+  );
+}
+
 /** A want list's Open to; a paired want list must take swaps, so Buying only is disabled with why. */
 export function OpenToField({
   id,
@@ -114,39 +168,57 @@ export function OpenToField({
   onChange: (flags: OpenToFlags) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <Label render={<span />} id={id("open-to")}>
-        {m.list_open_to_label()}
-      </Label>
-      <RadioGroup
-        aria-labelledby={id("open-to")}
-        aria-describedby={id("open-to-desc")}
-        value={openToOf(value)}
-        onValueChange={(next) => {
-          const picked = OPEN_TO_ORDER.find((openTo) => openTo === next);
-          if (picked) onChange(flagsOf(picked));
-        }}
-        className="gap-2.5"
-      >
-        {OPEN_TO_ORDER.map((openTo) => {
-          const refused = paired && pairRefusesOpenTo(flagsOf(openTo));
-          return (
-            <Field key={openTo} disabled={refused} className="w-full flex-row items-start gap-2.5">
-              <Radio value={openTo} disabled={refused} className="mt-0.5" />
-              <FieldLabel className="flex-col items-start gap-0.5 font-normal">
-                <span className="font-medium">{OPEN_TO_LABEL[openTo]()}</span>
-                <FieldDescription render={<span />}>
-                  {refused ? m.list_open_to_pair_hint() : OPEN_TO_DESC[openTo]()}
-                </FieldDescription>
-              </FieldLabel>
-            </Field>
-          );
-        })}
-      </RadioGroup>
-      <span id={id("open-to-desc")} className="text-muted-foreground text-xs text-pretty">
-        {m.list_open_to_desc()}
-      </span>
-    </div>
+    <OpenToRadios
+      id={id}
+      value={openToOf(value)}
+      options={OPEN_TO_ORDER.map((openTo) => {
+        const refused = paired && pairRefusesOpenTo(flagsOf(openTo));
+        return {
+          value: openTo,
+          label: OPEN_TO_LABEL[openTo](),
+          description: refused ? m.list_open_to_pair_hint() : OPEN_TO_DESC[openTo](),
+          refused,
+        };
+      })}
+      onPick={(openTo) => onChange(flagsOf(openTo))}
+    />
+  );
+}
+
+const SALE_OPEN_TO_ORDER: SaleOpenTo[] = ["sell", "both"];
+
+const SALE_OPEN_TO_DESC: Record<SaleOpenTo, () => string> = {
+  sell: m.list_sale_open_to_sell_desc,
+  both: m.list_sale_open_to_both_desc,
+};
+
+/** A bound sale list's Open to; a paired sale list must take swaps, so Sell only is disabled with why. */
+export function SaleOpenToField({
+  id,
+  value,
+  paired,
+  onChange,
+}: {
+  id: (field: string) => string;
+  value: SaleOpenTo;
+  paired: boolean;
+  onChange: (next: SaleOpenTo) => void;
+}) {
+  return (
+    <OpenToRadios
+      id={id}
+      value={value}
+      options={SALE_OPEN_TO_ORDER.map((openTo) => {
+        const refused = paired && openTo === "sell";
+        return {
+          value: openTo,
+          label: SALE_OPEN_TO_LABEL[openTo](),
+          description: refused ? m.list_sale_open_to_pair_hint() : SALE_OPEN_TO_DESC[openTo](),
+          refused,
+        };
+      })}
+      onPick={onChange}
+    />
   );
 }
 

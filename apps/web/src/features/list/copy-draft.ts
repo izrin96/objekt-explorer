@@ -18,6 +18,7 @@ export type CopySource = Pick<
   | "gridColumns"
   | "hideSerial"
   | "removeOnReceive"
+  | "takesSwaps"
 >;
 
 /**
@@ -39,6 +40,8 @@ export function toCopyDraft(
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     removeOnReceive: keepsOpenTo ? list.removeOnReceive : EMPTY_DRAFT.removeOnReceive,
+    // a sale copy of a sale source; any other type has no sale choice
+    takesSwaps: list.listType === "sale" && listType === "sale" && (list.takesSwaps ?? false),
     regenerateSlug: false,
     // the server carries the list's ratio when the copy keeps its type
     ratio: null,

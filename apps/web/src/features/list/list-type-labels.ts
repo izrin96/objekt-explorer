@@ -1,5 +1,5 @@
 import type { ListType } from "@repo/api/schemas/list";
-import type { OpenTo } from "@repo/api/schemas/open-to";
+import type { OpenTo, SaleOpenTo } from "@repo/api/schemas/open-to";
 
 import { type Tone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
@@ -22,4 +22,9 @@ export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
   swaps: m.list_create_match_swaps_label,
   both: m.list_create_match_both_label,
   buying: m.list_create_match_buying_label,
+};
+
+export const SALE_OPEN_TO_LABEL: Record<SaleOpenTo, () => string> = {
+  sell: m.trade_line_sell_only,
+  both: m.trade_line_sell_or_swap,
 };

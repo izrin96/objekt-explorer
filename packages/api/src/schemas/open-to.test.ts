@@ -7,6 +7,7 @@ import {
   type OpenTo,
   pairRefusesOpenTo,
   resolveOpenTo,
+  saleOpenToEdit,
 } from "./open-to";
 
 const BUYING_ONLY = { matchSale: true, matchHave: false };
@@ -100,5 +101,54 @@ describe("openToEdit", () => {
     expect(openToEdit(paired, "buying")).toEqual({ action: "refuse" });
     expect(openToEdit(paired, "swaps")).toEqual({ action: "write", flags: flagsOf("swaps") });
     expect(openToEdit(paired, "both")).toEqual({ action: "write", flags: flagsOf("both") });
+  });
+});
+
+describe("saleOpenToEdit", () => {
+  const sale = {
+    listType: "sale" as const,
+    discoverable: false,
+    isProfileBind: true,
+    linkedListId: null,
+  };
+
+  test("nothing sent keeps the stored one, as a tab from before it", () => {
+    expect(saleOpenToEdit(sale, undefined)).toEqual({ action: "keep" });
+  });
+
+  test("have, want and general lists keep theirs", () => {
+    for (const listType of ["have", "want", "general"] as const) {
+      expect(saleOpenToEdit({ ...sale, listType }, "both")).toEqual({ action: "keep" });
+    }
+  });
+
+  test("an unbound sale list keeps its, without refusing the save", () => {
+    expect(saleOpenToEdit({ ...sale, isProfileBind: false }, "both")).toEqual({ action: "keep" });
+    expect(saleOpenToEdit({ ...sale, isProfileBind: false, linkedListId: 7 }, "sell")).toEqual({
+      action: "keep",
+    });
+  });
+
+  test("on Trade the post's Open to stays, without refusing the save", () => {
+    expect(saleOpenToEdit({ ...sale, discoverable: true }, "both")).toEqual({ action: "keep" });
+    expect(saleOpenToEdit({ ...sale, discoverable: true, linkedListId: 7 }, "sell")).toEqual({
+      action: "keep",
+    });
+  });
+
+  test("a paired sale list off Trade can't be Sell only", () => {
+    expect(saleOpenToEdit({ ...sale, linkedListId: 7 }, "sell")).toEqual({ action: "refuse" });
+  });
+
+  test("an unpaired sale list takes either choice", () => {
+    expect(saleOpenToEdit(sale, "sell")).toEqual({ action: "write", takesSwaps: false });
+    expect(saleOpenToEdit(sale, "both")).toEqual({ action: "write", takesSwaps: true });
+  });
+
+  test("a paired sale list can take swaps", () => {
+    expect(saleOpenToEdit({ ...sale, linkedListId: 7 }, "both")).toEqual({
+      action: "write",
+      takesSwaps: true,
+    });
   });
 });

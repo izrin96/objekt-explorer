@@ -115,7 +115,13 @@ export function CreateListDialog({
                       type === "have"
                         ? { ...NEW_POST, kind: "swap", have: slug }
                         : type === "sale"
-                          ? { ...NEW_POST, kind: "sell", sale: slug }
+                          ? {
+                              ...NEW_POST,
+                              kind: "sell",
+                              sale: slug,
+                              // the composer starts from this, not the list: unticked would post it Sell only
+                              alsoSwap: input.takesSwaps === true,
+                            }
                           : { ...NEW_POST, want: slug },
                     );
                   } else {
