@@ -5,6 +5,13 @@
  */
 export const CHANGELOG = [
   {
+    date: "2026-11-14 - 2026-11-16",
+    items: [
+      "An offer now asks from one post. Choose it under Offer on in Make offer. To ask from another post, send another offer once this one closes.",
+      "Removed the Let people ask from more than one post setting.",
+    ],
+  },
+  {
     date: "2026-11-12 - 2026-11-13",
     items: [
       "Make offer pickers show one tile per collection. With several copies, pick a serial, or Any serial on You get.",
@@ -19,7 +26,7 @@ export const CHANGELOG = [
   {
     date: "2026-11-05 - 2026-11-11",
     items: [
-      "New offer settings in Account › General: Only offers with what I want, Let people ask from more than one post, and Let people ask for anything I hold.",
+      "New offer settings: Only offers with what I want, Let people ask from more than one post (since removed), and Let people ask for anything I hold.",
       "If you have no have or sale list on Trade, people can no longer ask for objekts in your collection unless you turn on Let people ask for anything I hold.",
       "Hide a single post on Trade without hiding its owner.",
       "The post composer can edit or copy a list, select several objekts, and Add to list.",
