@@ -130,3 +130,26 @@ export async function readTransferability(client: BatchClient, tokens: TokenRead
   const results = await client.batchCall(reads.map((read) => read.call));
   return decodeReads(reads, results);
 }
+
+type Change = { blockNumber: number; transactionIndex: number };
+
+/**
+ * The change an objekt ends on, out of those recorded before the indexer created it. The chain
+ * read that set its value covers every change up to the end of `readBlock`, and Cosmo sends one
+ * before the mint that the mint itself overrides, so only a change after `readBlock` counts.
+ */
+export function latestChangeAfterRead<T extends Change>(changes: readonly T[], readBlock: number) {
+  let latest: T | undefined;
+  for (const change of changes) {
+    if (change.blockNumber <= readBlock) continue;
+    if (
+      !latest ||
+      change.blockNumber > latest.blockNumber ||
+      (change.blockNumber === latest.blockNumber &&
+        change.transactionIndex > latest.transactionIndex)
+    ) {
+      latest = change;
+    }
+  }
+  return latest;
+}

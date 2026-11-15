@@ -11,6 +11,7 @@ import {
   type ChunkTransfer,
   type RpcCall,
   decodeReads,
+  latestChangeAfterRead,
   mintReads,
   planReads,
   readTransferability,
@@ -217,5 +218,31 @@ describe("decodeReads", () => {
         aggregateResult([{ success: true, returnData: word(false) }]),
       ]),
     ).toThrow();
+  });
+});
+
+describe("latestChangeAfterRead", () => {
+  const change = (blockNumber: number, transactionIndex: number, transferable: boolean) => ({
+    blockNumber,
+    transactionIndex,
+    transferable,
+  });
+
+  test("ignores a change sent before the mint", () => {
+    expect(latestChangeAfterRead([change(86423017, 0, false)], 86423025)).toBeUndefined();
+  });
+
+  test("ignores a change in the read block, which the read already covers", () => {
+    expect(latestChangeAfterRead([change(100, 9, false)], 100)).toBeUndefined();
+  });
+
+  test("takes the latest change after the read block", () => {
+    const changes = [
+      change(102, 0, true),
+      change(99, 5, false),
+      change(102, 3, false),
+      change(101, 7, true),
+    ];
+    expect(latestChangeAfterRead(changes, 100)).toEqual(change(102, 3, false));
   });
 });

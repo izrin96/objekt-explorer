@@ -7,7 +7,13 @@ import { collectionChanged, collectionFields } from "./collection-fields";
 import { env } from "./env";
 import { createHold } from "./hold";
 import { fetchMetadata } from "./metadata";
-import { type TokenRead, isMint, mintReads, readTransferability } from "./mint-transferability";
+import {
+  type TokenRead,
+  isMint,
+  latestChangeAfterRead,
+  mintReads,
+  readTransferability,
+} from "./mint-transferability";
 import {
   Collection,
   ComoBalance,
@@ -48,6 +54,8 @@ processor.run(db, async (ctx) => {
     }
 
     const transferBatchAll: Transfer[] = [];
+    // tokenId → the block whose chain read set a new objekt's transferable
+    const readBlocks = new Map<string, number>();
 
     // chunk everything into batches
     await chunk(transfers, env.COSMO_PARALLEL_COUNT, async (chunk) => {
@@ -100,6 +108,7 @@ processor.run(db, async (ctx) => {
           objekt.collection = collection;
           if (!existing) {
             newlyMintedIds.push(objekt.id);
+            readBlocks.set(objekt.id, blockNumber);
           }
         } else if (action === "keep-collection" && existing?.collection) {
           objekt = moveObjekt(existing, transfer);
@@ -162,7 +171,7 @@ processor.run(db, async (ctx) => {
 
       // apply any pending transferability updates that were waiting for these mints
       if (newlyMintedIds.length > 0) {
-        await applyPendingTransferabilityUpdates(ctx, objektBatch, newlyMintedIds);
+        await applyPendingTransferabilityUpdates(ctx, objektBatch, newlyMintedIds, readBlocks);
       }
 
       // upsert collections
@@ -213,7 +222,7 @@ processor.run(db, async (ctx) => {
     // process transferability updates separately from transfers
     if (transferability.length > 0) {
       ctx.log.info(`Handling ${transferability.length} transferability updates`);
-      await handleTransferabilityUpdates(ctx, transferability);
+      await handleTransferabilityUpdates(ctx, transferability, readBlocks);
     }
 
     // #region como balance updates
@@ -368,11 +377,14 @@ function chainValue(transferable: Map<string, boolean>, tokenId: string) {
  * immediately when the objekt already exists. Updates for objekts that don't
  * exist yet (e.g. their mint transfer hasn't been seen) are left pending
  * (appliedAt = null) and picked up later by applyPendingTransferabilityUpdates
- * once the objekt is minted, instead of being silently dropped.
+ * once the objekt is minted, instead of being silently dropped. An update at or before the block
+ * whose chain read created an objekt in this batch is recorded as applied without a write: the read
+ * already holds it, and Cosmo's change sent before a mint is overridden by the mint.
  */
 async function handleTransferabilityUpdates(
   ctx: ProcessorContext<Store>,
   updates: TransferabilityUpdateEvent[],
+  readBlocks: ReadonlyMap<string, number>,
 ) {
   const objektBatch = new Map<string, Objekt>();
   const updateRows: TransferabilityUpdate[] = [];
@@ -380,8 +392,9 @@ async function handleTransferabilityUpdates(
   for (const update of updates) {
     const objekt = await ctx.store.get(Objekt, update.tokenId);
     const appliedNow = objekt !== undefined;
+    const readBlock = readBlocks.get(update.tokenId);
 
-    if (objekt) {
+    if (objekt && (readBlock === undefined || update.blockNumber > readBlock)) {
       objekt.transferable = update.transferable;
       objektBatch.set(objekt.id, objekt);
     } else {
@@ -415,12 +428,14 @@ async function handleTransferabilityUpdates(
  * Apply any transferability updates that arrived before their objekt was
  * minted, now that the objekt(s) in `newlyMintedIds` exist. Mutates the
  * matching entries in `objektBatch` in place so the caller's upsert picks up
- * the corrected transferable value in the same write.
+ * the corrected transferable value in the same write. Every pending update is
+ * stamped, but only one after the objekt's read block changes its value.
  */
 async function applyPendingTransferabilityUpdates(
   ctx: ProcessorContext<Store>,
   objektBatch: Map<string, Objekt>,
   newlyMintedIds: string[],
+  readBlocks: ReadonlyMap<string, number>,
 ) {
   const pending = await ctx.store.find(TransferabilityUpdate, {
     where: newlyMintedIds.map((tokenId) => ({ tokenId, appliedAt: IsNull() })),
@@ -430,11 +445,7 @@ async function applyPendingTransferabilityUpdates(
     return;
   }
 
-  // keep only the latest pending update per tokenId
-  const latestByTokenId = new Map<string, TransferabilityUpdate>();
-  for (const update of pending) {
-    latestByTokenId.set(update.tokenId, update);
-  }
+  const byTokenId = Map.groupBy(pending, (update) => update.tokenId);
 
   const now = new Date();
   for (const update of pending) {
@@ -442,10 +453,13 @@ async function applyPendingTransferabilityUpdates(
   }
   await ctx.store.upsert(pending);
 
-  for (const [tokenId, update] of latestByTokenId) {
+  for (const [tokenId, updates] of byTokenId) {
     const objekt = objektBatch.get(tokenId);
-    if (objekt) {
-      objekt.transferable = update.transferable;
+    const readBlock = readBlocks.get(tokenId);
+    if (!objekt || readBlock === undefined) continue;
+    const latest = latestChangeAfterRead(updates, readBlock);
+    if (latest) {
+      objekt.transferable = latest.transferable;
     }
   }
 }
