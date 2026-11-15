@@ -2,7 +2,12 @@
  * Checks what `trade_post` must hold whatever a post's pairing is: every have, sale or want list
  * on Trade is in a row, no list is in two rows, and a row holds only its owner's lists, with a
  * want list only where one belongs. The rows are the only place a pairing is stored, so nothing
- * here compares them with a second copy.
+ * here compares them with a second copy. It also checks that no offer's `post_id` is another
+ * person's row.
+ *
+ * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
+ * row to another list, and an offer made by the old build after the migration has no post id, so
+ * neither is wrong data.
  *
  * Plain reads only, and it refuses to start unless the connection is read-only:
  *
@@ -48,6 +53,26 @@ const CHECKS: [label: string, query: SQL][] = [
           OR (w.id IS NOT NULL AND (w.user_id <> tp.user_id OR w.list_type <> 'want'
             OR o.list_type = 'want'))`,
   ],
+  [
+    "an offer whose post is another person's row (offer ids)",
+    sql`SELECT o.id FROM offer o JOIN trade_post tp ON tp.id = o.post_id
+        WHERE tp.user_id <> o.to_user_id`,
+  ],
+];
+
+/** Counted and printed like the checks, but information: they never count as drift. */
+const NOTES: [label: string, query: SQL][] = [
+  [
+    "an offer on a post now led by another list, its own list still there (offer ids)",
+    sql`SELECT o.id FROM offer o JOIN trade_post tp ON tp.id = o.post_id
+        WHERE o.post_list_id IS NOT NULL AND tp.lead_list_id <> o.post_list_id`,
+  ],
+  [
+    "an offer on a list that leads a row, with no post id (offer ids)",
+    sql`SELECT o.id FROM offer o
+        WHERE o.post_id IS NULL AND o.post_list_id IS NOT NULL AND EXISTS (
+          SELECT 1 FROM trade_post tp WHERE tp.lead_list_id = o.post_list_id)`,
+  ],
 ];
 
 const { rows: total } = await db.execute<{ n: number }>(
@@ -66,6 +91,14 @@ let drift = 0;
 for (const [label, query] of CHECKS) {
   const { rows } = await db.execute<{ id: number }>(sql`${query} ORDER BY 1`);
   drift += rows.length;
+  report(
+    rows.map((row) => row.id),
+    label,
+  );
+}
+
+for (const [label, query] of NOTES) {
+  const { rows } = await db.execute<{ id: number }>(sql`${query} ORDER BY 1`);
   report(
     rows.map((row) => row.id),
     label,

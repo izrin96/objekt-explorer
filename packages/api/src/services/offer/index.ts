@@ -1,5 +1,5 @@
 import { db } from "@repo/db";
-import { listEntries, lists, offer, offerItem, userSanction } from "@repo/db/schema";
+import { listEntries, lists, offer, offerItem, tradePost, userSanction } from "@repo/db/schema";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
@@ -329,6 +329,8 @@ export async function createOffer(
   const note = input.note ? input.note : null;
   const caution: FlagCategory[] = note === null ? [] : scanMessage(note);
 
+  // an offer that asks for nothing is on no post, though its post chose the wants above
+  const storedPostListId = getRows.some((row) => !keptObjekt(row.item)) ? onPost : null;
   const result = await db
     .transaction(async (tx) => {
       await lockParties(tx, [me, partnerId]);
@@ -425,8 +427,12 @@ export async function createOffer(
           topupPayer: shape.topup?.payer ?? null,
           note,
           caution: caution.length ? caution : null,
-          // an offer that asks for nothing is on no post, though its post chose the wants above
-          postListId: getRows.some((row) => !keptObjekt(row.item)) ? onPost : null,
+          postListId: storedPostListId,
+          // resolved in the statement, so it costs no round trip and reads the rows as late as possible
+          postId:
+            storedPostListId === null
+              ? null
+              : sql`(SELECT min(${tradePost.id}) FROM ${tradePost} WHERE ${tradePost.leadListId} = ${storedPostListId})`,
         })
         .returning({ id: offer.id });
       const offerId = inserted!.id;
