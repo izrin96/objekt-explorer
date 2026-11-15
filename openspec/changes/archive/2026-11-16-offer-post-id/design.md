@@ -286,6 +286,14 @@ Scratch scripts live in a dot-directory inside `apps/worker` (`apps/worker/.offe
   No statement failed otherwise. localtest2's lists, Trade state and rows ended as they began, row ids included, and offer 303 has its columns back.
 - **Local drift script,** read-only: 410 rows, zero on the four checks, zero on both notes.
 - **Docs:** `packages/api/docs/offers.md`, `packages/db/AGENTS.md`, `apps/worker/AGENTS.md`, and the `schema.ts` doc comments. `packages/api/AGENTS.md` and the root `AGENTS.md` are unchanged: no convention, trap or workflow changed.
+- **Before the migration** (task 8.1), read-only on production, 2026-11-16 after the push: no `post_list_id` names a list its offer's recipient does not own; 2,033 offers are on a list that leads a row and 68 on a list that leads none.
+- **Rollout** (tasks 8.2 to 8.4): pushed as `7bcd3843`; CI passed and moved `:latest`. The owner ran migrate, then web. Production, read-only, 2026-11-15 17:28:58 UTC (the 16th in the owner's time zone, the date used elsewhere in this file):
+  - the migration was applied at **17:28:08 UTC**;
+  - 2,105 offers have `post_list_id`; 2,036 have `post_id`, each the lowest row its list leads; 69 have none: the 68 whose list leads no row, and one offer from the gap;
+  - no offer has `post_id` without `post_list_id`;
+  - two offers were created after the migration, both on a post: **offer 9523 at 17:28:17 has no `post_id`**, so the previous build wrote it; the next, at **17:28:56**, has one, so the new build was serving by then;
+  - the drift script: 1,363 rows, zero on the four checks; the takeover note 0; the "no post id" note 1, which is offer 9523.
+  **The reconcile window for the first reader of `post_id` is 2026-11-15 17:28:08 to 17:28:56 UTC, and it holds exactly one offer, 9523.** No rollback has happened.
 - **Local data left:** six withdrawn or closed test offers (ids 308 to 313) in the localtest1 and localtest2 conversation.
 
 ## Open Questions

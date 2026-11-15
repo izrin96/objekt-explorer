@@ -88,12 +88,12 @@ Scratch scripts go in `apps/worker/.offer-post-id/` (bun resolves `@repo/*` from
 
 ## 8. Rollout (the owner)
 
-- [ ] 8.1 With a go-ahead, read-only on production, before the migration (design, Migration Plan, step 1):
+- [x] 8.1 With a go-ahead, read-only on production, before the migration (design, Migration Plan, step 1):
   - offers whose `post_list_id` names a list not owned by `to_user_id`: must be 0, or stop;
   - offers whose list leads a row (2,003 on 2026-11-16) and offers whose list leads none (68).
-- [ ] 8.2 The owner commits and pushes; CI passes and moves `:latest`.
-- [ ] 8.3 The owner runs `docker compose run --build --rm migrate`, then brings up web. The worker is not rebuilt, since it runs none of the changed code. Record the migration's applied time and the time the new web image serves.
-- [ ] 8.4 With a go-ahead, read-only on production:
+- [x] 8.2 The owner commits and pushes; CI passes and moves `:latest`.
+- [x] 8.3 The owner runs `docker compose run --build --rm migrate`, then brings up web. The worker is not rebuilt, since it runs none of the changed code. Record the migration's applied time and the time the new web image serves.
+- [x] 8.4 With a go-ahead, read-only on production:
   - the backfill counts;
   - the drift script: four checks zero, the two notes printed;
   - the number of offers created between the two times in 8.3.
