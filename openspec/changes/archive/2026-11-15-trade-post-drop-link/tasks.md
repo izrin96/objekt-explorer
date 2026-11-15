@@ -13,5 +13,5 @@ No task commits, pushes or runs a migration without the owner's approval for tha
 
 ## 3. Rollout
 
-- [ ] 3.1 The gate: a pair made on production after 2026-11-15 12:47 UTC whose lead list has no link, read-only.
-- [ ] 3.2 The owner commits, pushes and runs the migrate step. With a go-ahead afterwards, verify read-only that the column is gone and the drift script reads zero; record it in design.md.
+- [x] 3.1 The gate: a pair made on production after 2026-11-15 12:47 UTC whose lead list has no link, read-only.
+- [x] 3.2 The owner commits, pushes and runs the migrate step. With a go-ahead afterwards, verify read-only that the column is gone and the drift script reads zero; record it in design.md.
