@@ -43,6 +43,7 @@ import { Route as containerAccountNotificationsRouteImport } from './routes/(con
 import { Route as containerAccountPasswordRouteImport } from './routes/(container)/account/password'
 import { Route as containerAccountProfilesRouteImport } from './routes/(container)/account/profiles'
 import { Route as containerAccountSignInRouteImport } from './routes/(container)/account/sign-in'
+import { Route as containerAccountTradeRouteImport } from './routes/(container)/account/trade'
 import { Route as containerAuthResetPasswordRouteImport } from './routes/(container)/auth/reset-password'
 import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
 import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
@@ -258,6 +259,11 @@ const containerAccountProfilesRoute =
 const containerAccountSignInRoute = containerAccountSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountTradeRoute = containerAccountTradeRouteImport.update({
+  id: '/trade',
+  path: '/trade',
   getParentRoute: () => containerAccountRouteRoute,
 } as any)
 const containerAuthResetPasswordRoute =
@@ -489,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/account/password': typeof containerAccountPasswordRoute
   '/account/profiles': typeof containerAccountProfilesRoute
   '/account/sign-in': typeof containerAccountSignInRoute
+  '/account/trade': typeof containerAccountTradeRoute
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/account/password': typeof containerAccountPasswordRoute
   '/account/profiles': typeof containerAccountProfilesRoute
   '/account/sign-in': typeof containerAccountSignInRoute
+  '/account/trade': typeof containerAccountTradeRoute
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
@@ -624,6 +632,7 @@ export interface FileRoutesById {
   '/(container)/account/password': typeof containerAccountPasswordRoute
   '/(container)/account/profiles': typeof containerAccountProfilesRoute
   '/(container)/account/sign-in': typeof containerAccountSignInRoute
+  '/(container)/account/trade': typeof containerAccountTradeRoute
   '/(container)/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/(container)/auth/verified': typeof containerAuthVerifiedRoute
   '/(container)/link/connect': typeof containerLinkConnectRoute
@@ -697,6 +706,7 @@ export interface FileRouteTypes {
     | '/account/password'
     | '/account/profiles'
     | '/account/sign-in'
+    | '/account/trade'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -760,6 +770,7 @@ export interface FileRouteTypes {
     | '/account/password'
     | '/account/profiles'
     | '/account/sign-in'
+    | '/account/trade'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -831,6 +842,7 @@ export interface FileRouteTypes {
     | '/(container)/account/password'
     | '/(container)/account/profiles'
     | '/(container)/account/sign-in'
+    | '/(container)/account/trade'
     | '/(container)/auth/reset-password'
     | '/(container)/auth/verified'
     | '/(container)/link/connect'
@@ -1121,6 +1133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerAccountSignInRouteImport
       parentRoute: typeof containerAccountRouteRoute
     }
+    '/(container)/account/trade': {
+      id: '/(container)/account/trade'
+      path: '/trade'
+      fullPath: '/account/trade'
+      preLoaderRoute: typeof containerAccountTradeRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
     '/(container)/auth/reset-password': {
       id: '/(container)/auth/reset-password'
       path: '/auth/reset-password'
@@ -1387,6 +1406,7 @@ interface containerAccountRouteRouteChildren {
   containerAccountPasswordRoute: typeof containerAccountPasswordRoute
   containerAccountProfilesRoute: typeof containerAccountProfilesRoute
   containerAccountSignInRoute: typeof containerAccountSignInRoute
+  containerAccountTradeRoute: typeof containerAccountTradeRoute
   containerAccountIndexRoute: typeof containerAccountIndexRoute
 }
 
@@ -1401,6 +1421,7 @@ const containerAccountRouteRouteChildren: containerAccountRouteRouteChildren = {
   containerAccountPasswordRoute: containerAccountPasswordRoute,
   containerAccountProfilesRoute: containerAccountProfilesRoute,
   containerAccountSignInRoute: containerAccountSignInRoute,
+  containerAccountTradeRoute: containerAccountTradeRoute,
   containerAccountIndexRoute: containerAccountIndexRoute,
 }
 

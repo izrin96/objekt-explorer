@@ -81,7 +81,7 @@ The user SHALL be able to hide a person:
 
 A hidden person's row SHALL leave Browse and For you at once, and a toast SHALL offer Undo. A hidden person SHALL not count toward Mutual, Mutual N, the list-header counts or want-list alerts.
 
-When the user has hidden anyone or any post, Browse's footer note SHALL say that posts they hid, and posts from people they hid, aren't shown, and offer Hidden. Hidden SHALL open a dialog listing Hidden people, each with Unhide, and Hidden posts (see Hide a post). Account's Hidden page SHALL list Hidden people too.
+When the user has hidden anyone or any post, Browse's footer note SHALL say that posts they hid, and posts from people they hid, aren't shown, and offer Hidden. Hidden SHALL open a dialog listing Hidden people, each with Unhide, and Hidden posts (see Hide a post). Account's Hidden on Trade page (`/account/hidden`) SHALL list Hidden people and Hidden posts too, each under its own heading.
 
 #### Scenario: Hide and unhide
 - **WHEN** the user activates Hide on rin.trades's row, and later unhides rin.trades from the footer note's Hidden dialog
@@ -150,7 +150,7 @@ A post the user hid SHALL take no part in the user's Trade. Its lists SHALL not 
 - **THEN** "Looking for" is neither shown on Browse nor counted in matching, and its ⋯ menu on rin.trades's person page offers Unhide post
 
 ### Requirement: Hidden posts list
-The Hidden dialog and Account's Hidden page SHALL list the posts the user hid, newest hide first, once each however many of a post's lists the user hid. Each SHALL name the lists paired in the post now, on Trade or off, and its owner as a partner card names them (see Partner identity), link to the post page, and offer Unhide. Unhide SHALL bring the post back to Browse and For you. With no hidden post, the list SHALL say so and say that Hide post is in a post's ⋯ menu.
+The Hidden dialog and Account's Hidden on Trade page SHALL list the posts the user hid, newest hide first, once each however many of a post's lists the user hid. Each SHALL name the lists paired in the post now, on Trade or off, and its owner as a partner card names them (see Partner identity), link to the post page, and offer Unhide. Unhide SHALL bring the post back to Browse and For you. With no hidden post, the list SHALL say so and say that Hide post is in a post's ⋯ menu.
 
 #### Scenario: Unhide from Account
 - **WHEN** the user opens `/account/hidden` and activates Unhide on a hidden post of rin.trades

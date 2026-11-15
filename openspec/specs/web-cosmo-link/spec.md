@@ -167,17 +167,6 @@ For an account with two or more linked profiles, the message box of a conversati
 - **WHEN** a user with one linked profile opens a conversation
 - **THEN** the message box shows no Sending as line
 
-### Requirement: Removed privacy settings notice
-`/account/profiles` SHALL show a dismissible notice at the top saying the privacy settings (Hide Cosmo ID, Hide from Serial Lookup, Hide Activity History, Private Profile) were removed, because Trade needs holdings, serials and transfers visible and they are public on the blockchain anyway. Every signed-in viewer of the page SHALL see it until they dismiss it in that browser.
-
-#### Scenario: First visit after the change
-- **WHEN** a signed-in user opens `/account/profiles`
-- **THEN** the notice shows above their linked profiles
-
-#### Scenario: Dismissed
-- **WHEN** the user dismisses the notice and opens the page again in the same browser
-- **THEN** the notice does not show
-
 ### Requirement: Still banner compression
 A picked JPEG, PNG, WebP or BMP SHALL be uploaded as the user's crop at the 2.4:1 banner ratio, scaled down to at most 2400×1000 pixels (never scaled up), encoded as WebP. Where the browser cannot encode WebP, it SHALL be encoded as JPEG when every pixel is opaque, and as PNG when the crop has transparent pixels. The stored type and the object's file extension SHALL match the uploaded bytes. Save SHALL stay unavailable until the crop area has loaded.
 

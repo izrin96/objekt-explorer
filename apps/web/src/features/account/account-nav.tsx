@@ -1,5 +1,6 @@
 import {
   ArrowLeftIcon,
+  ArrowsLeftRightIcon,
   BellIcon,
   CaretRightIcon,
   ChatCircleIcon,
@@ -27,8 +28,9 @@ const SECTIONS = [
   { to: "/account/profiles", label: m.account_section_profiles, icon: LinkIcon },
   { to: "/account/notifications", label: m.notification_section, icon: BellIcon },
   { to: "/account/messages", label: m.chat_settings_tab, icon: ChatCircleIcon },
+  { to: "/account/trade", label: m.nav_trade, icon: ArrowsLeftRightIcon },
   { to: "/account/blocked", label: m.mod_blocked_tab, icon: ProhibitIcon },
-  { to: "/account/hidden", label: m.trade_hidden_partners, icon: EyeSlashIcon },
+  { to: "/account/hidden", label: m.account_section_hidden, icon: EyeSlashIcon },
   { to: "/account/sign-in", label: m.account_section_sign_in, icon: KeyIcon },
   { to: "/account/password", label: m.account_section_password, icon: LockIcon },
   { to: "/account/danger", label: m.auth_account_danger_zone, icon: WarningIcon },

@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/account-nav";
 import { LinkedCard } from "@/features/link/linked-card";
-import { PrivacyRemovedNotice } from "@/features/link/privacy-removed-notice";
 import { useLinkedPreviews } from "@/features/link/use-linked-previews";
 import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useCurrentUser, useUserProfiles } from "@/features/user/hooks";
@@ -34,7 +33,6 @@ export function LinkedProfilesPanel() {
         </Button>
       }
     >
-      <PrivacyRemovedNotice />
       {profiles.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2">
           {profiles.map((profile) => (

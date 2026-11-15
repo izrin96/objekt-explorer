@@ -1006,7 +1006,7 @@ When the recipient declines an offer holding a "Not on your wants" item, while t
 
 #### Scenario: Turn it on
 - **WHEN** rin.trades chooses Turn on in that notice
-- **THEN** the setting is saved on, Account › General shows it on, and the notice closes
+- **THEN** the setting is saved on, Account › Trade shows it on, and the notice closes
 
 #### Scenario: Shown once
 - **WHEN** the notice has shown, and rin.trades declines another such offer in the same browser
@@ -1033,11 +1033,11 @@ When the recipient declines an offer with the "Asks from" mark, while their "Let
 
 #### Scenario: Turn it off
 - **WHEN** rin.trades chooses Turn off in that notice
-- **THEN** the setting is saved off, the notice closes, a message says it is off, Account › General shows Let people ask from more than one post off, and the next offer asking from "doubles" and "spares" is refused as from another post
+- **THEN** the setting is saved off, the notice closes, a message says it is off, Account › Trade shows Let people ask from more than one post off, and the next offer asking from "doubles" and "spares" is refused as from another post
 
 #### Scenario: Save fails
 - **WHEN** rin.trades chooses Turn off and the save fails
-- **THEN** a message says it couldn't be turned off and to try again in Account › General, and the setting stays on
+- **THEN** a message says it couldn't be turned off and to try again in Account › Trade, and the setting stays on
 
 #### Scenario: Shown once
 - **WHEN** the notice has shown, and rin.trades declines another offer across posts in the same browser

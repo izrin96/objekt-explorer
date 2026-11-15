@@ -12,6 +12,7 @@ import { MessagesSection } from "@/features/account/sections/messages";
 import { NotificationsSection } from "@/features/account/sections/notifications";
 import { PasswordSection } from "@/features/account/sections/password";
 import { SectionStatus } from "@/features/account/sections/section-status";
+import { TradeSection } from "@/features/account/sections/trade";
 import {
   HiddenGroup,
   HiddenPartnersList,
@@ -56,6 +57,15 @@ export function MessagesPanel() {
   );
 }
 
+export function TradePanel() {
+  const { data } = useCurrentUser();
+  return (
+    <AccountSection title={m.nav_trade()}>
+      {data?.user ? <TradeSection user={data.user} /> : null}
+    </AccountSection>
+  );
+}
+
 export function BlockedPanel() {
   return (
     <AccountSection title={m.mod_blocked_title()} description={m.mod_blocked_desc()}>
@@ -66,8 +76,10 @@ export function BlockedPanel() {
 
 export function HiddenPanel() {
   return (
-    <AccountSection title={m.trade_hidden_partners()} description={m.trade_hidden_description()}>
-      <HiddenPartnersList enabled />
+    <AccountSection title={m.account_section_hidden()} description={m.trade_hidden_description()}>
+      <HiddenGroup title={m.trade_hidden_partners()}>
+        <HiddenPartnersList enabled />
+      </HiddenGroup>
       <HiddenGroup title={m.trade_hidden_posts()}>
         <HiddenPostsList enabled />
       </HiddenGroup>

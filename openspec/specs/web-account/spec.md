@@ -2,7 +2,7 @@
 
 ## Purpose
 The `/account` page on `apps/web`: everything a signed-in user can change about their site
-account, with its linked Cosmo profiles, notification, message, block and hidden-people settings each in its own section.
+account, with its linked Cosmo profiles, notification, message, offer-rule, block and hidden settings each in its own section.
 
 ## Requirements
 
@@ -13,8 +13,9 @@ A signed-in user's account settings SHALL live on the `/account` page, one route
 - `/account/profiles`: linked Cosmo profiles (see `web-cosmo-link`);
 - `/account/notifications`: Notifications (see `web-notifications`);
 - `/account/messages`: Messages (see `web-chat`);
+- `/account/trade`: Trade, holding the offer rules;
 - `/account/blocked`: Blocked users (see `web-moderation`);
-- `/account/hidden`: Hidden people (see `web-trade-for-you` Hide a partner);
+- `/account/hidden`: Hidden on Trade, listing hidden people and hidden posts (see `web-trade-for-you` Hide a partner and Hide a post);
 - `/account/sign-in`: Discord and Twitter;
 - `/account/password`: shown only when the account has a password;
 - `/account/danger`: Delete account.
@@ -37,15 +38,37 @@ From `md` up, a menu of the sections SHALL sit beside the open section and mark 
 - **WHEN** a user who signed up with Discord opens `/account/password`
 - **THEN** the not-found surface is shown and the section menu has no Password entry
 
+#### Scenario: Trade section
+- **WHEN** a signed-in user opens `/account/trade`
+- **THEN** the Trade section shows the offer rules, and Trade is marked in the section menu between Messages and Blocked users
+
 ### Requirement: General settings
 The General section SHALL let the user change the display name, toggle whether linked social handles
-are shown publicly, toggle "Show when I'm online" (on by default; see `web-presence`), toggle the three
-offer rules "Only offers with what I want", "Let people ask from more than one post" and "Let people
-ask for anything I hold" (see `web-trade-offers`), and remove the profile picture. Saving SHALL persist through the server
-and refresh every place the account is shown without a reload.
+are shown publicly, toggle "Show when I'm online" (on by default; see `web-presence`), and remove the
+profile picture. Saving SHALL persist through the server and refresh every place the account is shown
+without a reload.
 
 The Show when I'm online description SHALL say that turning it off hides the user's own dot and still
 shows other people's. Once saved, other viewers SHALL follow by their next presence check.
+
+#### Scenario: Rename
+- **WHEN** the user saves a new name
+- **THEN** the nav menu header shows the new name without a reload
+
+#### Scenario: Online off
+- **WHEN** the user turns Show when I'm online off and saves
+- **THEN** other viewers stop seeing the user's dot within 60 seconds, and the user still sees other people's dots
+
+#### Scenario: Online switch default
+- **WHEN** a user who never changed it opens `/account/general`
+- **THEN** Show when I'm online is on
+
+### Requirement: Offer rules
+The Trade section SHALL hold, under an Offers heading, the three offer rules "Only offers with what I
+want", "Let people ask from more than one post" and "Let people ask for anything I hold" (see
+`web-trade-offers`). Each switch SHALL save on change, with no Save button, and refresh every place
+the account is shown without a reload. A failed save SHALL put the switch back and say it couldn't be
+saved.
 
 Only offers with what I want SHALL be off by default. Its description SHALL open with what it does
 (people can give the user only what they want), then say that an offer on a post with its own want list
@@ -61,33 +84,25 @@ is on it), and that turning it on lets people ask for any objekt at their linked
 
 Once saved, each offer rule SHALL apply to the next offer sent; offers already open SHALL stay.
 
-#### Scenario: Rename
-- **WHEN** the user saves a new name
-- **THEN** the nav menu header shows the new name without a reload
-
-#### Scenario: Online off
-- **WHEN** the user turns Show when I'm online off and saves
-- **THEN** other viewers stop seeing the user's dot within 60 seconds, and the user still sees other people's dots
-
-#### Scenario: Online switch default
-- **WHEN** a user who never changed it opens `/account/general`
-- **THEN** Show when I'm online is on
-
 #### Scenario: Offer rules default
-- **WHEN** a user who never changed them opens `/account/general`, whether their account is new or not
+- **WHEN** a user who never changed them opens `/account/trade`, whether their account is new or not
 - **THEN** Only offers with what I want and Let people ask for anything I hold are off, and Let people ask from more than one post is on
 
 #### Scenario: Wanted offers on
-- **WHEN** the user turns Only offers with what I want on and saves
-- **THEN** the next offer someone sends on a post paired with a want list, giving an objekt not on that list, is refused
+- **WHEN** the user turns Only offers with what I want on
+- **THEN** it is saved with no Save button, and the next offer someone sends on a post paired with a want list, giving an objekt not on that list, is refused
 
 #### Scenario: One post per offer
-- **WHEN** the user turns Let people ask from more than one post off and saves
+- **WHEN** the user turns Let people ask from more than one post off
 - **THEN** the next offer someone sends them asking from two of their posts is refused
 
 #### Scenario: Collection asks on
-- **WHEN** a user with no have or sale list on Trade turns Let people ask for anything I hold on and saves
+- **WHEN** a user with no have or sale list on Trade turns Let people ask for anything I hold on
 - **THEN** people can ask them for any objekt they hold
+
+#### Scenario: Save fails
+- **WHEN** the user turns Only offers with what I want on and the save fails
+- **THEN** the switch goes back off and a message says the account couldn't be updated
 
 ### Requirement: Email
 The Email section SHALL show the account's email address and let the user change it. Changing it SHALL
