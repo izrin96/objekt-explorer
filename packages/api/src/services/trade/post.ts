@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
-import { and, eq, inArray, notInArray, or } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import type { TradePostRefusal } from "../../schemas/trade";
@@ -12,7 +12,7 @@ import {
   postHolding,
   postsOf,
 } from "../../schemas/trade-post";
-import { lockTradeLists, syncPostRows, touchList, tradeColumns } from "../list/shared";
+import { lockPosts, touchList, tradeColumns, tradeState, writePosts } from "../list/shared";
 
 const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_list_in_post: "That list is already in another post on Trade",
@@ -22,11 +22,11 @@ const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_empty: "Pick a list for this post",
 };
 
-/** Saves a post's lists, link, Open to and Trade state in one transaction. */
+/** Saves a post's lists, pairing, Open to and Trade state in one transaction. */
 export async function savePost(userId: string, choice: PostChoice) {
   const changed = await db.transaction(async (tx) => {
-    const own = await lockTradeLists(tx, userId);
-    const plan = planPost(own, choice);
+    const locked = await lockPosts(tx, userId);
+    const plan = planPost(locked.lists, choice);
     if (!plan.ok) {
       if (plan.reason === "not_found") throw new ORPCError("NOT_FOUND");
       refuse("BAD_REQUEST", plan.reason, REFUSAL_MESSAGE[plan.reason], {
@@ -36,38 +36,15 @@ export async function savePost(userId: string, choice: PostChoice) {
     }
 
     const touched = new Set<number>();
-    const mine = eq(lists.userId, userId);
-
-    if (plan.unlink.length > 0) {
-      const rows = await tx
-        .update(lists)
-        .set({ linkedListId: null })
-        .where(
-          and(mine, or(inArray(lists.id, plan.unlink), inArray(lists.linkedListId, plan.unlink))),
-        )
-        .returning({ id: lists.id });
-      for (const row of rows) touched.add(row.id);
-    }
-
-    if (plan.link) {
-      const [offerId, wantId] = plan.link;
-      // any other list still pointing at either half loses its link, as `writeList` does
-      const stale = await tx
-        .update(lists)
-        .set({ linkedListId: null })
-        .where(and(mine, inArray(lists.linkedListId, plan.link), notInArray(lists.id, plan.link)))
-        .returning({ id: lists.id });
-      for (const row of stale) touched.add(row.id);
-      await tx.update(lists).set({ linkedListId: wantId }).where(eq(lists.id, offerId));
-      await tx.update(lists).set({ linkedListId: offerId }).where(eq(lists.id, wantId));
-      touched.add(offerId).add(wantId);
-    }
+    const written = [];
 
     for (const { id, flags } of plan.on) {
-      await tx
+      const rows = await tx
         .update(lists)
         .set({ ...tradeColumns(true), ...flags })
-        .where(eq(lists.id, id));
+        .where(eq(lists.id, id))
+        .returning(tradeState);
+      written.push(...rows);
       touched.add(id);
     }
 
@@ -80,27 +57,41 @@ export async function savePost(userId: string, choice: PostChoice) {
     }
 
     if (plan.off.length > 0) {
-      await tx.update(lists).set(tradeColumns(false)).where(inArray(lists.id, plan.off));
+      const rows = await tx
+        .update(lists)
+        .set(tradeColumns(false))
+        .where(inArray(lists.id, plan.off))
+        .returning(tradeState);
+      written.push(...rows);
       for (const id of plan.off) touched.add(id);
     }
 
-    await syncPostRows(tx, userId);
+    const relinked = await writePosts(tx, userId, locked, {
+      pair: plan.link,
+      unpair: plan.unlink,
+      written,
+    });
+    for (const id of relinked) touched.add(id);
     return [...touched];
   });
   await touchList(changed);
 }
 
-/** Takes every list of the post off Trade; a pair stays linked, so posting it again brings it back. */
+/** Takes every list of the post off Trade; a pair stays paired, so posting it again brings it back. */
 export async function takeDownPost(userId: string, slug: string) {
   const changed = await db.transaction(async (tx) => {
-    const own = await lockTradeLists(tx, userId);
-    const list = own.find((entry) => entry.slug === slug);
-    const post = list ? postHolding(postsOf(own), list.id) : null;
+    const locked = await lockPosts(tx, userId);
+    const list = locked.lists.find((entry) => entry.slug === slug);
+    const post = list ? postHolding(postsOf(locked.lists), list.id) : null;
     if (!post) throw new ORPCError("NOT_FOUND");
     const ids = membersOf(post).map((member) => member.id);
-    await tx.update(lists).set(tradeColumns(false)).where(inArray(lists.id, ids));
-    await syncPostRows(tx, userId);
-    return ids;
+    const written = await tx
+      .update(lists)
+      .set(tradeColumns(false))
+      .where(inArray(lists.id, ids))
+      .returning(tradeState);
+    const relinked = await writePosts(tx, userId, locked, { written });
+    return [...new Set([...ids, ...relinked])];
   });
   await touchList(changed);
 }

@@ -308,14 +308,21 @@ export async function fetchListPreviews(
   }));
 }
 
+/** The caller's list, whole, with `linkedListId` its partner by its `trade_post` row. */
 export async function findOwnedList(slug: string, userId: string) {
-  const list = await db.query.lists.findFirst({
+  const found = await db.query.lists.findFirst({
     where: { slug, userId },
+    with: {
+      postLed: { columns: { wantListId: true }, orderBy: { id: "asc" } },
+      postWanted: { columns: { leadListId: true }, orderBy: { id: "asc" } },
+    },
   });
 
-  if (!list) throw new ORPCError("NOT_FOUND");
+  if (!found) throw new ORPCError("NOT_FOUND");
 
-  return list;
+  // the rows stay out: `list.find` returns this as it is
+  const { postLed, postWanted, ...list } = found;
+  return { ...list, linkedListId: postLed?.wantListId ?? postWanted?.leadListId ?? null };
 }
 
 /**

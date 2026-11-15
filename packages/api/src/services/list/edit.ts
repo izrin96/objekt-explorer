@@ -9,18 +9,20 @@ import { type OpenToFlags, openToEdit, pairRefusesOpenTo } from "../../schemas/o
 import { takesRatio } from "../../schemas/trade-ratio";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { assertProfileOwned } from "../profile";
+import { postPartnerSql } from "../trade/lists";
 import { generateProfileSlug, PAIR_MESSAGES } from "./create";
 import { findOwnedList } from "./read";
-import { lockTradeLists, syncPostRows, touchList } from "./shared";
+import { lockPosts, lockTradeLists, touchList, writePosts } from "./shared";
 
 /**
  * A want list's Open to as `list.edit` writes it. The UPDATE reads the row again: a list put on
- * Trade since it was read keeps its post's flags, and one linked since keeps its own rather than
- * become a Buying only pair. Both columns share one condition, so `lists_open_to_something` holds.
+ * Trade since it was read keeps its post's flags, and one paired since (by its `trade_post` row)
+ * keeps its own rather than become a Buying only pair. Both columns share one condition, so
+ * `lists_open_to_something` holds.
  */
 function openToColumns(flags: OpenToFlags) {
   const keep = pairRefusesOpenTo(flags)
-    ? sql`(${lists.discoverable} OR ${lists.linkedListId} IS NOT NULL)`
+    ? sql`(${lists.discoverable} OR ${postPartnerSql("lists")} IS NOT NULL)`
     : sql`${lists.discoverable}`;
   return {
     matchSale: sql<boolean>`CASE WHEN ${keep} THEN ${lists.matchSale} ELSE ${flags.matchSale}::boolean END`,
@@ -70,47 +72,58 @@ export async function editList(userId: string, input: EditListInput) {
       : await generateProfileSlug(input.name, list.slug, address, list.id);
   }
 
-  // no link or Trade state, which are the post's (`trade.savePost`); Open to only off Trade
-  await db
-    .update(lists)
-    .set({
-      name: input.name,
-      gridColumns: input.gridColumns,
-      profileAddress: list.isProfileBind
-        ? undefined
-        : input.profileAddress
-          ? input.profileAddress.toLowerCase()
-          : null,
-      description: input.description,
-      currency:
-        list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
-      profileSlug,
-      hideSerial:
-        ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
-      ratio: takesRatio(list.listType) ? input.ratio : undefined,
-      removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
-      ...(openTo.action === "write" && openToColumns(openTo.flags)),
-    })
-    .where(eq(lists.id, list.id));
+  // no pairing or Trade state, which are the post's (`trade.savePost`); Open to only off Trade
+  const save = (run: Pick<typeof db, "update">) =>
+    run
+      .update(lists)
+      .set({
+        name: input.name,
+        gridColumns: input.gridColumns,
+        profileAddress: list.isProfileBind
+          ? undefined
+          : input.profileAddress
+            ? input.profileAddress.toLowerCase()
+            : null,
+        description: input.description,
+        currency:
+          list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
+        profileSlug,
+        hideSerial:
+          ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
+        ratio: takesRatio(list.listType) ? input.ratio : undefined,
+        removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
+        ...(openTo.action === "write" && openToColumns(openTo.flags)),
+      })
+      .where(eq(lists.id, list.id));
+  if (openTo.action === "write" && pairRefusesOpenTo(openTo.flags)) {
+    // the guard reads the pair from `trade_post`, which a statement that waited on a pairing
+    // writer would read from before the wait; under the lock it starts after that writer
+    await db.transaction(async (tx) => {
+      await lockTradeLists(tx, userId);
+      await save(tx);
+    });
+  } else {
+    await save(db);
+  }
   await touchList([list.id]);
 }
 
 export async function deleteList(userId: string, slug: string) {
   const list = await findOwnedList(slug, userId);
+  if (list.listType === "general") {
+    await db.delete(lists).where(eq(lists.id, list.id));
+    await bumpTradeVersions([userId]);
+    return;
+  }
 
-  const unlinked = await db.transaction(async (tx) => {
+  const unpaired = await db.transaction(async (tx) => {
     // ON DELETE SET NULL also locks the partner, so take the shared lock in id order first
-    if (list.listType !== "general") await lockTradeLists(tx, userId);
-    const partners = await tx
-      .select({ id: lists.id })
-      .from(lists)
-      .where(eq(lists.linkedListId, list.id));
+    const locked = await lockPosts(tx, userId);
     await tx.delete(lists).where(eq(lists.id, list.id));
     // the partner of a deleted lead stands alone now, and may need a row of its own
-    if (list.listType !== "general") await syncPostRows(tx, userId);
-    return partners.map((partner) => partner.id);
+    return writePosts(tx, userId, locked, { removed: [list.id] });
   });
-  // the partner loses its link through the foreign key, which leaves its updated_at alone
-  if (unlinked.length > 0) await touchList(unlinked);
+  // the partner loses its pair through the foreign keys, which leave its updated_at alone
+  if (unpaired.length > 0) await touchList(unpaired);
   else await bumpTradeVersions([userId]);
 }

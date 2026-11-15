@@ -1,7 +1,8 @@
 /**
  * Checks that `trade_post` says what `lists` says: every link and every list on Trade has its
- * row, and no row says more. Posts, pairs and partners are read from the rows while writers
- * still derive them from `lists.linked_list_id`, so drift changes what people see.
+ * row, and no row says more. Posts, pairs and partners are read from the rows, and writers write
+ * the rows and mirror `lists.linked_list_id` from them. So a check that reads the link catches a
+ * wrong mirror, which only a redeploy of an older build would read, and no longer a wrong row.
  *
  * From the seventh check on, each compares a read over the rows with the read over the link it
  * replaced; the legacy SQL lives only here. They go when `trade-post-contract` drops the link,

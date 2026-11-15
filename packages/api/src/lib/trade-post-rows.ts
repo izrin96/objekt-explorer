@@ -8,7 +8,7 @@ export type RowList = {
   id: number;
   listType: "have" | "sale" | "want";
   discoverable: boolean;
-  /** `lists.linked_list_id` */
+  /** the list's partner after the write */
   linkedListId: number | null;
 };
 
@@ -40,8 +40,9 @@ export function planPostRows(rows: readonly PostRow[], lists: readonly RowList[]
     else kept.set(row.leadListId, row);
   }
 
-  // the link read from the have or sale side, as `syncPostRows` hands it over; two lists naming one
-  // want list should not happen, and the lower id keeps it so no list sits in two rows
+  // the partner read from the have or sale side; `planPostWrite` hands over a matching, so two
+  // lists naming one want list should not happen, and the lower id keeps it so no list sits in
+  // two rows
   const wantOf = new Map<number, number>();
   const taken = new Set<number>();
   for (const list of lists.toSorted((a, b) => a.id - b.id)) {
@@ -68,4 +69,121 @@ export function planPostRows(rows: readonly PostRow[], lists: readonly RowList[]
   // what is left leads nothing: its list is gone, or a have or sale list took it as its want list
   for (const row of kept.values()) ops.deletes.push(row.id);
   return ops;
+}
+
+export type PairChange = {
+  /** a have or sale list and a want list, in either order */
+  pair?: readonly [number, number] | null;
+  /** lists that leave their pair, with their partner */
+  unpair?: readonly number[];
+};
+
+/**
+ * Each list's partner by the rows: a lead's want list, a want list's lead. The lowest row id
+ * wins, as `postPartnerSql` reads it; a list the lowest row already placed is left out of a later
+ * row, which is the row set `planPostRows` then writes.
+ */
+export function partnersOf(rows: readonly PostRow[]): Map<number, number> {
+  const partners = new Map<number, number>();
+  const led = new Set<number>();
+  for (const row of rows.toSorted((a, b) => a.id - b.id)) {
+    if (led.has(row.leadListId)) continue;
+    led.add(row.leadListId);
+    if (row.wantListId === null) continue;
+    if (partners.has(row.leadListId) || partners.has(row.wantListId)) continue;
+    partners.set(row.leadListId, row.wantListId);
+    partners.set(row.wantListId, row.leadListId);
+  }
+  return partners;
+}
+
+function unpair(partners: Map<number, number>, id: number) {
+  const partner = partners.get(id);
+  if (partner === undefined) return;
+  partners.delete(id);
+  partners.delete(partner);
+}
+
+/** The partners after a write: each unpair first, then the pair, which first unpairs both lists. */
+export function applyPairing(
+  partners: ReadonlyMap<number, number>,
+  change: PairChange,
+): Map<number, number> {
+  const next = new Map(partners);
+  for (const id of change.unpair ?? []) unpair(next, id);
+  if (change.pair) {
+    const [a, b] = change.pair;
+    unpair(next, a);
+    unpair(next, b);
+    next.set(a, b);
+    next.set(b, a);
+  }
+  return next;
+}
+
+/** A have, sale or want list as a write leaves it, as a statement read or returned it. */
+export type TradeListState = { id: number; listType: RowList["listType"]; discoverable: boolean };
+
+export type PostWrite = PairChange & {
+  /** lists the write inserted, or whose `discoverable` it set, as its statements returned them */
+  written?: readonly TradeListState[];
+  /** lists the write deleted; the foreign keys already took them out of the rows and the links */
+  removed?: readonly number[];
+};
+
+export type PostWritePlan = {
+  ops: PostRowOps;
+  /** lists still there whose partner the write changed: the ones to `touchList` */
+  relinked: number[];
+  /** the write asked for a pair or an unpair, or the plan has a row operation */
+  mirror: boolean;
+};
+
+/**
+ * One write to a person's posts, planned in memory: the pairing the write asks for applied to
+ * the partners the rows hold, then the rows those lists call for (`planPostRows`).
+ */
+export function planPostWrite(
+  before: { lists: readonly TradeListState[]; rows: readonly PostRow[] },
+  write: PostWrite,
+): PostWritePlan {
+  const removed = new Set(write.removed);
+  // what the foreign keys did: a deleted lead takes its row, a deleted want list leaves it
+  const rows = before.rows.flatMap((row) =>
+    removed.has(row.leadListId)
+      ? []
+      : [
+          row.wantListId !== null && removed.has(row.wantListId)
+            ? { ...row, wantListId: null }
+            : row,
+        ],
+  );
+  const was = partnersOf(before.rows);
+  const after = applyPairing(partnersOf(rows), write);
+
+  const state = new Map(
+    before.lists.flatMap((list) => (removed.has(list.id) ? [] : [[list.id, list] as const])),
+  );
+  for (const list of write.written ?? []) state.set(list.id, list);
+  // by id, the order the identity column numbers a multi-row insert in
+  const lists = [...state.values()]
+    .toSorted((a, b) => a.id - b.id)
+    .map((list) => ({
+      id: list.id,
+      listType: list.listType,
+      discoverable: list.discoverable,
+      linkedListId: after.get(list.id) ?? null,
+    }));
+  const ops = planPostRows(rows, lists);
+
+  return {
+    ops,
+    relinked: lists.flatMap((list) => (was.get(list.id) === after.get(list.id) ? [] : [list.id])),
+    // not a comparison of partners: the planner can empty a later row of a list in two rows,
+    // which changes what the rows say with the same partners
+    mirror:
+      !!write.pair ||
+      (write.unpair?.length ?? 0) > 0 ||
+      ops.deletes.length + ops.updates.length + ops.inserts.length > 0,
+  };
 }

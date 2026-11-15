@@ -12,7 +12,7 @@ import { refuse } from "../../lib/refuse";
 import { canBeOnTrade, type createListInputSchema, type ListType } from "../../schemas/list";
 import { type OpenToFlags, resolveOpenTo } from "../../schemas/open-to";
 import { assertProfileOwned } from "../profile";
-import { lockTradeLists, syncPostRows, tradeColumns, turnOnBumpedAt } from "./shared";
+import { lockPosts, tradeColumns, tradeState, turnOnBumpedAt, writePosts } from "./shared";
 
 export function resolveDiscoverable(
   type: ListType,
@@ -156,17 +156,17 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
   let partner = prepared.partner;
   // a have, sale or want list can be created on Trade without a link, and its post row is
   // written under the same lock
-  const own = input.listType === "general" ? [] : await lockTradeLists(tx, userId);
+  const locked = input.listType === "general" ? null : await lockPosts(tx, userId);
   if (linkedListId !== null) {
-    const locked = own.find((list) => list.id === linkedListId);
-    if (!locked) refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
+    const target = locked?.lists.find((list) => list.id === linkedListId);
+    if (!target) refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
     const reason = pairRefusal(
       input.listType,
       { openTo: resolveOpenTo(input.listType, input), takesSwaps: false },
-      locked,
+      target,
     );
     if (reason) refuse("BAD_REQUEST", reason, PAIR_MESSAGES[reason]);
-    partner = locked;
+    partner = target;
   }
   // picked right before the insert, on the transaction's own connection, so the gap in which
   // two lists can pick the same profile slug stays as short as the insert itself
@@ -186,7 +186,6 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
       hideSerial:
         ["sale", "have"].includes(input.listType) && isProfileBind ? input.hideSerial : false,
       gridColumns: input.gridColumns,
-      linkedListId,
       profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
       description: input.description,
       currency:
@@ -196,29 +195,31 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
       removeOnReceive: input.listType === "want" && input.removeOnReceive,
       bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })
-    .returning({ id: lists.id });
+    .returning(tradeState);
 
   if (!inserted) throw new ORPCError("INTERNAL_SERVER_ERROR");
-  const changed = [inserted.id];
+  if (!locked) return { id: inserted.id, slug, changed: [inserted.id] };
 
-  // Bidirectional link: clear any existing reverse link on target, then set new one
-  if (linkedListId !== null) {
-    const unlinked = await tx
+  const written = [inserted];
+  if (
+    linkedListId !== null &&
+    partner &&
+    resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)
+  ) {
+    const on = await tx
       .update(lists)
-      .set({ linkedListId: null })
-      .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.id)))
-      .returning({ id: lists.id });
-    changed.push(linkedListId, ...unlinked.map((row) => row.id));
-
-    await tx.update(lists).set({ linkedListId: inserted.id }).where(eq(lists.id, linkedListId));
-
-    if (partner && resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)) {
-      await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
-    }
+      .set(tradeColumns(true))
+      .where(eq(lists.id, linkedListId))
+      .returning(tradeState);
+    written.push(...on);
   }
 
-  if (input.listType !== "general") await syncPostRows(tx, userId);
-  return { id: inserted.id, slug, changed };
+  // pairing takes the target from the list it was paired with, which is touched with the pair
+  const relinked = await writePosts(tx, userId, locked, {
+    pair: linkedListId === null ? null : [inserted.id, linkedListId],
+    written,
+  });
+  return { id: inserted.id, slug, changed: [...new Set([inserted.id, ...relinked])] };
 }
 
 /** Creates the list in one transaction; returns what `touchList` takes after the commit. */

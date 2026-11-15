@@ -1,6 +1,16 @@
 import { describe, expect, test } from "bun:test";
 
-import { type PostId, type PostRow, type RowList, planPostRows } from "./trade-post-rows";
+import {
+  type PostId,
+  type PostRow,
+  type PostWrite,
+  type RowList,
+  type TradeListState,
+  applyPairing,
+  partnersOf,
+  planPostRows,
+  planPostWrite,
+} from "./trade-post-rows";
 
 const row = (id: number, leadListId: number, wantListId: number | null = null): PostRow => ({
   id: id as PostId,
@@ -136,5 +146,158 @@ describe("planPostRows", () => {
       { leadListId: 1, wantListId: 3 },
       { leadListId: 2, wantListId: null },
     ]);
+  });
+});
+
+const pairs = (partners: Map<number, number>) => [...partners].toSorted(([a], [b]) => a - b);
+
+describe("partnersOf", () => {
+  test("a pair names both ways; a Buy post and a lone lead have no partner", () => {
+    expect(pairs(partnersOf([row(10, 1, 2), row(11, 3), row(12, 4)]))).toEqual([
+      [1, 2],
+      [2, 1],
+    ]);
+  });
+
+  test("a list in two rows: the lowest row wins and the later lead gets no partner", () => {
+    expect(pairs(partnersOf([row(11, 3, 2), row(10, 1, 2)]))).toEqual([
+      [1, 2],
+      [2, 1],
+    ]);
+  });
+
+  test("a lead in two rows keeps what its lowest row says", () => {
+    expect(pairs(partnersOf([row(10, 1), row(11, 1, 2)]))).toEqual([]);
+  });
+});
+
+describe("applyPairing", () => {
+  // 1 with 2, and 3 with 4
+  const two = partnersOf([row(10, 1, 2), row(11, 3, 4)]);
+
+  test("pairing two lists that each have a partner leaves both old partners with none", () => {
+    expect(pairs(applyPairing(two, { pair: [1, 4] }))).toEqual([
+      [1, 4],
+      [4, 1],
+    ]);
+  });
+
+  test("pairing the same pair again changes nothing, in either order", () => {
+    expect(pairs(applyPairing(two, { pair: [1, 2] }))).toEqual(pairs(two));
+    expect(pairs(applyPairing(two, { pair: [2, 1] }))).toEqual(pairs(two));
+  });
+
+  test("unpairing a list takes its partner's too; a list with no partner is no change", () => {
+    expect(pairs(applyPairing(two, { unpair: [2] }))).toEqual([
+      [3, 4],
+      [4, 3],
+    ]);
+    expect(pairs(applyPairing(two, { unpair: [9] }))).toEqual(pairs(two));
+  });
+
+  test("the unpairs run before the pair", () => {
+    expect(pairs(applyPairing(two, { unpair: [1, 2], pair: [1, 2] }))).toEqual(pairs(two));
+  });
+
+  test("a new list paired with a paired list takes it from its partner", () => {
+    expect(pairs(applyPairing(two, { pair: [5, 2] }))).toEqual([
+      [2, 5],
+      [3, 4],
+      [4, 3],
+      [5, 2],
+    ]);
+  });
+});
+
+describe("planPostWrite", () => {
+  const state = (
+    id: number,
+    listType: TradeListState["listType"],
+    discoverable = true,
+  ): TradeListState => ({ id, listType, discoverable });
+  const lists = [state(1, "have"), state(2, "want"), state(3, "have"), state(4, "want")];
+  const rows = [row(10, 1, 2), row(11, 3, 4)];
+  const write = (change: PostWrite, before = { lists, rows }) => {
+    const { ops, relinked, mirror } = planPostWrite(before, change);
+    return { ops: ops as PlainOps, relinked, mirror };
+  };
+
+  test("no change: nothing to write, nothing to mirror", () => {
+    expect(write({})).toEqual({ ops: NONE, relinked: [], mirror: false });
+    expect(write({ pair: null, unpair: [] }).mirror).toBe(false);
+  });
+
+  test("pairing across two pairs rehomes both old partners", () => {
+    expect(write({ pair: [1, 4] })).toEqual({
+      ops: {
+        deletes: [],
+        // 3 keeps its row without a want list, and 2 stands alone on Trade
+        updates: [
+          { id: 10, wantListId: 4 },
+          { id: 11, wantListId: null },
+        ],
+        inserts: [{ leadListId: 2, wantListId: null }],
+      },
+      relinked: [1, 2, 3, 4],
+      mirror: true,
+    });
+  });
+
+  test("the same pair again mirrors, and writes no row", () => {
+    expect(write({ pair: [1, 2] })).toEqual({ ops: NONE, relinked: [], mirror: true });
+  });
+
+  test("an unpair gives the want list on Trade its own row", () => {
+    expect(write({ unpair: [1, 2] })).toEqual({
+      ops: {
+        deletes: [],
+        updates: [{ id: 10, wantListId: null }],
+        inserts: [{ leadListId: 2, wantListId: null }],
+      },
+      relinked: [1, 2],
+      mirror: true,
+    });
+  });
+
+  test("a new list created paired with a paired want list", () => {
+    expect(write({ pair: [5, 2], written: [state(5, "have", false)] })).toEqual({
+      ops: {
+        deletes: [],
+        updates: [{ id: 10, wantListId: null }],
+        inserts: [{ leadListId: 5, wantListId: 2 }],
+      },
+      relinked: [1, 2, 5],
+      mirror: true,
+    });
+  });
+
+  test("a removed lead: the cascade took its row, and its partner on Trade gets one", () => {
+    expect(write({ removed: [1] })).toEqual({
+      ops: { ...NONE, inserts: [{ leadListId: 2, wantListId: null }] },
+      relinked: [2],
+      mirror: true,
+    });
+  });
+
+  test("a removed want list: the row stays without it, with nothing to write", () => {
+    expect(write({ removed: [2] })).toEqual({ ops: NONE, relinked: [1], mirror: false });
+  });
+
+  test("a list in two rows: the planner empties the later row, so the mirror runs", () => {
+    const before = { lists: lists.slice(0, 3), rows: [row(10, 1, 2), row(11, 3, 2)] };
+    expect(write({}, before)).toEqual({
+      ops: { ...NONE, updates: [{ id: 11, wantListId: null }] },
+      relinked: [],
+      mirror: true,
+    });
+  });
+
+  test("a written list overrides what was read, and a new one joins", () => {
+    // 1 leaves Trade and keeps its row; 5 is created on Trade
+    expect(write({ written: [state(1, "have", false), state(5, "want")] })).toEqual({
+      ops: { ...NONE, inserts: [{ leadListId: 5, wantListId: null }] },
+      relinked: [],
+      mirror: true,
+    });
   });
 });
