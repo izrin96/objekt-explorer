@@ -138,7 +138,8 @@ const tradeStates = ({ id, listType, discoverable }: WrittenList): TradeListStat
 
 /**
  * Plans the write over the rows `lockPosts` read (`planPostWrite`) and writes the row
- * operations. Call it after the list writes. Returns the lists whose partner changed, for
+ * operations. Call it after the list writes, and before a list delete (`removed`), so a row is
+ * re-led while its lists are still there. Returns the lists whose partner changed, for
  * `touchList`. A new writer of a pairing, of `discoverable`, or one that deletes a have, sale
  * or want list goes through it: the rows are the only place a pairing is stored.
  */
@@ -154,8 +155,11 @@ export async function writePosts(
   });
 
   if (ops.deletes.length > 0) await tx.delete(tradePost).where(inArray(tradePost.id, ops.deletes));
-  for (const { id, wantListId } of ops.updates) {
-    await tx.update(tradePost).set({ wantListId }).where(eq(tradePost.id, id));
+  for (const { id, leadListId, wantListId } of ops.updates) {
+    await tx
+      .update(tradePost)
+      .set(leadListId === undefined ? { wantListId } : { leadListId, wantListId })
+      .where(eq(tradePost.id, id));
   }
   if (ops.inserts.length > 0) {
     await tx

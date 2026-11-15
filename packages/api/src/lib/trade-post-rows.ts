@@ -14,7 +14,8 @@ export type RowList = {
 
 export type PostRowOps = {
   deletes: PostId[];
-  updates: { id: PostId; wantListId: number | null }[];
+  /** `leadListId` is set only when the row changes its lead and keeps its id */
+  updates: { id: PostId; leadListId?: number; wantListId: number | null }[];
   inserts: { leadListId: number; wantListId: number | null }[];
 };
 
@@ -29,8 +30,20 @@ export type PostRowOps = {
  *
  * It plans the person's whole set, not only the lists a write touched, so any write also repairs
  * rows a build without this left stale. A lead keeps its lowest row, so its post id stays.
+ *
+ * A post keeps its id while it stays one post: no plan deletes a row and inserts another that
+ * holds one of its lists. Such a pair becomes one update that changes the row's lead: a Buy post
+ * that gains a have list with no row, or a row whose lead is gone and whose want list now leads.
+ * Two posts merged still lose one id, and a split still makes one. On a merge the lead's row
+ * stays, unless `live` says the want list was on Trade before the write and the lead was not:
+ * then the want list's row stays, so the post a person was editing keeps its id over a row
+ * left behind by a list taken off Trade.
  */
-export function planPostRows(rows: readonly PostRow[], lists: readonly RowList[]): PostRowOps {
+export function planPostRows(
+  rows: readonly PostRow[],
+  lists: readonly RowList[],
+  live?: ReadonlySet<number>,
+): PostRowOps {
   const byId = new Map(lists.map((list) => [list.id, list]));
   const ops: PostRowOps = { deletes: [], updates: [], inserts: [] };
 
@@ -62,13 +75,43 @@ export function planPostRows(rows: readonly PostRow[], lists: readonly RowList[]
         : wantListId !== null || list.discoverable || row !== undefined;
     if (!leads) continue;
     kept.delete(list.id);
+    const wantRow = wantListId === null ? undefined : kept.get(wantListId);
+    if (row && wantRow && live?.has(wantListId!) && !live.has(list.id)) {
+      kept.delete(wantListId!);
+      ops.deletes.push(row.id);
+      ops.updates.push({ id: wantRow.id, leadListId: list.id, wantListId });
+      continue;
+    }
     if (!row) ops.inserts.push({ leadListId: list.id, wantListId });
     else if (row.wantListId !== wantListId) ops.updates.push({ id: row.id, wantListId });
   }
 
   // what is left leads nothing: its list is gone, or a have or sale list took it as its want list
   for (const row of kept.values()) ops.deletes.push(row.id);
-  return ops;
+  return relead(rows, ops);
+}
+
+/** Turns each insert that shares a list with a row the plan deletes into an update of that row. */
+function relead(rows: readonly PostRow[], ops: PostRowOps): PostRowOps {
+  if (ops.inserts.length === 0 || ops.deletes.length === 0) return ops;
+  const doomed = new Set<number>(ops.deletes);
+  const candidates = rows.filter((row) => doomed.has(row.id)).toSorted((a, b) => a.id - b.id);
+  const inserts: PostRowOps["inserts"] = [];
+  const updates = [...ops.updates];
+  for (const insert of ops.inserts) {
+    const holds = (id: number | null) =>
+      id !== null && (id === insert.leadListId || id === insert.wantListId);
+    const row = candidates.find(
+      (entry) => doomed.has(entry.id) && (holds(entry.leadListId) || holds(entry.wantListId)),
+    );
+    if (!row) {
+      inserts.push(insert);
+      continue;
+    }
+    doomed.delete(row.id);
+    updates.push({ id: row.id, leadListId: insert.leadListId, wantListId: insert.wantListId });
+  }
+  return { deletes: ops.deletes.filter((id) => doomed.has(id)), updates, inserts };
 }
 
 export type PairChange = {
@@ -127,7 +170,7 @@ export type TradeListState = { id: number; listType: RowList["listType"]; discov
 export type PostWrite = PairChange & {
   /** lists the write inserted, or whose `discoverable` it set, as its statements returned them */
   written?: readonly TradeListState[];
-  /** lists the write deleted; the foreign keys already took them out of the rows and the links */
+  /** lists the write is about to delete; the plan takes them out of the rows itself */
   removed?: readonly number[];
 };
 
@@ -146,7 +189,9 @@ export function planPostWrite(
   write: PostWrite,
 ): PostWritePlan {
   const removed = new Set(write.removed);
-  // what the foreign keys did: a deleted lead takes its row, a deleted want list leaves it
+  // the rows without the removed lists, for the partners only: a deleted lead takes its row, a
+  // deleted want list leaves it. The plan starts from the rows as they are, so it can keep the
+  // id of a row whose lead goes and whose want list then leads.
   const rows = before.rows.flatMap((row) =>
     removed.has(row.leadListId)
       ? []
@@ -172,7 +217,8 @@ export function planPostWrite(
       discoverable: list.discoverable,
       linkedListId: after.get(list.id) ?? null,
     }));
-  const ops = planPostRows(rows, lists);
+  const live = new Set(before.lists.flatMap((list) => (list.discoverable ? [list.id] : [])));
+  const ops = planPostRows(before.rows, lists, live);
 
   return {
     ops,

@@ -27,10 +27,11 @@ const list = (
 // the planner's ids are branded; the expectations here are plain numbers
 type PlainOps = {
   deletes: number[];
-  updates: { id: number; wantListId: number | null }[];
+  updates: { id: number; leadListId?: number; wantListId: number | null }[];
   inserts: { leadListId: number; wantListId: number | null }[];
 };
-const plan = (rows: PostRow[], lists: RowList[]): PlainOps => planPostRows(rows, lists);
+const plan = (rows: PostRow[], lists: RowList[], live?: number[]): PlainOps =>
+  planPostRows(rows, lists, live && new Set(live));
 
 const NONE = { deletes: [], updates: [], inserts: [] };
 // have 1 and want 2 are a pair, on Trade
@@ -73,12 +74,50 @@ describe("planPostRows", () => {
     });
   });
 
-  test("a lone want post linked to an off-Trade have list joins that list's new row", () => {
+  test("a merge keeps the row of the post that was on Trade", () => {
+    const rows = [row(10, 1), row(11, 2)];
+    // the Buy post was live and the have list's row was left from before: the Buy post's stays
+    expect(plan(rows, pair, [2])).toEqual({
+      deletes: [10],
+      updates: [{ id: 11, leadListId: 1, wantListId: 2 }],
+      inserts: [],
+    });
+    // both live, the have list alone, or neither: the lead's stays
+    for (const live of [[1, 2], [1], []]) {
+      expect(plan(rows, pair, live)).toEqual({
+        deletes: [11],
+        updates: [{ id: 10, wantListId: 2 }],
+        inserts: [],
+      });
+    }
+  });
+
+  test("a merge onto the live Buy post hands the lead's old want list the lead's old row", () => {
+    // 1 led 3 off Trade; the live Buy post 2 takes 1, and 3, on Trade now, takes over row 10
+    const lists = [list(1, "have", true, 2), list(2, "want", true, 1), list(3, "want", true)];
+    expect(plan([row(10, 1, 3), row(11, 2)], lists, [2])).toEqual({
+      deletes: [],
+      updates: [
+        { id: 11, leadListId: 1, wantListId: 2 },
+        { id: 10, leadListId: 3, wantListId: null },
+      ],
+      inserts: [],
+    });
+  });
+
+  test("a Buy post linked to a have list with no row keeps its row, led by the have list", () => {
     const lists = [list(1, "have", false, 2), list(2, "want", true, 1)];
     expect(plan([row(11, 2)], lists)).toEqual({
-      deletes: [11],
-      updates: [],
-      inserts: [{ leadListId: 1, wantListId: 2 }],
+      ...NONE,
+      updates: [{ id: 11, leadListId: 1, wantListId: 2 }],
+    });
+  });
+
+  test("a new sale list paired with a Buy post takes over its row too", () => {
+    const lists = [list(2, "want", true, 5), list(5, "sale", true, 2)];
+    expect(plan([row(11, 2)], lists)).toEqual({
+      ...NONE,
+      updates: [{ id: 11, leadListId: 5, wantListId: 2 }],
     });
   });
 
@@ -105,11 +144,26 @@ describe("planPostRows", () => {
     });
   });
 
-  test("the lead deleted: its row goes and the want list stands alone", () => {
+  test("the lead gone, the want list on Trade: the row stays, led by the want list", () => {
     expect(plan([row(10, 1, 2)], [list(2, "want", true)])).toEqual({
-      deletes: [10],
-      updates: [],
-      inserts: [{ leadListId: 2, wantListId: null }],
+      ...NONE,
+      updates: [{ id: 10, leadListId: 2, wantListId: null }],
+    });
+  });
+
+  test("the lead gone, the want list off Trade: the row goes", () => {
+    expect(plan([row(10, 1, 2)], [list(2, "want", false)])).toEqual({ ...NONE, deletes: [10] });
+  });
+
+  test("each doomed row is taken over once, lowest id first", () => {
+    // 1 and 3 are gone; their want lists 2 and 4 are on Trade
+    const lists = [list(2, "want", true), list(4, "want", true)];
+    expect(plan([row(12, 3, 4), row(10, 1, 2)], lists)).toEqual({
+      ...NONE,
+      updates: [
+        { id: 10, leadListId: 2, wantListId: null },
+        { id: 12, leadListId: 4, wantListId: null },
+      ],
     });
   });
 
@@ -268,15 +322,45 @@ describe("planPostWrite", () => {
     });
   });
 
-  test("a removed lead: the cascade took its row, and its partner on Trade gets one", () => {
+  test("a live Buy post paired with a have list that was off Trade keeps its row", () => {
+    const before = {
+      lists: [state(1, "have", false), state(2, "want")],
+      rows: [row(10, 1), row(11, 2)],
+    };
+    expect(write({ pair: [1, 2], written: [state(1, "have")] }, before)).toEqual({
+      ops: { deletes: [10], updates: [{ id: 11, leadListId: 1, wantListId: 2 }], inserts: [] },
+      relinked: [1, 2],
+    });
+  });
+
+  test("a removed lead: its partner on Trade takes over the row", () => {
     expect(write({ removed: [1] })).toEqual({
-      ops: { ...NONE, inserts: [{ leadListId: 2, wantListId: null }] },
+      ops: { ...NONE, updates: [{ id: 10, leadListId: 2, wantListId: null }] },
       relinked: [2],
     });
   });
 
-  test("a removed want list: the row stays without it, with nothing to write", () => {
-    expect(write({ removed: [2] })).toEqual({ ops: NONE, relinked: [1] });
+  test("a removed lead whose partner is off Trade: the row goes", () => {
+    const before = { lists: [state(1, "have"), state(2, "want", false)], rows: [row(10, 1, 2)] };
+    expect(write({ removed: [1] }, before)).toEqual({
+      ops: { ...NONE, deletes: [10] },
+      relinked: [2],
+    });
+  });
+
+  test("a removed lead with no partner: the row goes", () => {
+    const before = { lists: [state(1, "have")], rows: [row(10, 1)] };
+    expect(write({ removed: [1] }, before)).toEqual({
+      ops: { ...NONE, deletes: [10] },
+      relinked: [],
+    });
+  });
+
+  test("a removed want list: the row stays, emptied", () => {
+    expect(write({ removed: [2] })).toEqual({
+      ops: { ...NONE, updates: [{ id: 10, wantListId: null }] },
+      relinked: [1],
+    });
   });
 
   test("a list in two rows: the planner empties the later row", () => {

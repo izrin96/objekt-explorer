@@ -117,12 +117,12 @@ export async function deleteList(userId: string, slug: string) {
   }
 
   const unpaired = await db.transaction(async (tx) => {
-    // the delete changes the person's rows through their foreign keys, so it runs under the lock
-    // every post writer takes
     const locked = await lockPosts(tx, userId);
+    // rows first: a paired want list on Trade takes over its deleted lead's row and keeps the
+    // post id, which the cascade of the delete would have ended
+    const unpaired = await writePosts(tx, userId, locked, { removed: [list.id] });
     await tx.delete(lists).where(eq(lists.id, list.id));
-    // the partner of a deleted lead stands alone now, and may need a row of its own
-    return writePosts(tx, userId, locked, { removed: [list.id] });
+    return unpaired;
   });
   // the partner loses its pair through the foreign keys, which leave its updated_at alone
   if (unpaired.length > 0) await touchList(unpaired);

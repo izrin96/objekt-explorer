@@ -96,11 +96,30 @@ const done = (touched: Iterable<number>): Outcome => ({
 });
 const refused = (refusal: string): Outcome => ({ refusal, touched: [] });
 
+let releads = 0;
+
 function applyOps(world: World, userId: string, ops: PostRowOps) {
   const gone = new Set<number>(ops.deletes);
-  const wants = new Map(ops.updates.map((update) => [update.id as number, update.wantListId]));
+  // a post keeps its id: no plan deletes a row and inserts one that holds one of its lists
+  for (const row of world.rows.filter((entry) => gone.has(entry.id))) {
+    for (const insert of ops.inserts) {
+      const shared = [row.leadListId, row.wantListId].some(
+        (id) => id !== null && (id === insert.leadListId || id === insert.wantListId),
+      );
+      expect(shared, `row ${row.id} deleted and re-created for list ${insert.leadListId}`).toBe(
+        false,
+      );
+    }
+  }
+  releads += ops.updates.filter((update) => update.leadListId !== undefined).length;
+  const updates = new Map(ops.updates.map((update) => [update.id as number, update]));
   world.rows = world.rows.filter((row) => !gone.has(row.id));
-  for (const row of world.rows) if (wants.has(row.id)) row.wantListId = wants.get(row.id)!;
+  for (const row of world.rows) {
+    const update = updates.get(row.id);
+    if (!update) continue;
+    row.wantListId = update.wantListId;
+    if (update.leadListId !== undefined) row.leadListId = update.leadListId;
+  }
   for (const insert of ops.inserts) {
     world.rows.push({ id: world.nextRow++ as PostId, userId, ...insert });
   }
@@ -341,8 +360,12 @@ function byRows(world: World, write: Write): Outcome {
   }
 
   if (write.kind === "delete") {
+    // rows first, as `deleteList` runs it; the foreign keys then find nothing to do
+    const relinked = writePosts(world, userId, current, { removed: [write.id] });
+    const rowsBefore = structuredClone(world.rows);
     deleteLists(world, new Set([write.id]));
-    return done(writePosts(world, userId, current, { removed: [write.id] }));
+    expect(world.rows, "the foreign keys changed a row the plan left").toEqual(rowsBefore);
+    return done(relinked);
   }
 
   deleteLists(world, new Set(own.map((list) => list.id)));
@@ -520,9 +543,13 @@ function check(world: World, at: string) {
   }
 }
 
+// rows without their ids: the row world keeps an id where the link world, whose delete lets the
+// cascade take the row, makes a new one
 const sorted = (world: World) => ({
   lists: world.lists.toSorted((a, b) => a.id - b.id),
-  rows: world.rows.toSorted((a, b) => a.id - b.id),
+  rows: world.rows
+    .map(({ userId, leadListId, wantListId }) => ({ userId, leadListId, wantListId }))
+    .toSorted((a, b) => a.leadListId - b.leadListId),
 });
 
 function differential(seed: number, counts: Counts) {
@@ -569,6 +596,8 @@ test(
     for (const [transition, n] of Object.entries(counts)) {
       expect(n, `${transition} ran ${n} times`).toBeGreaterThanOrEqual(100);
     }
+    if (process.env.COUNTS) console.log({ releads });
+    expect(releads, "rows that changed their lead and kept their id").toBeGreaterThanOrEqual(100);
   },
   CI_TIMEOUT,
 );
