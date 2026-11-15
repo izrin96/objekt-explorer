@@ -28,4 +28,4 @@ No task commits, pushes or runs a migration. The root `.env` is production; ever
 
 ## 6. Rollout
 
-- [ ] 6.1 The owner confirms the production worker is built from `56b04e99` or later (rebuilding it if not), then commits, pushes and deploys (the no-op migration, then web). With a go-ahead afterwards, the drift script read-only on production reads zero; record it in design.md.
+- [x] 6.1 The owner confirms the production worker is built from `56b04e99` or later (rebuilding it if not), then commits, pushes and deploys (the no-op migration, then web). With a go-ahead afterwards, the drift script read-only on production reads zero; record it in design.md.
