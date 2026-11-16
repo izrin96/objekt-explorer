@@ -8,9 +8,9 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile and put on Trade (idle or not), at any of the recipient's linked addresses. A bound list kept off Trade SHALL not be asked from. When the recipient has no such list and has "Let people ask for anything I hold" on (see `web-account`; off by default), each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt only, never any copy, since every copy there shows its serial. With no such list and the setting off, nothing SHALL be asked for, and an offer MAY still give objekts or a top-up. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile and put on Trade (idle or not), at any of the recipient's linked addresses. A bound list kept off Trade SHALL not be asked from. When the recipient has no such list and has "Let people ask for anything I hold" on (see `web-account`; off by default), each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt only, never any copy, since every copy there shows its serial. With no such list and the setting off, nothing SHALL be asked for, and an offer MAY still give objekts or a top-up. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for, and every ask SHALL come from one of those lists (see One post per offer).
 
-Where an offer starts (a Trade row, a Market listing, a conversation) SHALL not narrow what may be asked for: every offer follows the rule above. The one exception is a recipient who takes asks from one post (see One post per offer).
+Where an offer starts (a Trade row, a Market listing, a conversation) SHALL not narrow which of the recipient's posts may be asked from: it only sets the post Offer on opens on (see Where Offer on opens), and the sender MAY choose another.
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
@@ -55,12 +55,16 @@ An offer SHALL hold at least one objekt, and at most 200 on each side. On the of
 - **THEN** the counter is sent
 
 #### Scenario: Post offer asks from another list
-- **WHEN** a user makes an offer from rin.trades's post for the have list "doubles", switches You get's list from "doubles" to rin.trades's sale list "spares", and asks for SeoYeon 204Z #537, which is only on "spares"
-- **THEN** the offer is sent: the post only chose the list You get opens on
+- **WHEN** a user makes an offer on rin.trades's post for the have list "doubles" and asks for SeoYeon 204Z #537, which is only on rin.trades's sale list "spares"
+- **THEN** the offer is refused as from another post, and nothing is sent
+
+#### Scenario: Post offer moved to another post
+- **WHEN** a user starts an offer from rin.trades's post "doubles", changes Offer on to "spares", and asks for SeoYeon 204Z #537, which is only on "spares"
+- **THEN** the offer is sent, on "spares": the post it started from only chose where Offer on opens
 
 #### Scenario: Post offer from a want list
-- **WHEN** a user makes an offer from rin.trades's WTB post, whose list is a want list, asking for SeoYeon 204Z #537 from rin.trades's sale list "spares"
-- **THEN** the offer is sent, as from a conversation
+- **WHEN** a user makes an offer from rin.trades's WTB post, whose list is a want list, with Offer on set to rin.trades's sale list "spares", asking for SeoYeon 204Z #537 from "spares"
+- **THEN** the offer is sent on "spares", as from a conversation
 
 #### Scenario: Want-only post with no lists to ask from
 - **WHEN** a user makes an offer from rin.trades's WTT post that has only a want list, rin.trades has no have or sale list on Trade and lets people ask for anything they hold, and the user asks for an objekt rin.trades holds at a linked address with a public profile
@@ -68,11 +72,11 @@ An offer SHALL hold at least one objekt, and at most 200 on each side. On the of
 
 #### Scenario: Conversation after a post offer
 - **WHEN** a user's offer from rin.trades's post for "doubles" opened their conversation, and rin.trades counters from the conversation
-- **THEN** the counter may ask for entries on any of the user's have and sale lists on Trade, as in any conversation
+- **THEN** the counter may ask from any one of the user's have and sale lists on Trade, as in any conversation, all its new asks from that one list
 
 #### Scenario: Recipient takes asks from one post
-- **WHEN** rin.trades has turned Let people ask from more than one post off, and a user makes an offer from the post "doubles" and asks for SeoYeon 204Z #537, which is only on "spares"
-- **THEN** the offer is refused as from another post
+- **WHEN** rin.trades has "doubles" and "spares" on Trade, and a user makes an offer on "doubles" asking for one objekt on "doubles" and SeoYeon 204Z #537, which is only on "spares"
+- **THEN** the offer is refused as from another post, naming #537
 
 ### Requirement: Checks before sending
 Before an offer is sent, each specific objekt SHALL be checked against current on-chain ownership:
@@ -164,10 +168,10 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 ### Requirement: Offer builder
 The builder SHALL be a page, `/trade/@<handle>/offer` (see Offer page), never a dialog. It shows:
 - You give, with an Add picker over the sender's own objekts, entries on their bound have and sale lists first;
-- You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists" (for a partner who takes asks from one post, over the post chosen under Offer on, labelled "Add from {post}"; see Choosing the post); or, when the partner has no have or sale list bound to a Cosmo profile and on Trade and lets people ask for anything they hold, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first; or, when they have no such list and don't allow that, no Add picker, and a line saying {name} has nothing on Trade to ask for and that the sender can still offer objekts or a top-up;
+- You get, with an Add picker over the allowed entries of the post chosen under Offer on, labelled "Add from {post}" (see Choosing the post); or, when the partner has no have or sale list bound to a Cosmo profile and on Trade and lets people ask for anything they hold, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first; or, when they have no such list and don't allow that, no Add picker, and a line saying {name} has nothing on Trade to ask for and that the sender can still offer objekts or a top-up;
 - the top-up and the note.
 
-Opened from a Market listing, You get's picker SHALL open with its List choice on the listing's sale list; opened anywhere else, on All their lists.
+You get's picker over lists SHALL show the post chosen under Offer on, which opens as Where Offer on opens says: on the listing's sale list when opened from a Market listing.
 
 Each picker SHALL show one tile per collection (see Copies grouped by collection in the pickers). Each pickable copy SHALL show its flags (not transferable, reserved, in another of the user's own open offers): on its tile when the tile stands for that one copy, else on its row in the serial dialog (see Serial dialog), with the tile counting the copies that can't be offered. Send SHALL stay disabled until the offer holds at least one objekt.
 
@@ -179,9 +183,9 @@ Below `sm`, each picker SHALL keep only its search field and a Filters button in
 
 You give's picker SHALL offer a **List** choice, after the filters: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, each shown with its list type badge, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of List.
 
-You get's picker over lists SHALL offer a **List** choice, after the filters, when the partner has a have or sale list on Trade: All their lists; or one of those lists, shown as its name after its list type badge as in Compare with, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of List. List changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available. For a partner who takes asks from one post there is no List choice: the picker shows the post chosen under Offer on.
+You get's picker over lists SHALL offer no **List** choice: it shows only the entries of the post chosen under Offer on that the sender may ask for, and the filters and the matching switch apply on top of it. Another of the partner's posts is reached by changing Offer on.
 
-An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
+An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or nothing on the post is available, since what they listed was traded away or can't be transferred. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
 
 #### Scenario: Partner lists nothing
 - **WHEN** the partner's only list on Trade is a have list with no entries, and the sender opens You get's picker with "Only what I want" on
@@ -196,40 +200,40 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **THEN** You get has no Add button, the line says the partner has nothing on Trade to ask for, and the sender can still send an offer that only gives objekts or a top-up
 
 #### Scenario: Partner with a list
-- **WHEN** the partner has one bound have list on Trade
-- **THEN** You get's button reads "Add from {name}'s lists", and its picker shows only that list's entries
+- **WHEN** the partner has one bound have list "doubles" on Trade
+- **THEN** the builder reads "Offer on doubles", You get's button reads "Add from doubles", and its picker shows only that list's entries
 
 #### Scenario: From a post
 - **WHEN** rin.trades has the have list "doubles" and the sale list "spares" on Trade, and the sender opens the builder from rin.trades's Trade row, whose lead post is "doubles"
-- **THEN** You get's button reads "Add from rin.trades's lists", and its picker opens on All their lists, showing the entries of both
+- **THEN** Offer on reads "doubles", You get's button reads "Add from doubles", and its picker shows only the entries of "doubles", with no List choice
 
 #### Scenario: A list kept off Trade
 - **WHEN** rin.trades has the bound have list "doubles" on Trade and the bound have list "private" off Trade
-- **THEN** You get's picker and its List choice show "doubles" only, and an offer asking for an entry only on "private" is refused when sent
+- **THEN** the builder reads "Offer on doubles", You get's picker shows "doubles" only, and an offer asking for an entry only on "private" is refused when sent
 
 #### Scenario: From a WTB post
-- **WHEN** the sender opens the builder from rin.trades's WTB post, and rin.trades has "doubles" and "spares" on Trade
-- **THEN** You get's button reads "Add from rin.trades's lists", and its picker shows the entries of both lists
+- **WHEN** the sender opens the builder from rin.trades's WTB post, and rin.trades has "doubles" then "spares" on Trade
+- **THEN** Offer on reads "doubles" and offers "spares", You get's button reads "Add from doubles", and its picker shows the entries of "doubles" only
 
 #### Scenario: From a Market listing
 - **WHEN** the sender chooses Make offer on rin.trades's listing in an objekt's Market tab, which comes from the sale list "spares"
-- **THEN** the builder opens with that objekt under You get, and You get's picker opens on "spares" under List, from which the sender MAY switch to All their lists
+- **THEN** the builder opens with that objekt under You get, Offer on reads "spares", and You get's picker shows only the entries of "spares"
 
 #### Scenario: From a conversation
-- **WHEN** the sender opens the builder from their conversation with rin.trades, who has "doubles" and "spares" on Trade
-- **THEN** You get's button reads "Add from rin.trades's lists", and its picker shows the entries of both lists
+- **WHEN** the sender opens the builder from their conversation with rin.trades, who has "doubles" then "spares" on Trade
+- **THEN** Offer on reads "doubles", You get's button reads "Add from doubles", and its picker shows the entries of "doubles" only
 
 #### Scenario: Pick one of my lists
 - **WHEN** the sender picks their sale list "doubles" under List, and holds 4 of its 6 entries
 - **THEN** the picker shows those 4 objekts only
 
 #### Scenario: Pick one of their lists
-- **WHEN** the sender, in their conversation with rin.trades, opens You get's picker and picks rin.trades's sale list "spares" under List
-- **THEN** the picker shows only the entries of "spares" the sender may ask for
+- **WHEN** the sender, in their conversation with rin.trades, changes Offer on to rin.trades's sale list "spares" and opens You get's picker
+- **THEN** the picker shows only the entries of "spares" the sender may ask for, with no List choice
 
 #### Scenario: Their List shown for one list
 - **WHEN** rin.trades has exactly one have or sale list on Trade
-- **THEN** You get's picker offers a List choice of All their lists and that list
+- **THEN** the builder reads "Offer on {that list}", and You get's picker shows that list's entries with no List choice
 
 #### Scenario: Their List hidden over a collection
 - **WHEN** rin.trades has no have or sale list on Trade and lets people ask for anything they hold, and the sender opens You get's picker
@@ -249,11 +253,11 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 
 #### Scenario: Picker on a phone
 - **WHEN** the sender opens You get's picker at 390 px with "Only what I want" on
-- **THEN** the search field and "Filters 1" sit on one row above the grid, the footer is one row, and choosing Filters shows the filters, List and the switch
+- **THEN** the search field and "Filters 1" sit on one row above the grid, the footer is one row, and choosing Filters shows the filters and the switch, with no List
 
 #### Scenario: Switches start off
 - **WHEN** a sender with a want list opens the builder
-- **THEN** both "Only what they want" and "Only what I want" are off, and You get's picker lists every entry the sender may ask for
+- **THEN** both "Only what they want" and "Only what I want" are off, and You get's picker lists every entry of the post under Offer on the sender may ask for
 
 #### Scenario: A collection's copies on one page
 - **WHEN** the sender holds one copy each of 199 collections, all received after their newest JiWoo 207Z, and three JiWoo 207Z, and opens You give's picker with All your objekts
@@ -264,7 +268,7 @@ When an entry on the recipient's list comes from a list that hides serial number
 
 A request asking for a specific objekt SHALL be refused unless that objekt is reachable through an entry on a list that shows serials, or it was under You give in the offer being countered, or it comes from the recipient's collection (see Offers name objekts on both sides). A copy listed only on hidden-serial lists can still be asked for as any copy.
 
-Asking for any copy SHALL draw only on the copies the recipient's entries open, while the recipient still holds them, transferable and unreserved: an entry for the whole collection, on any list, opens every copy the recipient holds; otherwise the entries open the specific objekts they name, on a list that hides serials or on one that shows them. Copies the same offer asks for by serial SHALL not count toward its any-copy asks. The picker's "N available" and the most copies a request may ask for SHALL count only what is left.
+Asking for any copy SHALL draw only on the copies the entries of the list the offer asks from open (see One post per offer), while the recipient still holds them, transferable and unreserved: an entry for the whole collection, on any list, opens every copy the recipient holds; otherwise the entries open the specific objekts they name, on a list that hides serials or on one that shows them. Copies the same offer asks for by serial SHALL not count toward its any-copy asks. The picker's "N available" and the most copies a request may ask for SHALL count only what is left.
 
 An any-copy item SHALL read "Any serial · N available" in You get's picker and "Any serial · N held" in You give, N being the copies the holder spares. When the same copies are not also offered by serial, as on a list that hides serials, the picked item SHALL show a count from 1 up to N under its tile, with − and + buttons and "They choose the serial"; − at 1 takes it out, and + stops at N or at the side's 200. When the collection also has copies shown by serial, that count SHALL sit in the serial dialog (see Any serial in the serial dialog), the tile SHALL read "Any serial · N more", N counting only the copies no shown serial stands for, and serials checked beside it SHALL not lower N. When every copy the ask could take is also offered by serial, the item SHALL stay a single pick, the "Any serial" checkbox in the serial dialog, and more copies are picked by serial; a count above 1 already held there SHALL show as a count that can only come down. Each copy SHALL count toward the 200, and You get SHALL list the item once with "× N" when N is more than 1, as the sent offer's card does. The offer asks for each copy as its own item. When the holder now spares fewer copies than the count, the item SHALL read "Only N available" and block Send until the count comes down. On You give, a counter's any-copy ask for several copies SHALL take that many of the sender's own copies; when they hold fewer, the copies found and the rest still waiting SHALL each be removable on their own.
 
@@ -297,12 +301,12 @@ An any-copy item SHALL read "Any serial · N available" in You get's picker and 
 - **THEN** the picker shows SeoYeon 204Z as "Any serial · 1 available", with no serial and no specific copies
 
 #### Scenario: Same collection on a visible list
-- **WHEN** rin.trades also lists SeoYeon 204Z #812 and #904 on a sale list that shows serials
-- **THEN** the picker shows one SeoYeon 204Z tile reading "Choose from 2 serials" and "Any serial · 1 more", and its serial dialog shows the "Any serial" count for the hidden list's entry, with no serial, above the rows for #812 and #904
+- **WHEN** rin.trades also lists SeoYeon 204Z #812 and #904 on the sale list "spares", which shows serials, and the sender changes Offer on to "spares"
+- **THEN** the picker shows one SeoYeon 204Z tile reading "Choose from 2 serials", with no "Any serial · 1 more" for the hidden list's entry, and its serial dialog holds an "Any serial" checkbox worth one copy above the rows for #812 and #904
 
 #### Scenario: Serials checked beside the hidden count
-- **WHEN** rin.trades's hidden-serial list names two SooMin 204Z, its sale list "spares" shows SooMin 204Z #615 and #1077, and the user checks both serials in the serial dialog
-- **THEN** the "Any serial" count still goes up to 2, and with it at 2 the offer asks for four copies of SooMin 204Z and is sent
+- **WHEN** rin.trades's hidden-serial list "quiet haves" names two SooMin 204Z, its sale list "spares" shows SooMin 204Z #615 and #1077, and a request on "spares" asks for #615, #1077 and two more copies of SooMin 204Z in any serial
+- **THEN** the offer is refused naming SooMin 204Z, and nothing is sent: the two copies only "quiet haves" opens are on another post
 
 #### Scenario: Listed one, holds three
 - **WHEN** rin.trades's hidden-serial list names one SeoYeon 204Z, and rin.trades holds three spare copies, none listed elsewhere
@@ -489,7 +493,7 @@ Each side of the offer builder SHALL show its picks as a grid of small cards, as
 - **THEN** one card shows Lynn 301A marked "×3"
 
 ### Requirement: Picks that can't be sent
-A pick that can't be sent (not on their lists, not on their wants, not on the offer's post, no post chosen, in a trade in progress, not transferable, more copies than are spare, or refused when sent) SHALL be outlined and name its reason under its card. Its side SHALL carry a banner counting such picks, with their reasons, and Remove them, which takes only those picks out. The footer SHALL say why Send is disabled while any remain.
+A pick that can't be sent (not on their lists, not on their wants, not on the offer's post, in a trade in progress, not transferable, more copies than are spare, or refused when sent) SHALL be outlined and name its reason under its card. Its side SHALL carry a banner counting such picks, with their reasons, and Remove them, which takes only those picks out. The footer SHALL say why Send is disabled while any remain.
 
 #### Scenario: Two blocked
 - **WHEN** You get holds 31 picks, one no longer on the partner's lists and one in a trade in progress
@@ -509,33 +513,33 @@ A pick that can't be sent (not on their lists, not on their wants, not on the of
 
 #### Scenario: Not on the post
 - **WHEN** the server refuses the offer as from another post, naming one You get objekt
-- **THEN** that card is outlined with "Not on {list}" and counted in You get's banner
+- **THEN** that card is outlined with "Not on {list}" and counted in You get's banner, and the error notice reads "An offer asks from one post. On another of their posts: {objekts}"
 
 ### Requirement: Matches added when the builder opens
 Opened from a Trade row's Make offer, the builder SHALL add the sender's matches with the partner before it shows its sides, chosen by the rule the row's chip follows (see `web-trade-browse` Matches to the signed-in viewer):
 - when the sender can swap with the partner (the row reads "You can swap N"), only the matches inside the pair of posts that score counts: You give gets one copy of each collection on the sender's post there that the partner's post wants, and You get one of each on the partner's post there that the sender's post wants;
-- otherwise, only the direction with more matches, swaps and sales alike: one copy of each collection the sender has that the partner wants under You give, or one of each the partner has that the sender wants under You get, the other side left empty. When both directions match equally, You get SHALL be filled.
+- otherwise, only the direction with more matches, swaps and sales alike: one copy of each collection the sender has that the partner wants under You give, or one of each the partner has that the sender wants under You get, the latter only from one of the partner's posts (see Row matches from one post), the other side left empty. When both directions match equally, You get SHALL be filled.
 
-The matches SHALL be read live, by the rules and the Compare with list the row counts with, up to 200 a side. What may be sent is not narrowed: the pickers still offer every list on Trade.
+The matches SHALL be read live, by the rules and the Compare with list the row counts with, up to 200 a side. You get's picker offers the post Offer on opens on, and the sender MAY change it to another of the partner's posts (see Choosing the post).
 
 #### Scenario: A person the sender can swap with
 - **WHEN** the sender's post P2 pairs have list "yooyeon spares" with want list "hyerin and kaede", jun.p's post holds Hyerin 302Z and wants Yooyeon 205Z, jun.p also holds 3 DCOs that the sender's other post P1 wants through its rule, and the sender chooses Make offer on jun.p's row, which reads "You can swap 1"
 - **THEN** the builder opens with Yooyeon 205Z under You give and Hyerin 302Z under You get, and none of the DCOs
 
 #### Scenario: A person who matches both ways across posts
-- **WHEN** mina.k holds 2 DCOs that the sender's post P1 wants through its rule and wants Yooyeon 205Z from the sender's post P2, so her row reads "They have 2 you want · You have 1 they want" with no Can swap mark, and the sender chooses Make offer on her row
-- **THEN** the builder opens with the 2 DCOs under You get and nothing under You give, and the line reads "Added 2 you get from your matches"
+- **WHEN** mina.k holds 2 DCOs on her have list "dco spares" that the sender's post P1 wants through its rule and wants Yooyeon 205Z from the sender's post P2, so her row reads "They have 2 you want · You have 1 they want" with no Can swap mark, and the sender chooses Make offer on her row
+- **THEN** the builder opens with the 2 DCOs under You get and nothing under You give, Offer on reads "dco spares", and the line reads "Added from dco spares: 2 you get"
 
 #### Scenario: From a Trade row
-- **WHEN** rin.trades's row reads "They have 5 you want · You have 3 they want" with no Can swap mark, and the sender chooses Make offer on it
+- **WHEN** rin.trades's row reads "They have 5 you want · You have 3 they want" with no Can swap mark, all 5 on rin.trades's "doubles", and the sender chooses Make offer on it
 - **THEN** the builder opens with 5 under You get and nothing under You give
 
 #### Scenario: Equal both ways
-- **WHEN** a person's row reads "They have 2 you want · You have 2 they want" with no Can swap mark, and the sender chooses Make offer on it
+- **WHEN** a person's row reads "They have 2 you want · You have 2 they want" with no Can swap mark, both they have on one post, and the sender chooses Make offer on it
 - **THEN** the builder opens with 2 under You get and nothing under You give
 
 #### Scenario: Under Compare with
-- **WHEN** the sender has Compare with set to their want list "ARTMS wants" on Browse, and chooses Make offer on rin.trades's row, which reads "They have 3 you want" only
+- **WHEN** the sender has Compare with set to their want list "ARTMS wants" on Browse, and chooses Make offer on rin.trades's row, which reads "They have 3 you want" only, all 3 on "doubles"
 - **THEN** You get holds only the collections on "ARTMS wants" that rin.trades has, as the row counted them
 
 #### Scenario: Over the limit
@@ -558,11 +562,11 @@ While the read runs, the builder SHALL show its title, a status line reading "Ad
 - **THEN** "Adding your matches…" is replaced in the same status line by what was added, and no second status line or alert appears
 
 ### Requirement: Matches of one post
-From Make offer on this post, or a conversation whose newest card is the partner's post card with a match, the builder SHALL add only matches through that post's lists: under You get those on its have or sale list, under You give those on its want list. When the sender can swap with the partner and that post is the partner's half of the pair the score counts, the builder SHALL add that pair's matches, as from the row; otherwise it SHALL add only the direction with more of the post's matches, You get on a tie. You get's picker SHALL open on the post's have or sale list, as from a Market listing, else on All their lists. What may be sent is not narrowed. The line SHALL name the post's list.
+From Make offer on this post, or a conversation whose newest card is the partner's post card with a match, the builder SHALL add only matches through that post's lists: under You get those on its have or sale list, under You give those on its want list. When the sender can swap with the partner and that post is the partner's half of the pair the score counts, the builder SHALL add that pair's matches, as from the row; otherwise it SHALL add only the direction with more of the post's matches, You get on a tie. Offer on SHALL open on the post's have or sale list, as from a Market listing; for a post with none, as Where Offer on opens says. You get's picker shows the post under Offer on, and an ask from another post is refused (see One post per offer). The line SHALL name the post's list.
 
 #### Scenario: One post of two
 - **WHEN** rin.trades has the WTT post "doubles" and "wants", and the WTS post "spares", open to swaps, which reads "2 you want", rin.trades's row reads "You can swap 3" through "doubles" and the sender's post "extras" and "binary hunt", and the sender chooses Make offer on this post on "doubles"
-- **THEN** the builder opens with the 3 the pair swaps under each side, none from "spares" or through the sender's other posts, the line reads "Added from doubles: 3 you give and 3 you get", and You get's picker opens on "doubles"
+- **THEN** the builder opens with the 3 the pair swaps under each side, none from "spares" or through the sender's other posts, the line reads "Added from doubles: 3 you give and 3 you get", and Offer on reads "doubles"
 
 #### Scenario: A post that matches both ways across the sender's posts
 - **WHEN** rin.trades's WTT post "doubles" has 2 collections the sender's post P1 wants and wants 1 on the sender's post P2, rin.trades is not Can swap through it, and the sender chooses Make offer on this post on "doubles"
@@ -574,15 +578,15 @@ From Make offer on this post, or a conversation whose newest card is the partner
 
 #### Scenario: WTB post
 - **WHEN** jun.k has the WTT post "extras" and the WTB post "hunting", which reads "2 you have", and the sender chooses Make offer on this post on "hunting"
-- **THEN** the builder opens with 2 under You give, nothing under You get, the line "Added from hunting: 2 you give", and You get's picker on All their lists
+- **THEN** the builder opens with 2 under You give, nothing under You get, the line "Added from hunting: 2 you give", and Offer on on jun.k's first have or sale list, "extras"
 
 #### Scenario: From a conversation with a post card
 - **WHEN** the sender opens Make offer in their conversation with rin.trades, whose newest card is the post card for "doubles" with "They have 2 you want"
 - **THEN** the builder opens with the matches through "doubles" and its want list read now, chosen by the same rule, which may differ from the 2 saved on the card, and the line names "doubles"
 
 #### Scenario: Asking past the post
-- **WHEN** the builder opened from "doubles", and the sender switches You get's List to "spares" and adds an objekt from it
-- **THEN** the offer sends with that objekt
+- **WHEN** the builder opened from "doubles" with its matches under You get, and a request sends them with an objekt only on "spares"
+- **THEN** the offer is refused as from another post, naming that objekt, and nothing is sent
 
 ### Requirement: Which copy a match adds
 For You give, a match SHALL add the sender's copy with the highest serial they can send, preferring one in none of their other open offers. For You get, it SHALL ask for any serial where the partner listed the collection as any copy or on a list that hides serials, and otherwise for the partner's copy with the lowest serial they can send. A copy that isn't transferable or is reserved by a trade SHALL never be added.
@@ -604,7 +608,7 @@ For You give, a match SHALL add the sender's copy with the highest serial they c
 - **THEN** You get holds #88
 
 ### Requirement: The added-matches line
-When matches were added, the status line SHALL say how many it added to each side, with Remove matches, its counts fixed when the builder opens, and SHALL say when more matched than fit a side. It SHALL be ink on the progress tint, led by the swap arrows, with its numbers in mono. With one side added it names that side only, and "from your match" for 1. From a post it starts "Added from {list}:".
+When matches were added, the status line SHALL say how many it added to each side, with Remove matches, its counts fixed when the builder opens, and SHALL say when more matched than fit a side. It SHALL be ink on the progress tint, led by the swap arrows, with its numbers in mono. With one side added it names that side only, and "from your match" for 1. From a post, or when a row's You get matches were taken from one post (see Row matches from one post), it starts "Added from {list}:".
 
 #### Scenario: Line
 - **WHEN** the builder opens with 3 under You give and 5 under You get from the matches
@@ -615,8 +619,12 @@ When matches were added, the status line SHALL say how many it added to each sid
 - **THEN** the line reads "Added 2 you give from your matches"
 
 #### Scenario: One match
-- **WHEN** the matches add 1 under You get and nothing under You give
-- **THEN** the line reads "Added 1 you get from your match"
+- **WHEN** the matches add 1 under You give and nothing under You get
+- **THEN** the line reads "Added 1 you give from your match"
+
+#### Scenario: One post's matches from a row
+- **WHEN** a row's matches add 2 under You get from rin.trades's "doubles" and nothing under You give
+- **THEN** the line reads "Added from doubles: 2 you get"
 
 #### Scenario: More matched than fit
 - **WHEN** 210 of the sender's collections match rin.trades's wants, and 5 of rin.trades's match the sender's
@@ -702,8 +710,8 @@ In the offer builder, a get-side item drawn from an entry of the partner's have 
 - **THEN** the Lynn 312Z tile reads "Choose from 3 serials" with the "1:2" chip, and the serial dialog's header carries the same chip
 
 #### Scenario: Copies ask different ratios
-- **WHEN** "doubles" asks ratio 2 for KimLip 108Z #133, and the sale list "spares" holds KimLip 108Z #2048 with no ratio
-- **THEN** the KimLip 108Z tile carries no chip, the row for #133 in the serial dialog carries "1:2", the row for #2048 carries none, and once picked the #133 card carries "1:2"
+- **WHEN** "doubles", which sets no ratio of its own, asks ratio 2 for KimLip 108Z #133 and none for KimLip 108Z #540
+- **THEN** the KimLip 108Z tile carries no chip, the row for #133 in the serial dialog carries "1:2", the row for #540 carries none, and once picked the #133 card carries "1:2"
 
 ### Requirement: Offer page
 Every Make offer and Counter SHALL open the offer page, `/trade/@<handle>/offer` of the partner (see `web-trade-person-pages` Trade handle): on a Trade row and each post's menu, the person and post pages, a post's "+N" sheet, a near match's Make offer with it, Make offer for this objekt on an objekt from a Trade post, chat's Add to message and deal strip, Counter, the trade page's status card, and a Market tab listing. The page SHALL start as the dialog did from the same place, with the same address, prefill and matches.
@@ -754,15 +762,15 @@ A signed-out visitor SHALL be sent to sign in and back. A handle other than the 
 From `lg` up, the page SHALL hold a narrow column, the title over a sticky part with the top-up, the note, Sending as, the send hint and Send, beside a main area with the status line across its width and then You get and You give side by side. The title scrolls with the page. Back to <name> SHALL lead the page. Add SHALL open the picker in a sheet from the end edge, as wide as the main area, with the column still in view.
 
 #### Scenario: Desktop
-- **WHEN** the sender opens rin.trades's offer page at 1440 px with 200 matches added under You get
-- **THEN** the column shows the title, top-up, note and Send, the line "Added 200 you get…" spans the main area, and You get and You give sit side by side under it
+- **WHEN** the sender opens rin.trades's offer page at 1440 px with 200 matches from "doubles" added under You get
+- **THEN** the column shows the title, top-up, note and Send, the line "Added from doubles: 200 you get…" spans the main area, and You get and You give sit side by side under it
 
 #### Scenario: Scrolled
 - **WHEN** the sender scrolls down to the last rows of the 200 picks at 1440 px
 - **THEN** the title has scrolled away, and the top-up, note and Send stay in view beside the sides
 
 #### Scenario: Picker
-- **WHEN** the sender activates Add from rin.trades's lists at 1440 px
+- **WHEN** the sender activates Add from doubles at 1440 px
 - **THEN** the picker opens as a sheet over the main area, and the column with Send stays visible
 
 ### Requirement: Offer page on a phone
@@ -811,14 +819,14 @@ Started from one collection of a Trade post's have or sale list, the builder SHA
 - **THEN** the asked objekt shows as loading, as a counter's any-copy ask does, and Send stays disabled
 
 ### Requirement: Recipients who take only what they want
-While the recipient has "Only offers with what I want" on (see `web-account`), each You give objekt SHALL be a collection, rules included, on the post's want list: the one paired with the offer's post, on Trade and not empty. A post without one SHALL take any give. With no post, the gives SHALL be on any of their want lists on Trade, or anything with none. Otherwise the send SHALL be refused as not wanted, naming those objekts; an objekt they asked for in a countered offer is exempt.
+While the recipient has "Only offers with what I want" on (see `web-account`), each You give objekt of an offer that asks for an objekt the recipient did not offer in the countered offer SHALL be a collection, rules included, on the post's want list: the one paired with the offer's post, on Trade and not empty. A post without one SHALL take any give. An offer that asks for nothing, or only for objekts the recipient offered, SHALL give only collections on any of their want lists on Trade, whatever Offer on names, or anything with none. Otherwise the send SHALL be refused as not wanted, naming those objekts; an objekt they asked for in a countered offer is exempt.
 
 #### Scenario: Unwanted give refused
-- **WHEN** rin.trades has the setting on and the post "doubles" paired with the want list "hunting", and a user's offer on "doubles" gives HyeRin 301Z #1203, a collection not on "hunting"
+- **WHEN** rin.trades has the setting on and the post "doubles" paired with the want list "hunting", and a user's offer on "doubles" asks for one objekt on "doubles" and gives HyeRin 301Z #1203, a collection not on "hunting"
 - **THEN** the offer is refused as not wanted, naming #1203, and nothing is sent
 
 #### Scenario: Wanted give sent
-- **WHEN** rin.trades has the setting on, and a user's offer on "doubles" gives SeoYeon 204Z #88, whose collection is on "hunting"
+- **WHEN** rin.trades has the setting on, and a user's offer on "doubles" asks for one objekt on "doubles" and gives SeoYeon 204Z #88, whose collection is on "hunting"
 - **THEN** the offer is sent
 
 #### Scenario: Wanted through a rule
@@ -826,19 +834,27 @@ While the recipient has "Only offers with what I want" on (see `web-account`), e
 - **THEN** the offer is sent
 
 #### Scenario: On another post's want list
-- **WHEN** rin.trades has the setting on, also has the post "spares" paired with the want list "wishlist", and a user's offer on "doubles" gives a collection only on "wishlist"
+- **WHEN** rin.trades has the setting on, also has the post "spares" paired with the want list "wishlist", and a user's offer on "doubles" asks for one objekt on "doubles" and gives a collection only on "wishlist"
 - **THEN** the offer is refused as not wanted: only the post's own want list counts
 
 #### Scenario: Post without a want list
-- **WHEN** rin.trades has the setting on and the have list "extras" posted alone, and a user's offer on "extras" gives HyeRin 301Z #1203
+- **WHEN** rin.trades has the setting on and the have list "extras" posted alone, and a user's offer on "extras" asks for one objekt on "extras" and gives HyeRin 301Z #1203
 - **THEN** the offer is sent
 
 #### Scenario: No post
-- **WHEN** rin.trades has the setting on, and a user's offer on no post gives one collection on "hunting" and one on "wishlist"
-- **THEN** the offer is sent: an offer on no post may give from any of their want lists on Trade
+- **WHEN** rin.trades has the setting on, and a user's offer with Offer on "doubles" asks for nothing and gives one collection on "hunting" and one on "wishlist"
+- **THEN** the offer is sent: an offer that asks for nothing may give from any of their want lists on Trade
+
+#### Scenario: Asks for nothing on a post without a want list
+- **WHEN** rin.trades has the setting on, the have list "extras" posted alone, and "hunting" on Trade, and a user's offer with Offer on "extras" asks for nothing and gives HyeRin 301Z #1203, a collection on none of rin.trades's want lists
+- **THEN** the offer is refused as not wanted, naming #1203: an offer that asks for nothing is checked against every want list on Trade, not its post's
+
+#### Scenario: Counter asks only for what they offered
+- **WHEN** rin.trades, with the setting on, offered HyeRin 301Z #1203, and the user counters with Offer on "doubles", keeping #1203 under You get, asking for nothing else and giving a collection only on "wishlist"
+- **THEN** the counter is sent: its gives are checked against every want list on Trade
 
 #### Scenario: Want list kept off Trade
-- **WHEN** rin.trades has the setting on, and a user's offer on no post gives a collection that is only on rin.trades's want list "private", which is not shown on Trade
+- **WHEN** rin.trades has the setting on, and a user's offer that asks for nothing gives a collection that is only on rin.trades's want list "private", which is not shown on Trade
 - **THEN** the offer is refused as not wanted
 
 #### Scenario: Cash buy
@@ -850,7 +866,7 @@ While the recipient has "Only offers with what I want" on (see `web-account`), e
 - **THEN** the counter is sent
 
 #### Scenario: No want list on Trade
-- **WHEN** rin.trades has the setting on but no want list shown on Trade, and a user's offer on no post gives any objekt they own
+- **WHEN** rin.trades has the setting on but no want list shown on Trade, and a user's offer gives any objekt they own
 - **THEN** the offer is sent
 
 #### Scenario: Open offers stay
@@ -858,15 +874,27 @@ While the recipient has "Only offers with what I want" on (see `web-account`), e
 - **THEN** the offer stays open, and rin.trades may still accept it
 
 ### Requirement: Builder for a want-only recipient
-When the rule filters the offer (see Recipients who take only what they want), You give's "Only what they want" SHALL be on and locked, keeping to the post's want list, or with no post to all their want lists on Trade, and a line SHALL say which: the want list of {post}, or their want lists. On a post without a want list the switch SHALL start off, with no line. A pick refused under the rule SHALL be one that can't be sent, "Not on their wants".
+When the rule filters the offer (see Recipients who take only what they want), You give's "Only what they want" SHALL be on and locked, and a line SHALL say what it keeps to. While You get holds an ask the partner did not offer in the countered offer, it keeps to the want list of the post under Offer on, and the line names the want list of {post}; on a post without a want list the switch SHALL instead be off, with no line. While You get holds no such ask, it keeps to all their want lists on Trade, and the line says their want lists. The switch and its line SHALL follow the first such ask added and the last removed. A pick refused under the rule SHALL be one that can't be sent, "Not on their wants".
 
 #### Scenario: Switch locked on
-- **WHEN** the sender opens the builder for rin.trades, who has the setting on and the want list "hunting" on Trade
+- **WHEN** the sender opens the builder for rin.trades, who has the setting on and the want list "hunting" on Trade paired with "doubles", and adds one objekt from "doubles" under You get
 - **THEN** with Offer on "doubles", You give's "Only what they want" is on and can't be turned off, the line reads that rin.trades only takes objekts on the want list of doubles, and the picker shows only collections on "hunting"
 
+#### Scenario: Before the first ask
+- **WHEN** the sender opens the builder for rin.trades, who has the setting on and the want lists "hunting" and "wishlist" on Trade, with Offer on "doubles" and nothing under You get
+- **THEN** "Only what they want" is on and can't be turned off, the line reads that rin.trades only takes objekts on their want lists, and the picker shows collections on "hunting" or "wishlist"
+
+#### Scenario: First ask added
+- **WHEN** the sender then adds one objekt from "doubles" under You get
+- **THEN** the line changes to the want list of doubles, and You give's picker shows only collections on "hunting"
+
 #### Scenario: Changing to a post without a want list
-- **WHEN** the sender changes Offer on to rin.trades's "extras", posted alone
+- **WHEN** the sender changes Offer on to rin.trades's "extras", posted alone, and adds an objekt from it under You get
 - **THEN** "Only what they want" turns off and may be turned on, and the line goes away
+
+#### Scenario: Post without a want list, nothing asked
+- **WHEN** Offer on reads "extras", posted alone, and You get holds nothing
+- **THEN** "Only what they want" is on and can't be turned off, and the line reads that rin.trades only takes objekts on their want lists
 
 #### Scenario: Refused on send
 - **WHEN** rin.trades removes a collection from "hunting" after the sender picked it, and the sender chooses Send
@@ -877,15 +905,15 @@ When the rule filters the offer (see Recipients who take only what they want), Y
 - **THEN** "Only what they want" starts off and may be turned on, as before
 
 ### Requirement: One post per offer
-While the recipient has "Let people ask from more than one post" off (see `web-account`; on by default) and a have or sale list on Trade, every You get item SHALL come from the same one of those lists: the post the offer names, else one that fits every ask. Otherwise the send SHALL be refused as from another post, naming the items. Exempt: an objekt the recipient offered in the offer being countered. Offers already open SHALL stay.
+While the recipient has a have or sale list on Trade, every You get item of every offer, counters included, SHALL come from the same one of those lists: the post the offer names, else one that fits every ask. An any-copy ask SHALL draw only on that list's copies. Otherwise the send SHALL be refused as from another post, naming the items: "An offer asks from one post. On another of their posts: {objekts}". Exempt: an objekt the recipient offered in the offer being countered. Offers already open SHALL stay open until they end.
 
 #### Scenario: Asks from one post
-- **WHEN** rin.trades has "Let people ask from more than one post" off, and a user's offer on rin.trades's post "doubles" asks for two objekts on "doubles"
+- **WHEN** rin.trades has "doubles" and "spares" on Trade, and a user's offer on rin.trades's post "doubles" asks for two objekts on "doubles"
 - **THEN** the offer is sent
 
 #### Scenario: Ask from another post refused
 - **WHEN** a user's offer on "doubles" asks for one objekt on "doubles" and SeoYeon 204Z #537, which is only on "spares"
-- **THEN** the offer is refused as from another post, naming #537, and nothing is sent
+- **THEN** the offer is refused as from another post, naming #537, the refusal reads "An offer asks from one post. On another of their posts: SeoYeon 204Z #537", and nothing is sent
 
 #### Scenario: On a post, asks only another
 - **WHEN** a user's offer on "doubles" asks only for objekts on "spares"
@@ -907,23 +935,28 @@ While the recipient has "Let people ask from more than one post" off (see `web-a
 - **WHEN** rin.trades offered HyeRin 301Z #1203, which is on none of their lists, and the user counters on "doubles", keeping #1203 under You get and asking for one objekt on "doubles"
 - **THEN** the counter is sent
 
-### Requirement: Recipients who take asks across posts
-While the recipient has "Let people ask from more than one post" on, the default, an offer MAY ask from any of their have and sale lists on Trade, as before this change. The builder SHALL then show no Offer on choice: a line "Offer on {post}" when it started from one of those posts (a post, a Market listing or a post's matches), and You get's picker SHALL offer the List choice with All their lists.
+#### Scenario: Counter asks from two posts
+- **WHEN** the user counters rin.trades's offer, asking for one objekt on rin.trades's "doubles" and SeoYeon 204Z #537, which is only on rin.trades's "spares"
+- **THEN** the counter is refused as from another post, naming #537: a counter's new asks come from one of the original sender's posts
 
-#### Scenario: Asks from two posts
-- **WHEN** rin.trades has the setting on, and a user asks for one objekt on "doubles" and one only on "spares"
-- **THEN** the offer is sent, on no one post
+#### Scenario: Any copy from two lists
+- **WHEN** "doubles" and "spares" each name one SeoYeon 204Z, and a request on "doubles" asks for two copies of SeoYeon 204Z in any serial
+- **THEN** the offer is refused naming SeoYeon 204Z, and nothing is sent
 
-#### Scenario: Started from a post
-- **WHEN** rin.trades has the setting on, and the sender chooses Make offer on "doubles"
-- **THEN** the builder reads "Offer on doubles", and You get's List opens on "doubles" and offers All their lists
+#### Scenario: Counter on an offer across posts
+- **WHEN** rin.trades's offer, sent before this rule and still open, asks from the user's posts "binary" and "extras", and the user counters, keeping rin.trades's gives under You get and giving the objekts it asked for
+- **THEN** the counter is sent: the objekts from "binary" and "extras" are now under You give, which no post rule checks, and the kept gives are exempt
 
-#### Scenario: Turned off
-- **WHEN** rin.trades turns the setting off, and a user then asks from "doubles" and "spares" in one offer
-- **THEN** the offer is refused as from another post
+#### Scenario: Replacing an offer across posts
+- **WHEN** the sender of that open offer sends a new one in its place, asking from the user's "binary" and "extras" again
+- **THEN** the new offer is refused as from another post, and the open one stays as it was
+
+#### Scenario: Open offers across posts stay
+- **WHEN** an offer to rin.trades asking from "doubles" and "spares" was sent before this rule and is still open
+- **THEN** it stays open until it is answered, withdrawn or expires, and rin.trades may accept, decline or counter it
 
 ### Requirement: Choosing the post
-When the partner takes asks from one post (One post per offer), the builder's header SHALL hold an **Offer on** choice: each of those lists, by type badge and name, then "No post". Where it opens is in Where Offer on opens. You get's button SHALL read "Add from {post}" and its picker SHALL show only that post, with no List choice. A line under You get SHALL say another post takes a separate offer. A pick from another list SHALL be one that can't be sent, "Not on {post}".
+When the partner has a have or sale list on Trade (One post per offer), the builder's header SHALL hold an **Offer on** choice: each of those lists, by type badge and name, with no "No post". With exactly one such list it SHALL instead read the line "Offer on {post}", with no choice. Where it opens is in Where Offer on opens. You get's button SHALL read "Add from {post}" and its picker SHALL show only that post, with no List choice. With two or more such lists, a line under You get SHALL say another post takes a separate offer; with one, no such line shows. A pick from another list SHALL be one that can't be sent, "Not on {post}".
 
 #### Scenario: From a post
 - **WHEN** the sender chooses Make offer on rin.trades's post "doubles"
@@ -935,7 +968,15 @@ When the partner takes asks from one post (One post per offer), the builder's he
 
 #### Scenario: From chat
 - **WHEN** the sender opens the builder from their conversation with rin.trades, whose lists on Trade are "doubles" then "spares"
-- **THEN** Offer on reads "doubles"
+- **THEN** Offer on reads "doubles" and offers "doubles" and "spares" only, with no "No post"
+
+#### Scenario: One post
+- **WHEN** rin.trades's only have or sale list on Trade is "doubles"
+- **THEN** the header reads "Offer on doubles" as a line, with no choice to open, You get's button reads "Add from doubles", and no line under You get speaks of another post
+
+#### Scenario: Gives only
+- **WHEN** the sender gives HyeRin 301Z #1203 for 6,000 KRW and asks for nothing
+- **THEN** Offer on still names one of rin.trades's posts, and the offer is sent
 
 #### Scenario: Changing the post
 - **WHEN** the sender has two picks from "doubles" and changes Offer on to "spares"
@@ -956,19 +997,8 @@ Offer on SHALL open on the post the builder started from (a post or a Market lis
 - **WHEN** rin.trades counters the user's offer, keeping the objekt the user gave under You get, and the user has "sale1" then "doubles" on Trade
 - **THEN** Offer on opens on "sale1", and the kept objekt can be sent whichever post is chosen, since the user offered it
 
-### Requirement: An offer on no post
-With No post chosen under Offer on, You get SHALL have no Add button, its line SHALL say to choose a post to ask for objekts, and any You get pick SHALL be one that can't be sent, "No post chosen". The offer MAY still give objekts or a top-up, and is sent on no post.
-
-#### Scenario: Gives only
-- **WHEN** the sender changes Offer on to No post and gives HyeRin 301Z #1203 for 6,000 KRW
-- **THEN** You get has no Add button, and the offer is sent on no post
-
-#### Scenario: A pick left behind
-- **WHEN** the sender has one pick from "doubles" and changes Offer on to No post
-- **THEN** that pick is outlined with "No post chosen", and Send is disabled until it is removed or a post is chosen
-
 ### Requirement: Row matches from one post
-Opened from a Trade row's Make offer for a partner who takes asks from one post, when the matches fill You get and don't come from a Can swap pair, the builder SHALL add You get matches only from the partner's have or sale post with the most of them (on a tie, the row's lead post), and the added-matches line SHALL name that post. Offer on SHALL open on it. Can swap pairs, whose You get comes from one post already, and You give matches SHALL stay as in Matches added when the builder opens.
+Opened from a Trade row's Make offer for a partner with a have or sale list on Trade, when the matches don't come from a Can swap pair, the builder SHALL count You get matches only from the partner's have or sale post with the most of them (on a tie, the row's lead post, then list order), and only then choose the direction with more. When You get is filled, the added-matches line SHALL name that post and Offer on SHALL open on it. When You give wins, You get SHALL stay empty. Can swap pairs, whose You get comes from one post already, and You give matches SHALL stay as in Matches added when the builder opens.
 
 #### Scenario: Matches across two posts
 - **WHEN** rin.trades's row reads "They have 5 you want" with no Can swap mark, 3 of them on "doubles" and 2 on "spares", and the sender chooses Make offer on the row
@@ -977,6 +1007,10 @@ Opened from a Trade row's Make offer for a partner who takes asks from one post,
 #### Scenario: Tie between posts
 - **WHEN** rin.trades has 2 matches each on "doubles", the lead post of their row, and "spares"
 - **THEN** the builder adds the 2 from "doubles"
+
+#### Scenario: You give wins after the cut
+- **WHEN** rin.trades's row reads "They have 4 you want · You have 3 they want" with no Can swap mark, 2 of the 4 on "doubles", the row's lead post, and 2 on "spares", and the sender chooses Make offer on the row
+- **THEN** the builder opens with the 3 under You give, nothing under You get, and Offer on on "doubles"
 
 #### Scenario: Can swap pair unchanged
 - **WHEN** the sender's row with rin.trades reads "You can swap 3" through "doubles"
@@ -1024,58 +1058,8 @@ When the recipient declines an offer holding a "Not on your wants" item, while t
 - **WHEN** rin.trades has the setting on and declines an offer that was open before they turned it on, holding a "Not on your wants" item
 - **THEN** no notice to turn on Only offers with what I want shows
 
-### Requirement: Notice after declining an offer across posts
-When the recipient declines an offer with the "Asks from" mark, while their "Let people ask from more than one post" is on and they have two or more have or sale lists on Trade, a notice SHALL offer Turn off, which saves the setting off, unless One notice per decline shows another notice instead. Once it has shown, that browser SHALL not show it again. Turning it off SHALL not touch open offers.
-
-#### Scenario: Notice shown
-- **WHEN** rin.trades, with the setting on and "doubles" and "spares" on Trade, declines an offer that reads "Asks from 2 of your posts: doubles and spares" and holds no "Not on your wants" item
-- **THEN** a notice asks whether each offer should ask from one post, says that with Let people ask from more than one post off each offer asks from one post the sender chooses, and offers Turn off
-
-#### Scenario: Turn it off
-- **WHEN** rin.trades chooses Turn off in that notice
-- **THEN** the setting is saved off, the notice closes, a message says it is off, Account › Trade shows Let people ask from more than one post off, and the next offer asking from "doubles" and "spares" is refused as from another post
-
-#### Scenario: Save fails
-- **WHEN** rin.trades chooses Turn off and the save fails
-- **THEN** a message says it couldn't be turned off and to try again in Account › Trade, and the setting stays on
-
-#### Scenario: Shown once
-- **WHEN** the notice has shown, and rin.trades declines another offer across posts in the same browser
-- **THEN** no notice about posts shows
-
-#### Scenario: Setting already off
-- **WHEN** rin.trades has the setting off and declines an offer across posts that was open before they turned it off
-- **THEN** no notice about posts shows
-
-#### Scenario: Offer on one post
-- **WHEN** rin.trades declines an offer on "doubles"
-- **THEN** no notice about posts shows
-
-#### Scenario: One post left on Trade
-- **WHEN** rin.trades has taken "spares" off Trade, so only "doubles" is on Trade, and declines an offer that reads "Asks from 2 of your posts: doubles and spares"
-- **THEN** no notice about posts shows, since the setting would refuse nothing
-
-#### Scenario: Open offers stay
-- **WHEN** rin.trades turns the setting off from the notice while another user's offer asking from "doubles" and "spares" is open
-- **THEN** that offer stays open, still reads the mark, and rin.trades may still accept it
-
-### Requirement: One notice per decline
-A decline SHALL show at most one notice about offer rules. When a declined offer qualifies for both the nudge to turn on Only offers with what I want and the notice to turn off Let people ask from more than one post, the nudge SHALL show if that browser has not shown it before, else the notice. The one not shown SHALL count as not shown, so a later decline can still show it.
-
-#### Scenario: Both apply
-- **WHEN** rin.trades, with Only offers with what I want off, "hunting" on Trade and Let people ask from more than one post on, declines an offer whose HyeRin 301Z #1203 reads "Not on your wants" and that reads "Asks from 2 of your posts: doubles and spares"
-- **THEN** only the nudge to turn on Only offers with what I want shows
-
-#### Scenario: The other one next
-- **WHEN** rin.trades then declines another offer across posts in the same browser
-- **THEN** the notice to turn off Let people ask from more than one post shows
-
-#### Scenario: Nudge already shown
-- **WHEN** the nudge to turn on Only offers with what I want has shown in this browser before, and rin.trades declines an offer that qualifies for both
-- **THEN** the notice to turn off Let people ask from more than one post shows
-
 ### Requirement: The post an offer is on
-An offer SHALL store the post its asks all come from: the Offer on choice or the post it started from, else the one list they fit. An offer asking across posts, giving only, or asking only for objekts the recipient offered, is on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line, and a post deleted later SHALL drop it.
+An offer SHALL store the post its asks all come from: the Offer on choice or the post it started from, else the one list they fit. An offer giving only, or asking only for objekts the recipient offered, is on no post, whatever Offer on read; so is an offer sent across posts before every offer had to ask from one. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line and no other mark about posts, and a post deleted later SHALL drop it.
 
 #### Scenario: Both sides see it
 - **WHEN** an offer on "doubles" is sent
@@ -1094,43 +1078,8 @@ An offer SHALL store the post its asks all come from: the Offer on choice or the
 - **THEN** neither card reads "Offer on"
 
 #### Scenario: Across posts
-- **WHEN** an offer to rin.trades asks from "doubles" and "spares"
-- **THEN** neither card reads "Offer on", and rin.trades's card reads the Asks from your posts mark instead
-
-### Requirement: Asks from your posts mark
-On an offer card, the recipient (never the sender) SHALL see "Asks from {count} of your posts: {posts}", in the place of "Offer on {post}", on an offer on no post whose asks were stored against two or more of their posts. The posts SHALL read by their current names, in the order of the asks, on Trade or not. A post deleted since, and an objekt the recipient offered in the offer being countered, SHALL not count. The mark SHALL block nothing.
-
-#### Scenario: Mark shown
-- **WHEN** rin.trades, with Let people ask from more than one post on, opens an offer that asks for one objekt on "doubles" and SeoYeon 204Z #537, which is only on "spares"
-- **THEN** the card reads "Asks from 2 of your posts: doubles and spares", it has no "Offer on" line, and rin.trades can still accept
-
-#### Scenario: Sender sees no mark
-- **WHEN** the user who sent that offer opens it
-- **THEN** their card reads neither "Asks from" nor "Offer on"
-
-#### Scenario: Offer on one post
-- **WHEN** rin.trades opens an offer on "doubles" whose asks are all on "doubles"
-- **THEN** the card reads "Offer on doubles" and no "Asks from" mark
-
-#### Scenario: Counter keeps their objekt
-- **WHEN** rin.trades, with Let people ask from more than one post on, offered HyeRin 301Z #1203, which is on their have list "extras", and the user counters, keeping #1203 and asking for one objekt on "doubles" and SeoYeon 204Z #537, only on "spares"
-- **THEN** rin.trades's card reads "Asks from 2 of your posts: doubles and spares": #1203 counts toward no post, since rin.trades offered it
-
-#### Scenario: Counter keeps their objekt on one post
-- **WHEN** rin.trades offered HyeRin 301Z #1203, which is on "extras", and the user counters on "doubles", keeping #1203 and asking for one objekt on "doubles"
-- **THEN** rin.trades's card reads "Offer on doubles" and no "Asks from" mark
-
-#### Scenario: Post deleted
-- **WHEN** rin.trades deletes "spares" after an offer asking from "doubles" and "spares" was sent
-- **THEN** the card reads neither "Asks from" nor "Offer on"
-
-#### Scenario: Post taken off Trade
-- **WHEN** rin.trades takes "spares" off Trade after an offer asking from "doubles" and "spares" was sent
-- **THEN** the card still reads "Asks from 2 of your posts: doubles and spares"
-
-#### Scenario: Closed offer
-- **WHEN** rin.trades declines an offer asking from "doubles" and "spares", or it expires, is withdrawn or is accepted
-- **THEN** the card still reads "Asks from 2 of your posts: doubles and spares"
+- **WHEN** an offer to rin.trades asking from "doubles" and "spares" was sent before every offer had to ask from one post
+- **THEN** neither card reads "Offer on" or names rin.trades's posts, and its items, Accept, Decline and Counter are as on any offer
 
 ### Requirement: Confirm a lopsided accept
 An offer is lopsided when both sides hold objekts and one side holds at least 5 times as many as the other, each copy counting as one. Accept on a lopsided open offer SHALL open a confirmation before any request is sent. It SHALL state how many objekts the recipient gets and gives, and that accepting trades all of them. When the card offers Counter, it SHALL say Counter trades only some, and offer Counter beside Cancel and Accept. Any other offer SHALL accept on one press.
@@ -1183,8 +1132,8 @@ Each picker (You give, and You get over lists or over a collection) SHALL show o
 - **THEN** the tile reads "Any serial · 3 available", one copy is picked, the count under the tile reads 1 with "They choose the serial", and focus stays on the tile
 
 #### Scenario: One shown copy and hidden copies
-- **WHEN** "spares" lists SooMin 204Z #615, and "quiet haves" lists two SooMin 204Z
-- **THEN** the SooMin 204Z tile reads "Choose from 1 serial" and "Any serial · 2 more", and choosing it opens the serial dialog
+- **WHEN** "spares" lists SooMin 204Z #615, "quiet haves" lists two SooMin 204Z, and Offer on reads "spares"
+- **THEN** the SooMin 204Z tile reads "#615" with no "Any serial · 2 more", and choosing it picks #615 at once
 
 #### Scenario: Your own copies
 - **WHEN** the sender holds Mayu 210Z #57, #212 and #498 and opens You give's picker
@@ -1202,8 +1151,8 @@ Under its collection label, a tile that opens the serial dialog SHALL read "Choo
 - **THEN** the tile reads "All 3 picked" and its card is marked "3"
 
 #### Scenario: Any serial counted
-- **WHEN** SooMin 204Z has #615 and #1077 on "spares" and two copies on "quiet haves", and the sender has checked #615 and set "Any serial" to 1
-- **THEN** the tile reads "2 of 4 picked"
+- **WHEN** rin.trades lists SeoYeon 204Z for the whole collection on "doubles", which shows serials, and holds five, and the sender has checked #537 and "Any serial"
+- **THEN** the tile reads "2 of 5 picked"
 
 ### Requirement: Copies that can't be offered on a tile
 A copy that is not transferable or in a trade in progress can't be offered. A tile for one such copy SHALL show its serial and its flag, stay focusable, and do nothing when chosen. A tile for several copies SHALL add "{count} can't be offered" for those, read "None available" when none is left, and still open the serial dialog, read-only then. A copy in another of the sender's open offers stays pickable, its warning on its row, or on the tile that stands for it alone.
@@ -1236,8 +1185,8 @@ The serial dialog SHALL be a modal over the picker, titled with the collection, 
 - **THEN** the dialog reads "tripleS · Binary01" and "Pick the copies you'll give.", with a row for each of the sender's copies
 
 #### Scenario: Copies on two lists
-- **WHEN** rin.trades lists KimLip 108Z #133 on "doubles" and #2048 on "spares"
-- **THEN** the dialog reads "ARTMS · Atom01 · doubles, spares", and its rows read "#133 · doubles" and "#2048 · spares"
+- **WHEN** rin.trades lists KimLip 108Z #133 and #540 on "doubles" and #2048 on "spares", and Offer on reads "doubles"
+- **THEN** the dialog reads "ARTMS · Atom01 · doubles", and its rows read "#133" and "#540", with no list name and no row for #2048
 
 #### Scenario: Estimated serials
 - **WHEN** the four Nien 402Z copies rin.trades lists have estimated serials
@@ -1274,8 +1223,8 @@ In You get over lists, the serial dialog SHALL put an "Any serial" control above
 - **THEN** "Any serial" unchecks itself and is disabled, and the footer reads "5 of 5 picked"
 
 #### Scenario: Count for copies only any serial reaches
-- **WHEN** the sender opens the SooMin 204Z dialog, with #615 and #1077 on "spares" and two copies on "quiet haves"
-- **THEN** "Any serial" is a count from 0 to 2 reading "They choose the serial · 2 available", its buttons named "One fewer copy of SooMin 204Z" and "One more copy of SooMin 204Z" and its field "Any serial of SooMin 204Z"
+- **WHEN** rin.trades lists SooMin 204Z #615 and #1077 on "spares" and two more on "quiet haves", which hides serials, and the sender opens the SooMin 204Z dialog with Offer on "spares"
+- **THEN** "Any serial" is a checkbox worth one copy reading "They choose the serial", with no count: the copies only any serial reaches are on "quiet haves", another post
 
 #### Scenario: One available copy
 - **WHEN** rin.trades lists JiWoo 207Z #221 and #640 by serial, and #640 is in a trade in progress
@@ -1283,7 +1232,7 @@ In You get over lists, the serial dialog SHALL put an "Any serial" control above
 
 #### Scenario: A count held from before
 - **WHEN** You get holds three copies of SeoYeon 204Z in any serial from a whole-collection entry on "doubles", which shows serials, and the sender opens its dialog
-- **THEN** "Any serial" shows as a count at 3 whose + is disabled, so it can only come down
+- **THEN** "Any serial" shows as a count at 3 whose + is disabled, so it can only come down, its buttons named "One fewer copy of SeoYeon 204Z" and "One more copy of SeoYeon 204Z" and its field "Any serial of SeoYeon 204Z"
 
 ### Requirement: Confirming or leaving the serial dialog
 The serial dialog's footer SHALL read "{picked} of {count} picked" and "{count} of 200 on this side", with Cancel and a confirm button reading "Pick 1 copy" or "Pick {count} copies"; with nothing picked, "Remove all" when the collection had picks, else a disabled "Pick copies". Confirming SHALL set the picks of the copies the dialog shows in the picker's selection, and Done writes them to the builder. Enter SHALL never confirm: Space checks a row.
@@ -1316,15 +1265,15 @@ The serial dialog's room SHALL be 200 less the side's other picks in the picker.
 - **THEN** choosing an unpicked tile does nothing, and the SeoYeon 204Z dialog lets the sender uncheck its two rows but check none
 
 ### Requirement: Serial dialog across posts
-A tile SHALL stand for the copies the picker shows: with You get fixed to one post, or narrowed by List, only that list's, "Any serial" included. Confirming SHALL change only the picks of the copies the dialog shows, so a pick of the same collection from another list stays, and the builder marks it as it does now.
+A tile SHALL stand for the copies the picker shows: in You get, only those of the post chosen under Offer on, "Any serial" included; in You give narrowed by List, only that list's. Confirming SHALL change only the picks of the copies the dialog shows, so a pick of the same collection from another post stays, and the builder marks it as one that can't be sent, "Not on {post}".
 
 #### Scenario: One post
-- **WHEN** rin.trades takes asks from one post, Offer on reads "doubles", and rin.trades lists SeoYeon 204Z #537 and #812 on "doubles" and #904 on "spares"
+- **WHEN** Offer on reads "doubles", and rin.trades lists SeoYeon 204Z #537 and #812 on "doubles" and #904 on "spares"
 - **THEN** the SeoYeon 204Z tile reads "Choose from 2 serials", its dialog reads "tripleS · Cream01 · doubles" with rows for #537 and #812 only, and its "Any serial" asks for one of those two
 
 #### Scenario: Across posts
-- **WHEN** rin.trades takes asks across posts and the sender opens You get's picker on All their lists
-- **THEN** the SeoYeon 204Z tile reads "Choose from 3 serials", and the rows read "#537 · doubles", "#812 · doubles" and "#904 · spares"
+- **WHEN** the sender changes Offer on to "spares" and opens You get's picker
+- **THEN** the SeoYeon 204Z tile reads "#904", choosing it picks #904 at once, and no row reads "#537 · doubles" or "#812 · doubles"
 
 #### Scenario: A pick from another post stays
 - **WHEN** the sender picked #904 from "spares", changed Offer on to "doubles", and confirms #537 in the SeoYeon 204Z dialog

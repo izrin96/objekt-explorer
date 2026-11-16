@@ -64,9 +64,8 @@ shows other people's. Once saved, other viewers SHALL follow by their next prese
 - **THEN** Show when I'm online is on
 
 ### Requirement: Offer rules
-The Trade section SHALL hold, under an Offers heading, the three offer rules "Only offers with what I
-want", "Let people ask from more than one post" and "Let people ask for anything I hold" (see
-`web-trade-offers`). Each switch SHALL save on change, with no Save button, and refresh every place
+The Trade section SHALL hold, under an Offers heading, the two offer rules "Only offers with what I
+want" and "Let people ask for anything I hold" (see `web-trade-offers`). Each switch SHALL save on change, with no Save button, and refresh every place
 the account is shown without a reload. A failed save SHALL put the switch back and say it couldn't be
 saved.
 
@@ -76,7 +75,7 @@ can give only objekts on that list and one on a post without one anything, that 
 can give only objekts on the user's want lists on Trade, and that cash-only offers and objekts the user
 asked for still come through.
 
-Let people ask from more than one post SHALL be on by default. Its description SHALL say that, on, one offer may ask from several of the user's posts, and off, each offer asks from one post the sender chooses.
+There SHALL be no switch for asking across posts: every offer to the user asks from one of their posts (see `web-trade-offers` One post per offer). A save that still sends the removed setting "Let people ask from more than one post", as from a tab opened before it was removed, SHALL be accepted and SHALL store nothing.
 
 Let people ask for anything I hold SHALL be off by default. Its description SHALL say that it applies
 only while the user has no have or sale list on Trade (once they post one, people can ask only for what
@@ -86,15 +85,15 @@ Once saved, each offer rule SHALL apply to the next offer sent; offers already o
 
 #### Scenario: Offer rules default
 - **WHEN** a user who never changed them opens `/account/trade`, whether their account is new or not
-- **THEN** Only offers with what I want and Let people ask for anything I hold are off, and Let people ask from more than one post is on
+- **THEN** the Offers heading holds two switches, Only offers with what I want and Let people ask for anything I hold, both off, and no switch named Let people ask from more than one post
 
 #### Scenario: Wanted offers on
 - **WHEN** the user turns Only offers with what I want on
-- **THEN** it is saved with no Save button, and the next offer someone sends on a post paired with a want list, giving an objekt not on that list, is refused
+- **THEN** it is saved with no Save button, and the next offer someone sends asking from a post paired with a want list, giving an objekt not on that list, is refused
 
 #### Scenario: One post per offer
-- **WHEN** the user turns Let people ask from more than one post off
-- **THEN** the next offer someone sends them asking from two of their posts is refused
+- **WHEN** a tab opened before the switch was removed still shows Let people ask from more than one post, and the user turns it off
+- **THEN** the save is accepted and nothing is stored, the next offer someone sends them is held to one post as every offer is, and after a reload the switch is gone
 
 #### Scenario: Collection asks on
 - **WHEN** a user with no have or sale list on Trade turns Let people ask for anything I hold on
