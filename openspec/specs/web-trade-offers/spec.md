@@ -168,7 +168,7 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 ### Requirement: Offer builder
 The builder SHALL be a page, `/trade/@<handle>/offer` (see Offer page), never a dialog. It shows:
 - You give, with an Add picker over the sender's own objekts, entries on their bound have and sale lists first;
-- You get, with an Add picker over the allowed entries of the post chosen under Offer on, labelled "Add from {post}" (see Choosing the post); or, when the partner has no have or sale list bound to a Cosmo profile and on Trade and lets people ask for anything they hold, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first; or, when they have no such list and don't allow that, no Add picker, and a line saying {name} has nothing on Trade to ask for and that the sender can still offer objekts or a top-up;
+- You get, with an Add picker over the allowed entries of the post chosen under Offer on, labelled "Add from {post}", and no Add picker while Offer on names one of the partner's Buy posts (see Choosing the post); or, when the partner has no have or sale list bound to a Cosmo profile and on Trade and lets people ask for anything they hold, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first; or, when they have no such list and don't allow that, no Add picker, and a line saying {name} has nothing on Trade to ask for and that the sender can still offer objekts or a top-up;
 - the top-up and the note.
 
 You get's picker over lists SHALL show the post chosen under Offer on, which opens as Where Offer on opens says: on the listing's sale list when opened from a Market listing.
@@ -200,7 +200,7 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **THEN** You get has no Add button, the line says the partner has nothing on Trade to ask for, and the sender can still send an offer that only gives objekts or a top-up
 
 #### Scenario: Partner with a list
-- **WHEN** the partner has one bound have list "doubles" on Trade
+- **WHEN** the partner has one bound have list "doubles" on Trade, and no Buy post
 - **THEN** the builder reads "Offer on doubles", You get's button reads "Add from doubles", and its picker shows only that list's entries
 
 #### Scenario: From a post
@@ -208,12 +208,12 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **THEN** Offer on reads "doubles", You get's button reads "Add from doubles", and its picker shows only the entries of "doubles", with no List choice
 
 #### Scenario: A list kept off Trade
-- **WHEN** rin.trades has the bound have list "doubles" on Trade and the bound have list "private" off Trade
+- **WHEN** rin.trades has the bound have list "doubles" on Trade and the bound have list "private" off Trade, and no Buy post
 - **THEN** the builder reads "Offer on doubles", You get's picker shows "doubles" only, and an offer asking for an entry only on "private" is refused when sent
 
 #### Scenario: From a WTB post
-- **WHEN** the sender opens the builder from rin.trades's WTB post, and rin.trades has "doubles" then "spares" on Trade
-- **THEN** Offer on reads "doubles" and offers "spares", You get's button reads "Add from doubles", and its picker shows the entries of "doubles" only
+- **WHEN** the sender opens the builder from rin.trades's Buy post "looking for", and rin.trades has "doubles" then "spares" on Trade
+- **THEN** Offer on reads "looking for" and offers "doubles" and "spares", and You get has no Add button until the sender changes Offer on to one of them, when it reads "Add from {post}" and its picker shows that post's entries only
 
 #### Scenario: From a Market listing
 - **WHEN** the sender chooses Make offer on rin.trades's listing in an objekt's Market tab, which comes from the sale list "spares"
@@ -232,7 +232,7 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **THEN** the picker shows only the entries of "spares" the sender may ask for, with no List choice
 
 #### Scenario: Their List shown for one list
-- **WHEN** rin.trades has exactly one have or sale list on Trade
+- **WHEN** rin.trades has exactly one have or sale list on Trade and no Buy post
 - **THEN** the builder reads "Offer on {that list}", and You get's picker shows that list's entries with no List choice
 
 #### Scenario: Their List hidden over a collection
@@ -562,7 +562,7 @@ While the read runs, the builder SHALL show its title, a status line reading "Ad
 - **THEN** "Adding your matches…" is replaced in the same status line by what was added, and no second status line or alert appears
 
 ### Requirement: Matches of one post
-From Make offer on this post, or a conversation whose newest card is the partner's post card with a match, the builder SHALL add only matches through that post's lists: under You get those on its have or sale list, under You give those on its want list. When the sender can swap with the partner and that post is the partner's half of the pair the score counts, the builder SHALL add that pair's matches, as from the row; otherwise it SHALL add only the direction with more of the post's matches, You get on a tie. Offer on SHALL open on the post's have or sale list, as from a Market listing; for a post with none, as Where Offer on opens says. You get's picker shows the post under Offer on, and an ask from another post is refused (see One post per offer). The line SHALL name the post's list.
+From Make offer on this post, or a conversation whose newest card is the partner's post card with a match, the builder SHALL add only matches through that post's lists: under You get those on its have or sale list, under You give those on its want list. When the sender can swap with the partner and that post is the partner's half of the pair the score counts, the builder SHALL add that pair's matches, as from the row; otherwise it SHALL add only the direction with more of the post's matches, You get on a tie. Offer on SHALL open on the post's have or sale list, as from a Market listing; on a Buy post, on that Buy post (see Where Offer on opens). You get's picker shows the post under Offer on, and an ask from another post is refused (see One post per offer). The line SHALL name the post's list.
 
 #### Scenario: One post of two
 - **WHEN** rin.trades has the WTT post "doubles" and "wants", and the WTS post "spares", open to swaps, which reads "2 you want", rin.trades's row reads "You can swap 3" through "doubles" and the sender's post "extras" and "binary hunt", and the sender chooses Make offer on this post on "doubles"
@@ -578,7 +578,7 @@ From Make offer on this post, or a conversation whose newest card is the partner
 
 #### Scenario: WTB post
 - **WHEN** jun.k has the WTT post "extras" and the WTB post "hunting", which reads "2 you have", and the sender chooses Make offer on this post on "hunting"
-- **THEN** the builder opens with 2 under You give, nothing under You get, the line "Added from hunting: 2 you give", and Offer on on jun.k's first have or sale list, "extras"
+- **THEN** the builder opens with 2 under You give, nothing under You get, the line "Added from hunting: 2 you give", and Offer on reads "hunting" and offers "extras"
 
 #### Scenario: From a conversation with a post card
 - **WHEN** the sender opens Make offer in their conversation with rin.trades, whose newest card is the post card for "doubles" with "They have 2 you want"
@@ -823,7 +823,7 @@ While the recipient has "Only offers with what I want" on (see `web-account`), e
 
 1. An offer that asks for an objekt the recipient did not offer in the countered offer: the want list paired with the offer's post. An offer to a partner with no have or sale list on Trade is on no post: any of their want lists on Trade.
 2. A counter that asks for nothing but objekts the recipient offered: any of their want lists on Trade.
-3. An offer started from one of the recipient's want lists that none of their have or sale posts pairs with (their Buy post, or the want list a Trade row's You give matches came from), asking for nothing: that want list.
+3. An offer on one of the recipient's Buy posts (see Choosing the post), asking for nothing: that Buy post's want list. The request names the Buy post, as `wantList`: the builder sends it while Offer on names the Buy post, or, for a recipient with no have or sale list on Trade, while the builder started from it.
 4. An offer asking for nothing on a post: that post's want list.
 5. An offer on no post (a partner with no have or sale list on Trade, or a tab loaded before every offer had to ask from one post that names no post): any of their want lists on Trade.
 
@@ -866,12 +866,12 @@ An offer held to a post without a want list (an empty one counts as none) SHALL 
 - **THEN** any objekt it gives, even one on "wishlist", is refused as not wanted
 
 #### Scenario: From a Buy post
-- **WHEN** rin.trades has the setting on and the Buy post "looking for" (a want list leading its own post), and a user's offer started from "looking for" asks for nothing
+- **WHEN** rin.trades has the setting on and the Buy post "looking for" (a want list leading its own post), and a user's offer with Offer on "looking for" asks for nothing
 - **THEN** a give on "looking for" is sent, and a give only on "hunting" is refused as not wanted
 
 #### Scenario: From a Buy post, then an ask
-- **WHEN** the user then adds one objekt from "doubles" under You get
-- **THEN** the gives are held to "hunting": a give only on "looking for" is refused as not wanted
+- **WHEN** a request names the Buy post "looking for" and also asks for one objekt from "doubles"
+- **THEN** it is not refused for asking: the gives are held to "hunting", a give only on "looking for" is refused as not wanted, and the offer is on "doubles"
 
 #### Scenario: Counter asks only for what they offered
 - **WHEN** rin.trades, with the setting on, offered HyeRin 301Z #1203, and the user counters, keeping #1203 under You get, asking for nothing else and giving a collection only on "wishlist"
@@ -910,7 +910,7 @@ An offer held to a post without a want list (an empty one counts as none) SHALL 
 - **THEN** the offer stays open, and rin.trades may still accept it
 
 ### Requirement: Builder for a want-only recipient
-When the rule filters the offer (see Recipients who take only what they want), You give's "Only what they want" SHALL be on and locked from the first frame, and a line SHALL say what it keeps to. It keeps to the want list the rule holds the offer to, and the line names the want list of {list}: the Buy post or want list the builder started from, else the post under Offer on. Where any of their want lists counts, it keeps to all their want lists on Trade, and the line says their want lists. Where the rule holds the offer to a post without a want list, You give SHALL have no Add button and the line SHALL say that {name} takes no objekts on {post} and a top-up can be offered instead. The switch, its line and You give's picker SHALL follow the first ask added under You get, the last one removed, and Offer on when it changes. Offer on itself SHALL keep choosing where You get's asks come from. A pick refused under the rule SHALL be one that can't be sent, "Not on their wants".
+When the rule filters the offer (see Recipients who take only what they want), You give's "Only what they want" SHALL be on and locked from the first frame, and a line SHALL say what it keeps to. It keeps to the want list the rule holds the offer to, and the line names the want list of {list}: the post under Offer on, a Buy post included, or, for a partner with no have or sale list on Trade, the Buy post the builder started from. Where any of their want lists counts, it keeps to all their want lists on Trade, and the line says their want lists. Where the rule holds the offer to a post without a want list, You give SHALL have no Add button and the line SHALL say that {name} takes no objekts on {post} and a top-up can be offered instead. The switch, its line and You give's picker SHALL follow the first ask added under You get, the last one removed, and Offer on when it changes. Offer on itself SHALL keep choosing where You get's asks come from. A pick refused under the rule SHALL be one that can't be sent, "Not on their wants".
 
 #### Scenario: Switch locked on
 - **WHEN** the sender opens the builder for rin.trades, who has the setting on and the want list "hunting" on Trade paired with "doubles"
@@ -926,22 +926,22 @@ When the rule filters the offer (see Recipients who take only what they want), Y
 
 #### Scenario: Started from a Buy post
 - **WHEN** the sender chooses Make offer on rin.trades's Buy post "looking for", and rin.trades has "doubles" then "spares" on Trade
-- **THEN** the line reads that rin.trades only takes objekts on the want list of looking for, You give's picker shows only collections on "looking for", and Offer on reads "doubles", where You get's asks would come from
+- **THEN** Offer on reads "looking for", the line reads that rin.trades only takes objekts on the want list of looking for, and You give's picker shows only collections on "looking for"
 
 #### Scenario: Buy post start, changing the post
 - **WHEN** You get holds nothing and the sender changes Offer on to "spares"
-- **THEN** the line still names looking for, and You give's picker still shows only collections on "looking for"
+- **THEN** the line names the want list of spares, and You give's picker shows only collections on "wishlist"
 
 #### Scenario: First ask added
-- **WHEN** the sender adds one objekt from "doubles" under You get
-- **THEN** the line changes to the want list of doubles and You give's picker shows only collections on "hunting"; removing that ask brings back looking for
+- **WHEN** the sender, started from "looking for", changes Offer on to "doubles" and adds one objekt from it under You get
+- **THEN** the line names the want list of doubles and You give's picker shows only collections on "hunting"; changing Offer on back to "looking for" brings back looking for and outlines that ask with "Not on looking for"
 
 #### Scenario: Changing to a post without a want list
-- **WHEN** the sender, who did not start from a want list, changes Offer on to rin.trades's "extras", posted alone, whether or not You get holds anything
+- **WHEN** the sender changes Offer on to rin.trades's "extras", posted alone, whether or not You get holds anything
 - **THEN** "Only what they want" stays on and locked, You give has no Add button, and the line reads that extras has no want list, so rin.trades takes no objekts on it, and a top-up can be offered
 
 #### Scenario: Post without a want list, nothing asked
-- **WHEN** Offer on reads "extras", posted alone, the sender did not start from a want list, and You get holds nothing
+- **WHEN** Offer on reads "extras", posted alone, and You get holds nothing
 - **THEN** "Only what they want" stays on and locked, You give has no Add button, and the line reads that extras has no want list, so rin.trades takes no objekts on it: a top-up can still be offered
 
 #### Scenario: Gives already on the side
@@ -955,6 +955,10 @@ When the rule filters the offer (see Recipients who take only what they want), Y
 #### Scenario: Partner with no posts
 - **WHEN** rin.trades has the setting on, no have or sale list on Trade, and the want lists "hunting" and "wishlist" on Trade
 - **THEN** "Only what they want" is on and can't be turned off, the line reads that rin.trades only takes objekts on their want lists, and the picker shows collections on "hunting" or "wishlist"
+
+#### Scenario: Partner with no posts, from their Buy post
+- **WHEN** rin.trades, as above, has "hunting" as a Buy post and lets people ask for anything they hold, and the sender chooses Make offer on "hunting"
+- **THEN** the line names the want list of hunting and the picker shows only collections on "hunting"; once the sender asks for an objekt from rin.trades's collection, the line says their want lists
 
 #### Scenario: Refused on send
 - **WHEN** rin.trades removes a collection from "hunting" after the sender picked it, and the sender chooses Send
@@ -1016,7 +1020,13 @@ While the recipient has a have or sale list on Trade, every You get item of ever
 - **THEN** it stays open until it is answered, withdrawn or expires, and rin.trades may accept, decline or counter it
 
 ### Requirement: Choosing the post
-When the partner has a have or sale list on Trade (One post per offer), the builder's header SHALL hold an **Offer on** choice: each of those lists, by type badge and name, with no "No post". With exactly one such list it SHALL instead read the line "Offer on {post}", with no choice. Where it opens is in Where Offer on opens. You get's button SHALL read "Add from {post}" and its picker SHALL show only that post, with no List choice. With two or more such lists, a line under You get SHALL say another post takes a separate offer; with one, no such line shows. A pick from another list SHALL be one that can't be sent, "Not on {post}".
+A **Buy post** is a want list of the partner's on Trade, with at least one entry, that leads its own post: no have or sale list is paired with it.
+
+When the partner has a have or sale list on Trade (One post per offer), the builder's header SHALL hold an **Offer on** choice: each of those lists, then each of their Buy posts, each by type badge and name, with no "No post". A counter SHALL offer no Buy post. With exactly one choice it SHALL instead read the line "Offer on {post}", with no choice. Where it opens is in Where Offer on opens. You get's button SHALL read "Add from {post}" and its picker SHALL show only that post, with no List choice. With two or more have or sale lists, a line under You get SHALL say another post takes a separate offer; with one, no such line shows. A pick from another list SHALL be one that can't be sent, "Not on {post}".
+
+While Offer on names a Buy post, the offer asks for nothing: You get SHALL have no Add button, and a line under You get SHALL say "{post} is a Buy post, so an offer on it asks for nothing. To ask for objekts, change Offer on." in place of the line about another post. Every You get pick is then one that can't be sent, "Not on {post}". The offer may give objekts and a top-up, and is sent naming the Buy post.
+
+When the partner has no have or sale list on Trade, the header SHALL have no Offer on choice. When the builder started from one of their Buy posts (its Make offer, its matches, or a row whose lead post it is), it SHALL read the line "Offer on {Buy post}" while You get asks for nothing; an ask from their collection takes the offer off the Buy post, and the line goes.
 
 #### Scenario: From a post
 - **WHEN** the sender chooses Make offer on rin.trades's post "doubles"
@@ -1031,8 +1041,24 @@ When the partner has a have or sale list on Trade (One post per offer), the buil
 - **THEN** Offer on reads "doubles" and offers "doubles" and "spares" only, with no "No post"
 
 #### Scenario: One post
-- **WHEN** rin.trades's only have or sale list on Trade is "doubles"
+- **WHEN** rin.trades's only have or sale list on Trade is "doubles", and rin.trades has no Buy post
 - **THEN** the header reads "Offer on doubles" as a line, with no choice to open, You get's button reads "Add from doubles", and no line under You get speaks of another post
+
+#### Scenario: One have post and one Buy post
+- **WHEN** rin.trades has the have list "doubles", paired with the want list "wishlist", and the Buy post "looking for" on Trade, and the sender opens the builder from their conversation with rin.trades
+- **THEN** Offer on reads "doubles" and offers "doubles", then "looking for" with the Want badge; "wishlist" is not offered, and no line under You get speaks of another post
+
+#### Scenario: Choosing a Buy post
+- **WHEN** You get holds nothing and the sender changes Offer on to "looking for"
+- **THEN** You get has no Add button, the line under You get reads "looking for is a Buy post, so an offer on it asks for nothing. To ask for objekts, change Offer on.", and an offer giving HyeRin 301Z #1203 for a top-up is sent on "looking for"
+
+#### Scenario: Choosing a Buy post with asks
+- **WHEN** the sender has two picks from "doubles" and changes Offer on to "looking for"
+- **THEN** both picks are outlined with "Not on looking for", You get's banner counts them, and Send is disabled until they are removed or Offer on goes back to "doubles"
+
+#### Scenario: Counter
+- **WHEN** the user counters rin.trades's offer, and rin.trades has "doubles" and the Buy post "looking for" on Trade
+- **THEN** the header reads "Offer on doubles" as a line, and "looking for" is not offered
 
 #### Scenario: Gives only
 - **WHEN** the sender gives HyeRin 301Z #1203 for 6,000 KRW and asks for nothing
@@ -1046,12 +1072,24 @@ When the partner has a have or sale list on Trade (One post per offer), the buil
 - **WHEN** rin.trades has no have or sale list on Trade
 - **THEN** the header has no Offer on choice
 
+#### Scenario: Partner whose only post is a Buy post
+- **WHEN** rin.trades has no have or sale list on Trade and the Buy post "looking for", lets people ask for anything they hold, and the sender chooses Make offer on "looking for"
+- **THEN** the header reads "Offer on looking for" as a line; once the sender asks for an objekt from rin.trades's collection, the line goes, and the offer is sent on no post
+
 ### Requirement: Where Offer on opens
-Offer on SHALL open on the post the builder started from (a post or a Market listing), else the post a row's matches came from, else the row's lead post when it is one of the partner's have or sale lists, else the list of the first You get pick, else the partner's first list. Where the start or the matches name a want list paired with one of those posts, Offer on SHALL open on that post. A start from a want list no post pairs with (a Buy post) opens on the first list that follows.
+Offer on SHALL open on the post the builder started from (a post or a Market listing), else the post a row's matches came from, else the row's lead post when it is one of the partner's have or sale lists, else the list of the first You get pick, else the partner's first list. Where the start or the matches name a want list paired with one of those posts, Offer on SHALL open on that post. Where they name a Buy post (that post's own Make offer, a conversation whose newest card is that post's card with a match, or a row's You give matches from it), Offer on SHALL open on the Buy post. A row's lead post never opens Offer on a Buy post: a row whose lead post is a Buy post opens on the first list that follows. A partner with no have or sale list on Trade has no Offer on choice, and there a start from their Buy post, a row's lead post included, reads as Choosing the post says.
 
 #### Scenario: From a WTB row
-- **WHEN** the sender opens the builder from rin.trades's row, whose lead post is a WTB post, with no matches, and rin.trades has "doubles" then "spares" on Trade
-- **THEN** Offer on opens on "doubles"
+- **WHEN** the sender opens the builder from rin.trades's row, whose lead post is the Buy post "looking for", with no matches, and rin.trades has "doubles" then "spares" on Trade
+- **THEN** Offer on opens on "doubles", and offers "looking for" after "spares"
+
+#### Scenario: From a Buy post
+- **WHEN** the sender chooses Make offer on rin.trades's Buy post "looking for", with or without matches, and rin.trades has "doubles" then "spares" on Trade
+- **THEN** Offer on opens on "looking for"
+
+#### Scenario: You give matches from a Buy post
+- **WHEN** the builder opens from rin.trades's row with only You give matches, all on the Buy post "looking for"
+- **THEN** Offer on opens on "looking for"
 
 #### Scenario: You give matches from a paired want list
 - **WHEN** the builder opens from rin.trades's row with only You give matches, all on "wishlist", the want list of "spares"
@@ -1062,7 +1100,7 @@ Offer on SHALL open on the post the builder started from (a post or a Market lis
 - **THEN** Offer on opens on "sale1", and the kept objekt can be sent whichever post is chosen, since the user offered it
 
 ### Requirement: Row matches from one post
-Opened from a Trade row's Make offer for a partner with a have or sale list on Trade, when the matches don't come from a Can swap pair, the builder SHALL count You get matches only from the partner's have or sale post with the most of them (on a tie, the row's lead post, then list order), and You give matches only from the partner's want list with the most of them (on a tie, the row's lead post when it is that want list, then list order), and only then choose the direction with more, You get on a tie. When You get is filled, the added-matches line SHALL name that post and Offer on SHALL open on it. When You give wins, You get SHALL stay empty, the line SHALL name that want list, and You give SHALL be held to it as a start (see Recipients who take only what they want). Can swap pairs, whose sides come from one post already, SHALL stay as in Matches added when the builder opens.
+Opened from a Trade row's Make offer for a partner with a have or sale list on Trade, when the matches don't come from a Can swap pair, the builder SHALL count You get matches only from the partner's have or sale post with the most of them (on a tie, the row's lead post, then list order), and You give matches only from the partner's want list with the most of them (on a tie, the row's lead post when it is that want list, then list order), and only then choose the direction with more, You get on a tie. When You get is filled, the added-matches line SHALL name that post and Offer on SHALL open on it. When You give wins, You get SHALL stay empty, the line SHALL name that want list, and Offer on SHALL open on it when it is a Buy post, else on the post it pairs with, so You give is held to it (see Recipients who take only what they want). Can swap pairs, whose sides come from one post already, SHALL stay as in Matches added when the builder opens.
 
 #### Scenario: Matches across two posts
 - **WHEN** rin.trades's row reads "They have 5 you want" with no Can swap mark, 3 of them on "doubles" and 2 on "spares", and the sender chooses Make offer on the row
@@ -1074,7 +1112,7 @@ Opened from a Trade row's Make offer for a partner with a have or sale list on T
 
 #### Scenario: You give wins after the cut
 - **WHEN** rin.trades's row reads "They have 4 you want · You have 4 they want" with no Can swap mark, 2 of the 4 on "doubles", the row's lead post, and 2 on "spares", and of the user's 4, 3 are on rin.trades's Buy post "looking for" and 1 on "hunting"
-- **THEN** the builder opens with the 3 on "looking for" under You give, nothing under You get, the line "Added from looking for: 3 you give", and You give held to "looking for"
+- **THEN** the builder opens with the 3 on "looking for" under You give, nothing under You get, the line "Added from looking for: 3 you give", Offer on reading "looking for", and You give held to "looking for"
 
 #### Scenario: You give across want lists
 - **WHEN** rin.trades's row has no Can swap mark, 1 match under You get on "doubles", and of the user's matches 2 are on "hunting" and 2 on "wishlist", "hunting" first in list order
@@ -1127,7 +1165,7 @@ When the recipient declines an offer holding a "Not on your wants" item, while t
 - **THEN** no notice to turn on Only offers with what I want shows
 
 ### Requirement: The post an offer is on
-An offer SHALL store its post: the Offer on choice or the post it started from, else the one list its asks fit. An offer that asks for nothing new SHALL be on the post under Offer on too, except two that are on no post: a counter that asks only for objekts the recipient offered, and an offer started from a want list (a Buy post's, or a row's You give matches') that asks for nothing. An offer to a partner with no have or sale list on Trade, one from a client that named no post and asks for nothing new, and one sent across posts before every offer had to ask from one, are on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line and no other mark about posts, and a post deleted later SHALL drop it.
+An offer SHALL store its post: the Offer on choice or the post it started from, else the one list its asks fit. An offer that asks for nothing new SHALL be on the post under Offer on too, and an offer that names a Buy post and asks for nothing new SHALL be on that Buy post, for a partner with or without a have or sale list on Trade. A counter that asks only for objekts the recipient offered is on no post. An offer to a partner with no have or sale list on Trade that names no Buy post or asks for something, one from a client that named no post and asks for nothing new, and one sent across posts before every offer had to ask from one, are on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line and no other mark about posts, and a post deleted later SHALL drop it.
 
 #### Scenario: Both sides see it
 - **WHEN** an offer on "doubles" is sent
@@ -1138,8 +1176,16 @@ An offer SHALL store its post: the Offer on choice or the post it started from, 
 - **THEN** both cards read "Offer on doubles"
 
 #### Scenario: Gives only from a Buy post
-- **WHEN** an offer started from rin.trades's Buy post "looking for" gives objekts and asks for nothing
-- **THEN** neither card reads "Offer on"
+- **WHEN** an offer with Offer on rin.trades's Buy post "looking for" gives objekts and asks for nothing
+- **THEN** both cards read "Offer on looking for"
+
+#### Scenario: Buy post named, with an ask
+- **WHEN** a request names the Buy post "looking for" and asks for one objekt on "doubles"
+- **THEN** both cards read "Offer on doubles"
+
+#### Scenario: Gives only from a Buy post of a partner with no lists
+- **WHEN** rin.trades has no have or sale list on Trade, and an offer started from their Buy post "looking for" gives objekts and asks for nothing
+- **THEN** both cards read "Offer on looking for"
 
 #### Scenario: Counter asking for nothing new
 - **WHEN** the user counters rin.trades's offer, keeping only objekts rin.trades offered under You get
