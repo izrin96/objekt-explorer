@@ -51,7 +51,14 @@ import {
 import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
-import { chosenPostOf, giveRule, givesPostOf, openPostOf, postProblem } from "./post-choice";
+import {
+  chosenPostOf,
+  giveRule,
+  offerOnOf,
+  openPostOf,
+  postProblem,
+  startWantOf,
+} from "./post-choice";
 import { BuilderRefused, SendError } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
@@ -117,7 +124,7 @@ export function BuilderForm({
   const openPost = openPostOf(choices, {
     startList: request.startList,
     matchesPost: request.matches?.post,
-    addedPost: added?.postSlug,
+    addedPost: added?.postSlug ?? added?.wantSlug,
     lead: "target" in to && to.target.kind === "list" ? to.target.slug : undefined,
     get: prefill?.get,
   });
@@ -166,10 +173,21 @@ export function BuilderForm({
       ? m.offer_flag_not_on_post({ list: postName ?? postSlug! })
       : null;
   };
-  // Only offers with what I want: the want list You give is held to, if any, on the post the
-  // server will read the offer as on
-  const givesPost = givesPostOf(postSlug, getShown);
-  const gives = giveRule(rules, posts.find((list) => list.slug === givesPost) ?? null);
+  const wantLists = theirs.data?.wantLists ?? [];
+  const newAsk = getShown.some((pick) => !pick.kept);
+  const startWant = startWantOf(posts, wantLists, {
+    matchesPost: request.matches?.post,
+    addedWant: added?.wantSlug,
+    target: "target" in to && to.target.kind === "list" ? to.target.slug : undefined,
+  });
+  const offerOn = offerOnOf({
+    postSlug,
+    posts,
+    startWant,
+    newAsk,
+    counter: request.counter !== undefined,
+  });
+  const gives = giveRule(rules, offerOn.gives);
   const reasonOf = (side: OfferSide, pick: OfferPick) =>
     (side === "get" ? postReason(pick) : null) ??
     pickProblem(side, pick, {
@@ -281,7 +299,7 @@ export function BuilderForm({
     sendOffer({
       ...offerInput(to, { give: giveShown, get: getShown, topup: topupNow, note }),
       counters: request.counter,
-      ...(postSlug !== null && { post: postSlug }),
+      ...offerOn.input,
     });
   };
 
@@ -289,9 +307,17 @@ export function BuilderForm({
   const ruleLine = (side: OfferSide) => {
     if (side === "give") {
       if (gives === null) return null;
-      return gives === "all"
-        ? m.offer_rule_wanted_only({ name })
-        : m.offer_rule_wanted_post({ name, post: listName(givesPost) ?? givesPost! });
+      if (gives === "all") return m.offer_rule_wanted_only({ name });
+      if (gives === "none") {
+        return m.offer_rule_wanted_none({ name, post: postName ?? postSlug! });
+      }
+      const start = typeof offerOn.gives === "object" && offerOn.gives.start;
+      return m.offer_rule_wanted_post({
+        name,
+        post: start
+          ? (wantLists.find((list) => list.slug === gives.want)?.name ?? gives.want)
+          : (postName ?? postSlug!),
+      });
     }
     if (rules?.asksClosed && source === "collection") return m.offer_rule_asks_closed({ name });
     if (choices.length < 2) return null;
@@ -381,7 +407,11 @@ export function BuilderForm({
                     }
                     rule={ruleLine(side)}
                     post={side === "get" && onePost ? postName : null}
-                    closed={side === "get" && rules?.asksClosed === true && source === "collection"}
+                    closed={
+                      side === "get"
+                        ? rules?.asksClosed === true && source === "collection"
+                        : gives === "none"
+                    }
                     loading={side === "give" ? loadingAsks : loadingGet}
                     source={source}
                     onAdd={() => setPicking(side)}
@@ -483,8 +513,8 @@ export function BuilderForm({
               theirLists={theirs.data?.lists ?? []}
               startList={request.startList}
               rules={{
-                wantedOnly: gives !== null,
-                ...(gives !== null && gives !== "all" && { wantList: gives.want }),
+                wantedOnly: gives !== null && gives !== "none",
+                ...(typeof gives === "object" && gives !== null && { wantList: gives.want }),
                 ...(onePost &&
                   postSlug !== null && { post: { slug: postSlug, name: postName ?? postSlug } }),
               }}

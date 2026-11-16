@@ -33,6 +33,8 @@ export type AddedMatches = {
   postName: string | null;
   /** that list's slug: the post the offer is on */
   postSlug: string | null;
+  /** the want list You give's matches came from, when You give won */
+  wantSlug: string | null;
   /** near matches still waiting on their lines, never added on their own */
   near: NearGroup[];
   /** near picks added at open, by Make offer with it: Remove matches takes them out too */

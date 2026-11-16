@@ -13,7 +13,7 @@ import {
   nearGroups,
   type PartnerEntry,
 } from "../../../lib/offer-prefill";
-import { rowPost } from "../../../lib/offer-recipient-rules";
+import { oneListOf } from "../../../lib/offer-recipient-rules";
 import { itemFlags } from "../../../lib/offer-rules";
 import { matchCounts } from "../../../lib/trade-person";
 import type { Match } from "../../../lib/trade-rank";
@@ -105,11 +105,11 @@ async function sidePage(
   }
   // without an offset the whole list comes back, as the builder checks picks against it
   if (input.offset !== undefined) return theirPickerPage(me, addressed, input.offset, input);
-  const [page, lists] = await Promise.all([
+  const [page, choices] = await Promise.all([
     theirCandidates(me, addressed),
     partnerListChoices(addressed),
   ]);
-  return { ...page, lists };
+  return { ...page, lists: choices.lists, wantLists: choices.wantLists };
 }
 
 /** Each rule only where it would filter something, as `createOffer` applies them. */
@@ -139,7 +139,7 @@ type SuggestInput = {
  * The matches the partner's Trade row counts, filled by `fillMatches` (the Can swap pair, else
  * the bigger side), one copy per collection a side, chosen by `chooseMatchPicks`. `post` narrows
  * them to one post's lists: its have or sale list for the get side, its want list for the give
- * side.
+ * side. A row's You give is cut to one want list as You get is to one post.
  */
 export async function suggestOffer(
   me: string,
@@ -153,11 +153,12 @@ export async function suggestOffer(
     near: [] as SuggestedNear[],
     postName: null as string | null,
     postSlug: null as string | null,
+    wantSlug: null as string | null,
     collections: {},
   };
   const { userLow, userHigh } = pairKey(me, partnerId);
   // each early result is the same `empty` and no read here refuses, so the order holds
-  const [safety, sides, postLists, existing, pref] = await Promise.all([
+  const [safety, sides, postLists, existing, pref, partnerLists] = await Promise.all([
     chatSafety(me, partnerId),
     resolveCompareSides(me, list, mutual ?? false),
     post === undefined ? null : postListsOf(partnerId, post),
@@ -166,6 +167,19 @@ export async function suggestOffer(
       .from(conversation)
       .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh))),
     fetchPref(partnerId),
+    // only a row cut chooses among the partner's lists, so a post skips the read
+    post === undefined
+      ? db
+          .select({ id: lists.id, slug: lists.slug, name: lists.name, listType: lists.listType })
+          .from(lists)
+          .where(
+            and(
+              eq(lists.userId, partnerId),
+              or(askableOnTrade, and(eq(lists.listType, "want"), eq(lists.discoverable, true))),
+            ),
+          )
+          .orderBy(lists.id)
+      : null,
   ]);
   if (safety.blocked || safety.tradeBlocked || safety.partnerTradeBlocked) return empty;
   if (post !== undefined && !postLists) return empty;
@@ -191,20 +205,36 @@ export async function suggestOffer(
   const filled = partner
     ? fillMatches(partner, swapPair, postLists ?? undefined)
     : { get: [], give: [] };
-  // a row's You get matches outside a Can swap pair come from one post
-  const leadPost =
-    post === undefined && !swapPair && filled.get.length > 0
-      ? await onePostOf(partnerId, filled.get, lead)
-      : null;
+  // a row's matches outside a Can swap pair come from one post (You get) or one want list (You give)
+  const rowCut = post === undefined && !swapPair;
+  // the uncut side matches: `filled` has already emptied You get when the give side is bigger
+  const getAll = rowCut ? matchesThrough(partner?.theyHaveIWant ?? [], undefined) : filled.get;
+  const giveAll = rowCut ? matchesThrough(partner?.iHaveTheyWant ?? [], undefined) : [];
+  const leadPost = rowCut
+    ? chooseList(
+        getAll,
+        (partnerLists ?? []).filter((row) => row.listType !== "want"),
+        lead,
+      )
+    : null;
+  const giveWant = rowCut
+    ? chooseList(
+        giveAll,
+        (partnerLists ?? []).filter((row) => row.listType === "want"),
+        lead,
+      )
+    : null;
   const onPostGet = leadPost
-    ? filled.get.filter((match) => match.partnerListIds.includes(leadPost.id))
+    ? getAll.filter((match) => match.partnerListIds.includes(leadPost.id))
     : filled.get;
-  // cut to one post, You get may hold fewer than You give would: the bigger side wins again
-  const giveAll = leadPost ? matchesThrough(partner?.iHaveTheyWant ?? [], undefined) : [];
-  const giveWins = giveAll.length > onPostGet.length;
+  const giveOne = giveWant
+    ? giveAll.filter((match) => match.partnerListIds.includes(giveWant.id))
+    : [];
+  // cut to one list, a side may hold fewer than it would: the bigger side wins again
+  const giveWins = rowCut && giveOne.length > onPostGet.length;
   const onePost = giveWins ? null : leadPost;
   const getMatches = giveWins ? [] : onPostGet;
-  const giveMatches = giveWins ? giveAll : filled.give;
+  const giveMatches = rowCut ? (giveWins ? giveOne : []) : filled.give;
   const offerIds = onePost ? new Set([onePost.id]) : postLists?.offerIds;
 
   const addressed: Addressed = {
@@ -262,7 +292,10 @@ export async function suggestOffer(
   return {
     ...picks,
     near,
-    postName: onePost?.name ?? pairPost?.name ?? postLists?.name ?? null,
+    postName: giveWins
+      ? giveWant!.name
+      : (onePost?.name ?? pairPost?.name ?? postLists?.name ?? null),
+    wantSlug: giveWins ? giveWant!.slug : null,
     postSlug: onePost?.slug ?? pairPost?.slug ?? (postLists ? post! : null),
     collections: await collectionsOf(
       [...picks.give, ...picks.get, ...near.flatMap((group) => group.items)].map(
@@ -272,6 +305,16 @@ export async function suggestOffer(
   };
 }
 
+/** The one of the partner's lists a row's matches come from, or null when none holds a match. */
+function chooseList<T extends { id: number; slug: string }>(
+  matches: readonly { partnerListIds: readonly number[] }[],
+  candidates: readonly T[],
+  lead: string | undefined,
+) {
+  const chosen = oneListOf(matches, candidates, lead);
+  return candidates.find((row) => row.id === chosen) ?? null;
+}
+
 type Suggestion = {
   give: CandidateItem[];
   get: CandidateItem[];
@@ -279,32 +322,10 @@ type Suggestion = {
   near: SuggestedNear[];
   postName: string | null;
   postSlug: string | null;
+  /** the want list You give's matches came from, when You give won */
+  wantSlug: string | null;
   collections: Awaited<ReturnType<typeof collectionsOf>>;
 };
-
-/** The one post a row's get matches come from, or null when none is on a list askable on Trade. */
-async function onePostOf(
-  partnerId: string,
-  getMatches: readonly { partnerListIds: readonly number[] }[],
-  lead: string | undefined,
-) {
-  const counts = new Map<number, number>();
-  for (const match of getMatches) {
-    for (const id of new Set(match.partnerListIds)) counts.set(id, (counts.get(id) ?? 0) + 1);
-  }
-  const rows = await db
-    .select({ id: lists.id, slug: lists.slug, name: lists.name })
-    .from(lists)
-    .where(and(eq(lists.userId, partnerId), inArray(lists.id, [...counts.keys()]), askableOnTrade))
-    .orderBy(lists.id);
-  const leadId = rows.find((row) => row.slug === lead)?.id ?? null;
-  const chosen = rowPost(
-    counts,
-    rows.map((row) => row.id),
-    leadId,
-  );
-  return rows.find((row) => row.id === chosen) ?? null;
-}
 
 /** Near matches the builder offers to add, one group per side and verb, picked as matches are. */
 export type SuggestedNear = { side: "give" | "get"; verb: NearVerb; items: CandidateItem[] };

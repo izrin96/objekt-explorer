@@ -27,7 +27,7 @@ import { SerialDialog } from "./serial-dialog";
 /** The partner's offer rules the pickers follow. */
 export type PickerRules = {
   wantedOnly: boolean;
-  /** the post's own want list, which You give's picker keeps to under `wantedOnly` */
+  /** the one want list You give's picker keeps to under `wantedOnly`: the post's, or the Buy post the offer started from */
   wantList?: string;
   /** the post the offer is on, the one You get's picker shows */
   post?: { slug: string; name: string };

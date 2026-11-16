@@ -175,6 +175,8 @@ export const createOfferInputSchema = addressedSchema
     counters: idSchema.optional(),
     /** the partner's post (a have or sale list) the builder started on; never narrows asks alone */
     post: z.string().min(1).max(12).optional(),
+    /** the want list a gives-only offer started from (a Buy post's): its gives are held to it */
+    wantList: z.string().min(1).max(12).optional(),
     topup: topupInputSchema.optional(),
     note: z
       .string()

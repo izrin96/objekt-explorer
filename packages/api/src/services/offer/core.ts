@@ -10,6 +10,7 @@ import {
   offer,
   offerItem,
   tradeLeg,
+  tradePost,
   userAddress,
 } from "@repo/db/schema";
 import { type SQL, and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
@@ -410,6 +411,26 @@ export async function offerRulesOf(userId: string) {
     .from(user)
     .where(eq(user.id, userId));
   return row ?? { onlyWantedOffers: false, allowCollectionAsks: false };
+}
+
+/** The partner's want list a `wantList` slug names: discoverable, with an entry, else null. */
+export async function resolveWantList(partnerId: string, slug: string | undefined) {
+  if (slug === undefined) return null;
+  const [row] = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(
+      and(
+        eq(lists.userId, partnerId),
+        eq(lists.slug, slug),
+        eq(lists.listType, "want"),
+        eq(lists.discoverable, true),
+        sql`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${lists.id})`,
+        // a want list paired with a have or sale post is that post's, not a Buy post's
+        sql`NOT EXISTS (SELECT 1 FROM ${tradePost} WHERE ${tradePost.wantListId} = ${lists.id})`,
+      ),
+    );
+  return row?.id ?? null;
 }
 
 /** The partner's have or sale list on Trade a `post` slug names, else null: a post never refuses. */

@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { anyCopyItem, anyEntryOf } from "../../../lib/offer-any-item";
@@ -198,11 +198,22 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
   };
 }
 
-/** The partner's lists on Trade, for the picker's List choice. */
-export async function partnerListChoices(addressed: Addressed): Promise<PartnerList[]> {
+/**
+ * The partner's lists on Trade, for the picker's List choice, and their want lists on Trade with
+ * entries, which a start may name.
+ */
+export async function partnerListChoices(
+  addressed: Addressed,
+): Promise<{ lists: PartnerList[]; wantLists: { slug: string; name: string }[] }> {
   const wantHalf = alias(lists, "want_half");
   const rows = await db
-    .select({ slug: lists.slug, name: lists.name, type: lists.listType, want: wantHalf.slug })
+    .select({
+      slug: lists.slug,
+      name: lists.name,
+      type: lists.listType,
+      want: wantHalf.slug,
+      filled: sql<boolean>`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${lists.id})`,
+    })
     .from(lists)
     .leftJoin(
       wantHalf,
@@ -210,15 +221,27 @@ export async function partnerListChoices(addressed: Addressed): Promise<PartnerL
         eq(wantHalf.id, postPartnerSql("lists")),
         eq(wantHalf.listType, "want"),
         eq(wantHalf.discoverable, true),
-        // an empty want list takes anything, as `postWantedAmong` reads it
+        // an empty want list counts as none, as `postWantedAmong` reads it
         sql`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${wantHalf.id})`,
       ),
     )
-    .where(and(eq(lists.userId, addressed.partnerId), askableOnTrade))
+    .where(
+      and(
+        eq(lists.userId, addressed.partnerId),
+        or(askableOnTrade, and(eq(lists.listType, "want"), eq(lists.discoverable, true))),
+      ),
+    )
     .orderBy(lists.id);
-  return rows.flatMap((row) =>
-    row.type === "have" || row.type === "sale" ? [{ ...row, type: row.type }] : [],
-  );
+  return {
+    lists: rows.flatMap((row) =>
+      row.type === "have" || row.type === "sale"
+        ? [{ slug: row.slug, name: row.name, type: row.type, want: row.want }]
+        : [],
+    ),
+    wantLists: rows.flatMap((row) =>
+      row.type === "want" && row.filled ? [{ slug: row.slug, name: row.name }] : [],
+    ),
+  };
 }
 
 /**

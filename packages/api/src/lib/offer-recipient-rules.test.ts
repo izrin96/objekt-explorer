@@ -6,8 +6,9 @@ import {
   closedCollectionAsks,
   notWanted,
   onePostVerdict,
+  oneListOf,
   rowPost,
-  storedPostOf,
+  givesRuleOf,
   unwantedGives,
 } from "./offer-recipient-rules";
 
@@ -258,20 +259,84 @@ describe("askCandidates", () => {
   });
 });
 
-describe("storedPostOf", () => {
-  test("an offer with an ask that is not kept keeps its post", () => {
-    expect(storedPostOf(7, [{ kept: true }, { kept: false }])).toBe(7);
+describe("givesRuleOf", () => {
+  const base = { newAsk: false, counter: false, onPost: null, wantList: null };
+
+  test("new ask on a post", () => {
+    expect(givesRuleOf({ ...base, newAsk: true, onPost: 7 })).toEqual({
+      check: { post: 7 },
+      stored: 7,
+    });
   });
 
-  test("a gives-only offer from a Buy post start checks every want list", () => {
-    expect(storedPostOf(7, [])).toBeNull();
+  test("new ask, no post", () => {
+    expect(givesRuleOf({ ...base, newAsk: true })).toEqual({ check: "every", stored: null });
   });
 
-  test("a counter whose asks are all kept checks every want list", () => {
-    expect(storedPostOf(7, [{ kept: true }, { kept: true }])).toBeNull();
+  test("a new ask ignores the start", () => {
+    expect(givesRuleOf({ ...base, newAsk: true, onPost: 7, wantList: 9 })).toEqual({
+      check: { post: 7 },
+      stored: 7,
+    });
   });
 
-  test("no post stays none", () => {
-    expect(storedPostOf(null, [{ kept: false }])).toBeNull();
+  test("a counter asking nothing new ignores post and start", () => {
+    expect(givesRuleOf({ ...base, counter: true, onPost: 7, wantList: 9 })).toEqual({
+      check: "every",
+      stored: null,
+    });
+  });
+
+  test("a start with no post", () => {
+    expect(givesRuleOf({ ...base, wantList: 9 })).toEqual({ check: { want: 9 }, stored: null });
+  });
+
+  test("a start with a post stores the post", () => {
+    expect(givesRuleOf({ ...base, wantList: 9, onPost: 7 })).toEqual({
+      check: { want: 9 },
+      stored: 7,
+    });
+  });
+
+  test("gives-only on a post", () => {
+    expect(givesRuleOf({ ...base, onPost: 7 })).toEqual({ check: { post: 7 }, stored: 7 });
+  });
+
+  test("gives-only, no post", () => {
+    expect(givesRuleOf(base)).toEqual({ check: "every", stored: null });
+  });
+});
+
+describe("oneListOf", () => {
+  const candidates = [
+    { id: 1, slug: "doubles" },
+    { id: 2, slug: "hunting" },
+    { id: 3, slug: "wishlist" },
+  ];
+  const on = (...partnerListIds: number[]) => ({ partnerListIds });
+
+  test("the list with the most matches wins", () => {
+    expect(oneListOf([on(1), on(2), on(2, 3)], candidates, undefined)).toBe(2);
+  });
+
+  test("a tie goes to the lead list", () => {
+    expect(oneListOf([on(1), on(3)], candidates, "wishlist")).toBe(3);
+  });
+
+  test("a tie without a lead goes to list order", () => {
+    expect(oneListOf([on(2), on(3)], candidates, undefined)).toBe(2);
+  });
+
+  test("a match counts once per list, however often the list repeats", () => {
+    expect(oneListOf([on(1, 1, 1), on(2), on(2)], candidates, undefined)).toBe(2);
+  });
+
+  test("ids outside the candidates are ignored", () => {
+    expect(oneListOf([on(9), on(9), on(3)], candidates, undefined)).toBe(3);
+  });
+
+  test("no candidate holding a match gives null", () => {
+    expect(oneListOf([on(9)], candidates, undefined)).toBeNull();
+    expect(oneListOf([on(1)], [], undefined)).toBeNull();
   });
 });

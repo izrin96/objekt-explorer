@@ -56,6 +56,8 @@ export type CandidatesPage = {
   partnerLists?: boolean;
   /** theirs, whole list only: the List choice's lists */
   lists?: PartnerList[];
+  /** theirs, whole list only: the partner's want lists on Trade with entries, which a start may name */
+  wantLists?: { slug: string; name: string }[];
   /** the partner's offer rules as they apply now, for the builder to follow */
   partnerRules?: PartnerRules;
   wanted: string[];
@@ -65,7 +67,7 @@ export type CandidatesPage = {
 };
 
 export type PartnerRules = {
-  /** Only offers with what I want: gives come from the post's want list, a post without one takes anything */
+  /** Only offers with what I want: gives come from one want list (`web-trade-offers`); a post without one takes no objekts */
   wantedOnly: boolean;
   /** a want list on Trade with entries, which an offer on no post gives from under `wantedOnly` */
   wantsOnTrade: boolean;
@@ -164,7 +166,7 @@ export async function wantedAmong(userId: string, slugs: string[]) {
 
 /**
  * Of `slugs`, those on the want list paired with the post `postListId`, or null when that post
- * has no want list on Trade (or an empty one), which takes anything.
+ * has no want list on Trade (or an empty one), which callers read as "no objekts".
  */
 export async function postWantedAmong(postListId: number, slugs: string[]) {
   const [post] = await db
@@ -174,6 +176,14 @@ export async function postWantedAmong(postListId: number, slugs: string[]) {
   if (post?.want == null) return null;
   return wantedOn(
     and(eq(lists.id, post.want), eq(lists.listType, "want"), eq(lists.discoverable, true)),
+    slugs,
+  );
+}
+
+/** Of `slugs`, those on the want list `wantListId`, or null when it holds no entry. */
+export function wantListWantedAmong(wantListId: number, slugs: string[]) {
+  return wantedOn(
+    and(eq(lists.id, wantListId), eq(lists.listType, "want"), eq(lists.discoverable, true)),
     slugs,
   );
 }

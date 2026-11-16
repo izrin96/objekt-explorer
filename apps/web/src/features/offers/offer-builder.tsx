@@ -133,6 +133,7 @@ function MatchesBuilder({
                   matched: data.matched,
                   postName: data.postName,
                   postSlug: data.postSlug,
+                  wantSlug: data.wantSlug ?? null,
                   near: left,
                   nearKeys: {
                     give: give.added.map((pick) => pick.key),

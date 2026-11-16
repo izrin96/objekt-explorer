@@ -477,7 +477,9 @@ export const offer = pgTable(
       .default(sql`now() + interval '7 days'`),
     respondedAt: timestamp("responded_at", { mode: "string", withTimezone: true }),
     /**
-     * the recipient's have or sale post every ask came from; null for an offer that asks nothing.
+     * the recipient's have or sale post the offer is on: the sender's choice, else the one every
+     * ask came from; null for a partner with no posts, a counter asking only for kept objekts, a
+     * gives-only offer started from a want list (a Buy post), or a client that named no post.
      * It is the offer's history, which every reader uses (`packages/api/docs/offers.md`)
      */
     postListId: integer("post_list_id").references(() => lists.id, { onDelete: "set null" }),

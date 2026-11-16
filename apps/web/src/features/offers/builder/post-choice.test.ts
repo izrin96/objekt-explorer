@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { chosenPostOf, giveRule, givesPostOf, openPostOf, postProblem } from "./post-choice";
+import {
+  chosenPostOf,
+  giveRule,
+  offerOnOf,
+  openPostOf,
+  postProblem,
+  startWantOf,
+} from "./post-choice";
 
 const posts = [{ slug: "doubles" }, { slug: "spares" }];
 
@@ -28,6 +35,14 @@ describe("openPostOf", () => {
 
   test("else their first post", () => {
     expect(openPostOf(posts, {})).toBe("doubles");
+  });
+
+  test("a want list opens the post it pairs with", () => {
+    const paired = [
+      { slug: "doubles", want: "hunting" },
+      { slug: "spares", want: "wishlist" },
+    ];
+    expect(openPostOf(paired, { addedPost: "wishlist" })).toBe("spares");
   });
 
   test("a partner with no posts", () => {
@@ -72,45 +87,132 @@ describe("postProblem", () => {
   });
 });
 
-describe("giveRule", () => {
-  const on = { wantedOnly: true, wantsOnTrade: true };
+describe("startWantOf", () => {
+  const wantLists = [{ slug: "lookingfor" }, { slug: "hunting" }];
+  const paired = [{ want: "hunting" }];
 
-  test("off filters nothing", () => {
-    expect(giveRule({ ...on, wantedOnly: false }, { want: "hunting" })).toBeNull();
-    expect(giveRule(undefined, null)).toBeNull();
+  test("a Buy post's want list from matches", () => {
+    expect(startWantOf(paired, wantLists, { matchesPost: "lookingfor" })).toBe("lookingfor");
   });
 
-  test("a post with a want list holds gives to it", () => {
-    expect(giveRule(on, { want: "hunting" })).toEqual({ want: "hunting" });
+  test("the request's target alone", () => {
+    expect(startWantOf(paired, wantLists, { target: "lookingfor" })).toBe("lookingfor");
   });
 
-  test("a post without a want list takes anything", () => {
-    expect(giveRule(on, { want: null })).toBeNull();
+  test("a want list paired with a post is no start", () => {
+    expect(startWantOf(paired, wantLists, { matchesPost: "hunting" })).toBeUndefined();
   });
 
-  test("no post holds gives to every want list on Trade", () => {
-    expect(giveRule(on, null)).toBe("all");
+  test("a slug that is no want list on Trade", () => {
+    expect(startWantOf(paired, wantLists, { target: "doubles" })).toBeUndefined();
   });
 
-  test("no post and no want list on Trade takes anything", () => {
-    expect(giveRule({ ...on, wantsOnTrade: false }, null)).toBeNull();
+  test("an added want beats the target", () => {
+    const more = [...wantLists, { slug: "other" }];
+    expect(startWantOf(paired, more, { addedWant: "other", target: "lookingfor" })).toBe("other");
+  });
+
+  test("a paired added want is no start, whatever the target", () => {
+    expect(
+      startWantOf(paired, wantLists, { addedWant: "hunting", target: "lookingfor" }),
+    ).toBeUndefined();
   });
 });
 
-describe("givesPostOf", () => {
-  test("no pick is no post", () => {
-    expect(givesPostOf("doubles", [])).toBeNull();
+describe("offerOnOf", () => {
+  const posts = [
+    { slug: "doubles", want: "hunting" },
+    { slug: "extras", want: null },
+  ];
+  const base = { postSlug: "doubles", posts, startWant: undefined, newAsk: false, counter: false };
+
+  test("1: a new ask with no posts", () => {
+    expect(offerOnOf({ ...base, posts: [], postSlug: null, newAsk: true })).toEqual({
+      gives: "every",
+      input: {},
+    });
   });
 
-  test("only kept picks is no post", () => {
-    expect(givesPostOf("doubles", [{ kept: true }, { kept: true }])).toBeNull();
+  test("2: a new ask on a post with a want list", () => {
+    expect(offerOnOf({ ...base, newAsk: true })).toEqual({
+      gives: { want: "hunting", start: false },
+      input: { post: "doubles" },
+    });
   });
 
-  test("one pick that is not kept gives the post", () => {
-    expect(givesPostOf("doubles", [{}])).toBe("doubles");
+  test("3: a new ask on a post without one", () => {
+    expect(offerOnOf({ ...base, postSlug: "extras", newAsk: true })).toEqual({
+      gives: "none",
+      input: { post: "extras" },
+    });
   });
 
-  test("a mix gives the post", () => {
-    expect(givesPostOf("doubles", [{ kept: true }, {}])).toBe("doubles");
+  test("a start is ignored once You get asks", () => {
+    expect(offerOnOf({ ...base, newAsk: true, startWant: "lookingfor" }).gives).toEqual({
+      want: "hunting",
+      start: false,
+    });
+  });
+
+  test("4: a counter asking nothing new ignores a start", () => {
+    expect(offerOnOf({ ...base, counter: true, startWant: "lookingfor" })).toEqual({
+      gives: "every",
+      input: {},
+    });
+  });
+
+  test("5: a start", () => {
+    expect(offerOnOf({ ...base, startWant: "lookingfor" })).toEqual({
+      gives: { want: "lookingfor", start: true },
+      input: { wantList: "lookingfor" },
+    });
+  });
+
+  test("6: no ask on a post with a want list", () => {
+    expect(offerOnOf(base)).toEqual({
+      gives: { want: "hunting", start: false },
+      input: { post: "doubles" },
+    });
+  });
+
+  test("7: no ask on a post without one", () => {
+    expect(offerOnOf({ ...base, postSlug: "extras" })).toEqual({
+      gives: "none",
+      input: { post: "extras" },
+    });
+  });
+
+  test("8: no ask and no posts", () => {
+    expect(offerOnOf({ ...base, posts: [], postSlug: null })).toEqual({
+      gives: "every",
+      input: {},
+    });
+  });
+});
+
+describe("giveRule", () => {
+  const on = { wantedOnly: true, wantsOnTrade: true };
+  const one = { want: "hunting", start: false };
+
+  test("off filters nothing", () => {
+    expect(giveRule({ ...on, wantedOnly: false }, one)).toBeNull();
+    expect(giveRule(undefined, "every")).toBeNull();
+    expect(giveRule({ ...on, wantedOnly: false }, "none")).toBeNull();
+  });
+
+  test("one want list holds gives to it", () => {
+    expect(giveRule(on, one)).toEqual({ want: "hunting" });
+  });
+
+  test("a post without a want list takes no objekts", () => {
+    expect(giveRule(on, "none")).toBe("none");
+  });
+
+  test("every want list on Trade", () => {
+    expect(giveRule(on, "every")).toBe("all");
+  });
+
+  test("every want list with none on Trade filters nothing", () => {
+    expect(giveRule({ ...on, wantsOnTrade: false }, "every")).toBeNull();
   });
 });

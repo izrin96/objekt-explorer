@@ -6,8 +6,8 @@ import { firstListed } from "../../lib/chat-rules";
 import {
   askCandidates,
   closedCollectionAsks,
+  givesRuleOf,
   onePostVerdict,
-  storedPostOf,
   unwantedGives,
 } from "../../lib/offer-recipient-rules";
 import {
@@ -53,10 +53,17 @@ import {
   offerRulesOf,
   partnerHasLists,
   resolvePostList,
+  resolveWantList,
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
 import { partyNames, writeNotes } from "./notes";
-import { counteredAsks, counteredGives, postWantedAmong, wantedAmong } from "./picker/shared";
+import {
+  counteredAsks,
+  counteredGives,
+  postWantedAmong,
+  wantedAmong,
+  wantListWantedAmong,
+} from "./picker/shared";
 import {
   type OfferRow,
   findOffer,
@@ -129,7 +136,7 @@ export async function createOffer(
   const firstRead =
     startCtx === null && addressed.empty ? prepareFirst(me, meCreatedAt, partnerId) : null;
   // none of these reads refuses, so the refusals below keep their order
-  const [firstCtx, safety, addresses, entries, kept, hasLists, rules, postListId] =
+  const [firstCtx, safety, addresses, entries, kept, hasLists, rules, postListId, wantListId] =
     await Promise.all([
       startCtx ?? firstRead,
       startCtx?.safety ?? firstRead?.then((ctx) => ctx.safety) ?? chatSafety(me, partnerId),
@@ -142,6 +149,7 @@ export async function createOffer(
       partnerHasLists(partnerId),
       offerRulesOf(partnerId),
       resolvePostList(partnerId, input.post),
+      resolveWantList(partnerId, input.wantList),
     ]);
   const myAddresses = addresses.get(me)!;
   if (myAddresses.size === 0) refuseOffer("no_address");
@@ -220,18 +228,21 @@ export async function createOffer(
     }
     onPost ??= chosen;
   }
-  // an offer that asks for nothing new is on no post, so its gives are read against every want list
-  const storedPostListId = storedPostOf(
+  const { check, stored } = givesRuleOf({
+    newAsk: getRows.some((row) => !keptObjekt(row.item)),
+    counter: input.counters !== undefined,
     onPost,
-    getRows.map((row) => ({ kept: keptObjekt(row.item) })),
-  );
+    wantList: wantListId,
+  });
   if (rules.onlyWantedOffers) {
     const slugs = input.give.map((item) => item.collectionSlug);
-    // on a post, its own want list; a post without one takes anything; no post, every want list
+    // one want list, or every one (web-trade-offers); a post without one takes no objekts
     const [wanted, asked] = await Promise.all([
-      storedPostListId !== null
-        ? postWantedAmong(storedPostListId, slugs)
-        : wantedAmong(partnerId, slugs),
+      check === "every"
+        ? wantedAmong(partnerId, slugs)
+        : "post" in check
+          ? postWantedAmong(check.post, slugs).then((w) => w ?? new Set<string>())
+          : wantListWantedAmong(check.want, slugs).then((w) => w ?? new Set<string>()),
       counteredAsks(addressed.conversationId, me),
     ]);
     const unwanted = unwantedGives(input.give, wanted, asked);
@@ -412,12 +423,12 @@ export async function createOffer(
           topupPayer: shape.topup?.payer ?? null,
           note,
           caution: caution.length ? caution : null,
-          postListId: storedPostListId,
+          postListId: stored,
           // resolved in the statement, so it costs no round trip and reads the rows as late as possible
           postId:
-            storedPostListId === null
+            stored === null
               ? null
-              : sql`(SELECT min(${tradePost.id}) FROM ${tradePost} WHERE ${tradePost.leadListId} = ${storedPostListId})`,
+              : sql`(SELECT min(${tradePost.id}) FROM ${tradePost} WHERE ${tradePost.leadListId} = ${stored})`,
         })
         .returning({ id: offer.id });
       const offerId = inserted!.id;

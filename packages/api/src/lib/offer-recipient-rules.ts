@@ -112,12 +112,25 @@ export function notWanted(i: {
   return i.viewerIsRecipient && i.side === "give" && !i.wanted && !i.asked;
 }
 
-/**
- * The post an offer is stored on, which is also the post its gives are checked against: the
- * post its asks came through, or none when every ask is a kept objekt or there is none.
- */
-export function storedPostOf(post: number | null, asks: readonly { kept: boolean }[]) {
-  return asks.some((ask) => !ask.kept) ? post : null;
+export type GivesCheck = { post: number } | { want: number } | "every";
+
+/** Which want list gives are held to, and the post stored: `web-trade-offers` Recipients who take only what they want. */
+export function givesRuleOf(i: {
+  /** an ask that is not a kept objekt */
+  newAsk: boolean;
+  /** input.counters !== undefined */
+  counter: boolean;
+  /** resolved `post`, else the list the asks fit */
+  onPost: number | null;
+  /** resolved `wantList` */
+  wantList: number | null;
+}): { check: GivesCheck; stored: number | null } {
+  if (i.newAsk)
+    return { check: i.onPost === null ? "every" : { post: i.onPost }, stored: i.onPost };
+  if (i.counter) return { check: "every", stored: null };
+  if (i.wantList !== null) return { check: { want: i.wantList }, stored: i.onPost };
+  if (i.onPost !== null) return { check: { post: i.onPost }, stored: i.onPost };
+  return { check: "every", stored: null };
 }
 
 /**
@@ -139,4 +152,25 @@ export function rowPost(
     }
   }
   return best;
+}
+
+/**
+ * The one of `candidates` a row's matches come from: each match counts once per list it sits on,
+ * the most matches win, a tie goes to the candidate whose slug is `lead`, then to list order.
+ */
+export function oneListOf(
+  matches: readonly { partnerListIds: readonly number[] }[],
+  candidates: readonly { id: number; slug: string }[],
+  lead: string | undefined,
+): number | null {
+  const counts = new Map<number, number>();
+  for (const match of matches) {
+    for (const id of new Set(match.partnerListIds)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  const leadId = candidates.find((candidate) => candidate.slug === lead)?.id ?? null;
+  return rowPost(
+    counts,
+    candidates.map((candidate) => candidate.id),
+    leadId,
+  );
 }
