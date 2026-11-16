@@ -7,11 +7,11 @@ export const CHANGELOG = [
   {
     date: "2026-11-14 - 2026-11-16",
     items: [
-      "An offer now asks from one post. Choose it under Offer on in Make offer. To ask from another post, send another offer once this one closes.",
+      "An offer now asks from one post. Choose it under 'Offer on' in Make offer. To ask from another post, send another offer once this one closes.",
       "Removed the Let people ask from more than one post setting.",
-      "If someone has Only offers with what I want on, you can give them only objekts on the want list of the post you make the offer on.",
+      "If someone has 'Only offers with what I want' on, you can give them only objekts on the want list of the post you make the offer on.",
       "If their post has no want list, you can offer them only a top-up, no objekts.",
-      "Make offer with matches fills You give from one want list.",
+      "Make offer with matches fills 'You give' from one want list.",
     ],
   },
   {
