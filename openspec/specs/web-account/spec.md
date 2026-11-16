@@ -70,10 +70,11 @@ the account is shown without a reload. A failed save SHALL put the switch back a
 saved.
 
 Only offers with what I want SHALL be off by default. Its description SHALL open with what it does
-(people can give the user only what they want), then say that an offer on a post with its own want list
-can give only objekts on that list and one on a post without one anything, that an offer not on a post
-can give only objekts on the user's want lists on Trade, and that cash-only offers and objekts the user
-asked for still come through.
+(people can give the user only what they want), then say that an offer on one of the user's posts can
+give only objekts on that post's want list, and no objekts on a post without one; that an offer started
+from the user's Buy post can give only objekts on its want list; that any other offer can give only
+objekts on the user's want lists on Trade; and that cash-only offers and objekts the user asked for in a
+counter still come through.
 
 There SHALL be no switch for asking across posts: every offer to the user asks from one of their posts (see `web-trade-offers` One post per offer). A save that still sends the removed setting "Let people ask from more than one post", as from a tab opened before it was removed, SHALL be accepted and SHALL store nothing.
 
@@ -89,7 +90,15 @@ Once saved, each offer rule SHALL apply to the next offer sent; offers already o
 
 #### Scenario: Wanted offers on
 - **WHEN** the user turns Only offers with what I want on
-- **THEN** it is saved with no Save button, and the next offer someone sends asking from a post paired with a want list, giving an objekt not on that list, is refused
+- **THEN** it is saved with no Save button, and the next offer someone sends on a post paired with a want list, giving an objekt not on that list, is refused
+
+#### Scenario: Post without a want list
+- **WHEN** the user has Only offers with what I want on and the have list "extras" posted alone, and someone's offer on "extras" gives an objekt
+- **THEN** the offer is refused; the same offer with only a top-up is sent
+
+#### Scenario: Description
+- **WHEN** the user opens `/account/trade`
+- **THEN** Only offers with what I want's description says what a post with a want list, a post without one, a Buy post and any other offer can be given, and that cash-only offers and objekts asked for in a counter still come through
 
 #### Scenario: One post per offer
 - **WHEN** a tab opened before the switch was removed still shows Let people ask from more than one post, and the user turns it off
