@@ -114,6 +114,16 @@ function relead(rows: readonly PostRow[], ops: PostRowOps): PostRowOps {
   return { deletes: ops.deletes.filter((id) => doomed.has(id)), updates, inserts };
 }
 
+/** The row of the post a list is in: the lowest row it leads, else the lowest row it is the want list of. */
+export function postRowOf(rows: readonly PostRow[], listId: number): PostId | null {
+  const lowest = (match: (row: PostRow) => boolean) =>
+    rows.reduce<PostId | null>(
+      (best, row) => (match(row) && (best === null || row.id < best) ? row.id : best),
+      null,
+    );
+  return lowest((row) => row.leadListId === listId) ?? lowest((row) => row.wantListId === listId);
+}
+
 export type PairChange = {
   /** a have or sale list and a want list, in either order */
   pair?: readonly [number, number] | null;

@@ -4,6 +4,7 @@ import { listEntries, listRule, lists } from "@repo/db/schema";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { type FeedEntry, tradeableEntries, untradeableKey } from "../../../lib/trade-feed";
+import { postRowSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import type { ListType } from "../../../schemas/list";
 import { redis, redisFailOpen } from "../../redis";
@@ -23,6 +24,7 @@ export const feedListColumns = {
   listType: lists.listType,
   // the other half of the list's pair, from its `trade_post` row
   linkedListId: postPartnerSql("lists"),
+  postId: postRowSql("lists"),
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,
   takesSwaps: lists.takesSwaps,
@@ -42,6 +44,7 @@ export type FeedList = {
   description: string | null;
   listType: ListType;
   linkedListId: number | null;
+  postId: number | null;
   matchSale: boolean;
   matchHave: boolean;
   takesSwaps: boolean;

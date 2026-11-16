@@ -42,6 +42,7 @@ export async function fetchMyPosts(userId: string) {
     .toSorted(comparePosts)
     .map((post) => ({
       id: post.anchor.id,
+      postId: post.anchor.postId,
       slug: post.anchor.slug,
       tags: post.tags,
       kind: postKindOf(post).kind,

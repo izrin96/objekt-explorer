@@ -36,3 +36,9 @@ export const byOpenToSql = (alias: string, byOpenTo: Record<OpenTo, SQL>) => sql
   WHEN ${column(alias, "match_sale")} THEN ${byOpenTo.both}
   ELSE ${byOpenTo.swaps}
 END`;
+
+/** The SQL twin of `postRowOf` (lib/trade-post-rows.ts), which changes with it; `trade-sql.test.ts` pins the text. */
+export const postRowSql = (alias: string) =>
+  sql<
+    number | null
+  >`coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = ${column(alias, "id")}), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = ${column(alias, "id")}))`;

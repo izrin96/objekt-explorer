@@ -200,6 +200,10 @@ const postTagSchema = z.enum(["wtt", "wtb", "wts"]);
 
 const feedPostSchema = z.object({
   id: z.number().int(),
+  postId: z.number().int().nullable().meta({
+    description:
+      "The post's own id. It stays through most edits, but changing or removing the post's have or sale list gives the post a new id. `id` is its anchor list's id. Null when no stored post holds its lists.",
+  }),
   tags: z.array(postTagSchema),
   narrowed: z.boolean(),
   /** the signed-in viewer hid this post; only the person and post pages return one */

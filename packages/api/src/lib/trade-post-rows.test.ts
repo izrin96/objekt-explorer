@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { pairPosts, type TradeList } from "./trade-feed";
 import {
   type PostId,
   type PostRow,
@@ -10,6 +11,7 @@ import {
   partnersOf,
   planPostRows,
   planPostWrite,
+  postRowOf,
 } from "./trade-post-rows";
 
 const row = (id: number, leadListId: number, wantListId: number | null = null): PostRow => ({
@@ -377,5 +379,79 @@ describe("planPostWrite", () => {
       ops: { ...NONE, inserts: [{ leadListId: 5, wantListId: null }] },
       relinked: [],
     });
+  });
+});
+
+describe("postRowOf", () => {
+  const rows = [
+    row(1000001, 1, 2),
+    row(1000002, 3),
+    row(1000003, 4, 5),
+    row(1000004, 6),
+    row(1000005, 6),
+  ];
+
+  test("a lead and its want list share the row", () => {
+    expect(postRowOf(rows, 1)).toBe(1000001 as PostId);
+    expect(postRowOf(rows, 2)).toBe(1000001 as PostId);
+  });
+
+  test("a lead alone has its row", () => {
+    expect(postRowOf(rows, 3)).toBe(1000002 as PostId);
+  });
+
+  test("a want list in a row led by another list has that row", () => {
+    expect(postRowOf(rows, 5)).toBe(1000003 as PostId);
+  });
+
+  test("a list leading two rows has the lowest", () => {
+    expect(postRowOf(rows, 6)).toBe(1000004 as PostId);
+  });
+
+  test("a list in no row has none", () => {
+    expect(postRowOf(rows, 7)).toBeNull();
+  });
+});
+
+describe("posts shown on Trade", () => {
+  const onTrade = (
+    id: number,
+    listType: TradeList["listType"],
+    linkedListId: number | null,
+    takesSwaps = false,
+  ): TradeList => ({
+    id,
+    userId: "u",
+    listType,
+    linkedListId,
+    takesSwaps,
+    matchHave: true,
+    matchSale: false,
+    bumpedAt: null,
+    updatedAt: "2026-01-01T00:00:00Z",
+  });
+
+  test("no two share a row", () => {
+    const rows = [
+      row(1000001, 1, 2),
+      row(1000002, 3),
+      row(1000003, 4, 5),
+      row(1000004, 6, 7),
+      row(1000005, 8),
+    ];
+    // list 4 is off Trade, so want 5 is shown alone
+    const shown = [
+      onTrade(1, "have", 2),
+      onTrade(2, "want", 1),
+      onTrade(3, "want", null),
+      onTrade(5, "want", 4),
+      onTrade(6, "sale", 7, true),
+      onTrade(7, "want", 6),
+      onTrade(8, "sale", null),
+    ];
+    const ids = pairPosts(shown).map((post) => postRowOf(rows, post.anchor.id));
+    expect(ids.toSorted((a, b) => (a ?? 0) - (b ?? 0))).toEqual([
+      1000001, 1000002, 1000003, 1000004, 1000005,
+    ] as PostId[]);
   });
 });

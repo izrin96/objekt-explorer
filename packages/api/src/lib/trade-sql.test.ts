@@ -5,7 +5,7 @@ import { PgDialect } from "drizzle-orm/pg-core";
 
 import { offersSwaps, openToOf } from "../schemas/open-to";
 import { tagsOf } from "../schemas/trade-post";
-import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "./trade-sql";
+import { TAG_WHERE, byOpenToSql, offersSwapsSql, postRowSql } from "./trade-sql";
 
 const render = (q: SQL) => new PgDialect().sqlToQuery(q);
 // Whitespace is formatting, not meaning: collapse it so the pinned text stays on one line.
@@ -109,5 +109,13 @@ describe("tagsOf and TAG_WHERE", () => {
       "( (posts.type = 'want' AND (posts.match_sale OR NOT posts.match_have)) OR (posts.type IN ('have', 'sale') AND posts.partner_id IS NOT NULL AND (coalesce(posts.partner_match_sale, false) OR NOT coalesce(posts.partner_match_have, true))) )",
     );
     expect(flat(TAG_WHERE.wts)).toBe("posts.type = 'sale'");
+  });
+});
+
+describe("postRowOf and postRowSql", () => {
+  test("the lowest row a list leads, else the lowest it is the want list of", () => {
+    expect(flat(postRowSql("l"))).toBe(
+      "coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = l.id), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = l.id))",
+    );
   });
 });
