@@ -2,7 +2,7 @@
 
 oRPC routers (`src/routers/`), Zod inputs (`src/schemas/`), and the services they call (`src/services/`). Pure logic lives in `src/lib/` beside its `*.test.ts`.
 
-A procedure checks its input and the caller, then calls a service; database and Redis reads and writes live in the service. No router imports `@repo/db`. Services sit in their domain's folder (`services/objekt/`, `services/offer/`, `services/list/` and so on), and a new service joins the folder of its domain.
+A procedure checks its input and the caller, then calls a service; database and Redis reads and writes live in the service. Services sit in their domain's folder (`services/objekt/`, `services/offer/`, `services/list/` and so on), and a new service joins the folder of its domain.
 
 The worker imports some `services/` modules (`grep -r '@repo/api/services' apps/worker/src` lists them), and its container cannot load `env.ts` or `services/redis`. Keep those modules' import chains clear of both; `apps/worker/src/import-boundary.test.ts` fails when one is not.
 

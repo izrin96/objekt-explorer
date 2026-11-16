@@ -1,7 +1,11 @@
+import { fileURLToPath } from "node:url";
+
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
   plugins: ["react", "import"],
+  // absolute, since a config that extends this one would resolve a relative path against itself
+  jsPlugins: [fileURLToPath(new URL("./plugin.ts", import.meta.url))],
   options: {
     typeAware: true,
   },
@@ -28,5 +32,8 @@ export default defineConfig({
     // type-only cycles are erased at build time and cost nothing at runtime
     "import/no-cycle": ["error", { ignoreTypes: true }],
     "oxc/no-map-spread": "warn",
+    "repo/zod-namespace-import": "error",
+    "repo/no-enum-or-class": "error",
+    "repo/user-address-link-write": "error",
   },
 });

@@ -127,13 +127,12 @@ Enforced by oxlint (`packages/lint/oxlint.config.ts`) and oxfmt (`oxfmt.config.t
 
 Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The React Compiler runs in `apps/web`, so `react/set-state-in-effect` and `react/refs` are errors; `react/incompatible-library` stays a warning, since the compiler only skips a component that uses such a library.
 
+Conventions no built-in rule can check are local rules in `packages/lint/plugin.ts` (`repo/*`), each tested in `plugin.test.ts` through the real CLI. When a fix corrects a mistake an agent can repeat, add a rule there rather than a line to an `AGENTS.md`.
+
 - Path alias: `@/*` → `src/`
 - In `packages/lib` and `packages/cosmo`, code that needs the server (the database, Redis, secrets, `process.env`) goes in `src/server/` (`@repo/lib/server/*`, `@repo/cosmo/server/*`); the rest is shared with the browser. The web build refuses a client import of `src/server/`, `packages/db` or `packages/api/src` outside `schemas/` and `constants.ts` (`importProtection` in `apps/web/vite.config.ts`)
-- `import * as z from "zod"` — never `import { z }` (convention only; oxlint's `no-restricted-imports` cannot tell the two apart)
 - Prefer TS type inference from Zod schemas over manual type declarations
-- Await all promises or explicitly void them
 - A comment states a non-obvious why: a workaround, an invariant, a trap. Vendored files (`apps/web/src/components/ui/*`) keep their comments as they are
-- Avoid `class` and `enum` — use functions/objects and `as const`/unions
 - In Tailwind, prefer theme-based spacing (e.g. `p-2`) over arbitrary values (`p-[8px]`)
 - oxfmt handles all formatting — do not add Prettier or Biome
 

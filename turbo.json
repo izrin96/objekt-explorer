@@ -2,7 +2,11 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "agentGuidance": false,
-  "globalDependencies": ["packages/lint/oxlint.config.ts", "oxfmt.config.ts"],
+  "globalDependencies": [
+    "packages/lint/oxlint.config.ts",
+    "packages/lint/plugin.ts",
+    "oxfmt.config.ts"
+  ],
   "tasks": {
     "dev": {
       "cache": false,

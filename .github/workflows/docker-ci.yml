@@ -87,6 +87,12 @@ jobs:
           # the same Bun the Dockerfiles run
           bun-version-file: package.json
 
+      # oxlint runs on Node, and its JS plugins (packages/lint/plugin.ts) need Node 22.18+ to load
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
       - name: Cache Bun packages
         uses: actions/cache@v6
         with:
