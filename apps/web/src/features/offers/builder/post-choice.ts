@@ -1,10 +1,23 @@
 import type { OfferPick } from "@/features/offers/pick";
 
-type Post = { slug: string; want?: string | null };
+type Post = { slug: string; want?: string | null; buy?: boolean };
 
 /**
- * Where Offer on opens: the first of these that is one of the partner's posts, else their first;
- * a want list names the post it pairs with.
+ * The partner's Buy posts as Offer on choices: the want lists that lead their own post, in order.
+ */
+export function buyPostsOf(wantLists: readonly { slug: string; name: string; buy: boolean }[]) {
+  return wantLists.flatMap((list) =>
+    list.buy
+      ? [{ slug: list.slug, name: list.name, type: "want" as const, want: null, buy: true }]
+      : [],
+  );
+}
+
+/**
+ * Where Offer on opens: the first of these that is one of the partner's posts, else their first
+ * that is not a Buy post; a want list names the post it pairs with. A Buy post is found only from
+ * the start, the matches' post and the added matches' post: a row's lead post and the first get
+ * pick's list never open on one.
  */
 export function openPostOf(
   posts: readonly Post[],
@@ -17,17 +30,21 @@ export function openPostOf(
     get?: readonly Pick<OfferPick, "listSlug">[];
   },
 ): string | undefined {
-  const asPost = (slug: string | null | undefined) =>
+  const asPost = (slug: string | null | undefined, buy: boolean) =>
     slug == null
       ? undefined
-      : posts.find((post) => post.slug === slug || (post.want != null && post.want === slug))?.slug;
+      : posts.find(
+          (post) =>
+            (buy || post.buy !== true) &&
+            (post.slug === slug || (post.want != null && post.want === slug)),
+        )?.slug;
   return (
-    asPost(from.startList) ??
-    asPost(from.matchesPost) ??
-    asPost(from.addedPost) ??
-    asPost(from.lead) ??
-    asPost(from.get?.find((pick) => pick.listSlug !== null)?.listSlug) ??
-    posts[0]?.slug
+    asPost(from.startList, true) ??
+    asPost(from.matchesPost, true) ??
+    asPost(from.addedPost, true) ??
+    asPost(from.lead, false) ??
+    asPost(from.get?.find((pick) => pick.listSlug !== null)?.listSlug, false) ??
+    posts.find((post) => post.buy !== true)?.slug
   );
 }
 
@@ -55,49 +72,50 @@ export function postProblem(
 }
 
 /**
- * The want list a start names, when it is one of the partner's want lists on Trade that pairs
- * with no post (a Buy post's own). The matches' post, else the added matches' want list, decides
- * alone when set: a paired one is no start, and the target is read only without either.
+ * The want list a start names, when it is one of the partner's Buy posts. The matches' post, else
+ * the added matches' want list, decides alone when set: a paired one is no start, and the target
+ * is read only without either.
  */
 export function startWantOf(
-  posts: readonly { want?: string | null }[],
-  wantLists: readonly { slug: string }[],
+  wantLists: readonly { slug: string; buy: boolean }[],
   from: { matchesPost?: string; addedWant?: string | null; target?: string },
 ): string | undefined {
   const slug = from.matchesPost ?? from.addedWant ?? from.target;
-  return slug != null &&
-    wantLists.some((list) => list.slug === slug) &&
-    !posts.some((post) => post.want === slug)
+  return slug != null && wantLists.some((list) => list.slug === slug && list.buy)
     ? slug
     : undefined;
 }
 
 /**
  * What You give keeps to and what the request names, by `web-trade-offers` Recipients who take
- * only what they want: a new ask goes to the post's want list, a counter asking nothing new to
- * every one, else a start to its want list, else the post's.
+ * only what they want: a Buy post under Offer on to its want list, whatever You get asks; else a
+ * new ask goes to the post's want list, a counter asking nothing new to every one, else a start
+ * (only with no Offer on choices) to its want list, else the post's.
  */
 export function offerOnOf(i: {
   postSlug: string | null;
-  posts: readonly { slug: string; want: string | null }[];
+  posts: readonly { slug: string; want: string | null; buy?: boolean }[];
   startWant: string | undefined;
   newAsk: boolean;
   counter: boolean;
 }): {
-  gives: { want: string; start: boolean } | "none" | "every";
+  gives: { want: string; buy: boolean } | "none" | "every";
   input: { post?: string; wantList?: string };
 } {
   const post = i.posts.find((p) => p.slug === i.postSlug) ?? null;
+  if (post?.buy === true) {
+    return { gives: { want: post.slug, buy: true }, input: { wantList: post.slug } };
+  }
   const onPost = (): ReturnType<typeof offerOnOf> =>
     post === null
       ? { gives: "every", input: {} }
       : post.want === null
         ? { gives: "none", input: { post: post.slug } }
-        : { gives: { want: post.want, start: false }, input: { post: post.slug } };
+        : { gives: { want: post.want, buy: false }, input: { post: post.slug } };
   if (i.newAsk) return onPost();
   if (i.counter) return { gives: "every", input: {} };
-  if (i.startWant !== undefined) {
-    return { gives: { want: i.startWant, start: true }, input: { wantList: i.startWant } };
+  if (i.startWant !== undefined && i.posts.length === 0) {
+    return { gives: { want: i.startWant, buy: true }, input: { wantList: i.startWant } };
   }
   return onPost();
 }

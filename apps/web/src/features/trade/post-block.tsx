@@ -189,7 +189,7 @@ export function PostBlock({
     openOffer({
       handle: offerHandle,
       to: { list: anchor.list.slug },
-      startList: offering?.list.slug,
+      startList: offering?.list.slug ?? anchor.list.slug,
       matches: matched
         ? { list: compare.list, mutual: compare.mutual || undefined, post: anchor.list.slug }
         : undefined,

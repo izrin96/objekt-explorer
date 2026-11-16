@@ -114,7 +114,10 @@ export function notWanted(i: {
 
 export type GivesCheck = { post: number } | { want: number } | "every";
 
-/** Which want list gives are held to, and the post stored: `web-trade-offers` Recipients who take only what they want. */
+/**
+ * Which want list gives are held to, and the post stored: `web-trade-offers` Recipients who take only
+ * what they want. A gives-only offer naming a Buy post stores that want list, as it has no post.
+ */
 export function givesRuleOf(i: {
   /** an ask that is not a kept objekt */
   newAsk: boolean;
@@ -128,7 +131,7 @@ export function givesRuleOf(i: {
   if (i.newAsk)
     return { check: i.onPost === null ? "every" : { post: i.onPost }, stored: i.onPost };
   if (i.counter) return { check: "every", stored: null };
-  if (i.wantList !== null) return { check: { want: i.wantList }, stored: i.onPost };
+  if (i.wantList !== null) return { check: { want: i.wantList }, stored: i.onPost ?? i.wantList };
   if (i.onPost !== null) return { check: { post: i.onPost }, stored: i.onPost };
   return { check: "every", stored: null };
 }

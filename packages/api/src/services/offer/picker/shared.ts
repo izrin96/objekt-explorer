@@ -56,8 +56,8 @@ export type CandidatesPage = {
   partnerLists?: boolean;
   /** theirs, whole list only: the List choice's lists */
   lists?: PartnerList[];
-  /** theirs, whole list only: the partner's want lists on Trade with entries, which a start may name */
-  wantLists?: { slug: string; name: string }[];
+  /** theirs, whole list only: the partner's want lists on Trade with entries; `buy` is true for a Buy post, a want list that leads its own post */
+  wantLists?: { slug: string; name: string; buy: boolean }[];
   /** the partner's offer rules as they apply now, for the builder to follow */
   partnerRules?: PartnerRules;
   wanted: string[];

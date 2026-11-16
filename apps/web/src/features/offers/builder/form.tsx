@@ -52,6 +52,7 @@ import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
 import {
+  buyPostsOf,
   chosenPostOf,
   giveRule,
   offerOnOf,
@@ -120,7 +121,11 @@ export function BuilderForm({
   const posts = source === "lists" ? theirLists : [];
   // every offer to a partner with lists is on one of them: the sender chooses it under Offer on
   const onePost = rules?.onePost === true;
-  const choices = onePost ? posts : [];
+  const wantLists = theirs.data?.wantLists ?? [];
+  const buyPosts = buyPostsOf(wantLists);
+  // a counter offers no Buy post: it answers the partner's own offer
+  const choices: (((typeof posts)[number] & { buy?: boolean }) | (typeof buyPosts)[number])[] =
+    onePost ? [...posts, ...(request.counter === undefined ? buyPosts : [])] : [];
   const openPost = openPostOf(choices, {
     startList: request.startList,
     matchesPost: request.matches?.post,
@@ -130,9 +135,11 @@ export function BuilderForm({
   });
   // undefined until the sender chooses
   const [chosenPost, setChosenPost] = useState<string | undefined>(undefined);
-  const postSlug = onePost ? chosenPostOf(posts, chosenPost, openPost) : null;
-  const listName = (slug: string | null) => theirLists.find((list) => list.slug === slug)?.name;
+  const postSlug = onePost ? chosenPostOf(choices, chosenPost, openPost) : null;
+  const listName = (slug: string | null) =>
+    [...theirLists, ...buyPosts].find((list) => list.slug === slug)?.name;
   const postName = listName(postSlug) ?? null;
+  const onBuyPost = choices.some((post) => post.buy === true && post.slug === postSlug);
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
@@ -173,21 +180,26 @@ export function BuilderForm({
       ? m.offer_flag_not_on_post({ list: postName ?? postSlug! })
       : null;
   };
-  const wantLists = theirs.data?.wantLists ?? [];
   const newAsk = getShown.some((pick) => !pick.kept);
-  const startWant = startWantOf(posts, wantLists, {
+  const startWant = startWantOf(wantLists, {
     matchesPost: request.matches?.post,
     addedWant: added?.wantSlug,
     target: "target" in to && to.target.kind === "list" ? to.target.slug : undefined,
   });
   const offerOn = offerOnOf({
     postSlug,
-    posts,
+    posts: choices,
     startWant,
     newAsk,
     counter: request.counter !== undefined,
   });
   const gives = giveRule(rules, offerOn.gives);
+  // a partner with no lists has no select: the header still names the Buy post a start asks on
+  const headerName =
+    postName ??
+    (!onePost && offerOn.input.wantList !== undefined
+      ? wantLists.find((list) => list.slug === offerOn.input.wantList)?.name
+      : undefined);
   const reasonOf = (side: OfferSide, pick: OfferPick) =>
     (side === "get" ? postReason(pick) : null) ??
     pickProblem(side, pick, {
@@ -311,16 +323,17 @@ export function BuilderForm({
       if (gives === "none") {
         return m.offer_rule_wanted_none({ name, post: postName ?? postSlug! });
       }
-      const start = typeof offerOn.gives === "object" && offerOn.gives.start;
+      const buy = typeof offerOn.gives === "object" && offerOn.gives.buy;
       return m.offer_rule_wanted_post({
         name,
-        post: start
+        post: buy
           ? (wantLists.find((list) => list.slug === gives.want)?.name ?? gives.want)
           : (postName ?? postSlug!),
       });
     }
+    if (onBuyPost) return m.offer_rule_buy_post({ post: postName ?? postSlug! });
     if (rules?.asksClosed && source === "collection") return m.offer_rule_asks_closed({ name });
-    if (choices.length < 2) return null;
+    if (posts.length < 2) return null;
     return m.offer_rule_one_post();
   };
   const shown = { give: giveShown, get: getShown };
@@ -347,14 +360,17 @@ export function BuilderForm({
                 undoRef={undoRef}
               />
             ) : null}
-            {nearLeft.map((group) => (
-              <NearLine
-                key={`${group.side}:${group.verb}`}
-                group={group}
-                names={names(group.picks)}
-                onAdd={() => addNear(group)}
-              />
-            ))}
+            {/* an offer on a Buy post asks for nothing, so You get's near matches can't be added */}
+            {nearLeft
+              .filter((group) => !(onBuyPost && group.side === "get"))
+              .map((group) => (
+                <NearLine
+                  key={`${group.side}:${group.verb}`}
+                  group={group}
+                  names={names(group.picks)}
+                  onAdd={() => addNear(group)}
+                />
+              ))}
           </div>,
           region,
         )
@@ -378,8 +394,10 @@ export function BuilderForm({
                   onChange={setChosenPost}
                 />
               </div>
-            ) : postName ? (
-              <p className="text-muted-foreground text-sm">{m.offer_on_post({ post: postName })}</p>
+            ) : headerName ? (
+              <p className="text-muted-foreground text-sm">
+                {m.offer_on_post({ post: headerName })}
+              </p>
             ) : null}
             <div className="grid min-w-0 gap-6 md:grid-cols-2">
               {(["give", "get"] as const).map((side) => {
@@ -409,7 +427,7 @@ export function BuilderForm({
                     post={side === "get" && onePost ? postName : null}
                     closed={
                       side === "get"
-                        ? rules?.asksClosed === true && source === "collection"
+                        ? (rules?.asksClosed === true && source === "collection") || onBuyPost
                         : gives === "none"
                     }
                     loading={side === "give" ? loadingAsks : loadingGet}

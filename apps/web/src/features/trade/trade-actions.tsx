@@ -23,6 +23,7 @@ export function TradeActions({
   handle,
   offerClassName,
   matches,
+  startList,
 }: {
   contact: TradeContact;
   name: string;
@@ -30,6 +31,8 @@ export function TradeActions({
   handle: string | null;
   /** Make offer opens with these swap matches added */
   matches?: OfferStart["matches"];
+  /** the post Offer on opens on, when it is not the one the target names */
+  startList?: string;
   /** e.g. `flex-1`, where Make offer fills the row */
   offerClassName?: string;
 }) {
@@ -45,7 +48,7 @@ export function TradeActions({
         <MakeOfferButton
           variant="default"
           className={offerClassName}
-          start={{ handle, to: { list: contact.target.slug }, matches }}
+          start={{ handle, to: { list: contact.target.slug }, startList, matches }}
         />
       ) : (
         <NoProfileOffer name={name} variant="default" className={offerClassName} />

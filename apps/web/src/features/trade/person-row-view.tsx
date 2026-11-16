@@ -136,6 +136,11 @@ export const PersonRow = memo(function PersonRow({
       handle={offerHandle}
       offerClassName="@max-3xl:flex-1"
       matches={offerMatches}
+      startList={
+        focused
+          ? (focused.sides.find((side) => side.role !== "want") ?? anchor)?.list.slug
+          : undefined
+      }
     />
   );
   const copyReason = person.handle ? null : m.trade_post_copy_link_no_profile();

@@ -2023,6 +2023,7 @@
   "offer_rule_wanted_only": "{name} only takes objekts on their want lists.",
   "offer_rule_wanted_none": "{post} has no want list, so {name} takes no objekts on it. You can offer a top-up.",
   "offer_rule_one_post": "An offer asks from one post. To ask from another, send another offer once this one closes.",
+  "offer_rule_buy_post": "{post} is a Buy post, so an offer on it asks for nothing. To ask for objekts, change Offer on.",
   "offer_rule_asks_closed": "{name} has nothing on Trade to ask for. You can still offer objekts or a top-up.",
   "offer_add_from_post": "Add from {post}",
   "offer_post_label": "Offer on",

@@ -287,8 +287,8 @@ describe("givesRuleOf", () => {
     });
   });
 
-  test("a start with no post", () => {
-    expect(givesRuleOf({ ...base, wantList: 9 })).toEqual({ check: { want: 9 }, stored: null });
+  test("a Buy post with no post stores the Buy post", () => {
+    expect(givesRuleOf({ ...base, wantList: 9 })).toEqual({ check: { want: 9 }, stored: 9 });
   });
 
   test("a start with a post stores the post", () => {

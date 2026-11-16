@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { listEntries, lists } from "@repo/db/schema";
+import { listEntries, lists, tradePost } from "@repo/db/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
@@ -200,11 +200,11 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
 
 /**
  * The partner's lists on Trade, for the picker's List choice, and their want lists on Trade with
- * entries, which a start may name.
+ * entries: `buy` is true for a Buy post, a want list that leads its own post.
  */
 export async function partnerListChoices(
   addressed: Addressed,
-): Promise<{ lists: PartnerList[]; wantLists: { slug: string; name: string }[] }> {
+): Promise<{ lists: PartnerList[]; wantLists: { slug: string; name: string; buy: boolean }[] }> {
   const wantHalf = alias(lists, "want_half");
   const rows = await db
     .select({
@@ -213,6 +213,7 @@ export async function partnerListChoices(
       type: lists.listType,
       want: wantHalf.slug,
       filled: sql<boolean>`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${lists.id})`,
+      buy: sql<boolean>`NOT EXISTS (SELECT 1 FROM ${tradePost} WHERE ${tradePost.wantListId} = ${lists.id})`,
     })
     .from(lists)
     .leftJoin(
@@ -239,7 +240,7 @@ export async function partnerListChoices(
         : [],
     ),
     wantLists: rows.flatMap((row) =>
-      row.type === "want" && row.filled ? [{ slug: row.slug, name: row.name }] : [],
+      row.type === "want" && row.filled ? [{ slug: row.slug, name: row.name, buy: row.buy }] : [],
     ),
   };
 }

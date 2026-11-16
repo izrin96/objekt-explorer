@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  buyPostsOf,
   chosenPostOf,
   giveRule,
   offerOnOf,
@@ -48,6 +49,43 @@ describe("openPostOf", () => {
   test("a partner with no posts", () => {
     expect(openPostOf([], { startList: "doubles" })).toBeUndefined();
   });
+
+  describe("with a Buy post", () => {
+    const withBuy = [...posts, { slug: "lookingfor", buy: true }];
+
+    test("opens on it from the start, the matches' post and the added post", () => {
+      expect(openPostOf(withBuy, { startList: "lookingfor" })).toBe("lookingfor");
+      expect(openPostOf(withBuy, { matchesPost: "lookingfor" })).toBe("lookingfor");
+      expect(openPostOf(withBuy, { addedPost: "lookingfor" })).toBe("lookingfor");
+    });
+
+    test("a WTB lead post is no post to ask from", () => {
+      expect(openPostOf(withBuy, { lead: "lookingfor" })).toBe("doubles");
+    });
+
+    test("the first get pick's list is no way onto it", () => {
+      expect(openPostOf(withBuy, { get: [{ listSlug: "lookingfor" }] })).toBe("doubles");
+    });
+
+    test("a fallback never lands on it, even listed first", () => {
+      expect(openPostOf([withBuy[2]!, ...posts], {})).toBe("doubles");
+    });
+  });
+});
+
+describe("buyPostsOf", () => {
+  test("keeps only the Buy posts, in order, typed want", () => {
+    expect(
+      buyPostsOf([
+        { slug: "a", name: "A", buy: true },
+        { slug: "hunting", name: "Hunting", buy: false },
+        { slug: "b", name: "B", buy: true },
+      ]),
+    ).toEqual([
+      { slug: "a", name: "A", type: "want", want: null, buy: true },
+      { slug: "b", name: "B", type: "want", want: null, buy: true },
+    ]);
+  });
 });
 
 describe("chosenPostOf", () => {
@@ -88,34 +126,34 @@ describe("postProblem", () => {
 });
 
 describe("startWantOf", () => {
-  const wantLists = [{ slug: "lookingfor" }, { slug: "hunting" }];
-  const paired = [{ want: "hunting" }];
+  const wantLists = [
+    { slug: "lookingfor", buy: true },
+    { slug: "hunting", buy: false },
+  ];
 
   test("a Buy post's want list from matches", () => {
-    expect(startWantOf(paired, wantLists, { matchesPost: "lookingfor" })).toBe("lookingfor");
+    expect(startWantOf(wantLists, { matchesPost: "lookingfor" })).toBe("lookingfor");
   });
 
   test("the request's target alone", () => {
-    expect(startWantOf(paired, wantLists, { target: "lookingfor" })).toBe("lookingfor");
+    expect(startWantOf(wantLists, { target: "lookingfor" })).toBe("lookingfor");
   });
 
   test("a want list paired with a post is no start", () => {
-    expect(startWantOf(paired, wantLists, { matchesPost: "hunting" })).toBeUndefined();
+    expect(startWantOf(wantLists, { matchesPost: "hunting" })).toBeUndefined();
   });
 
   test("a slug that is no want list on Trade", () => {
-    expect(startWantOf(paired, wantLists, { target: "doubles" })).toBeUndefined();
+    expect(startWantOf(wantLists, { target: "doubles" })).toBeUndefined();
   });
 
   test("an added want beats the target", () => {
-    const more = [...wantLists, { slug: "other" }];
-    expect(startWantOf(paired, more, { addedWant: "other", target: "lookingfor" })).toBe("other");
+    const more = [...wantLists, { slug: "other", buy: true }];
+    expect(startWantOf(more, { addedWant: "other", target: "lookingfor" })).toBe("other");
   });
 
   test("a paired added want is no start, whatever the target", () => {
-    expect(
-      startWantOf(paired, wantLists, { addedWant: "hunting", target: "lookingfor" }),
-    ).toBeUndefined();
+    expect(startWantOf(wantLists, { addedWant: "hunting", target: "lookingfor" })).toBeUndefined();
   });
 });
 
@@ -135,7 +173,7 @@ describe("offerOnOf", () => {
 
   test("2: a new ask on a post with a want list", () => {
     expect(offerOnOf({ ...base, newAsk: true })).toEqual({
-      gives: { want: "hunting", start: false },
+      gives: { want: "hunting", buy: false },
       input: { post: "doubles" },
     });
   });
@@ -150,8 +188,36 @@ describe("offerOnOf", () => {
   test("a start is ignored once You get asks", () => {
     expect(offerOnOf({ ...base, newAsk: true, startWant: "lookingfor" }).gives).toEqual({
       want: "hunting",
-      start: false,
+      buy: false,
     });
+  });
+
+  test("a Buy post under Offer on sends its want list, whatever You get asks", () => {
+    const withBuy = [...posts, { slug: "lookingfor", want: null, buy: true }];
+    const expected = {
+      gives: { want: "lookingfor", buy: true },
+      input: { wantList: "lookingfor" },
+    };
+    expect(offerOnOf({ ...base, posts: withBuy, postSlug: "lookingfor" })).toEqual(expected);
+    expect(offerOnOf({ ...base, posts: withBuy, postSlug: "lookingfor", newAsk: true })).toEqual(
+      expected,
+    );
+  });
+
+  test("a start is ignored while there are Offer on choices", () => {
+    expect(offerOnOf({ ...base, startWant: "lookingfor" })).toEqual({
+      gives: { want: "hunting", buy: false },
+      input: { post: "doubles" },
+    });
+  });
+
+  test("a start with no posts sends its want list, and with a new ask sends nothing", () => {
+    const none = { ...base, posts: [], postSlug: null, startWant: "lookingfor" };
+    expect(offerOnOf(none)).toEqual({
+      gives: { want: "lookingfor", buy: true },
+      input: { wantList: "lookingfor" },
+    });
+    expect(offerOnOf({ ...none, newAsk: true })).toEqual({ gives: "every", input: {} });
   });
 
   test("4: a counter asking nothing new ignores a start", () => {
@@ -161,16 +227,9 @@ describe("offerOnOf", () => {
     });
   });
 
-  test("5: a start", () => {
-    expect(offerOnOf({ ...base, startWant: "lookingfor" })).toEqual({
-      gives: { want: "lookingfor", start: true },
-      input: { wantList: "lookingfor" },
-    });
-  });
-
   test("6: no ask on a post with a want list", () => {
     expect(offerOnOf(base)).toEqual({
-      gives: { want: "hunting", start: false },
+      gives: { want: "hunting", buy: false },
       input: { post: "doubles" },
     });
   });
@@ -192,7 +251,7 @@ describe("offerOnOf", () => {
 
 describe("giveRule", () => {
   const on = { wantedOnly: true, wantsOnTrade: true };
-  const one = { want: "hunting", start: false };
+  const one = { want: "hunting", buy: false };
 
   test("off filters nothing", () => {
     expect(giveRule({ ...on, wantedOnly: false }, one)).toBeNull();
