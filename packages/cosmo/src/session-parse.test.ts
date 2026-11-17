@@ -128,7 +128,7 @@ describe("sessionUserSchema", () => {
   });
 });
 
-const item = (collectionId: string, collection: object = {}) => ({
+const item = (collectionId: string, collection: object = {}, rest: object = {}) => ({
   collection: {
     collectionId,
     frontMedia: null,
@@ -141,9 +141,42 @@ const item = (collectionId: string, collection: object = {}) => ({
     season: "Cream01",
     ...collection,
   },
-  count: 3,
-  objekts: [{ tokenId: "1" }],
+  count: 0,
+  objekts: [],
+  ...rest,
 });
+
+const OWNER = "0x1111111111111111111111111111111111111111";
+const entry = (
+  tokenId: number,
+  extra: { metadata?: object; inventory?: object; nonTransferableReason?: string } = {},
+) => {
+  const { metadata, inventory, ...rest } = extra;
+  return {
+    metadata: {
+      objektNo: 7,
+      transferable: true,
+      tokenAddress: "0x2222222222222222222222222222222222222222",
+      collectionId: "cream01-seoyeon-101z",
+      tokenId,
+      artist: { category: "tripleS", name: "seoyeon" },
+      ...metadata,
+    },
+    inventory: {
+      status: "minted",
+      acquiredAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      mintedAt: "2026-01-01T00:00:00Z",
+      mintedAtDay: 20260101,
+      usedForGrid: false,
+      lenticularPairTokenId: 0,
+      owner: OWNER,
+      objektId: 99,
+      ...inventory,
+    },
+    ...rest,
+  };
+};
 
 describe("objektSummariesSchema", () => {
   test("keeps only the collection media fields", () => {
@@ -166,6 +199,9 @@ describe("objektSummariesSchema", () => {
         },
       ],
       skipped: 0,
+      objekts: [],
+      skippedObjekts: 0,
+      partial: 0,
     });
   });
 
@@ -216,7 +252,127 @@ describe("objektSummariesSchema", () => {
       collectionCount: 0,
       collections: [],
       skipped: 0,
+      objekts: [],
+      skippedObjekts: 0,
+      partial: 0,
     });
+  });
+});
+
+describe("objektSummariesSchema objekts", () => {
+  const page = (items: unknown[]) =>
+    objektSummariesSchema.parse({ collectionCount: items.length, collections: items });
+
+  test("keeps the entries of every collection, flat", () => {
+    const parsed = page([
+      item(
+        "a",
+        {},
+        {
+          count: 2,
+          objekts: [
+            entry(11),
+            entry(12, {
+              nonTransferableReason: "challenge-reward",
+              metadata: { transferable: false },
+              inventory: { usedForGrid: true },
+            }),
+          ],
+        },
+      ),
+      item(
+        "b",
+        {},
+        { count: 1, objekts: [entry(21, { metadata: { collectionId: "b", objektNo: 3 } })] },
+      ),
+    ]);
+    expect(parsed.collections).toHaveLength(2);
+    expect(parsed.skippedObjekts).toBe(0);
+    expect(parsed.partial).toBe(0);
+    expect(parsed.objekts).toEqual([
+      {
+        tokenId: "11",
+        objektNo: 7,
+        collectionId: "cream01-seoyeon-101z",
+        transferable: true,
+        nonTransferableReason: null,
+        usedForGrid: false,
+        owner: OWNER,
+        status: "minted",
+      },
+      {
+        tokenId: "12",
+        objektNo: 7,
+        collectionId: "cream01-seoyeon-101z",
+        transferable: false,
+        nonTransferableReason: "challenge-reward",
+        usedForGrid: true,
+        owner: OWNER,
+        status: "minted",
+      },
+      {
+        tokenId: "21",
+        objektNo: 3,
+        collectionId: "b",
+        transferable: true,
+        nonTransferableReason: null,
+        usedForGrid: false,
+        owner: OWNER,
+        status: "minted",
+      },
+    ]);
+  });
+
+  test("an entry missing tokenId is skipped and its collection still parses", () => {
+    const bad = entry(1);
+    delete (bad.metadata as { tokenId?: number }).tokenId;
+    const parsed = page([item("a", {}, { count: 2, objekts: [bad, entry(2)] })]);
+    expect(parsed.skippedObjekts).toBe(1);
+    expect(parsed.skipped).toBe(0);
+    expect(parsed.collections.map((c) => c.collectionId)).toEqual(["a"]);
+    expect(parsed.objekts.map((o) => o.tokenId)).toEqual(["2"]);
+  });
+
+  test("a reason that is not a slug becomes other", () => {
+    const parsed = page([
+      item("a", {}, { count: 1, objekts: [entry(1, { nonTransferableReason: "Bad Reason!" })] }),
+    ]);
+    expect(parsed.objekts[0]?.nonTransferableReason).toBe("other");
+  });
+
+  test("lowercases the owner", () => {
+    const upper = "0xABCDEFabcdef1234567890ABCDEFabcdef123456";
+    const parsed = page([
+      item("a", {}, { count: 1, objekts: [entry(1, { inventory: { owner: upper } })] }),
+    ]);
+    expect(parsed.objekts[0]?.owner).toBe(upper.toLowerCase());
+  });
+
+  test("counts an item whose count differs from its objekts", () => {
+    const parsed = page([item("a", {}, { count: 3, objekts: [entry(1), entry(2)] })]);
+    expect(parsed.partial).toBe(1);
+    expect(parsed.objekts).toHaveLength(2);
+  });
+
+  test("an item with no objekts array gives none", () => {
+    const parsed = page([{ collection: item("a").collection, count: 2 }]);
+    expect(parsed.objekts).toEqual([]);
+    expect(parsed.skippedObjekts).toBe(0);
+  });
+
+  test("drops dates, lenticular pair and artist", () => {
+    const parsed = page([item("a", {}, { count: 1, objekts: [entry(1)] })]);
+    const kept = parsed.objekts[0] ?? {};
+    for (const key of [
+      "acquiredAt",
+      "mintedAt",
+      "lenticularPairTokenId",
+      "artist",
+      "tokenAddress",
+      "objektId",
+    ]) {
+      expect(kept).not.toHaveProperty(key);
+    }
   });
 });
 

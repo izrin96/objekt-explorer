@@ -11,7 +11,7 @@
 
 ## 1. Cosmo client: parsing `objekts[]` (pure)
 
-- [ ] 1.1 In `packages/cosmo/src/session-parse.ts` (Decision 2):
+- [x] 1.1 In `packages/cosmo/src/session-parse.ts` (Decision 2):
   - Add `summaryObjektSchema` with exactly the fields of Decision 2's table and their rules. `tokenId` becomes a decimal string; `owner` is lowercased; `nonTransferableReason` is the reason when it matches `^[a-z0-9-]{1,64}$`, `"other"` when it does not, `null` when absent; `usedForGrid` defaults to `false`. Export `SummaryObjekt`.
   - `objektSummariesSchema` keeps its output and adds `objekts: SummaryObjekt[]` (every collection's entries, flat), `skippedObjekts` and `partial`: the count of items whose `count` differs from their `objekts.length`. Each entry parses alone with `safeParse`, so a bad entry adds to `skippedObjekts` and never to `skipped` (which stays per collection). An item with no `objekts` array gives none.
 
@@ -27,7 +27,7 @@
 
 ## 2. App schema
 
-- [ ] 2.1 In `packages/db/src/schema.ts`, add `cosmoObjekt` (`cosmo_objekt`) and `cosmoTransferable` (`cosmo_transferable`) with the columns, CHECKs and indexes of Decision 3:
+- [x] 2.1 In `packages/db/src/schema.ts`, add `cosmoObjekt` (`cosmo_objekt`) and `cosmoTransferable` (`cosmo_transferable`) with the columns, CHECKs and indexes of Decision 3:
   - `transferable_outcome` CHECK in `('matched','moved','chain_newer','spin','missing','report_untransferable','report_transferable','written_untransferable','written_transferable','raced')`;
   - `cosmo_transferable`'s CHECK that `superseded_at` and `superseded_block` are both null or both set;
   - the three partial indexes on `cosmo_objekt`: `(slug) WHERE serial_eligible`, `(slug) WHERE serial_due`, `(observed_at) WHERE transferable_due`;
@@ -38,8 +38,8 @@
 
 ## 3. Worker: recording
 
-- [ ] 3.0 Create `packages/lib/src/cosmo-objekt-writes.ts` (pure, browser-safe) with `objektWriteModes(raw)`, exported as `@repo/lib/cosmo-objekt-writes` (Decision 10): a comma list, trimmed and lowercased, returning `{ anchors, untransferable, transferable, unknown: string[] }`; `undefined` and `""` give all false. `cosmo-objekt-writes.test.ts` covers unset, `"anchors"`, `" Anchors , untransferable "`, `"anchors,untransferable,transferable"` and `"anchors,bogus"` (`unknown: ["bogus"]`). `bun test packages/lib` passes. Lint and typecheck pass for `@repo/lib`; build passes for `worker` and `web`.
-- [ ] 3.1 Create `apps/worker/src/lib/cosmo-objekts.ts` (pure) and `cosmo-objekts.test.ts`:
+- [x] 3.0 Create `packages/lib/src/cosmo-objekt-writes.ts` (pure, browser-safe) with `objektWriteModes(raw)`, exported as `@repo/lib/cosmo-objekt-writes` (Decision 10): a comma list, trimmed and lowercased, returning `{ anchors, untransferable, transferable, unknown: string[] }`; `undefined` and `""` give all false. `cosmo-objekt-writes.test.ts` covers unset, `"anchors"`, `" Anchors , untransferable "`, `"anchors,untransferable,transferable"` and `"anchors,bogus"` (`unknown: ["bogus"]`). `bun test packages/lib` passes. Lint and typecheck pass for `@repo/lib`; build passes for `worker` and `web`.
+- [x] 3.1 Create `apps/worker/src/lib/cosmo-objekts.ts` (pure) and `cosmo-objekts.test.ts`:
   - `serialEligible(read, indexerObjekt)` returns true, false or null under Decision 5's trust rules: null when the token is not in the indexer; true when the indexer's slug equals the read's, the collection is offline or in `preAssignedCollections`, and `minted_at` is at or after `V1_CUTOFF_MS`; false otherwise.
   - `observationsOf(objekts, sessionAddress, indexerObjekts, chainHeight, observedAt)` returns `{ rows, skipped: { notMinted, otherOwner, holderMismatch, duplicate } }` (Decision 4). `indexerObjekts` is a `Map` of token id to `{ owner, mintedAt, slug, onOffline }` with the owner lowercased; a token missing from it is kept. Each row has `tokenId`, `slug` (`slugifyObjekt(collectionId)`), `objektNo`, `transferable`, `nonTransferableReason`, `usedForGrid`, `serialEligible`, `chainHeight` and `observedAt`. The address comparison is lowercase on both sides, and of two entries with one token the later wins.
   - Import `objektWriteModes` from `@repo/lib` (task 3.0) wherever the worker reads the switch.
@@ -61,7 +61,7 @@
 
 ## 4. Worker: transferable corrections
 
-- [ ] 4.1 Create `apps/worker/src/lib/cosmo-transferable.ts` (pure) and its test:
+- [x] 4.1 Create `apps/worker/src/lib/cosmo-transferable.ts` (pure) and its test:
   - `judgeTransferable(objekt, read, mode)`, where `objekt` is `{ transferable, owner, receivedAt, slug, newerChange } | null`, `read` is a `cosmo_objekt` row, and `mode` is `{ untransferable, transferable }`. It returns one outcome of Decision 6's table, checked in that table's order: `missing`, `moved`, `chain_newer`, `spin`, `matched`, then `report_*` or `write_untransferable` / `write_transferable` (a plan, turned into `written_*` or `raced` by the caller).
   - `confirmationOf(outcome, read, objekt)` returns the `cosmo_transferable` row to store for `matched` and `written_*` (the read's value, `observed_at`, `chain_height`, the judged `received_at`) and `null` for every other outcome (Decision 6, the record's invariant).
   - `outcomeCounts(outcomes)` for the summary.
@@ -90,7 +90,7 @@
 
 ## 5. Worker: confirmed serials as anchors
 
-- [ ] 5.1 Create `apps/worker/src/lib/cosmo-anchors.ts` (pure) and `cosmo-anchors.test.ts` (Decision 5):
+- [x] 5.1 Create `apps/worker/src/lib/cosmo-anchors.ts` (pure) and `cosmo-anchors.test.ts` (Decision 5):
   - Export `COSMO_ANCHOR_NOTE = "Cosmo objektNo from a connected account"`.
   - `mergeAnchors({ manual, confirmed, rows, batches })`, where `confirmed` are `{ tokenId, objektNo, observedAt }[]` of one collection. It returns `{ anchors, conflicts, refused }` by the table of Decision 5, walking confirmed serials in token order against the manual anchors, v1 serials and the confirmed anchors kept so far. Kept ones carry `COSMO_ANCHOR_NOTE` and `addedAt = observedAt`. `anchors` always holds every manual anchor unchanged.
 

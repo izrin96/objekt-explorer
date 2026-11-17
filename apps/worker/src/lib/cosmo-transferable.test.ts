@@ -1,0 +1,154 @@
+import { describe, expect, test } from "bun:test";
+
+import { Addresses } from "@repo/lib";
+
+import {
+  confirmationOf,
+  judgeTransferable,
+  outcomeCounts,
+  type StoredOutcome,
+  type TransferableRead,
+} from "./cosmo-transferable";
+
+const OBSERVED = "2026-11-17T00:00:00.000Z";
+const read = (extra: Partial<TransferableRead> = {}): TransferableRead => ({
+  tokenId: "101",
+  slug: "summer26-seoyeon-101z",
+  transferable: true,
+  observedAt: OBSERVED,
+  chainHeight: 900,
+  ...extra,
+});
+const objekt = (extra: object = {}) => ({
+  transferable: true,
+  owner: "0x1111111111111111111111111111111111111111",
+  receivedAt: "2026-11-01T00:00:00.000Z",
+  slug: "summer26-seoyeon-101z",
+  newerChange: false,
+  ...extra,
+});
+const both = { untransferable: true, transferable: true };
+const none = { untransferable: false, transferable: false };
+
+describe("judgeTransferable", () => {
+  test("missing without an objekt or under another collection", () => {
+    expect(judgeTransferable(null, read(), both)).toBe("missing");
+    expect(judgeTransferable(objekt({ slug: "other-101z" }), read(), both)).toBe("missing");
+  });
+
+  test("moved when received after the read", () => {
+    expect(
+      judgeTransferable(objekt({ receivedAt: "2026-11-17T00:00:01.000Z" }), read(), both),
+    ).toBe("moved");
+  });
+
+  test("received at the read's own time is not moved", () => {
+    expect(judgeTransferable(objekt({ receivedAt: OBSERVED }), read(), both)).toBe("matched");
+  });
+
+  test("a read that agrees but moved is moved, not matched", () => {
+    const o = objekt({ receivedAt: "2026-11-18T00:00:00.000Z" });
+    expect(judgeTransferable(o, read({ transferable: true }), both)).toBe("moved");
+  });
+
+  test("chain_newer when a newer or unapplied change exists", () => {
+    expect(judgeTransferable(objekt({ newerChange: true }), read(), both)).toBe("chain_newer");
+  });
+
+  test("moved outranks chain_newer, and chain_newer outranks spin", () => {
+    const o = objekt({ receivedAt: "2026-11-18T00:00:00.000Z", newerChange: true });
+    expect(judgeTransferable(o, read(), both)).toBe("moved");
+    const s = objekt({ newerChange: true, owner: Addresses.SPIN });
+    expect(judgeTransferable(s, read(), both)).toBe("chain_newer");
+  });
+
+  test("spin in any letter case", () => {
+    for (const owner of [
+      Addresses.SPIN,
+      Addresses.SPIN.toLowerCase(),
+      Addresses.SPIN.toUpperCase(),
+    ]) {
+      expect(judgeTransferable(objekt({ owner, transferable: false }), read(), both)).toBe("spin");
+    }
+  });
+
+  test("matched when the values agree", () => {
+    expect(judgeTransferable(objekt(), read(), none)).toBe("matched");
+    expect(
+      judgeTransferable(objekt({ transferable: false }), read({ transferable: false }), none),
+    ).toBe("matched");
+  });
+
+  test("a direction that is off reports", () => {
+    expect(judgeTransferable(objekt(), read({ transferable: false }), none)).toBe(
+      "report_untransferable",
+    );
+    expect(judgeTransferable(objekt({ transferable: false }), read(), none)).toBe(
+      "report_transferable",
+    );
+  });
+
+  test("a direction that is on plans a write", () => {
+    expect(judgeTransferable(objekt(), read({ transferable: false }), both)).toBe(
+      "write_untransferable",
+    );
+    expect(judgeTransferable(objekt({ transferable: false }), read(), both)).toBe(
+      "write_transferable",
+    );
+  });
+
+  test("each direction follows its own switch", () => {
+    const onlyUntransferable = { untransferable: true, transferable: false };
+    expect(judgeTransferable(objekt(), read({ transferable: false }), onlyUntransferable)).toBe(
+      "write_untransferable",
+    );
+    expect(judgeTransferable(objekt({ transferable: false }), read(), onlyUntransferable)).toBe(
+      "report_transferable",
+    );
+    const onlyTransferable = { untransferable: false, transferable: true };
+    expect(judgeTransferable(objekt(), read({ transferable: false }), onlyTransferable)).toBe(
+      "report_untransferable",
+    );
+    expect(judgeTransferable(objekt({ transferable: false }), read(), onlyTransferable)).toBe(
+      "write_transferable",
+    );
+  });
+});
+
+describe("confirmationOf", () => {
+  const o = objekt();
+  const stored: StoredOutcome[] = [
+    "missing",
+    "moved",
+    "chain_newer",
+    "spin",
+    "matched",
+    "report_untransferable",
+    "report_transferable",
+    "written_untransferable",
+    "written_transferable",
+    "raced",
+  ];
+
+  test("gives a row only for matched and written_*", () => {
+    const withRow = stored.filter((s) => confirmationOf(s, read(), o) !== null);
+    expect(withRow).toEqual(["matched", "written_untransferable", "written_transferable"]);
+  });
+
+  test("the row holds the read's value and the judged received_at", () => {
+    expect(confirmationOf("written_untransferable", read({ transferable: false }), o)).toEqual({
+      tokenId: "101",
+      transferable: false,
+      observedAt: OBSERVED,
+      chainHeight: 900,
+      receivedAt: o.receivedAt,
+    });
+  });
+});
+
+describe("outcomeCounts", () => {
+  test("counts each outcome", () => {
+    expect(outcomeCounts(["matched", "moved", "matched"])).toEqual({ matched: 2, moved: 1 });
+    expect(outcomeCounts([])).toEqual({});
+  });
+});

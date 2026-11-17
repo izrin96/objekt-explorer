@@ -1065,11 +1065,78 @@ export const collectionMedia = pgTable("collection_media", {
     .defaultNow(),
 });
 
+// Cosmo's latest read of one token, kept for good. It names no user, session or address
+// and has no foreign key, so no account path can cascade into it.
+export const cosmoObjekt = pgTable(
+  "cosmo_objekt",
+  {
+    tokenId: varchar("token_id", { length: 20 }).primaryKey(),
+    slug: varchar("slug", { length: 255 }).notNull(),
+    objektNo: integer("objekt_no").notNull(),
+    transferable: boolean("transferable").notNull(),
+    nonTransferableReason: varchar("non_transferable_reason", { length: 64 }),
+    usedForGrid: boolean("used_for_grid").notNull(),
+    chainHeight: integer("chain_height").notNull(),
+    observedAt: timestamp("observed_at", { mode: "string", withTimezone: true }).notNull(),
+    serialEligible: boolean("serial_eligible"),
+    serialDue: boolean("serial_due").notNull().default(true),
+    serialCheckedAt: timestamp("serial_checked_at", { mode: "string", withTimezone: true }),
+    transferableDue: boolean("transferable_due").notNull().default(true),
+    transferableOutcome: text("transferable_outcome"),
+  },
+  (t) => [
+    check("cosmo_objekt_token_id_check", sql`${t.tokenId} ~ '^[0-9]+$'`),
+    check("cosmo_objekt_objekt_no_check", sql`${t.objektNo} > 0`),
+    check(
+      "cosmo_objekt_reason_check",
+      sql`${t.nonTransferableReason} IS NULL OR ${t.nonTransferableReason} ~ '^[a-z0-9-]+$'`,
+    ),
+    check(
+      "cosmo_objekt_outcome_check",
+      sql`${t.transferableOutcome} IS NULL OR ${t.transferableOutcome} IN ('matched','moved','chain_newer','spin','missing','report_untransferable','report_transferable','written_untransferable','written_transferable','raced')`,
+    ),
+    index("cosmo_objekt_confirmed_idx")
+      .on(t.slug)
+      .where(sql`${t.serialEligible}`),
+    index("cosmo_objekt_serial_due_idx")
+      .on(t.slug)
+      .where(sql`${t.serialDue}`),
+    index("cosmo_objekt_transferable_due_idx")
+      .on(t.observedAt)
+      .where(sql`${t.transferableDue}`),
+  ],
+);
+
+// The Cosmo-confirmed transferable value of one token, kept for good. Written only by the
+// apply step's outcome statement, never by the per-read upsert into `cosmo_objekt`.
+export const cosmoTransferable = pgTable(
+  "cosmo_transferable",
+  {
+    tokenId: varchar("token_id", { length: 20 }).primaryKey(),
+    transferable: boolean("transferable").notNull(),
+    observedAt: timestamp("observed_at", { mode: "string", withTimezone: true }).notNull(),
+    chainHeight: integer("chain_height").notNull(),
+    receivedAt: timestamp("received_at", { mode: "string", withTimezone: true }).notNull(),
+    confirmedAt: timestamp("confirmed_at", { mode: "string", withTimezone: true }).notNull(),
+    supersededAt: timestamp("superseded_at", { mode: "string", withTimezone: true }),
+    supersededBlock: integer("superseded_block"),
+  },
+  (t) => [
+    check("cosmo_transferable_token_id_check", sql`${t.tokenId} ~ '^[0-9]+$'`),
+    check(
+      "cosmo_transferable_superseded_check",
+      sql`(${t.supersededAt} IS NULL) = (${t.supersededBlock} IS NULL)`,
+    ),
+  ],
+);
+
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;
 export type CosmoSession = typeof cosmoSession.$inferSelect;
 export type CollectionMedia = typeof collectionMedia.$inferSelect;
+export type CosmoObjekt = typeof cosmoObjekt.$inferSelect;
+export type CosmoTransferable = typeof cosmoTransferable.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
