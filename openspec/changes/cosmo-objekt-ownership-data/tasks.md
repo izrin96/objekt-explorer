@@ -9,6 +9,14 @@
 - **Owner steps.** Tasks marked **(owner)** apply a migration, change the VPS, set `COSMO_OBJEKT_WRITES`, or write to production. Only the owner runs them.
 - **Wording.** "Decision N" means this change's design.md, Decisions, section N. Load `vercel-react-best-practices` before any `.tsx` edit in `apps/web`. Names follow Decision 12: Cosmo's terms, never the words of Objekt Tracker's own lock feature.
 
+**Local live checks, 2026-11-17** (migration applied locally; three seeded `cosmo_objekt` rows for real `cream02-jiwoo-355a` tokens, removed afterwards; production indexer read-only):
+- Plan script: confirmed/unjudged counts, a planned `write_untransferable` (challenge-reward), the breaker line; it runs only with a read-only indexer connection (the URL's options count).
+- Serial pass, `anchors` on: an unjudged row judged eligible by its received-at; three mutually inconsistent confirmed serials all held as conflicts, rows settled. A lone serial 2 high planned 22 serials moved by 2; the write failed at the read-only indexer (25006), the slug was stamped and the row left due.
+- Estimate mark: no "~" removed while the row is due; removed once settled; unchanged with the switch unset.
+- Transferable pass: with `untransferable` on the write failed (25006), the caller warned and rows stayed due; with the switch off it stored `matched`/`report_untransferable` and one `cosmo_transferable` confirmation, no indexer write.
+- `fix-transferability` dry run (30 objekts): runs, prints held/superseded counts.
+- Not run: a real sync recording rows (needs a deploy), the consent text on the page.
+
 ## 1. Cosmo client: parsing `objekts[]` (pure)
 
 - [x] 1.1 In `packages/cosmo/src/session-parse.ts` (Decision 2):
