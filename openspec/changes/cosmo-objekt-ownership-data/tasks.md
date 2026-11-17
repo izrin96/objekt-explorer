@@ -42,7 +42,7 @@
   - no column naming a user, session or address, and no foreign key on either table, so no account or session deletion cascades to them (Decision 7).
 
   Export `type CosmoObjekt` and `type CosmoTransferable`. Run `bun run --filter=@repo/db db:generate` and read the SQL: two `CREATE TABLE`, their CHECKs and three partial `CREATE INDEX`, nothing else. Do not run `db:migrate`. Lint, typecheck and build pass for `@repo/db` and `@repo/api`.
-- [ ] 2.2 **(owner)** Apply both migrations (`20261117123145_cosmo_objekt`, `20261117180405_cosmo_session_objekts_consented`) locally (`db:migrate`, `.env.local` on the compose Postgres), and on production with `docker compose run --build --rm migrate` before the deploy that reads the tables (task 9.2).
+- [x] 2.2 **(owner)** Apply both migrations (`20261117123145_cosmo_objekt`, `20261117180405_cosmo_session_objekts_consented`) locally (`db:migrate`, `.env.local` on the compose Postgres), and on production with `docker compose run --build --rm migrate` before the deploy that reads the tables (task 9.2).
 
 ## 3. Worker: recording
 
@@ -201,18 +201,21 @@
 ## 9. Rollout (owner)
 
 - [x] 9.1 Settled by `cosmo_session.objekts_consented` (8.3): sessions from before the deploy give media only until they reconnect, so no pre-deploy check is needed.
-- [ ] 9.2 **(owner)** Apply the migration (2.2), deploy the web and the worker with `COSMO_OBJEKT_WRITES` unset, and reconnect the owner's account (its session predates the consent marker), which syncs at once.
+- [x] 9.2 **(owner)** Apply the migration (2.2), deploy the web and the worker with `COSMO_OBJEKT_WRITES` unset, and reconnect the owner's account (its session predates the consent marker), which syncs at once.
   - Check: the worker's `collection-media` summary shows `objekts recorded` near 182.
   - Check: `select transferable_outcome, count(*) from cosmo_objekt group by 1` on production shows outcomes and no `written_*`.
   - Check: the drawer and trade surfaces look as before (no grid use or reason anywhere, serial marks unchanged).
-- [ ] 9.3 **(owner)** Run `cosmo-objekt-plan.ts` on production read-only.
+  - *Done 2026-11-17: both migrations applied through the Dokploy migrate deploy, web and worker deployed with the switch unset, owner reconnected (`objekts_consented` true). First sync: `objekts recorded 182`; transferable judged 182, all `matched`, no `written_*`; 182 `cosmo_transferable` records. The surfaces were not checked by eye.*
+- [x] 9.3 **(owner)** Run `cosmo-objekt-plan.ts` on production read-only.
   - Read the serial section: the Cream02 Double that was off by 1 should show its batch moving by 1, with no conflict.
   - If the serials look right, set `COSMO_OBJEKT_WRITES=anchors` in the root `.env` and restart the `worker` and `web` together. From then on, run the serial scripts with the same value (Decision 5, The switch is per process).
   - Within 10 minutes, `serial-offline` logs the collections rewritten, and the Cream02 Double shows its Cosmo serial with no "~" in the offer builder. `serial-anchor.ts list <slug>` is unchanged.
-- [ ] 9.4 **(owner)** From the plan's transferable section, decide on `untransferable`, then `transferable`, and add each to `COSMO_OBJEKT_WRITES` with a restart.
+  - *Done 2026-11-17 (run from a workstation against production, read-only; the worker image carries only `dist`): 0 confirmed serials, all 182 rows not eligible (the owner's objekts are online or v1 mints), so the expected Cream02 Double move did not apply: `cream02-jiwoo-311z` is online and shows in the compare-only section, token 26661843 Cosmo 2152 against indexer 2151, the only one of 182 that differs. Transferable: 182 matched, 0 planned writes. Reasons: none 136, `challenge-reward` 38, `welcome-objekt` 8. Breaker 0 of 50.*
+- [x] 9.4 **(owner)** From the plan's transferable section, decide on `untransferable`, then `transferable`, and add each to `COSMO_OBJEKT_WRITES` with a restart.
   - Optionally re-arm earlier reads the enabled direction would now write, one slice of at most 50 per run, since a larger slice trips the breaker (Decision 10). For `untransferable`: `update cosmo_objekt set transferable_due = true where token_id in (select token_id from cosmo_objekt where not transferable_due and transferable_outcome = 'report_untransferable' and non_transferable_reason in ('challenge-reward', 'welcome-objekt') limit 50)`; for `transferable`, the same with `transferable_outcome = 'report_transferable'` and no reason filter (a production write). A re-armed row no longer settles back to `report_*`, so the slices converge.
   - Check the next `info` line's `written_*` counts against the plan, and that `cosmo_transferable` gained as many rows.
   - Record the decision on `transferable` in design.md, Open questions.
+  - *Done 2026-11-17: `COSMO_OBJEKT_WRITES=anchors,untransferable,transferable` on worker and both web replicas, verified in the containers. The owner trusts Cosmo's transferable over the chain read, including where it contradicts the indexer's deliberate false rule; the guards and the breaker still apply. No re-arm needed: no `report_*` rows existed.*
 - [ ] 9.5 **(owner)** A week after 9.3, run `script/anchor-gaps.ts` read-only. For each new whole-block gap after anchorless batches, decide whether to run `script/refine-serial-batches.ts` (dry first, then `APPLY=1`), with the worker's `COSMO_OBJEKT_WRITES` value in its env.
 - [ ] 9.6 **(owner)** Record in design.md, Open questions, from the first syncs and the plan: the `partial` count (is `objekts[]` complete?), any `inventory.status` other than `minted`, and every `non_transferable_reason` value seen. For a frequent new reason, open a follow-up for its label.
 
