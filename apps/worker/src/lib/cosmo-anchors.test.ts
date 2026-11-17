@@ -121,11 +121,53 @@ describe("mergeAnchors", () => {
     expect(refused[0]?.reason).toContain("not found");
   });
 
-  test("judges a later confirmed serial against the ones kept before it", () => {
-    // 1010 -> 30 makes 1000 serial 20; then 1060 -> 3 would put 1050 at -3 and is refused
-    const { anchors, refused } = merge([confirmed(1010, 30), confirmed(1060, 3)]);
+  test("two confirmed serials of one unpinned batch that disagree: neither is kept, both conflict", () => {
+    // 1010 -> 30 numbers 1060 as 80, not 3
+    const { anchors, conflicts, refused } = merge([confirmed(1010, 30), confirmed(1060, 3)]);
+    expect(anchors).toEqual([]);
+    expect(conflicts).toEqual([
+      { tokenId: 1010, objektNo: 30, pinnedSerial: null },
+      { tokenId: 1060, objektNo: 3, pinnedSerial: null },
+    ]);
+    expect(refused).toEqual([]);
+  });
+
+  test("a disagreement off by one is still a conflict for the whole batch", () => {
+    const { anchors, conflicts } = merge([
+      confirmed(1010, 11),
+      confirmed(1050, 51),
+      confirmed(1060, 62),
+    ]);
+    expect(anchors).toEqual([]);
+    expect(conflicts.map((c) => c.tokenId)).toEqual([1010, 1050, 1060]);
+  });
+
+  test("agreement is by token distance, whatever gaps or foreign tokens lie between", () => {
+    // only 1000, 1010 and 1060 are this collection's; 1011..1059 may be unminted or foreign
+    const sparse = [row(1000), row(1010), row(1060)];
+    const { anchors, conflicts } = merge([confirmed(1010, 30), confirmed(1060, 80)], [], sparse);
+    expect(anchors.map((a) => [a.tokenId, a.serial])).toEqual([
+      [1010, 30],
+      [1060, 80],
+    ]);
+    expect(conflicts).toEqual([]);
+  });
+
+  test("a disagreeing batch leaves the other batches' confirmed serials kept", () => {
+    const { anchors, conflicts } = merge([
+      confirmed(1010, 11),
+      confirmed(1060, 70),
+      confirmed(2010, 111),
+    ]);
+    expect(anchors.map((a) => a.tokenId)).toEqual([2010]);
+    expect(conflicts.map((c) => c.tokenId)).toEqual([1010, 1060]);
+  });
+
+  test("a token missing from the rows takes no part in agreement and is refused", () => {
+    const { anchors, conflicts, refused } = merge([confirmed(1010, 11), confirmed(1020, 99)]);
     expect(anchors.map((a) => a.tokenId)).toEqual([1010]);
-    expect(refused.map((r) => r.tokenId)).toEqual([1060]);
+    expect(conflicts).toEqual([]);
+    expect(refused.map((r) => r.tokenId)).toEqual([1020]);
   });
 
   test("returns every manual anchor unchanged ahead of the kept ones", () => {

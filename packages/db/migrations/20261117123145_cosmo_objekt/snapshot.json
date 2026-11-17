@@ -2,7 +2,7 @@
   "type": "diff",
   "version": "9",
   "dialect": "postgres",
-  "id": "161f5c75-6cd8-4428-8b43-b6a771adc364",
+  "id": "2f13a5a9-8c63-42b1-8428-4d82687a31d5",
   "prevIds": [
     "13a2369c-c8e4-45d7-829f-17d869e1b3f3"
   ],
@@ -258,6 +258,22 @@
       "row": {
         "schema": "public",
         "table": "cosmo_objekt",
+        "name": "received_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
         "name": "serial_eligible",
         "type": "boolean",
         "typeSchema": null,
@@ -324,6 +340,22 @@
         "table": "cosmo_objekt",
         "name": "transferable_outcome",
         "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "transferable_checked_at",
+        "type": "timestamp with time zone",
         "typeSchema": null,
         "notNull": false,
         "dimensions": 0,

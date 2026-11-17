@@ -7,23 +7,28 @@ import {
   judgeTransferable,
   outcomeCounts,
   settleOutcome,
+  transferableBreaker,
   type StoredOutcome,
   type TransferableRead,
 } from "./cosmo-transferable";
 
 const OBSERVED = "2026-11-17T00:00:00.000Z";
+const RECEIVED = "2026-11-01T00:00:00.000Z";
+// a trusted reason by default, so the untransferable direction can write
 const read = (extra: Partial<TransferableRead> = {}): TransferableRead => ({
   tokenId: "101",
   slug: "summer26-seoyeon-101z",
   transferable: true,
+  nonTransferableReason: "challenge-reward",
   observedAt: OBSERVED,
+  receivedAt: RECEIVED,
   chainHeight: 900,
   ...extra,
 });
 const objekt = (extra: object = {}) => ({
   transferable: true,
   owner: "0x1111111111111111111111111111111111111111",
-  receivedAt: "2026-11-01T00:00:00.000Z",
+  receivedAt: RECEIVED,
   slug: "summer26-seoyeon-101z",
   newerChange: false,
   ...extra,
@@ -37,14 +42,23 @@ describe("judgeTransferable", () => {
     expect(judgeTransferable(objekt({ slug: "other-101z" }), read(), both)).toBe("missing");
   });
 
-  test("moved when received after the read", () => {
+  test("missing when the indexer lacked the token at the read", () => {
+    expect(judgeTransferable(objekt(), read({ receivedAt: null }), both)).toBe("missing");
+  });
+
+  test("moved when the indexer's received_at is not the recorded one", () => {
     expect(
       judgeTransferable(objekt({ receivedAt: "2026-11-17T00:00:01.000Z" }), read(), both),
     ).toBe("moved");
+    // received again before the read was even taken: still not the holder the chain confirmed
+    expect(
+      judgeTransferable(objekt({ receivedAt: "2026-11-10T00:00:00.000Z" }), read(), both),
+    ).toBe("moved");
   });
 
-  test("received at the read's own time is not moved", () => {
-    expect(judgeTransferable(objekt({ receivedAt: OBSERVED }), read(), both)).toBe("matched");
+  test("the recorded received_at in another notation is the same instant", () => {
+    const o = objekt({ receivedAt: "2026-11-01 09:00:00.000000+09" });
+    expect(judgeTransferable(o, read(), both)).toBe("matched");
   });
 
   test("a read that agrees but moved is moved, not matched", () => {
@@ -113,6 +127,49 @@ describe("judgeTransferable", () => {
     expect(judgeTransferable(objekt({ transferable: false }), read(), onlyTransferable)).toBe(
       "write_transferable",
     );
+  });
+});
+
+describe("untransferable writes trust only known reasons", () => {
+  test("challenge-reward and welcome-objekt write", () => {
+    for (const reason of ["challenge-reward", "welcome-objekt"]) {
+      const r = read({ transferable: false, nonTransferableReason: reason });
+      expect(judgeTransferable(objekt(), r, both)).toBe("write_untransferable");
+    }
+  });
+
+  test("any other reason, other or none is reported", () => {
+    for (const reason of ["grid-used", "other", null]) {
+      const r = read({ transferable: false, nonTransferableReason: reason });
+      expect(judgeTransferable(objekt(), r, both)).toBe("report_untransferable");
+    }
+  });
+
+  test("the transferable direction needs no reason", () => {
+    const r = read({ transferable: true, nonTransferableReason: null });
+    expect(judgeTransferable(objekt({ transferable: false }), r, both)).toBe("write_transferable");
+  });
+});
+
+describe("transferableBreaker", () => {
+  test("a few writes in a small run pass under the floor of 50", () => {
+    expect(transferableBreaker(30, 30)).toEqual({ tripped: false, limit: 50 });
+    expect(transferableBreaker(50, 60)).toEqual({ tripped: false, limit: 50 });
+    expect(transferableBreaker(51, 60)).toEqual({ tripped: true, limit: 50 });
+  });
+
+  test("20% of the reads above the floor", () => {
+    expect(transferableBreaker(100, 500)).toEqual({ tripped: false, limit: 100 });
+    expect(transferableBreaker(101, 500)).toEqual({ tripped: true, limit: 100 });
+  });
+
+  test("never more than 200, however many reads", () => {
+    expect(transferableBreaker(200, 5000)).toEqual({ tripped: false, limit: 200 });
+    expect(transferableBreaker(201, 5000)).toEqual({ tripped: true, limit: 200 });
+  });
+
+  test("no writes never trips", () => {
+    expect(transferableBreaker(0, 0).tripped).toBe(false);
   });
 });
 

@@ -12,26 +12,33 @@ import { preAssignedCollections } from "./serial-constants";
 export type IndexerObjekt = {
   owner: string;
   mintedAt: Date | string;
+  receivedAt: Date | string;
   slug: string;
   onOffline: "online" | "offline";
 };
 
 /**
- * Whether a read's serial may anchor its collection: null when the indexer lacks the token (judged
- * again later), true for an offline or pre-assigned collection's token minted at or after the v1
- * cutoff that the indexer files under the read's own slug, false otherwise. Online and v1 serials
- * are compared elsewhere, never used.
+ * Whether a read's serial may anchor its collection. False for another slug's token, an online
+ * collection that is not pre-assigned, or a mint before the v1 cutoff: online and v1 serials are
+ * compared elsewhere, never used. Otherwise true only while the indexer's `received_at` is the one
+ * recorded with the read (`read.receivedAt`, set only once the holder check passed), so the chain
+ * confirmed the holder Cosmo answered for; null when the indexer lacks the token, or lacked it at
+ * the read. Null is never eligible on Cosmo's word alone: a later read can settle it.
  */
 export function serialEligible(
-  read: { slug: string },
-  indexerObjekt: IndexerObjekt | null | undefined,
+  read: { slug: string; receivedAt: Date | string | null },
+  indexerObjekt: Omit<IndexerObjekt, "owner"> | null | undefined,
 ): boolean | null {
   if (!indexerObjekt) return null;
   if (indexerObjekt.slug !== read.slug) return false;
   if (indexerObjekt.onOffline !== "offline" && !preAssignedCollections.includes(read.slug)) {
     return false;
   }
-  return new Date(indexerObjekt.mintedAt).getTime() >= V1_CUTOFF_MS;
+  if (new Date(indexerObjekt.mintedAt).getTime() < V1_CUTOFF_MS) return false;
+  if (read.receivedAt === null) return null;
+  return new Date(indexerObjekt.receivedAt).getTime() === new Date(read.receivedAt).getTime()
+    ? true
+    : null;
 }
 
 export type ObservedRow = {
@@ -44,6 +51,8 @@ export type ObservedRow = {
   serialEligible: boolean | null;
   chainHeight: number;
   observedAt: string;
+  /** The indexer's `received_at` at record time; null when the indexer lacked the token. */
+  receivedAt: string | null;
 };
 
 /**
@@ -76,6 +85,12 @@ export function observationsOf(
       continue;
     }
     const slug = slugifyObjekt(o.collectionId);
+    // kept as the indexer gave it, at full precision, since the guarded write compares it exactly
+    const receivedAt = !indexed
+      ? null
+      : typeof indexed.receivedAt === "string"
+        ? indexed.receivedAt
+        : indexed.receivedAt.toISOString();
     if (byToken.has(o.tokenId)) {
       skipped.duplicate++;
       // delete first so the later entry also takes the later position
@@ -88,9 +103,10 @@ export function observationsOf(
       transferable: o.transferable,
       nonTransferableReason: o.nonTransferableReason,
       usedForGrid: o.usedForGrid,
-      serialEligible: serialEligible({ slug }, indexed),
+      serialEligible: serialEligible({ slug, receivedAt }, indexed),
       chainHeight,
       observedAt,
+      receivedAt,
     });
   }
   return { rows: [...byToken.values()], skipped };

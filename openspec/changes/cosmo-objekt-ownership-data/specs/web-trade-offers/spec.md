@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Estimated serials are marked
-A serial is exact when Cosmo supplied it or when it follows from one Cosmo supplied. That holds for an objekt minted before Cosmo's v1 metadata cutoff (2026-06-04 08:07:02 UTC), and for a later objekt that sits in an anchored range: a reserved token range of its collection that also holds a pre-cutoff objekt's serial, a reported serial recorded as a manual anchor, or, while the operator lets the serial job use them, a serial a connected account's Cosmo read confirmed (see `worker-offline-serials`). The mark SHALL count exactly the confirmed serials the serial job may anchor on, so the two never disagree. Every other serial of an objekt minted at or after the cutoff is one the system estimated. That covers an offline objekt in a range with no anchor, an objekt outside every stored range, and every post-cutoff objekt of an online collection.
+A serial is exact when Cosmo supplied it or when it follows from one Cosmo supplied. That holds for an objekt minted before Cosmo's v1 metadata cutoff (2026-06-04 08:07:02 UTC), and for a later objekt that sits in an anchored range: a reserved token range of its collection that also holds a pre-cutoff objekt's serial, a reported serial recorded as a manual anchor, or, while the operator lets the serial job use them, a serial a connected account's Cosmo read confirmed (see `worker-offline-serials`). The mark SHALL count exactly the confirmed serials the serial job has already rewritten the collection with, and SHALL NOT count confirmed serials of one range that disagree with each other, so the two never disagree. Every other serial of an objekt minted at or after the cutoff is one the system estimated. That covers an offline objekt in a range with no anchor, an objekt outside every stored range, and every post-cutoff objekt of an online collection.
 
 Wherever a trade surface shows a specific objekt's serial, an estimated serial SHALL read with a leading "~", as in "HyeRin 301Z ~#1203", and its accessible name SHALL say it is an estimate. An exact serial SHALL read as today ("#1203"). An objekt not yet numbered SHALL show its name with no serial.
 
@@ -42,6 +42,10 @@ When any objekt shown in the builder, or any waiting leg on the trade page, has 
 #### Scenario: Confirmed serial anchors a range
 - **WHEN** confirmed serials are enabled, a connected account's read confirmed token 51000250 as serial 251, its range holds no manual anchor or pre-cutoff serial, and an offer holds another objekt of that range
 - **THEN** that objekt's serial reads with no mark
+
+#### Scenario: Confirmed serial not yet applied
+- **WHEN** confirmed serials are enabled and a connected account's read confirmed token 51000250 as serial 251 a minute ago, before the serial job rewrote its collection
+- **THEN** an objekt of that range still reads with "~" until the serial job has rewritten the collection
 
 #### Scenario: Confirmed serials not enabled
 - **WHEN** confirmed serials are not enabled and a range holds only a confirmed serial

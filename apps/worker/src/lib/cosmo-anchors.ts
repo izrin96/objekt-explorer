@@ -10,14 +10,27 @@ export const COSMO_ANCHOR_NOTE = "Cosmo objektNo from a connected account";
 
 export type Anchor = { tokenId: number; serial: number; note: string; addedAt: string };
 export type ConfirmedSerial = { tokenId: string | number; objektNo: number; observedAt: string };
-export type AnchorConflict = { tokenId: number; objektNo: number; pinnedSerial: number };
+/** `pinnedSerial` is null when the conflict is with another confirmed serial of the same batch. */
+export type AnchorConflict = { tokenId: number; objektNo: number; pinnedSerial: number | null };
 export type AnchorRefusal = { tokenId: number; objektNo: number; reason: string };
+
+/**
+ * Whether confirmed serials of one batch agree with each other: `computeOfflineSerials` numbers a
+ * batch by token id from its nearest anchor (`serial = anchor.serial + (tid - anchor.tid)`), with
+ * no regard to gaps or foreign tokens inside the range, so they agree exactly when every one has
+ * the same `objektNo - tokenId`.
+ */
+export function consistentInBatch(confirmed: { tokenId: number; objektNo: number }[]) {
+  return new Set(confirmed.map((c) => c.objektNo - c.tokenId)).size <= 1;
+}
 
 /**
  * `confirmed` are one collection's confirmed serials, `rows` every objekt of it. Walked in token
  * order, a confirmed serial is kept only where nothing else pins its batch: a manual anchor or a v1
  * serial always wins, and a disagreement is a conflict, never resolved here. Several confirmed
- * serials in one unpinned batch all stay. `anchors` is every manual anchor unchanged, then the kept.
+ * serials in one unpinned batch all stay while they agree with each other; when any two disagree,
+ * none of that batch's stays and each is a conflict. `anchors` is every manual anchor unchanged,
+ * then the kept.
  */
 export function mergeAnchors(input: {
   manual: Anchor[];
@@ -56,6 +69,8 @@ export function mergeAnchors(input: {
     return serials;
   };
 
+  // the confirmed serials that would pin an unpinned batch, by batch
+  const candidates: { c: (typeof confirmed)[number]; bi: number }[] = [];
   for (const c of confirmed) {
     const onToken = manual.find((a) => a.tokenId === c.tokenId);
     if (onToken) {
@@ -86,6 +101,22 @@ export function mergeAnchors(input: {
       } else if (pinnedSerial !== c.objektNo) {
         conflicts.push({ tokenId: c.tokenId, objektNo: c.objektNo, pinnedSerial });
       }
+      continue;
+    }
+    candidates.push({ c, bi });
+  }
+
+  // a candidate whose token is not among the rows is refused below, so it never disagrees
+  const present = new Set(rows.map((o) => Number.parseInt(o.id)));
+  const inconsistent = new Set<number>();
+  for (const bi of new Set(candidates.map((x) => x.bi))) {
+    const inBatch = candidates.filter((x) => x.bi === bi && present.has(x.c.tokenId));
+    if (!consistentInBatch(inBatch.map((x) => x.c))) inconsistent.add(bi);
+  }
+
+  for (const { c, bi } of candidates) {
+    if (inconsistent.has(bi) && present.has(c.tokenId)) {
+      conflicts.push({ tokenId: c.tokenId, objektNo: c.objektNo, pinnedSerial: null });
       continue;
     }
     const anchor = { tokenId: c.tokenId, serial: c.objektNo };

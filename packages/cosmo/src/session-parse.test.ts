@@ -360,6 +360,25 @@ describe("objektSummariesSchema objekts", () => {
     expect(parsed.skippedObjekts).toBe(0);
   });
 
+  test("a null count keeps the collection and its objekts", () => {
+    const parsed = page([item("a", {}, { count: null, objekts: [entry(1)] })]);
+    expect(parsed.skipped).toBe(0);
+    expect(parsed.collections.map((c) => c.collectionId)).toEqual(["a"]);
+    expect(parsed.objekts.map((o) => o.tokenId)).toEqual(["1"]);
+    expect(parsed.partial).toBe(0);
+  });
+
+  test("null or malformed objekts lose only the objekts, never the collection", () => {
+    const parsed = page([
+      item("a", {}, { count: 2, objekts: null }),
+      item("b", {}, { count: "two", objekts: "nope" }),
+    ]);
+    expect(parsed.skipped).toBe(0);
+    expect(parsed.collections.map((c) => c.collectionId)).toEqual(["a", "b"]);
+    expect(parsed.objekts).toEqual([]);
+    expect(parsed.partial).toBe(0);
+  });
+
   test("drops dates, lenticular pair and artist", () => {
     const parsed = page([item("a", {}, { count: 1, objekts: [entry(1)] })]);
     const kept = parsed.objekts[0] ?? {};

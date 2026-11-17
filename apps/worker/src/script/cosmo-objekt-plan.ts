@@ -8,8 +8,10 @@
  * the online and v1 serials Cosmo and the indexer disagree on (compared only, never written).
  *
  * Transferable: `judgeTransferable` with both directions on, over every row whatever its due
- * flags: outcomes, the writes by direction, non-transferable reason and class, the distinct
- * reasons, sample token ids, and the `cosmo_transferable` records split by whether a newer
+ * flags: outcomes, the writes by direction, non-transferable reason and class (and the
+ * untransferable reads left as reports because their reason is not trusted), what the breaker
+ * would do with those writes, the distinct reasons, sample token ids, and the
+ * `cosmo_transferable` records split by whether a newer
  * `transferability_update` exists (the ones `fix-transferability` would supersede, and the rest,
  * which it holds wherever the chain disagrees; this script makes no chain reads).
  *
@@ -29,9 +31,13 @@ import { and, asc, count, eq, gt, inArray, sql } from "drizzle-orm";
 
 import { mergeAnchors } from "@/lib/cosmo-anchors";
 import {
+  BREAKER_CAP,
+  BREAKER_FLOOR,
+  BREAKER_SHARE,
   type TransferableObjekt,
   judgeTransferable,
   outcomeCounts,
+  transferableBreaker,
 } from "@/lib/cosmo-transferable";
 import {
   V1_CUTOFF_MS,
@@ -168,7 +174,11 @@ async function serialPlan(app: Tx) {
       if (updates.length > SAMPLE) console.log(`    (+${updates.length - SAMPLE} more)`);
     }
     for (const c of merge.conflicts) {
-      console.log(`  conflict: token ${c.tokenId} Cosmo ${c.objektNo}, pinned ${c.pinnedSerial}`);
+      console.log(
+        c.pinnedSerial === null
+          ? `  conflict: token ${c.tokenId} Cosmo ${c.objektNo}, disagrees with another confirmed serial of its batch`
+          : `  conflict: token ${c.tokenId} Cosmo ${c.objektNo}, pinned ${c.pinnedSerial}`,
+      );
     }
     for (const r of merge.refused) {
       console.log(`  refused: token ${r.tokenId} Cosmo ${r.objektNo}: ${r.reason}`);
@@ -261,6 +271,7 @@ async function transferablePlan(app: Tx) {
   heading("Transferable, both directions on");
   const outcomes: string[] = [];
   const writes = new Map<string, number>();
+  const untrusted = new Map<string, number>();
   const samples: Record<string, string[]> = { untransferable: [], transferable: [] };
   let after = "";
   let total = 0;
@@ -273,6 +284,7 @@ async function transferablePlan(app: Tx) {
         reason: cosmoObjekt.nonTransferableReason,
         chainHeight: cosmoObjekt.chainHeight,
         observedMs,
+        receivedAt: sql<string | null>`to_json(${cosmoObjekt.receivedAt}) #>> '{}'`,
       })
       .from(cosmoObjekt)
       .where(gt(cosmoObjekt.tokenId, after))
@@ -310,7 +322,9 @@ async function transferablePlan(app: Tx) {
             tokenId: read.tokenId,
             slug: read.slug,
             transferable: read.transferable,
+            nonTransferableReason: read.reason,
             observedAt: new Date(Number(read.observedMs)),
+            receivedAt: read.receivedAt,
             chainHeight: read.chainHeight,
           },
           MODE,
@@ -322,6 +336,10 @@ async function transferablePlan(app: Tx) {
           writes.set(key, (writes.get(key) ?? 0) + 1);
           const sample = samples[direction]!;
           if (sample.length < SAMPLE) sample.push(read.tokenId);
+        } else if (outcome === "report_untransferable") {
+          // with both directions on, only an untrusted reason leaves an untransferable read a report
+          const key = `${read.reason ?? "no reason"} | ${found?.class ?? "?"}`;
+          untrusted.set(key, (untrusted.get(key) ?? 0) + 1);
         }
       }
     }
@@ -341,6 +359,23 @@ async function transferablePlan(app: Tx) {
   for (const [direction, ids] of Object.entries(samples)) {
     console.log(`sample ${direction}: ${ids.join(", ") || "none"}`);
   }
+  console.log("\nUntransferable reads not written, reason not trusted | class");
+  for (const [key, n] of [...untrusted].sort(([a], [b]) => a.localeCompare(b))) {
+    console.log(`  ${key}: ${n}`);
+  }
+  if (untrusted.size === 0) console.log("  none");
+
+  heading("Breaker");
+  const planned = [...writes.values()].reduce((n, w) => n + w, 0);
+  const breaker = transferableBreaker(planned, total);
+  console.log(
+    `${planned} write(s) planned over ${total} read(s); a run writes at most ${BREAKER_CAP}, or ${BREAKER_SHARE * 100}% of its reads with a floor of ${BREAKER_FLOOR} (here ${breaker.limit})`,
+  );
+  console.log(
+    breaker.tripped
+      ? "  if these were one run's reads, it would trip: nothing written, the planned reads left due"
+      : "  if these were one run's reads, it would write them",
+  );
 
   heading("Non-transferable reasons Cosmo reported");
   const reasons = await app

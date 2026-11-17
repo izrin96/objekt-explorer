@@ -100,7 +100,7 @@ describe("mergeTally", () => {
     expect(tally.conflicts()).toEqual([conflict]);
     expect(tally.refused()).toEqual([]);
     expect(tallyWarning(tally)).toBe(
-      "confirmed serials: 1 disagree with a manual anchor or v1 serial (tokens 3020)",
+      "confirmed serials: 1 disagree with a manual anchor, v1 serial or another confirmed serial of their batch (tokens 3020)",
     );
   });
 
@@ -111,7 +111,9 @@ describe("mergeTally", () => {
       refused: [refusal],
     });
     const line = tallyWarning(tally)!;
-    expect(line).toStartWith("confirmed serials: 22 disagree with a manual anchor or v1 serial");
+    expect(line).toStartWith(
+      "confirmed serials: 22 disagree with a manual anchor, v1 serial or another confirmed serial of their batch",
+    );
     expect(line).toContain("(tokens 79, 80,");
     expect(line).toContain("98 +2 more); 1 refused");
     expect(tallyDetails(tally)).toHaveLength(23);

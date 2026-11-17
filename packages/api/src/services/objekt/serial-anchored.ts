@@ -95,12 +95,19 @@ export async function anchoredSerialIds(ids: string[]): Promise<Set<string>> {
   if (candidates.length === 0) return result;
 
   try {
+    // only rows the serial job has already rewritten with (serial_due off), so "~" goes when the
+    // serials move and not before
     const confirmed = await db
-      .select({ slug: cosmoObjekt.slug, tokenId: cosmoObjekt.tokenId })
+      .select({
+        slug: cosmoObjekt.slug,
+        tokenId: cosmoObjekt.tokenId,
+        objektNo: cosmoObjekt.objektNo,
+      })
       .from(cosmoObjekt)
       .where(
         and(
           sql`${cosmoObjekt.serialEligible}`,
+          sql`not ${cosmoObjekt.serialDue}`,
           inArray(cosmoObjekt.slug, unique(candidates.map((c) => c.slug))),
         ),
       );

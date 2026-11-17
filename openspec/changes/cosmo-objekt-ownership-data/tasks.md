@@ -49,8 +49,8 @@
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
 - [x] 3.2 Record from the sync, in `apps/worker/src/job/collection-media.ts`:
   - In `syncPhase`, before the first session, read the final height (`select max(height)::int as height from squid_processor.status`, through `indexer.execute`) into `run.chainHeight`. A failure or null leaves it null and counts `no_height`.
-  - In `recordPage`, after the collection merge, when `run.chainHeight` is set: one indexer read of the page's token ids (Decision 4, The holder check: `id`, `owner`, `minted_at`, the collection's `slug` and `on_offline`), then `observationsOf(page.objekts, session.cosmoAddress, indexerObjekts, run.chainHeight, now)`, then one upsert into `cosmo_objekt` from `unnest` arrays with the `ON CONFLICT (token_id) DO UPDATE` of Decision 4. `serial_due` becomes true only where `objekt_no` or `slug` changed and `serial_eligible` is not false; `serial_eligible` is written on insert, where `objekt_no` or `slug` changed, or where it is null; `transferable_due` is always true. Pass `session` into `recordPage`. The indexer read and the upsert sit in their own try/catch after the media merge: a failure adds the page's objekts to `run.objektsFailed` and never reaches the session's catch, so the media is recorded, the cursor moves and the session is not parked. One `warn` per run carries the count (Decision 4, Failure isolation).
-  - Add `objektsRecorded` to `Run`, and `objekts recorded N` to the run's `info` summary (which now also logs when only objekts were recorded). Add the skip counts, `no_height`, `skippedObjekts` and `partial` to the heartbeat.
+  - In `recordPage`, after the collection merge, when `run.chainHeight` is set: one indexer read of the page's token ids (Decision 4, The holder check: `id`, `owner`, `minted_at`, `received_at`, the collection's `slug` and `on_offline`), then `observationsOf(page.objekts, session.cosmoAddress, indexerObjekts, run.chainHeight, now)`, then one upsert into `cosmo_objekt` from `unnest` arrays with the `ON CONFLICT (token_id) DO UPDATE` of Decision 4. `serial_due` becomes true only where `objekt_no` or `slug` changed and `serial_eligible` is not false; `serial_eligible` is written on insert, where `objekt_no` or `slug` changed, or where it is null; `transferable_due` becomes true only where `transferable`, `objekt_no`, `slug` or the recorded `received_at` changed or `transferable_checked_at` is missing or over 7 days old. The row keeps the indexer's `received_at` (null when the indexer lacked the token). The statement returns the rows written and the new or changed ones. Pass `session` into `recordPage`. The indexer read and the upsert sit in their own try/catch after the media merge: a failure adds the page's objekts to `run.objektsFailed` and never reaches the session's catch, so the media is recorded, the cursor moves and the session is not parked. One `warn` per run carries the count (Decision 4, Failure isolation).
+  - Add `objektsRecorded` (new or changed rows) to `Run`, and `objekts recorded N` to the run's `info` summary (which now also logs when only objekts were recorded); refreshed rows go to the heartbeat. Add the skip counts, `no_height`, `skippedObjekts` and `partial` to the heartbeat.
   - In `docker-compose.yml`, add `COSMO_OBJEKT_WRITES` to the `worker` and `web` environments, from the root `.env` (Decision 8). In `.env.example`, add `COSMO_OBJEKT_WRITES=` with a comment listing `anchors` (confirmed serials as anchors), `untransferable` and `transferable`, and saying empty records only.
 
   Checks:
@@ -68,13 +68,13 @@
   - `confirmationOf(outcome, read, objekt)` returns the `cosmo_transferable` row to store for `matched` and `written_*` (the read's value, `observed_at`, `chain_height`, the judged `received_at`) and `null` for every other outcome (Decision 6, the record's invariant).
   - `outcomeCounts(outcomes)` for the summary.
 
-  Tests cover every outcome; a read of `received_at` equal to `observed_at` (not moved); a spin owner in any letter case; `untransferable` on and `transferable` off with both directions present; that a read that agrees but moved is `moved`, not `matched`; and that `confirmationOf` gives a row only for `matched` and `written_*`.
+  Tests cover every outcome; a read whose recorded `received_at` is null (`missing`); an indexer `received_at` other than the recorded one, earlier or later (`moved`); the same instant in another notation (not moved); untransferable writes only for `challenge-reward` and `welcome-objekt`, reported for another reason, `other` or none; `transferableBreaker` at the floor, the share and the cap; a spin owner in any letter case; `untransferable` on and `transferable` off with both directions present; that a read that agrees but moved is `moved`, not `matched`; and that `confirmationOf` gives a row only for `matched` and `written_*`.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
 - [x] 4.2 Add `applyCosmoTransferable(mode)` to the apply phase of `job/collection-media.ts`, after the collection apply (Decision 6):
-  - Read up to 5,000 rows `WHERE transferable_due ORDER BY observed_at` from `db`.
+  - Read up to 5,000 rows `WHERE transferable_due ORDER BY observed_at` from `db` (the bare column, so the partial index matches).
   - Per chunk of 500, read the indexer in one statement: `objekt.id, transferable, owner, received_at`, the collection's `slug`, and `newerChange` (an `EXISTS` on `transferability_update` with `block_number > height OR applied_at IS NULL`, with the height passed per token through `unnest`).
-  - Judge each row. For each direction with planned writes, run the guarded `UPDATE … RETURNING` of Decision 6 inside an indexer transaction with `SET LOCAL lock_timeout = '5s'`. Returned ids are `written_*`; the rest of the plan are `raced`.
+  - Judge every chunk first. If `transferableBreaker(planned, judged)` trips, write nothing, store the outcomes of the unplanned reads, leave the planned reads due and log one `warn` with the counts (Decision 6, The breaker). Otherwise, for each direction with planned writes, run the guarded `UPDATE … RETURNING` of Decision 6 inside an indexer transaction with `SET LOCAL lock_timeout = '5s'`. Returned ids are `written_*`; the rest of the plan are `raced`.
   - In one app transaction: store every outcome (`UPDATE cosmo_objekt … FROM unnest`), setting `transferable_due = false` except on `raced`; and upsert `confirmationOf`'s rows into `cosmo_transferable`, clearing `superseded_*`, only where the stored `observed_at` is older. A lock timeout (55P03) leaves that chunk's rows due and counts it.
   - Log as Decision 11 says. `mode` comes from `objektWriteModes(process.env.COSMO_OBJEKT_WRITES)`, read once per process. Unknown words give one `warn` per process.
   - Wrap the step in its own try/catch in `runSyncOnce`: any error but a lock timeout logs one `warn` with `errorCode(error)` and leaves the rows due, and `deleteLongDead` and `sendExpiryNotices` still run.
@@ -92,6 +92,8 @@
 
   Read-only verified: a dry run with `LIMIT=2000` and `PGOPTIONS='-c default_transaction_read_only=on'` prints both new lines (0 before any record). `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
 
+  Under `APPLY=1` the records are read again inside each page's indexer write transaction, right before the write, so a record stored meanwhile holds its token.
+
   Built; the read-only dry run is pending (orchestrator).
 
 ## 5. Worker: confirmed serials as anchors
@@ -102,7 +104,7 @@
 
   Tests cover:
   - every row of the table;
-  - two confirmed serials in one unpinned batch (both kept);
+  - two confirmed serials in one unpinned batch that agree (both kept), that disagree (none kept, all conflicts), agreement across gaps or foreign tokens, and a disagreeing batch leaving other batches' kept;
   - an unpinned batch whose estimate already matches (kept);
   - a batch pinned by a manual anchor that agrees (dropped, no conflict) and one that disagrees (a conflict);
   - a batch pinned by a v1 serial, agreeing and disagreeing;
@@ -118,7 +120,7 @@
   Read-only verified, with approval for seeded local rows: seed eligible `cosmo_objekt` rows for real tokens of one offline post-cutoff collection whose batch has no anchor, one with its production serial and one one higher. Run `refine-serial-batches.ts` dry for that collection with `COSMO_OBJEKT_WRITES=anchors`: it lists the serials the merged anchor would move. Without the variable its output matches a run before this change. `import-boundary.test.ts` passes. Lint, typecheck and build pass for `worker`.
 - [x] 5.3 Add `applyConfirmedSerials()` to `job/confirmed-serials.ts`, and call it as the last step of `populateSerialOffline` (`job/populate-serial.ts`), after the collection loop, in its own try/catch that logs one `warn` on failure. It returns at once unless `anchors` is on.
   - From `db`: up to 20 `slug`s with `serial_due` rows whose `serial_eligible` is not false, observed in the last 30 days and `serial_checked_at` null or over 6 hours old, oldest `observed_at` first; then those rows.
-  - Per slug, from `indexer`: the collection (`id`, `on_offline`, `slug`, `serial_batches`, `serial_anchors`), and every objekt `(id, serial, minted_at)` minted before `now − MINT_DELAY_MS` (export the constant from `populate-serial.ts`). Judge rows whose `serial_eligible` is null with `serialEligible`, and store those judgements in one app statement before the load. Then `loadConfirmedSerials`, `mergeAnchors` and `rewriteSerials`.
+  - Per slug, from `indexer`: the collection (`id`, `on_offline`, `slug`, `serial_batches`, `serial_anchors`), and every objekt `(id, serial, minted_at)` minted before `now − MINT_DELAY_MS` (export the constant from `populate-serial.ts`). Judge rows whose `serial_eligible` is null with `serialEligible` (with no recorded `received_at` they can only be judged false), and store those judgements in one app statement before the load. Then `loadConfirmedSerials`, `mergeAnchors` and `rewriteSerials`.
   - Then one app statement stores `serial_checked_at = now()`, and sets `serial_due = false` except on rows still unjudged. A 55P03 skips the slug for this run.
   - It never writes `collection.serial_anchors`.
 
@@ -142,7 +144,7 @@
 - [x] 7.1 The estimate mark counts confirmed serials (Decision 8):
   - Create `packages/api/src/lib/confirmed-pins.ts` with the pure `pinnedByConfirmed(candidates, confirmed)`: `candidates` are `{ id, slug, start, end }[]`, `confirmed` are `{ slug, tokenId }[]`; it returns the ids whose `[start, end]` holds a confirmed token of the same slug. `confirmed-pins.test.ts` covers a hit, a confirmed token of another slug, one outside the range, range edges, and empty inputs.
   - In `packages/api/src/env.ts`, add `COSMO_OBJEKT_WRITES: z.string().optional()` to `serverEnv`.
-  - In `packages/api/src/services/objekt/serial-anchored.ts`, `anchoredSerialIds(ids)`: when `objektWriteModes(serverEnv.COSMO_OBJEKT_WRITES).anchors`, extend the indexer query to also return, for each post-cutoff id it does not mark anchored, the collection's `slug` and the holding batch's `start` and `end`; then, if any exist, one `db` query `select slug, token_id from cosmo_objekt where serial_eligible and slug = any($1)`; add `pinnedByConfirmed`'s ids to the set. A failed app query logs `console.warn` with the error code and adds nothing. Without `anchors`, the function behaves as today. Update its doc comment, and `isSerialEstimated`'s in `@repo/lib/serial`, to name confirmed serials.
+  - In `packages/api/src/services/objekt/serial-anchored.ts`, `anchoredSerialIds(ids)`: when `objektWriteModes(serverEnv.COSMO_OBJEKT_WRITES).anchors`, extend the indexer query to also return, for each post-cutoff id it does not mark anchored, the collection's `slug` and the holding batch's `start` and `end`; then, if any exist, one `db` query `select slug, token_id, objekt_no from cosmo_objekt where serial_eligible and not serial_due and slug = any($1)`; add `pinnedByConfirmed`'s ids to the set (a batch pinned only while its confirmed tokens agree). A failed app query logs `console.warn` with the error code and adds nothing. Without `anchors`, the function behaves as today. Update its doc comment, and `isSerialEstimated`'s in `@repo/lib/serial`, to name confirmed serials.
   - Callers (`services/offer/verify.ts`, `services/offer/picker/*`, `services/chat/cards.ts`) and response shapes are unchanged.
 
   Checks:
@@ -151,7 +153,7 @@
   - `import-boundary.test.ts` passes for `worker` (the worker does not import this service). Lint, typecheck and build pass for `@repo/lib`, `@repo/api` and `web`.
   *Built, tests and checks pass; `serial-anchored.ts` reads `COSMO_OBJEKT_WRITES` from `process.env` because the worker bundles it through `offer/verify` and `env.ts` would break the import boundary. The seeded dev-server check is pending.*
 
-- [x] 7.2 Replace `cosmo_session_intro`, `cosmo_session_read` and `cosmo_session_shown` in `messages/en.json`, `ko.json` and `ja.json` with Decision 9's text, and tell the owner the ko and ja texts are drafts for review. On the local dev server, `/account/collection-data` shows the new text above Connect in each locale. Lint, typecheck and build pass for `web`.
+- [x] 7.2 Replace `cosmo_session_intro`, `cosmo_session_stored`, `cosmo_session_read` and `cosmo_session_shown` in `messages/en.json`, `ko.json` and `ja.json` with Decision 9's text, and tell the owner the ko and ja texts are drafts for review. On the local dev server, `/account/collection-data` shows the new text above Connect in each locale. Lint, typecheck and build pass for `web`.
   *Strings replaced and checks pass; the ko and ja texts are drafts for the owner's review; the dev-server look at `/account/collection-data` is pending.*
 
 ## 8. Review
@@ -167,6 +169,17 @@
 
   Fix what they find, or record why not in design.md, Risks. Lint, typecheck and build pass for every package the fixes touch.
 
+- [x] 8.2 Review fixes (2026-11-17), each reflected in design.md:
+  - The breaker on transferable writes and the trusted untransferable reasons (Decision 6), printed by the plan script.
+  - Confirmed serials of one batch that disagree pin nothing and are all conflicts (Decision 5), and the estimate mark applies the same rule (Decision 8).
+  - The estimate mark counts only confirmed rows the serial step settled (`not serial_due`, Decision 8).
+  - A null or malformed `count` or `objekts` never costs a collection its media (Decision 2).
+  - A non-lock failure of the serial tail step stamps `serial_checked_at` without settling (Decision 5).
+  - `cosmo_objekt.received_at` records the indexer's `received_at` at the read; the transferable guard and serial eligibility require it unchanged, and a token the indexer lacked at the read is never eligible or written (Decisions 3 to 6). The migration was regenerated in place under the same folder name.
+  - Repeated reads re-judge transferability only on a change or after 7 days (`transferable_checked_at`), and the recording and transferable `info` lines log only on a write or change (Decisions 4, 11).
+  - `fix-transferability` re-reads the Cosmo records inside each page's write transaction.
+  - `cosmo_session_stored` no longer says objekt details are deleted (Decision 9).
+
 ## 9. Rollout (owner)
 
 - [ ] 9.1 **(owner)** Before the deploy, read-only on production: `select count(*) from cosmo_session where dead_at is null` and whether any of those rows belongs to an account other than the owner's. If any does, settle design.md's open question on old consent before 9.2. A reconnect rule is a `created_at` filter on the sessions whose pages `recordPage` records objekts from.
@@ -179,7 +192,7 @@
   - If the serials look right, set `COSMO_OBJEKT_WRITES=anchors` in the root `.env` and restart the `worker` and `web` together. From then on, run the serial scripts with the same value (Decision 5, The switch is per process).
   - Within 10 minutes, `serial-offline` logs the collections rewritten, and the Cream02 Double shows its Cosmo serial with no "~" in the offer builder. `serial-anchor.ts list <slug>` is unchanged.
 - [ ] 9.4 **(owner)** From the plan's transferable section, decide on `untransferable`, then `transferable`, and add each to `COSMO_OBJEKT_WRITES` with a restart.
-  - Optionally re-arm earlier reads with `update cosmo_objekt set transferable_due = true where transferable_outcome like 'report_%'` (a production write).
+  - Optionally re-arm earlier reads the enabled direction would now write, one slice of at most 50 per run, since a larger slice trips the breaker (Decision 10). For `untransferable`: `update cosmo_objekt set transferable_due = true where token_id in (select token_id from cosmo_objekt where not transferable_due and transferable_outcome = 'report_untransferable' and non_transferable_reason in ('challenge-reward', 'welcome-objekt') limit 50)`; for `transferable`, the same with `transferable_outcome = 'report_transferable'` and no reason filter (a production write). A re-armed row no longer settles back to `report_*`, so the slices converge.
   - Check the next `info` line's `written_*` counts against the plan, and that `cosmo_transferable` gained as many rows.
   - Record the decision on `transferable` in design.md, Open questions.
 - [ ] 9.5 **(owner)** A week after 9.3, run `script/anchor-gaps.ts` read-only. For each new whole-block gap after anchorless batches, decide whether to run `script/refine-serial-batches.ts` (dry first, then `APPLY=1`), with the worker's `COSMO_OBJEKT_WRITES` value in its env.
@@ -204,4 +217,4 @@
 
 - Archive `cosmo-qr-collection-media` before this change: this change's `web-cosmo-session` delta modifies a requirement that change adds, and archive refuses it otherwise.
 - Archive this change with `/opsx:archive` once 9.2 to 9.4 are done.
-- Follow-ups: show grid use and the non-transferable reason on the site (stored since this change; a reader treats them as current only while `received_at <= observed_at`), with labels for new reasons (9.6); lenticular pairs once something shows them.
+- Follow-ups: show grid use and the non-transferable reason on the site (stored since this change; a reader treats them as current only while the indexer's `received_at` equals the row's recorded `received_at`), with labels for new reasons (9.6); lenticular pairs once something shows them.

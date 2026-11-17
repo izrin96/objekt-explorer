@@ -1078,11 +1078,17 @@ export const cosmoObjekt = pgTable(
     usedForGrid: boolean("used_for_grid").notNull(),
     chainHeight: integer("chain_height").notNull(),
     observedAt: timestamp("observed_at", { mode: "string", withTimezone: true }).notNull(),
+    // the indexer's received_at when the read was recorded; null when the indexer lacked the token
+    receivedAt: timestamp("received_at", { mode: "string", withTimezone: true }),
     serialEligible: boolean("serial_eligible"),
     serialDue: boolean("serial_due").notNull().default(true),
     serialCheckedAt: timestamp("serial_checked_at", { mode: "string", withTimezone: true }),
     transferableDue: boolean("transferable_due").notNull().default(true),
     transferableOutcome: text("transferable_outcome"),
+    transferableCheckedAt: timestamp("transferable_checked_at", {
+      mode: "string",
+      withTimezone: true,
+    }),
   },
   (t) => [
     check("cosmo_objekt_token_id_check", sql`${t.tokenId} ~ '^[0-9]+$'`),

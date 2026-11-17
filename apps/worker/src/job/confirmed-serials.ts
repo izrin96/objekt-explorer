@@ -82,6 +82,7 @@ type DueRow = {
   tokenId: string;
   slug: string;
   observedAt: string;
+  receivedAt: string | null;
   serialEligible: boolean | null;
 };
 
@@ -129,6 +130,7 @@ export async function applyConfirmedSerials(tally?: MergeTally) {
       tokenId: cosmoObjekt.tokenId,
       slug: cosmoObjekt.slug,
       observedAt: cosmoObjekt.observedAt,
+      receivedAt: cosmoObjekt.receivedAt,
       serialEligible: cosmoObjekt.serialEligible,
     })
     .from(cosmoObjekt)
@@ -146,11 +148,18 @@ export async function applyConfirmedSerials(tally?: MergeTally) {
       if ((outcome.written ?? 0) > 0) rewritten++;
       moved += outcome.written ?? 0;
     } catch (error) {
-      // 55P03: an indexer batch holds the rows; left unchecked, the next run retries the slug
-      if (findPgError(error, (e) => e.code === "55P03")) lockTimeouts++;
+      // 55P03 or 40P01: an indexer batch held the rows; left unchecked, the next run retries it
+      if (findPgError(error, (e) => e.code === "55P03" || e.code === "40P01")) lockTimeouts++;
       else {
         failed++;
         offlineLog.debug(`${slug}: confirmed serials failed: ${errorCode(error)}`);
+        // stamped but not settled, so the slug waits out RECHECK_MS instead of taking a slot
+        // every run
+        try {
+          await markChecked(rows, new Set());
+        } catch (stampError) {
+          offlineLog.debug(`${slug}: check not stamped: ${errorCode(stampError)}`);
+        }
       }
     }
   }
@@ -237,24 +246,29 @@ async function confirmSlug(slug: string, rows: DueRow[], tally: MergeTally): Pro
   return { written, settled };
 }
 
-/** Judge the rows recorded before the indexer had their token, storing the judgements first. */
+/**
+ * Judge the rows recorded before the indexer had their token, storing the judgements first. Such
+ * a row has no recorded `received_at`, so the chain never confirmed its holder: it can be judged
+ * false (another slug, online, a v1 mint) but never true; a later read settles it.
+ */
 async function judgeUnjudged(slug: string, rows: DueRow[], eligible: Map<string, boolean | null>) {
-  const ids = rows.filter((r) => r.serialEligible === null).map((r) => r.tokenId);
-  if (ids.length === 0) return;
+  const unjudged = rows.filter((r) => r.serialEligible === null);
+  if (unjudged.length === 0) return;
+  const recorded = new Map(unjudged.map((r) => [r.tokenId, r.receivedAt] as const));
   const found = await indexer
     .select({
       id: objekts.id,
-      owner: objekts.owner,
       mintedAt: objekts.mintedAt,
+      receivedAt: objekts.receivedAt,
       slug: collections.slug,
       onOffline: collections.onOffline,
     })
     .from(objekts)
     .innerJoin(collections, eq(collections.id, objekts.collectionId))
-    .where(inArray(objekts.id, ids));
+    .where(inArray(objekts.id, [...recorded.keys()]));
   const judged: { id: string; value: boolean }[] = [];
   for (const { id, ...indexerObjekt } of found) {
-    const value = serialEligible({ slug }, indexerObjekt);
+    const value = serialEligible({ slug, receivedAt: recorded.get(id) ?? null }, indexerObjekt);
     if (value === null) continue;
     eligible.set(id, value);
     judged.push({ id, value });

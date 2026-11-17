@@ -29,15 +29,30 @@ A confirmed serial SHALL NOT override a manual anchor or v1 serial on its token 
 - **THEN** nothing changes and nothing is reported
 
 ### Requirement: Only trusted reads become confirmed serials
-A read SHALL count as a confirmed serial only when its holder check passed at the read, the token sits in the collection the read names, that collection is offline or pre-assigned, and the token was minted after the v1 cutoff. It SHALL also be left out of a calculation where its token sits outside every stored batch or it would give an objekt of its batch a serial below 1. A read whose token is not yet indexed SHALL be judged again later.
+A read SHALL count as a confirmed serial only when the chain confirmed its holder when it was recorded and the objekt has not been received since, the token sits in the collection the read names, that collection is offline or pre-assigned, and the token was minted after the v1 cutoff. A read whose token was not yet indexed SHALL NOT count on Cosmo's word alone. A confirmed serial SHALL be left out where its token sits outside every stored batch or it would give a serial below 1.
 
 #### Scenario: A token in another collection
 - **WHEN** a read names token 51000250 for a collection the site files it under another one
 - **THEN** the read never anchors a batch
 
+#### Scenario: A token not yet indexed
+- **WHEN** a read shows token 51000250 as serial 251 before the site has indexed 51000250, and no later read of it arrives
+- **THEN** the read never anchors a batch
+
 #### Scenario: Batches not yet discovered
 - **WHEN** a read arrives for a collection with no stored batches
 - **THEN** no serial moves, and the read anchors the batch once the batches are stored
+
+### Requirement: Confirmed serials that disagree with each other are left out
+Within one batch that no manual anchor or v1 serial pins, confirmed serials SHALL anchor it only while they agree with each other: two agree when their serials differ by exactly as much as their token ids. When any two in a batch disagree, none of that batch's confirmed serials SHALL anchor it, and each SHALL be reported to the operator as a conflict.
+
+#### Scenario: Two reads of one batch disagree
+- **WHEN** anchors are enabled, a batch has no manual anchor or v1 serial, and reads confirm token 51000250 as serial 251 and token 51000260 as serial 262
+- **THEN** no serial in that batch moves for them, and the run reports two conflicts naming 51000250 and 51000260
+
+#### Scenario: Two reads of one batch agree
+- **WHEN** reads confirm token 51000250 as serial 251 and token 51000260 as serial 261 in a batch nothing else pins
+- **THEN** both anchor the batch
 
 ### Requirement: An operator's exclusion of a confirmed serial sticks
 After an operator excludes a confirmed serial, further reads of the same token with the same serial SHALL NOT make it count again.

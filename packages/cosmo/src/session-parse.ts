@@ -132,10 +132,11 @@ const summaryObjektSchema = z
   }));
 export type SummaryObjekt = z.infer<typeof summaryObjektSchema>;
 
+// `count` and `objekts` never cost the collection its media: a null or malformed one reads as absent
 const summaryItemSchema = z.object({
   collection: summaryCollectionSchema,
-  count: z.number().optional(),
-  objekts: z.array(z.unknown()).optional(),
+  count: z.number().nullish().catch(null),
+  objekts: z.array(z.unknown()).nullish().catch(null),
 });
 
 // Each item parses alone, so one malformed collection costs one `skipped`, not the page.
@@ -164,7 +165,7 @@ export const objektSummariesSchema = z
         if (objekt.success) objekts.push(objekt.data);
         else skippedObjekts++;
       }
-      if (count !== undefined && entries && count !== entries.length) partial++;
+      if (count != null && entries && count !== entries.length) partial++;
     }
     return { collectionCount, collections, skipped, objekts, skippedObjekts, partial };
   });

@@ -57,7 +57,7 @@ export function tallyWarning(tally: MergeTally): string | null {
   const parts: string[] = [];
   if (conflicts.length > 0) {
     parts.push(
-      `${conflicts.length} disagree with a manual anchor or v1 serial (tokens ${ids.join(", ")}${more})`,
+      `${conflicts.length} disagree with a manual anchor, v1 serial or another confirmed serial of their batch (tokens ${ids.join(", ")}${more})`,
     );
   }
   if (refused.length > 0) parts.push(`${refused.length} refused`);
@@ -69,8 +69,10 @@ export function tallyDetails(tally: MergeTally): string[] {
   return [
     ...tally
       .conflicts()
-      .map(
-        (c) => `confirmed serial ${c.objektNo} of ${c.tokenId} conflicts: pinned ${c.pinnedSerial}`,
+      .map((c) =>
+        c.pinnedSerial === null
+          ? `confirmed serial ${c.objektNo} of ${c.tokenId} conflicts with another confirmed serial of its batch`
+          : `confirmed serial ${c.objektNo} of ${c.tokenId} conflicts: pinned ${c.pinnedSerial}`,
       ),
     ...tally
       .refused()

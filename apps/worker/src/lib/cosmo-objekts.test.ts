@@ -9,6 +9,7 @@ const OTHER = "0x3333333333333333333333333333333333333333";
 const POST = "2026-07-01T00:00:00Z";
 const PRE = "2026-01-01T00:00:00Z";
 const NOW = "2026-11-17T00:00:00.000Z";
+const RECEIVED = "2026-08-01T00:00:00.000Z";
 
 const objekt = (tokenId: string, extra: Partial<SummaryObjekt> = {}): SummaryObjekt => ({
   tokenId,
@@ -25,6 +26,7 @@ const objekt = (tokenId: string, extra: Partial<SummaryObjekt> = {}): SummaryObj
 const indexed = (extra: Partial<IndexerObjekt> = {}): IndexerObjekt => ({
   owner: ME,
   mintedAt: POST,
+  receivedAt: RECEIVED,
   slug: "summer26-seoyeon-101z",
   onOffline: "offline",
   ...extra,
@@ -34,7 +36,7 @@ const observe = (objekts: SummaryObjekt[], map: [string, IndexerObjekt][] = [], 
   observationsOf(objekts, session, new Map(map), 900, NOW);
 
 describe("serialEligible", () => {
-  const read = { slug: "summer26-seoyeon-101z" };
+  const read = { slug: "summer26-seoyeon-101z", receivedAt: RECEIVED };
 
   test("null when the indexer lacks the token", () => {
     expect(serialEligible(read, undefined)).toBeNull();
@@ -55,12 +57,34 @@ describe("serialEligible", () => {
 
   test("true for a pre-assigned online collection", () => {
     const slug = "cream02-jiyeon-315z";
-    expect(serialEligible({ slug }, indexed({ slug, onOffline: "online" }))).toBe(true);
+    expect(
+      serialEligible({ slug, receivedAt: RECEIVED }, indexed({ slug, onOffline: "online" })),
+    ).toBe(true);
   });
 
   test("false for a mint before the cutoff, accepting a Date", () => {
     expect(serialEligible(read, indexed({ mintedAt: PRE }))).toBe(false);
     expect(serialEligible(read, indexed({ mintedAt: new Date(POST) }))).toBe(true);
+  });
+
+  test("null when the read recorded no received_at: never eligible on Cosmo's word alone", () => {
+    expect(serialEligible({ ...read, receivedAt: null }, indexed())).toBeNull();
+  });
+
+  test("null when the token was received again since the read", () => {
+    expect(serialEligible(read, indexed({ receivedAt: "2026-11-20T00:00:00.000Z" }))).toBeNull();
+  });
+
+  test("the false rules need no holder check", () => {
+    expect(serialEligible({ ...read, receivedAt: null }, indexed({ onOffline: "online" }))).toBe(
+      false,
+    );
+    expect(serialEligible({ ...read, receivedAt: null }, indexed({ mintedAt: PRE }))).toBe(false);
+  });
+
+  test("the same instant in another notation matches", () => {
+    const other = { ...read, receivedAt: "2026-08-01 09:00:00+09" };
+    expect(serialEligible(other, indexed())).toBe(true);
   });
 });
 
@@ -82,6 +106,7 @@ describe("observationsOf", () => {
         serialEligible: true,
         chainHeight: 900,
         observedAt: NOW,
+        receivedAt: RECEIVED,
       },
     ]);
   });
@@ -108,6 +133,7 @@ describe("observationsOf", () => {
     const { rows, skipped } = observe([objekt("1")]);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.serialEligible).toBeNull();
+    expect(rows[0]?.receivedAt).toBeNull();
     expect(skipped.holderMismatch).toBe(0);
   });
 

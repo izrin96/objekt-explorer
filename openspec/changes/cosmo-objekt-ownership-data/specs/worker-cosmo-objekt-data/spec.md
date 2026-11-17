@@ -18,7 +18,7 @@ The site SHALL take per-objekt data only from the collection pages the collectio
 - **THEN** that entry is skipped and counted, and the rest of the page's objekts and every collection's media are still recorded
 
 ### Requirement: What is recorded per objekt
-For each objekt read, the site SHALL record, by token id: its collection, Cosmo's serial, whether Cosmo lets it be sent, Cosmo's non-transferable reason, whether it was used for a grid, and when it was read. It SHALL NOT record which user, session, nickname or address the read came from, nor Cosmo's minted, acquired or updated dates.
+For each objekt read, the site SHALL record, by token id: its collection, Cosmo's serial, whether Cosmo lets it be sent, Cosmo's non-transferable reason, whether it was used for a grid, when it was read, and when the chain last saw the token received as of the read. It SHALL NOT record which user, session, nickname or address the read came from, nor Cosmo's minted, acquired or updated dates.
 
 #### Scenario: A challenge reward
 - **WHEN** rin.t's page lists token 41200001 as serial 12, not transferable for `challenge-reward`, used for a grid
@@ -32,7 +32,7 @@ An objekt entry SHALL be recorded only when Cosmo names the connected account's 
 - **THEN** no record is written for it
 
 ### Requirement: Cosmo's transferability corrects the site's
-When enabled for that direction, a recorded transferability that differs from the site's SHALL replace it, but only while the objekt has not been received since the read, no on-chain transferability change is newer than the read or still unapplied, its holder is not Cosmo's spin address, and the site's value is still the one compared.
+When enabled for that direction, a recorded transferability that differs from the site's SHALL replace it, but only when the chain confirmed the read's holder when the read was recorded and the objekt has not been received since, no on-chain transferability change is newer than the read or still unapplied, its holder is not Cosmo's spin address, and the site's value is still the one compared.
 
 #### Scenario: A challenge reward shown as transferable
 - **WHEN** untransferable corrections are enabled and a read shows token 41200001 not transferable while the site shows it transferable, and it has not moved since
@@ -42,13 +42,35 @@ When enabled for that direction, a recorded transferability that differs from th
 - **WHEN** token 41200001 was received by another holder after the read
 - **THEN** the site's transferability is left as it is
 
+#### Scenario: The chain did not know the token at the read
+- **WHEN** a read shows token 41200001 not transferable while the site had not indexed 41200001 yet
+- **THEN** that read changes nothing, even after the site indexes the token
+
 #### Scenario: A newer chain change wins
 - **WHEN** an on-chain transferability change for token 41200001 was indexed after the read was taken
-- **THEN** the site keeps the chain's value until a later read
+- **THEN** the site keeps the chain's value until a later read is judged, either because it differs or at the weekly re-judgement
 
 #### Scenario: Cosmo's spin address
 - **WHEN** a read differs from the site for an objekt held by Cosmo's spin address
 - **THEN** the site's value is left as it is
+
+### Requirement: Only trusted reasons make an objekt untransferable
+A correction to not transferable SHALL be made only when Cosmo's non-transferable reason is `challenge-reward`, `welcome-objekt`, or a reason the operator added to the trusted list. Any other reason, or none, SHALL be counted as one the site would make untransferable and SHALL NOT change the site.
+
+#### Scenario: An untrusted reason
+- **WHEN** untransferable corrections are enabled and a read shows token 41200001 not transferable for a reason other than `challenge-reward` or `welcome-objekt`, or for none
+- **THEN** the site's transferability is left as it is and the read is counted as one the site would make untransferable
+
+### Requirement: Too many corrections at once stop the run
+Before writing any correction in a run, the site SHALL count the corrections the run plans. When they exceed 200, or exceed 20% of the reads the run judged and 50, the run SHALL write none of them, SHALL leave them to be judged again, and SHALL report the counts to the operator.
+
+#### Scenario: A burst of disagreements
+- **WHEN** untransferable corrections are enabled and one run judges 1,000 reads of which 300 differ from the site
+- **THEN** no transferability changes in that run, and the operator is told 300 corrections were planned over 1,000 reads
+
+#### Scenario: A few corrections
+- **WHEN** a run judges 40 reads of which 3 differ from the site with their direction enabled
+- **THEN** the 3 corrections are written
 
 ### Requirement: Each direction of correction is switched on separately
 Corrections that make an objekt untransferable and corrections that make one transferable SHALL each be off until the operator enables that direction. While a direction is off, the site SHALL still count the objekts it would change in that direction, by non-transferable reason.
