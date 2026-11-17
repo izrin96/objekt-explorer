@@ -128,17 +128,18 @@
 
 ## 6. The plan script
 
-- [ ] 6.1 Create `apps/worker/src/script/cosmo-objekt-plan.ts` (Decision 10), read-only:
+- [x] 6.1 Create `apps/worker/src/script/cosmo-objekt-plan.ts` (Decision 10), read-only:
   - It refuses to start unless `SHOW default_transaction_read_only` is `on` for the indexer, as `fix-transferability.ts` does.
   - It reads every `cosmo_objekt` row (all of them, ignoring the due flags), runs `mergeAnchors` per slug as if `anchors` were on, and `judgeTransferable` per chunk with both directions on.
   - It prints per collection the serials the merge would move, with their count and range (`shiftedSerials`), the conflicts and refusals with token ids, and the online and v1 serials that differ from the indexer. Then the transferable outcomes by direction × non-transferable reason × class, the distinct `non_transferable_reason` values with counts, up to 10 sample token ids per direction, and the `cosmo_transferable` records split by whether a `transferability_update` above their `chain_height` exists (Decision 10).
   - An optional `SLUG=<slug>` narrows the serial part.
 
   Usage lines go in its header comment, as in `serial-anchor.ts`. Read-only verified: with the seeded rows of 4.2 and 5.2 on the local app database and `PGOPTIONS='-c default_transaction_read_only=on'`, it prints both reports. Without `PGOPTIONS` it refuses. Lint, typecheck and build pass for `worker`.
+  *Built and checked; the read-only run on seeded local rows (and the refusal without `PGOPTIONS`) is pending, owner-approved seeding needed.*
 
 ## 7. API and web
 
-- [ ] 7.1 The estimate mark counts confirmed serials (Decision 8):
+- [x] 7.1 The estimate mark counts confirmed serials (Decision 8):
   - Create `packages/api/src/lib/confirmed-pins.ts` with the pure `pinnedByConfirmed(candidates, confirmed)`: `candidates` are `{ id, slug, start, end }[]`, `confirmed` are `{ slug, tokenId }[]`; it returns the ids whose `[start, end]` holds a confirmed token of the same slug. `confirmed-pins.test.ts` covers a hit, a confirmed token of another slug, one outside the range, range edges, and empty inputs.
   - In `packages/api/src/env.ts`, add `COSMO_OBJEKT_WRITES: z.string().optional()` to `serverEnv`.
   - In `packages/api/src/services/objekt/serial-anchored.ts`, `anchoredSerialIds(ids)`: when `objektWriteModes(serverEnv.COSMO_OBJEKT_WRITES).anchors`, extend the indexer query to also return, for each post-cutoff id it does not mark anchored, the collection's `slug` and the holding batch's `start` and `end`; then, if any exist, one `db` query `select slug, token_id from cosmo_objekt where serial_eligible and slug = any($1)`; add `pinnedByConfirmed`'s ids to the set. A failed app query logs `console.warn` with the error code and adds nothing. Without `anchors`, the function behaves as today. Update its doc comment, and `isSerialEstimated`'s in `@repo/lib/serial`, to name confirmed serials.
@@ -148,7 +149,10 @@
   - `bun test packages/api` passes.
   - With approved seeded local rows (task 5.2's eligible row for a production token of an unanchored offline batch) and `COSMO_OBJEKT_WRITES=anchors` in the web's env, on the local dev server the offer builder shows another objekt of that batch without "~"; without the variable it shows "~".
   - `import-boundary.test.ts` passes for `worker` (the worker does not import this service). Lint, typecheck and build pass for `@repo/lib`, `@repo/api` and `web`.
-- [ ] 7.2 Replace `cosmo_session_intro`, `cosmo_session_read` and `cosmo_session_shown` in `messages/en.json`, `ko.json` and `ja.json` with Decision 9's text, and tell the owner the ko and ja texts are drafts for review. On the local dev server, `/account/collection-data` shows the new text above Connect in each locale. Lint, typecheck and build pass for `web`.
+  *Built, tests and checks pass; `serial-anchored.ts` reads `COSMO_OBJEKT_WRITES` from `process.env` because the worker bundles it through `offer/verify` and `env.ts` would break the import boundary. The seeded dev-server check is pending.*
+
+- [x] 7.2 Replace `cosmo_session_intro`, `cosmo_session_read` and `cosmo_session_shown` in `messages/en.json`, `ko.json` and `ja.json` with Decision 9's text, and tell the owner the ko and ja texts are drafts for review. On the local dev server, `/account/collection-data` shows the new text above Connect in each locale. Lint, typecheck and build pass for `web`.
+  *Strings replaced and checks pass; the ko and ja texts are drafts for the owner's review; the dev-server look at `/account/collection-data` is pending.*
 
 ## 8. Review
 
