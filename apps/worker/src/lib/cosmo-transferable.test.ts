@@ -6,6 +6,7 @@ import {
   confirmationOf,
   judgeTransferable,
   outcomeCounts,
+  settleOutcome,
   type StoredOutcome,
   type TransferableRead,
 } from "./cosmo-transferable";
@@ -150,5 +151,20 @@ describe("outcomeCounts", () => {
   test("counts each outcome", () => {
     expect(outcomeCounts(["matched", "moved", "matched"])).toEqual({ matched: 2, moved: 1 });
     expect(outcomeCounts([])).toEqual({});
+  });
+});
+
+describe("settleOutcome", () => {
+  test("a planned write becomes written when the UPDATE returned it, raced when not", () => {
+    expect(settleOutcome("write_untransferable", true)).toBe("written_untransferable");
+    expect(settleOutcome("write_untransferable", false)).toBe("raced");
+    expect(settleOutcome("write_transferable", true)).toBe("written_transferable");
+    expect(settleOutcome("write_transferable", false)).toBe("raced");
+  });
+
+  test("any other outcome is stored as judged", () => {
+    expect(settleOutcome("matched", false)).toBe("matched");
+    expect(settleOutcome("report_transferable", true)).toBe("report_transferable");
+    expect(settleOutcome("moved", false)).toBe("moved");
   });
 });

@@ -63,6 +63,13 @@ export function judgeTransferable(
   return mode.untransferable ? "write_untransferable" : "report_untransferable";
 }
 
+/** A judged outcome as stored, once the guarded UPDATE has run: a planned write that it did not return raced. */
+export function settleOutcome(judged: JudgedOutcome, landed: boolean): StoredOutcome {
+  if (judged === "write_untransferable") return landed ? "written_untransferable" : "raced";
+  if (judged === "write_transferable") return landed ? "written_transferable" : "raced";
+  return judged;
+}
+
 /**
  * The `cosmo_transferable` row to store: for `matched` and `written_*` only, since a record holds
  * only a value the worker wrote to, or found in, `objekt.transferable` under every guard.

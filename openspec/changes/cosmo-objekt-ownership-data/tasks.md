@@ -47,7 +47,7 @@
   Tests cover each skip reason (a token the indexer holds under another owner, and one the indexer lacks, which is kept with `serialEligible: null`), each `serialEligible` rule (another slug, an online collection, a pre-assigned online one, a pre-cutoff mint, an eligible one), the duplicate rule, a mixed-case session address and the slug mapping of a real-shaped `collectionId`.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 3.2 Record from the sync, in `apps/worker/src/job/collection-media.ts`:
+- [x] 3.2 Record from the sync, in `apps/worker/src/job/collection-media.ts`:
   - In `syncPhase`, before the first session, read the final height (`select max(height)::int as height from squid_processor.status`, through `indexer.execute`) into `run.chainHeight`. A failure or null leaves it null and counts `no_height`.
   - In `recordPage`, after the collection merge, when `run.chainHeight` is set: one indexer read of the page's token ids (Decision 4, The holder check: `id`, `owner`, `minted_at`, the collection's `slug` and `on_offline`), then `observationsOf(page.objekts, session.cosmoAddress, indexerObjekts, run.chainHeight, now)`, then one upsert into `cosmo_objekt` from `unnest` arrays with the `ON CONFLICT (token_id) DO UPDATE` of Decision 4. `serial_due` becomes true only where `objekt_no` or `slug` changed and `serial_eligible` is not false; `serial_eligible` is written on insert, where `objekt_no` or `slug` changed, or where it is null; `transferable_due` is always true. Pass `session` into `recordPage`. The indexer read and the upsert sit in their own try/catch after the media merge: a failure adds the page's objekts to `run.objektsFailed` and never reaches the session's catch, so the media is recorded, the cursor moves and the session is not parked. One `warn` per run carries the count (Decision 4, Failure isolation).
   - Add `objektsRecorded` to `Run`, and `objekts recorded N` to the run's `info` summary (which now also logs when only objekts were recorded). Add the skip counts, `no_height`, `skippedObjekts` and `partial` to the heartbeat.
@@ -59,6 +59,8 @@
   - Read the diff: no new Cosmo call, the request budget is untouched, no session id, user id, nickname or address is written to `cosmo_objekt` or logged beside a token id, the upsert never touches `cosmo_transferable`, and nothing deletes `cosmo_objekt` rows (Decision 7).
   - Lint, typecheck and build pass for `worker`.
 
+  Built; live checks pending (orchestrator).
+
 ## 4. Worker: transferable corrections
 
 - [x] 4.1 Create `apps/worker/src/lib/cosmo-transferable.ts` (pure) and its test:
@@ -69,7 +71,7 @@
   Tests cover every outcome; a read of `received_at` equal to `observed_at` (not moved); a spin owner in any letter case; `untransferable` on and `transferable` off with both directions present; that a read that agrees but moved is `moved`, not `matched`; and that `confirmationOf` gives a row only for `matched` and `written_*`.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 4.2 Add `applyCosmoTransferable(mode)` to the apply phase of `job/collection-media.ts`, after the collection apply (Decision 6):
+- [x] 4.2 Add `applyCosmoTransferable(mode)` to the apply phase of `job/collection-media.ts`, after the collection apply (Decision 6):
   - Read up to 5,000 rows `WHERE transferable_due ORDER BY observed_at` from `db`.
   - Per chunk of 500, read the indexer in one statement: `objekt.id, transferable, owner, received_at`, the collection's `slug`, and `newerChange` (an `EXISTS` on `transferability_update` with `block_number > height OR applied_at IS NULL`, with the height passed per token through `unnest`).
   - Judge each row. For each direction with planned writes, run the guarded `UPDATE … RETURNING` of Decision 6 inside an indexer transaction with `SET LOCAL lock_timeout = '5s'`. Returned ids are `written_*`; the rest of the plan are `raced`.
@@ -81,12 +83,16 @@
   Read-only verified, with the owner's approval for seeded local rows: seed three `cosmo_objekt` rows for real production token ids whose `transferable` disagrees with production (find them read-only with the plan script, task 6.1, or invert a real value in the seed), with `chain_height` from production's `squid_processor.status`. Call `applyCosmoTransferable({ untransferable: true, transferable: true })` once from `bun -e` in `apps/worker` with `.env.local`. The plan logs (`debug`) the writes it would send, and the `UPDATE` fails at the read-only indexer, so no `cosmo_transferable` row is stored. Then with both off: the rows get `report_*` outcomes, nothing reaches the indexer, and `cosmo_transferable` stays empty. Then seed one row whose value matches production: it is `matched` and its `cosmo_transferable` row is stored locally.
 
   `import-boundary.test.ts` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 4.3 `fix-transferability` never reverts a Cosmo-confirmed value (Decision 6, Against `fix-transferability`):
+
+  Built; the read-only check with seeded rows is pending (orchestrator).
+- [x] 4.3 `fix-transferability` never reverts a Cosmo-confirmed value (Decision 6, Against `fix-transferability`):
   - In `apps/worker/src/lib/transferability-check.ts`, add the pure `cosmoHold(mismatch, record, newestBlock)` returning `apply`, `held` or `superseded`, with tests: no record; a record agreeing with the chain value; a record disagreeing with no newer update (`held`); a newer update above the record's `chain_height` (`superseded`); an update at exactly that height (`held`); a record already superseded (`apply`); a record whose token moved since (still `held`).
   - In `apps/worker/src/script/fix-transferability.ts`, per page of mismatches: read from `db` the `cosmo_transferable` rows of those ids, and from `indexer` the highest `transferability_update.block_number` of the tokens that have one. Leave `held` tokens out of `applyPage`. Under `APPLY=1`, apply `superseded` tokens' chain value with the rest, then mark their records in one app statement (`superseded_at = now()`, `superseded_block`). The dry run writes nothing.
   - In both runs, print "held by Cosmo" and "Cosmo record superseded" counts beside the totals. Update the header comment: its `APPLY=1` paragraph gains the hold rule.
 
   Read-only verified: a dry run with `LIMIT=2000` and `PGOPTIONS='-c default_transaction_read_only=on'` prints both new lines (0 before any record). `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
+
+  Built; the read-only dry run is pending (orchestrator).
 
 ## 5. Worker: confirmed serials as anchors
 

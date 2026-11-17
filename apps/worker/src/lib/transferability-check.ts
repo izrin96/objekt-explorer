@@ -108,3 +108,31 @@ export function addToTally(
   for (const mismatch of mismatches) entry(mismatch.class)[mismatch.direction] += 1;
   return tally;
 }
+
+/** A token's Cosmo-confirmed value (`cosmo_transferable`), as the chain check weighs it. */
+export type CosmoRecord = {
+  transferable: boolean;
+  chainHeight: number;
+  supersededAt: string | null;
+};
+
+export type CosmoHold = "apply" | "held" | "superseded";
+
+/**
+ * Whether the chain check may write a mismatch over a Cosmo-confirmed value: `apply` with no live
+ * record or one that agrees with the chain, `superseded` when an on-chain change above the
+ * record's chain height exists (the chain wins), `held` otherwise. A move since the record
+ * changes nothing.
+ */
+export function cosmoHold(
+  mismatch: { chain: boolean },
+  record: CosmoRecord | null | undefined,
+  newestBlock: number | null | undefined,
+): CosmoHold {
+  if (!record || record.supersededAt !== null) return "apply";
+  if (record.transferable === mismatch.chain) return "apply";
+  if (newestBlock !== null && newestBlock !== undefined && newestBlock > record.chainHeight) {
+    return "superseded";
+  }
+  return "held";
+}
