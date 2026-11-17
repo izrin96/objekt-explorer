@@ -34,6 +34,7 @@ import { Route as MSRouteImport } from './routes/m/s'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as containerAccountIndexRouteImport } from './routes/(container)/account/index'
 import { Route as containerAccountBlockedRouteImport } from './routes/(container)/account/blocked'
+import { Route as containerAccountCollectionDataRouteImport } from './routes/(container)/account/collection-data'
 import { Route as containerAccountDangerRouteImport } from './routes/(container)/account/danger'
 import { Route as containerAccountEmailRouteImport } from './routes/(container)/account/email'
 import { Route as containerAccountGeneralRouteImport } from './routes/(container)/account/general'
@@ -212,6 +213,12 @@ const containerAccountBlockedRoute = containerAccountBlockedRouteImport.update({
   path: '/blocked',
   getParentRoute: () => containerAccountRouteRoute,
 } as any)
+const containerAccountCollectionDataRoute =
+  containerAccountCollectionDataRouteImport.update({
+    id: '/collection-data',
+    path: '/collection-data',
+    getParentRoute: () => containerAccountRouteRoute,
+  } as any)
 const containerAccountDangerRoute = containerAccountDangerRouteImport.update({
   id: '/danger',
   path: '/danger',
@@ -486,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/trade/@{$handle}': typeof containerTradeAtChar123handleChar125RouteRouteWithChildren
   '/trade/mine': typeof containerTradeMineRouteRouteWithChildren
   '/account/blocked': typeof containerAccountBlockedRoute
+  '/account/collection-data': typeof containerAccountCollectionDataRoute
   '/account/danger': typeof containerAccountDangerRoute
   '/account/email': typeof containerAccountEmailRoute
   '/account/general': typeof containerAccountGeneralRoute
@@ -550,6 +558,7 @@ export interface FileRoutesByTo {
   '/': typeof containerIndexRoute
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
   '/account/blocked': typeof containerAccountBlockedRoute
+  '/account/collection-data': typeof containerAccountCollectionDataRoute
   '/account/danger': typeof containerAccountDangerRoute
   '/account/email': typeof containerAccountEmailRoute
   '/account/general': typeof containerAccountGeneralRoute
@@ -623,6 +632,7 @@ export interface FileRoutesById {
   '/(container)/trade/@{$handle}': typeof containerTradeAtChar123handleChar125RouteRouteWithChildren
   '/(container)/trade/mine': typeof containerTradeMineRouteRouteWithChildren
   '/(container)/account/blocked': typeof containerAccountBlockedRoute
+  '/(container)/account/collection-data': typeof containerAccountCollectionDataRoute
   '/(container)/account/danger': typeof containerAccountDangerRoute
   '/(container)/account/email': typeof containerAccountEmailRoute
   '/(container)/account/general': typeof containerAccountGeneralRoute
@@ -697,6 +707,7 @@ export interface FileRouteTypes {
     | '/trade/@{$handle}'
     | '/trade/mine'
     | '/account/blocked'
+    | '/account/collection-data'
     | '/account/danger'
     | '/account/email'
     | '/account/general'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/'
     | '/@{$nickname}'
     | '/account/blocked'
+    | '/account/collection-data'
     | '/account/danger'
     | '/account/email'
     | '/account/general'
@@ -833,6 +845,7 @@ export interface FileRouteTypes {
     | '/(container)/trade/@{$handle}'
     | '/(container)/trade/mine'
     | '/(container)/account/blocked'
+    | '/(container)/account/collection-data'
     | '/(container)/account/danger'
     | '/(container)/account/email'
     | '/(container)/account/general'
@@ -1068,6 +1081,13 @@ declare module '@tanstack/react-router' {
       path: '/blocked'
       fullPath: '/account/blocked'
       preLoaderRoute: typeof containerAccountBlockedRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/collection-data': {
+      id: '/(container)/account/collection-data'
+      path: '/collection-data'
+      fullPath: '/account/collection-data'
+      preLoaderRoute: typeof containerAccountCollectionDataRouteImport
       parentRoute: typeof containerAccountRouteRoute
     }
     '/(container)/account/danger': {
@@ -1397,6 +1417,7 @@ declare module '@tanstack/react-router' {
 
 interface containerAccountRouteRouteChildren {
   containerAccountBlockedRoute: typeof containerAccountBlockedRoute
+  containerAccountCollectionDataRoute: typeof containerAccountCollectionDataRoute
   containerAccountDangerRoute: typeof containerAccountDangerRoute
   containerAccountEmailRoute: typeof containerAccountEmailRoute
   containerAccountGeneralRoute: typeof containerAccountGeneralRoute
@@ -1412,6 +1433,7 @@ interface containerAccountRouteRouteChildren {
 
 const containerAccountRouteRouteChildren: containerAccountRouteRouteChildren = {
   containerAccountBlockedRoute: containerAccountBlockedRoute,
+  containerAccountCollectionDataRoute: containerAccountCollectionDataRoute,
   containerAccountDangerRoute: containerAccountDangerRoute,
   containerAccountEmailRoute: containerAccountEmailRoute,
   containerAccountGeneralRoute: containerAccountGeneralRoute,

@@ -1,5 +1,10 @@
-import type { Notification, SanctionPayload } from "@repo/api/schemas/notification";
+import type {
+  CosmoSessionExpiryPayload,
+  Notification,
+  SanctionPayload,
+} from "@repo/api/schemas/notification";
 
+import { expiryNotice } from "@/features/cosmo-session/connect-flow";
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
@@ -12,6 +17,7 @@ export const ACTION_LABEL: Record<RowAction, () => string> = {
   review: m.notification_action_review,
   feedback: m.notification_action_feedback,
   matches: m.notification_action_matches,
+  renew: m.cosmo_session_renew,
 };
 
 export function sanctionText(
@@ -41,6 +47,18 @@ export function sanctionText(
     default:
       return null;
   }
+}
+
+/**
+ * Whole days from the notice's own time to the session's end, so an old notice stays true as of
+ * then; null when the window doesn't hold, which this tab then doesn't draw.
+ */
+export function expiryText({ expiresAt }: CosmoSessionExpiryPayload, createdAt: string) {
+  const days = expiryNotice(Date.parse(expiresAt), Date.parse(createdAt));
+  if (days === null) return null;
+  if (days === 0) return m.notification_cosmo_expiry_today();
+  if (days === 1) return m.notification_cosmo_expiry_one_day();
+  return m.notification_cosmo_expiry_days({ count: formatCount(days) });
 }
 
 export function alertText(

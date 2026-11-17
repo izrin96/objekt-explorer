@@ -13,6 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import { deletionBlockers, refusalOf } from "../../lib/account-deletion";
 import { ownBannerKey } from "../../lib/banner-key";
 import { disconnectUser } from "../../realtime";
+import { revokeSessionsOf, signOutSealed, type SealedSession } from "../cosmo-session/sessions";
 import { lockTradeLists } from "../list/shared";
 import { audit, openReportsOf } from "../moderation/core";
 import { bumpSafetyVersions } from "../moderation/safety-cache";
@@ -33,6 +34,7 @@ const DELETED_ACCOUNT_NAME = "Deleted account";
  * `self` is refused on a sanction and writes the `account_deleted` audit entry.
  */
 export async function anonymizeUser(userId: string, { self }: { self: boolean }) {
+  let revoked: SealedSession[] = [];
   const { cancelled, banners } = await db.transaction(async (tx) => {
     // the user row before any offer row, as accept takes it; an accept racing this either
     // commits its trade before the check below or then finds its offer gone
@@ -95,8 +97,12 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     await tx.delete(notification).where(eq(notification.userId, userId));
     await tx.delete(notificationPref).where(eq(notificationPref.userId, userId));
     await tx.delete(messagePref).where(eq(messagePref.userId, userId));
+    // not left to the foreign key: the row is scrubbed, never deleted
+    revoked = await revokeSessionsOf(tx, userId);
     return { cancelled: result, banners: held };
   });
+  // a failed sign-out skips nothing below
+  if (revoked.length > 0) void signOutSealed(revoked);
   await publishCancelled(cancelled);
   // its addresses left the account, so cached matches must stop counting what they hold
   await bumpSafetyVersions([userId]);

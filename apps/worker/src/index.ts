@@ -4,6 +4,8 @@ import { cron, type CronJob } from "bun";
 import { flushErrorTracking } from "./instrument";
 import { relayActivity } from "./job/activity-relay";
 import { replayPendingTransfers } from "./job/collection";
+import { syncCollectionMedia } from "./job/collection-media";
+import { copyCollectionMedia } from "./job/copy-collection-media";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { mirrorArtistImages } from "./job/mirror-artist-images";
@@ -137,6 +139,18 @@ if (indexerWrites) {
   const runImages = safeRun("images", processCollectionImages);
   startupRuns.push(runImages);
   crons.push(cron("4-59/10 * * * *", runImages));
+
+  // media sessions reported (motion, voice, back image, colours) onto the indexer; the only job
+  // that calls Cosmo with a stored session, serially and under a fixed budget
+  const runCollectionMedia = safeRun("collection-media", syncCollectionMedia);
+  startupRuns.push(runCollectionMedia);
+  crons.push(cron("*/5 * * * *", runCollectionMedia));
+
+  // copies recorded motion and voice files into the bucket; a separate job so a download never
+  // spends the Cosmo run's budget or waits on its backoff
+  const runMediaCopy = safeRun("media-copy", copyCollectionMedia);
+  startupRuns.push(runMediaCopy);
+  crons.push(cron("2-59/10 * * * *", runMediaCopy));
 }
 
 // weekly safety-net full scan for stale entries the outbox drain missed

@@ -2,6 +2,7 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses, chunkMap } from "@repo/lib";
+import { heldKey } from "@repo/lib/held-by-key";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
@@ -176,8 +177,6 @@ function page<R extends { objekt: { receivedAt: Date | string; id: string } }>(
 }
 
 const CACHE_TTL = 60 * 5;
-
-const heldKey = (addr: string) => `held-by:v3:${addr}`;
 
 /** Drops Spin's cached held list, which carries collection colours, after a colour save. */
 export function forgetSpinHeld() {

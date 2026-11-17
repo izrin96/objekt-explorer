@@ -17,6 +17,7 @@ services:
       - S3_BUCKET
       - S3_PUBLIC_URL
       - COSMO_KEY
+      - COSMO_SESSION_KEY
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY
       - WORKER_LOG_LEVEL
@@ -155,6 +156,8 @@ services:
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY
       - CENTRIFUGO_TOKEN_SECRET
+      - COSMO_SESSION_KEY
+      - COSMO_BROWSER_URL
       - SENTRY_DSN
       - SENTRY_ENVIRONMENT
       - SENTRY_RELEASE
@@ -188,6 +191,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # headless Chromium that mints the reCAPTCHA token for Cosmo's QR sign-in (CDP over a websocket); the web
+  # reaches it at COSMO_BROWSER_URL=ws://browser:3000?token=<COSMO_BROWSER_TOKEN> and no port is published
+  browser:
+    restart: always
+    image: ghcr.io/browserless/chromium:v2.58.2
+    expose:
+      - "3000"
+    environment:
+      - TOKEN=${COSMO_BROWSER_TOKEN}
+      - CONCURRENT=2
+      - QUEUED=4
+      - TIMEOUT=60000
 
   # postgres database for web
   postgres:

@@ -294,7 +294,9 @@ export const notification = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     type: text("type")
-      .$type<"want_match" | "have_wanted" | "offer" | "trade" | "sanction">()
+      .$type<
+        "want_match" | "have_wanted" | "offer" | "trade" | "sanction" | "cosmo_session_expiry"
+      >()
       .notNull(),
     payload: jsonb("payload").notNull(),
     groupKey: text("group_key").notNull(),
@@ -973,9 +975,96 @@ export const collectionPriceHistory = pgTable(
   ],
 );
 
+// A user's connected Cosmo sign-in. The sealed cookie carries its owner in its AAD
+// (`packages/lib/src/server/sealed.ts`), so a copy onto another row or user fails to open.
+export const cosmoSession = pgTable(
+  "cosmo_session",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    cosmoAddress: citext("cosmo_address", { length: 42 }).notNull(),
+    cosmoNickname: text("cosmo_nickname").notNull(),
+    cookieSealed: text("cookie_sealed"),
+    cookieExpiresAt: timestamp("cookie_expires_at", {
+      mode: "string",
+      withTimezone: true,
+    }).notNull(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    nextSyncAt: timestamp("next_sync_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    syncCursor: jsonb("sync_cursor").$type<{ artist: string; page: number }>(),
+    lastUsedAt: timestamp("last_used_at", { mode: "string", withTimezone: true }),
+    lastAttemptAt: timestamp("last_attempt_at", { mode: "string", withTimezone: true }),
+    lastSyncedAt: timestamp("last_synced_at", { mode: "string", withTimezone: true }),
+    syncRequestedAt: timestamp("sync_requested_at", { mode: "string", withTimezone: true }),
+    deadAt: timestamp("dead_at", { mode: "string", withTimezone: true }),
+    lastError: text("last_error").$type<
+      | "session_dead"
+      | "session_expired"
+      | "cosmo_unavailable"
+      | "unexpected_response"
+      | "key_unreadable"
+    >(),
+    lastSync: jsonb("last_sync").$type<{
+      seen: number;
+      recorded: number;
+      applied: number;
+      skipped: number;
+    }>(),
+    // set when the expiry notice goes out; every connect clears it so the next cycle notifies again
+    expiryNotifiedAt: timestamp("expiry_notified_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    index("cosmo_session_user_id_idx").on(t.userId),
+    uniqueIndex("cosmo_session_address_idx").on(t.cosmoAddress),
+    // the worker's due-time scan reads only live rows
+    index("cosmo_session_next_sync_idx")
+      .on(t.nextSyncAt)
+      .where(sql`dead_at IS NULL`),
+    // a live row has a cookie, a dead row has none
+    check(
+      "cosmo_session_cookie_live",
+      sql`(${t.deadAt} IS NULL) = (${t.cookieSealed} IS NOT NULL)`,
+    ),
+    check(
+      "cosmo_session_last_error_chk",
+      sql`${t.lastError} IN ('session_dead', 'session_expired', 'cosmo_unavailable', 'unexpected_response', 'key_unreadable')`,
+    ),
+  ],
+);
+
+// What connected sessions reported about each collection. It names no session or user: the site
+// keeps no record of which account shared which collection. The worker applies it onto the indexer.
+export const collectionMedia = pgTable("collection_media", {
+  slug: varchar("slug", { length: 255 }).primaryKey(),
+  // The sources are Cosmo's URLs, so they are not bound by the indexer column's 255.
+  frontMedia: varchar("front_media", { length: 1024 }),
+  bandImageUrl: varchar("band_image_url", { length: 1024 }),
+  // Our copy of the motion video; the apply writes it onto the indexer's `front_media`.
+  frontMediaCopy: varchar("front_media_copy", { length: 255 }),
+  frontMediaFailedAt: timestamp("front_media_failed_at", { mode: "string", withTimezone: true }),
+  hasVoice: boolean("has_voice").notNull().default(false),
+  backImage: text("back_image"),
+  accentColor: text("accent_color"),
+  textColor: text("text_color"),
+  observedAt: timestamp("observed_at", { mode: "string", withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  confirmedAt: timestamp("confirmed_at", { mode: "string", withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;
+export type CosmoSession = typeof cosmoSession.$inferSelect;
+export type CollectionMedia = typeof collectionMedia.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;

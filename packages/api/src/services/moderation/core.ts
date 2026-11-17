@@ -6,6 +6,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { effectiveSanction } from "../../lib/sanctions";
 import type { Role } from "../../permissions";
 import type { AuditAction } from "../../schemas/moderation";
+import { revokeSessionsOf, type SealedSession } from "../cosmo-session/sessions";
 import { activeSanctionWhere } from "./safety";
 
 const MODERATION_REFUSALS = [
@@ -47,9 +48,15 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
  * Sets the admin plugin's ban columns from the user's bans in force, so one ban's end or
  * revoke never lifts or shortens another. The plugin only refuses a banned user's new
  * sessions, so a new ban deletes the existing ones; sessions live only in the `session`
- * table, as no secondary storage or cookie cache is configured.
+ * table, as no secondary storage or cookie cache is configured. It deletes the user's connected
+ * Cosmo sessions too, and returns them for the caller to sign out at Cosmo once the transaction
+ * has committed (`signOutSealed`); empty when nothing was revoked.
  */
-export async function syncBan(tx: Tx, userId: string, options: { revokeSessions: boolean }) {
+export async function syncBan(
+  tx: Tx,
+  userId: string,
+  options: { revokeSessions: boolean },
+): Promise<SealedSession[]> {
   // a ban and a revoke for one user each read the bans in force; the row lock orders them
   await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${userId} FOR NO KEY UPDATE`);
   const bans = await tx
@@ -69,7 +76,9 @@ export async function syncBan(tx: Tx, userId: string, options: { revokeSessions:
         : { banned: false, banReason: null, banExpires: null },
     )
     .where(eq(user.id, userId));
-  if (ban && options.revokeSessions) await tx.delete(session).where(eq(session.userId, userId));
+  if (!ban || !options.revokeSessions) return [];
+  await tx.delete(session).where(eq(session.userId, userId));
+  return revokeSessionsOf(tx, userId);
 }
 
 /** `actorId` is null when the set-role script grants it. */

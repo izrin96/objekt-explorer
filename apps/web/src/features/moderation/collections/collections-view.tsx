@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { matchesSearch, rowColors } from "./colors";
+import { CosmoMediaSummary } from "./cosmo-media-summary";
 import { type Draft, EditRow } from "./edit-row";
 import { History } from "./history";
 import { collectionOverridesOptions } from "./queries";
@@ -161,6 +162,8 @@ export function CollectionsView() {
           </div>
         }
       />
+
+      <CosmoMediaSummary />
 
       {unrefreshed ? (
         <div

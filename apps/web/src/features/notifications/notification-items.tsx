@@ -28,7 +28,13 @@ import {
   type RowVariant,
 } from "./row-body";
 import { NotificationStack, PartnerAvatar, ToneTile } from "./row-lead";
-import { alertText, type ListNotification, sanctionText, updatesLabel } from "./row-text";
+import {
+  alertText,
+  expiryText,
+  type ListNotification,
+  sanctionText,
+  updatesLabel,
+} from "./row-text";
 import { rowAction } from "./sections";
 import { type Collections, sameSlugs, shownSlugs } from "./stack";
 import { notificationTone } from "./tone";
@@ -39,6 +45,7 @@ const ROW =
 
 type OfferNotification = Extract<Notification, { type: "offer" | "trade" }>;
 type SanctionNotification = Extract<Notification, { type: "sanction" }>;
+type ExpiryNotification = Extract<Notification, { type: "cosmo_session_expiry" }>;
 
 type RowProps<N> = {
   notification: N;
@@ -108,6 +115,37 @@ function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionN
     >
       {body}
     </button>
+  );
+}
+
+/** A Cosmo connection nearing its end; it leads to the section where the row offers Renew. */
+function ExpiryItem({ notification, now, onOpen, variant }: RowProps<ExpiryNotification>) {
+  const text = expiryText(notification.payload, notification.createdAt);
+  if (text === null) return null;
+  const unread = notification.readAt === null;
+  const tone = notificationTone(notification);
+
+  return (
+    <Link to="/account/collection-data" onClick={onOpen} className={rowClass(unread, variant)}>
+      <RowBody
+        lead={<ToneTile icon={tone.icon} />}
+        headline={
+          <span
+            className={cn(
+              "text-sm text-pretty break-words",
+              unread ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {text}
+          </span>
+        }
+        action={<ActionLabel action="renew" primary={false} />}
+        createdAt={notification.createdAt}
+        now={now}
+        unread={unread}
+        variant={variant}
+      />
+    </Link>
   );
 }
 
@@ -276,6 +314,8 @@ export function NotificationRow(props: RowProps<Notification>) {
   switch (notification.type) {
     case "sanction":
       return <SanctionItem {...props} notification={notification} />;
+    case "cosmo_session_expiry":
+      return <ExpiryItem {...props} notification={notification} />;
     case "offer":
     case "trade":
       return <OfferItem {...props} notification={notification} />;

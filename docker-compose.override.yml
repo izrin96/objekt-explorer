@@ -4,3 +4,7 @@ services:
   centrifugo:
     ports:
       - "127.0.0.1:8000:8000"
+  # reCAPTCHA browser for Cosmo QR sign-in; locally COSMO_BROWSER_URL=ws://127.0.0.1:3001?token=<COSMO_BROWSER_TOKEN>
+  browser:
+    ports:
+      - "127.0.0.1:3001:3000"

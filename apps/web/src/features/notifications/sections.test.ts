@@ -100,6 +100,26 @@ describe("sectionOf", () => {
   });
 });
 
+describe("expiry notice", () => {
+  const expiry = (createdAt: string): Notification => ({
+    id: 5,
+    readAt: null,
+    createdAt,
+    type: "cosmo_session_expiry",
+    payload: { expiresAt: at(2026, 9, 29) },
+  });
+
+  test("it offers Renew and draws", () => {
+    expect(rowAction(expiry(at(2026, 9, 17)))).toBe("renew");
+    expect(renderable(expiry(at(2026, 9, 17)))).toBe(true);
+  });
+
+  test("it sits under Today, never Needs you", () => {
+    expect(needsYou(expiry(at(2026, 9, 17)), true, now)).toBe(false);
+    expect(sectionOf(expiry(at(2026, 9, 17)), true, now)).toBe("today");
+  });
+});
+
 describe("renderable", () => {
   const alert = (latest: number): Notification => ({
     id: 3,

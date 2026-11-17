@@ -14,6 +14,14 @@ const trade = (event: TradeEvent): Notification =>
   fromPartial({ type: "trade", payload: { event } });
 
 describe("notificationTone", () => {
+  test("a Cosmo connection nearing its end is an amber clock", () => {
+    const expiry: Notification = fromPartial({
+      type: "cosmo_session_expiry",
+      payload: { expiresAt: "2027-01-01T00:00:00.000Z" },
+    });
+    expect(notificationTone(expiry)).toEqual({ icon: "clock", tone: "warning" });
+  });
+
   test("verified, completed and accepted are a green check", () => {
     for (const n of [trade("leg_verified"), trade("completed"), offer("accepted")]) {
       expect(notificationTone(n)).toEqual({ icon: "check", tone: "success" });

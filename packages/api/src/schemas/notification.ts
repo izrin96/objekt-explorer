@@ -72,8 +72,16 @@ const sanctionPayloadSchema = z.object({
 });
 export type SanctionPayload = z.infer<typeof sanctionPayloadSchema>;
 
+/** A Cosmo session's end is near; data only, with no nickname or address. Always on and never grouped. */
+export const cosmoSessionExpiryPayloadSchema = z.object({ expiresAt: z.string() });
+export type CosmoSessionExpiryPayload = z.infer<typeof cosmoSessionExpiryPayloadSchema>;
+
 /** Every type the bell lists; `NOTIFICATION_TYPES` are only the ones with a preference. */
-export const LISTED_NOTIFICATION_TYPES = [...NOTIFICATION_TYPES, "sanction"] as const;
+export const LISTED_NOTIFICATION_TYPES = [
+  ...NOTIFICATION_TYPES,
+  "sanction",
+  "cosmo_session_expiry",
+] as const;
 
 /** How many of a group's earlier notifications a row carries. */
 export const EARLIER_LIMIT = 10;
@@ -99,6 +107,11 @@ export const notificationSchema = z.discriminatedUnion("type", [
   z.object({ ...rowFields, type: z.literal("want_match"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("have_wanted"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("sanction"), payload: sanctionPayloadSchema }),
+  z.object({
+    ...rowFields,
+    type: z.literal("cosmo_session_expiry"),
+    payload: cosmoSessionExpiryPayloadSchema,
+  }),
   offerNoteSchema.extend(groupFields(offerNoteSchema)),
   tradeNoteSchema.extend(groupFields(tradeNoteSchema)),
 ]);

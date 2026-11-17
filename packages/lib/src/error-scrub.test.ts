@@ -81,6 +81,38 @@ describe("scrubUrl", () => {
   });
 });
 
+const SESSION_KEYS = [
+  "ticket",
+  "otp",
+  "recaptcha",
+  "qr",
+  "user-session",
+  "cookie_sealed",
+  "cookieSealed",
+];
+
+describe("Cosmo sign-in keys", () => {
+  test.each(SESSION_KEYS)("%s is dropped from extra", (key) => {
+    const out = scrubEvent(event({ extra: { [key]: "secret", kept: 1 } }));
+    expect(out.extra).toEqual({ kept: 1 });
+  });
+
+  test.each(SESSION_KEYS)("%s is dropped from a context", (key) => {
+    const out = scrubEvent(event({ contexts: { login: { [key]: "secret", kept: 1 } } }));
+    expect(out.contexts).toEqual({ login: { kept: 1 } });
+  });
+
+  test.each(SESSION_KEYS)("%s is dropped from a breadcrumb's data", (key) => {
+    const out = scrubBreadcrumb({ category: "fetch", data: { [key]: "secret", method: "POST" } });
+    expect(out?.data).toEqual({ method: "POST" });
+  });
+
+  test("a key that only contains one of them stays", () => {
+    const out = scrubEvent(event({ extra: { quarter: 1, otpCount: 2, ticketCount: 3 } }));
+    expect(out.extra).toEqual({ quarter: 1, otpCount: 2, ticketCount: 3 });
+  });
+});
+
 describe("scrubBreadcrumb", () => {
   test("drops console breadcrumbs", () => {
     expect(scrubBreadcrumb({ category: "console", message: "input: secret" })).toBeNull();

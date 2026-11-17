@@ -12,6 +12,7 @@ import { collectionsRouter } from "./collections";
 import { compareRouter } from "./compare";
 import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
+import { cosmoSessionRouter } from "./cosmo-session";
 import { listRouter } from "./list";
 import { liveRouter } from "./live";
 import { lockedObjektsRouter } from "./locked-objekts";
@@ -32,6 +33,7 @@ import { userRouter } from "./user";
 export const router = {
   list: listRouter,
   cosmoLink: cosmoLinkRouter,
+  cosmoSession: cosmoSessionRouter,
   user: userRouter,
   pins: pinsRouter,
   profile: profileRouter,

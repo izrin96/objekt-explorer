@@ -10,6 +10,7 @@ import { PARTNER_TOKEN, splitAround } from "./headline";
 import {
   ACTION_LABEL,
   alertText,
+  expiryText,
   type ListNotification,
   sanctionText,
   updatesLabel,
@@ -185,9 +186,35 @@ describe("ACTION_LABEL", () => {
       review: m.notification_action_review(),
       feedback: m.notification_action_feedback(),
       matches: m.notification_action_matches(),
+      renew: m.cosmo_session_renew(),
     };
     for (const action of Object.keys(expected) as RowAction[]) {
       check(ACTION_LABEL[action]()).toBe(expected[action]);
     }
+  });
+});
+
+describe("expiryText", () => {
+  const DAY = 86_400_000;
+  const created = "2026-10-17T12:00:00.000Z";
+  const ends = (ms: number) => ({ expiresAt: new Date(Date.parse(created) + ms).toISOString() });
+
+  test("13 days, counted from the notice's own time", () => {
+    check(expiryText(ends(13 * DAY + DAY / 2), created)).toBe(
+      m.notification_cosmo_expiry_days({ count: 13 }),
+    );
+  });
+
+  test("1 day has its own wording", () => {
+    check(expiryText(ends(DAY + 1000), created)).toBe(m.notification_cosmo_expiry_one_day());
+  });
+
+  test("the last day reads today", () => {
+    check(expiryText(ends(DAY / 2), created)).toBe(m.notification_cosmo_expiry_today());
+  });
+
+  test("an expiry outside the window draws nothing", () => {
+    check(expiryText(ends(14 * DAY), created)).toBeNull();
+    check(expiryText(ends(-1000), created)).toBeNull();
   });
 });

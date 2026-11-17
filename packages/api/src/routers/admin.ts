@@ -5,6 +5,7 @@ import {
   removeBannerInputSchema,
   setCollectionColorsInputSchema,
 } from "../schemas/admin";
+import { cosmoMediaSummarySchema } from "../schemas/cosmo-session";
 import {
   messageTotalsSchema,
   staffRangeInputSchema,
@@ -21,6 +22,7 @@ import {
   refreshCollections,
   setCollectionColors,
 } from "../services/admin/collections";
+import { mediaSummary } from "../services/cosmo-session/summary";
 import { messageTotals } from "../services/moderation/message-totals";
 import { staffTrade } from "../services/moderation/staff-trade";
 import { trackerHealth, tradeAttention, tradeTotals } from "../services/moderation/trade-tracking";
@@ -51,6 +53,9 @@ export const adminRouter = {
   refreshCollections: adminOnly.handler(({ context }) =>
     refreshCollections(context.session.user.id),
   ),
+
+  /** Connected Cosmo sessions as counts and one time; never an address, a nickname or a user. */
+  cosmoMediaSummary: adminOnly.output(cosmoMediaSummarySchema).handler(() => mediaSummary()),
 
   /** Offer and trade counts per UTC day, at most 5 minutes old. */
   tradeTotals: moderator

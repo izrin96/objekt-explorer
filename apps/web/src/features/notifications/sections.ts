@@ -1,12 +1,12 @@
 import type { Notification } from "@repo/api/schemas/notification";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 
-import { alertText, sanctionText } from "./row-text";
+import { alertText, expiryText, sanctionText } from "./row-text";
 
 export const SECTIONS = ["needs-you", "today", "week", "earlier"] as const;
 export type Section = (typeof SECTIONS)[number];
 
-export type RowAction = "send" | "review" | "feedback" | "matches";
+export type RowAction = "send" | "review" | "feedback" | "matches" | "renew";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -24,6 +24,8 @@ export function rowAction(item: Notification): RowAction | null {
       if (item.payload.event === "reminder") return "send";
       if (item.payload.event === "completed" && !item.payload.confirmed) return "feedback";
       return null;
+    case "cosmo_session_expiry":
+      return "renew";
     default:
       return null;
   }
@@ -34,6 +36,8 @@ export function renderable(item: Notification) {
   switch (item.type) {
     case "sanction":
       return sanctionText(item.payload, String) !== null;
+    case "cosmo_session_expiry":
+      return expiryText(item.payload, item.createdAt) !== null;
     case "want_match":
     case "have_wanted":
       return alertText(item, "", String) !== null;

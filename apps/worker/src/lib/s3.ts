@@ -24,12 +24,17 @@ export async function uploadWebp(key: string, buffer: Buffer) {
 
 /** `key` is the whole bucket key, folder included. */
 export async function putWebp(key: string, buffer: Buffer) {
+  await putObject(key, buffer, "image/webp");
+}
+
+/** `key` is the whole bucket key. Every object carries `CACHE_CONTROL`. */
+export async function putObject(key: string, body: Uint8Array, contentType: string) {
   await s3Client.send(
     new PutObjectCommand({
       Bucket: BUCKET,
       Key: key,
-      Body: buffer,
-      ContentType: "image/webp",
+      Body: body,
+      ContentType: contentType,
       CacheControl: CACHE_CONTROL,
     }),
   );
@@ -62,4 +67,22 @@ export function keyFromUrl(url: string) {
   if (!url.startsWith(prefix)) return null;
   const key = url.slice(prefix.length);
   return key.startsWith(`${FOLDER}/`) ? key : null;
+}
+
+const MEDIA_FOLDER = "collection-media";
+
+/** Like `keyFromUrl`, for the `collection-media/` prefix; null for any other URL or key. */
+export function mediaKeyFromUrl(url: string) {
+  const prefix = `${publicUrl}/`;
+  if (!url.startsWith(prefix)) return null;
+  const key = url.slice(prefix.length);
+  return key.startsWith(`${MEDIA_FOLDER}/`) ? key : null;
+}
+
+/**
+ * Whether stored media URLs can be built: the copy's URL is stored, so `S3_PUBLIC_URL` must be
+ * set itself, not fall back to the endpoint.
+ */
+export function mediaStorageConfigured() {
+  return Boolean(process.env.S3_BUCKET && process.env.S3_PUBLIC_URL);
 }

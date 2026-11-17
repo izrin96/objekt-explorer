@@ -3,6 +3,7 @@ import { ORPCError } from "@orpc/server";
 import type { ADMIN_REFUSALS } from "../schemas/admin";
 import type { COMPARE_REFUSALS } from "../schemas/compare";
 import type { COSMO_LINK_REFUSALS } from "../schemas/cosmo-link";
+import type { COSMO_SESSION_REFUSALS } from "../schemas/cosmo-session";
 import type { LIST_REFUSALS } from "../schemas/list";
 import type { OBJEKT_REFUSALS } from "../schemas/objekts";
 import type { PROFILE_REFUSALS } from "../schemas/profile";
@@ -20,6 +21,7 @@ export type Refusal =
   | (typeof TRADE_BUMP_REFUSALS)[number]
   | (typeof COMPARE_REFUSALS)[number]
   | (typeof COSMO_LINK_REFUSALS)[number]
+  | (typeof COSMO_SESSION_REFUSALS)[number]
   | (typeof PROFILE_REFUSALS)[number]
   | (typeof USER_REFUSALS)[number]
   | (typeof DELETE_REFUSALS)[number]

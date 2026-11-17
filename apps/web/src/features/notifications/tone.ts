@@ -35,6 +35,8 @@ export function notificationTone(notification: ToneInput): Toned {
         notification.payload.action === "trade_block_lifted"
         ? { icon: "shield", tone: "success" }
         : { icon: "shield", tone: "destructive" };
+    case "cosmo_session_expiry":
+      return { icon: "clock", tone: "warning" };
     case "trade":
       switch (notification.payload.event) {
         case "leg_verified":

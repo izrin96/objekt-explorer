@@ -1,5 +1,6 @@
 import type { CollectionMetadataOutput } from "@repo/api/schemas/collections";
 import { getCollectionEdition } from "@repo/lib/collection-edition";
+import { mediaKind } from "@repo/lib/collection-media";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
@@ -66,6 +67,7 @@ export function MetadataPanel({
   const { getArtist } = useCosmoArtist();
   // not every surface tags its objekts, so derive it here
   const edition = getCollectionEdition(objekt);
+  const kind = mediaKind(objekt.frontMedia);
 
   return (
     /* `minmax(0,1fr)`: a bare `1fr` is floored at the value's min-content, and
@@ -129,6 +131,20 @@ export function MetadataPanel({
       <MetaRow label={m.objekt_band_image_alt()} mono>
         <MetaLink href={objekt.bandImageUrl} />
       </MetaRow>
+      {kind === "video" ? (
+        <MetaRow label={m.objekt_motion()} mono>
+          <MetaLink href={objekt.frontMedia} />
+        </MetaRow>
+      ) : null}
+      {kind === "audio" ? (
+        <MetaRow label={m.objekt_voice()} mono>
+          <MetaLink href={objekt.frontMedia} />
+        </MetaRow>
+      ) : (
+        <MetaRow label={m.objekt_voice()}>
+          {objekt.hasAudio ? m.objekt_yes() : m.objekt_no()}
+        </MetaRow>
+      )}
 
       {owned && (
         <>

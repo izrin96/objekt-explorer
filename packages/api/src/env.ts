@@ -28,6 +28,12 @@ export const serverEnv = createEnv({
     // optional so the site starts without it; a trade cancel refuses as indexer_behind without it
     INDEXER_RPC_ENDPOINT: z.url().optional(),
     COSMO_KEY: z.string().min(1),
+    // optional so the site starts without them; Cosmo sign-in reports itself unavailable unless both are set
+    COSMO_SESSION_KEY: z
+      .string()
+      .refine((key) => Buffer.from(key, "base64").length === 32, "must be 32 bytes, base64")
+      .optional(),
+    COSMO_BROWSER_URL: z.string().min(1).optional(),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
     SITE_URL: z.url(),

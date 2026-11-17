@@ -12,6 +12,7 @@ import {
   staffTargetRefused,
 } from "../../schemas/moderation";
 import type { SanctionPayload } from "../../schemas/notification";
+import { signOutSealed, type SealedSession } from "../cosmo-session/sessions";
 import { cancelOpenOffers, offersOf, publishCancelled } from "../offer/cancel";
 import {
   audit,
@@ -37,6 +38,7 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
   const now = new Date();
   const end = sanctionEnd(input.action, input.days, now);
 
+  let revoked: SealedSession[] = [];
   const result = await db.transaction(async (tx) => {
     // first, before the sanction insert, whose foreign-key check takes only KEY SHARE and so
     // would not wait for a linker holding this row FOR SHARE, nor for a deletion's scrub; NO KEY
@@ -65,7 +67,7 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
               })
               .returning({ id: userSanction.id })
           )[0]!.id;
-    if (input.action === "ban") await syncBan(tx, input.userId, { revokeSessions: true });
+    if (input.action === "ban") revoked = await syncBan(tx, input.userId, { revokeSessions: true });
 
     const resolved = await tx
       .update(report)
@@ -111,6 +113,8 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
   if (input.action === "trade_block" || input.action === "ban") {
     await bumpSafetyVersions([input.userId]);
   }
+  // last among the post-commit steps, and never throws: a failed sign-out skips nothing
+  if (revoked.length > 0) void signOutSealed(revoked);
   if (input.action === "ban") await disconnectUser(input.userId);
   else if (input.action !== "dismiss") await publishNotify(input.userId, MOD_NOTIFY);
   if (result.cancelled) await publishCancelled(result.cancelled);

@@ -2,6 +2,7 @@ import type { Refusal } from "@repo/api/lib/refuse";
 import { ADMIN_REFUSALS } from "@repo/api/schemas/admin";
 import { COMPARE_REFUSALS } from "@repo/api/schemas/compare";
 import { COSMO_LINK_REFUSALS } from "@repo/api/schemas/cosmo-link";
+import { COSMO_SESSION_REFUSALS } from "@repo/api/schemas/cosmo-session";
 import { LIST_REFUSALS } from "@repo/api/schemas/list";
 import { OBJEKT_REFUSALS } from "@repo/api/schemas/objekts";
 import { PROFILE_REFUSALS } from "@repo/api/schemas/profile";
@@ -23,6 +24,7 @@ const REFUSALS: readonly string[] = [
   ...TRADE_BUMP_REFUSALS,
   ...COMPARE_REFUSALS,
   ...COSMO_LINK_REFUSALS,
+  ...COSMO_SESSION_REFUSALS,
   ...PROFILE_REFUSALS,
   ...USER_REFUSALS,
   ...OBJEKT_REFUSALS,
@@ -129,6 +131,26 @@ export function refusalText(error: unknown) {
       return m.api_errors_profile_not_found();
     case "user_query_too_long":
       return m.api_errors_user_query_too_long();
+    case "cosmo_session_unavailable":
+      return m.api_errors_cosmo_session_unavailable();
+    case "cosmo_session_busy":
+      return m.api_errors_cosmo_session_busy();
+    case "cosmo_session_captcha":
+      return m.api_errors_cosmo_session_captcha();
+    case "cosmo_session_expired":
+      return m.api_errors_cosmo_session_expired();
+    case "cosmo_session_wrong_code":
+      return m.api_errors_cosmo_session_wrong_code();
+    case "cosmo_session_cosmo_error":
+      return m.api_errors_cosmo_session_cosmo_error();
+    case "cosmo_session_limit":
+      return m.api_errors_cosmo_session_limit();
+    case "cosmo_session_not_allowed":
+      return m.api_errors_cosmo_session_not_allowed();
+    case "cosmo_session_dead":
+      return m.api_errors_cosmo_session_dead();
+    case "cosmo_session_not_found":
+      return m.api_errors_cosmo_session_not_found();
     case "user_rate_limit":
       return m.api_errors_user_rate_limit();
     case "user_not_linked_provider":

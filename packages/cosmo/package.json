@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     "./member": "./src/member.ts",
+    "./session-parse": "./src/session-parse.ts",
     "./types/*": "./src/types/*.ts",
     "./server/*": "./src/server/*.ts"
   },
@@ -15,7 +16,8 @@
     "format": "oxfmt ."
   },
   "dependencies": {
-    "ofetch": "catalog:"
+    "ofetch": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",

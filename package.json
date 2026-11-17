@@ -19,7 +19,8 @@
       "@sentry/bun": "11.10.0",
       "@sentry/core": "11.10.0",
       "@sentry/react": "11.10.0",
-      "mediabunny": "1.65.1"
+      "mediabunny": "1.65.1",
+      "qrcode.react": "^4.2.0"
     },
     "catalogs": {
       "dev": {

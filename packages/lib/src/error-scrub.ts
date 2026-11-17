@@ -43,7 +43,7 @@ const DB_VALUES: ReadonlyArray<[RegExp, string]> = [
 
 // chat bodies, offer notes, credentials, request bodies and stack-frame locals
 const PRIVATE_KEY =
-  /^(authorization|cookies?|set-cookie|password|secret|token|access_?token|refresh_?token|id_?token|email|body|note|notes|text|input|data|query_string|headers|vars)$/i;
+  /^(authorization|cookies?|set-cookie|password|secret|token|access_?token|refresh_?token|id_?token|email|body|note|notes|text|input|data|query_string|headers|vars|ticket|otp|recaptcha|qr|user-session|cookie_?sealed)$/i;
 
 // words people write; dropped only in `extra` and the app's own contexts, since the SDK's
 // own keys reuse these names (`event.message`, `sdk.name`, `contexts.os.name`, span `description`)
