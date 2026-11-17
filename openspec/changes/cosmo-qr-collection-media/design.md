@@ -258,7 +258,7 @@ A CHECK keeps `(dead_at IS NULL) = (cookie_sealed IS NOT NULL)`: a live row has 
 - **Disconnect** (`disconnect {id}`, the owner only):
   1. Delete the row (`WHERE id AND user_id`).
   2. After commit, `logoutSession` once, best effort, with a 403 counting as done. A dead row has no cookie and skips this.
-  3. When Cosmo did not confirm, the section says Cosmo did not confirm the sign-out. The session at Cosmo outlives our copy, and only the account holder can end it from the Cosmo app.
+  3. When Cosmo did not confirm, the section says Cosmo did not confirm the sign-out. The session at Cosmo outlives our copy until Cosmo ends it after 45 to 60 minutes unused; the Cosmo app offers no way to end it.
 
   No `mod_audit` entry is written: connecting and disconnecting are a user's choices about their own data, like linking a provider, not staff actions, and the values written come from Cosmo, so provenance has nothing to prove.
 - **Replaced.** A connect of the same Cosmo account by anyone replaces the row and signs the old cookie out (Decision 1).
@@ -524,7 +524,7 @@ The Collection data section shows this above its list, before Connect, every tim
 | stored | What we store: an encrypted Cosmo sign-in, and your Cosmo nickname and wallet address. The sign-in is kept until you disconnect, for 180 days at most. Once it ends, the rest is deleted within 30 days. | 저장하는 정보: 암호화된 Cosmo 로그인, Cosmo 닉네임과 지갑 주소입니다. 로그인은 연결을 해제할 때까지, 최대 180일 동안 보관합니다. 로그인이 끝나면 나머지 정보는 30일 이내에 삭제합니다. | 保存する情報：暗号化されたCosmoのログイン、Cosmoのニックネームとウォレットアドレスです。ログインは接続を解除するまで、最長180日間保存します。ログインの終了後、そのほかの情報は30日以内に削除します。 |
 | read | What we read: the collections you hold, for their media and colours. We keep only that media, not a list of what you hold or anything else from your Cosmo account, such as your email. | 읽는 정보: 보유한 컬렉션의 미디어와 색상입니다. 그 미디어만 보관하며, 보유 목록이나 이메일 등 Cosmo 계정의 다른 정보는 보관하지 않습니다. | 読み取る情報：保有しているコレクションのメディアとカラーです。保存するのはそのメディアのみで、保有リストやメールアドレスなど、Cosmoアカウントのその他の情報は保存しません。 |
 | shown | What others see: the media, with no link to you. Your Cosmo nickname and address show only to you, here. | 다른 사람에게 보이는 정보: 회원님과 연결되지 않은 미디어만 보입니다. Cosmo 닉네임과 주소는 이 화면에서 회원님에게만 보입니다. | ほかの人に表示される情報：あなたと結び付かないメディアのみです。Cosmoのニックネームとアドレスは、この画面であなたにのみ表示されます。 |
-| stop | To stop, press Disconnect at any time. We sign out of Cosmo and delete the sign-in. You can also end it from the Cosmo app. | 중단하려면 언제든지 연결 해제를 누르세요. Cosmo에서 로그아웃하고 로그인을 삭제합니다. Cosmo 앱에서도 종료할 수 있습니다. | 停止するには、いつでも「接続を解除」を押してください。Cosmoからログアウトし、ログインを削除します。Cosmoアプリからも終了できます。 |
+| stop | To stop, press Disconnect at any time. We sign out of Cosmo and delete the sign-in. | 중단하려면 언제든지 연결 해제를 누르세요. Cosmo에서 로그아웃하고 로그인을 삭제합니다. | 停止するには、いつでも「接続を解除」を押してください。Cosmoからログアウトし、ログインを削除します。|
 
 The copy never says what a user holds is private: profiles already show holdings, as on chain.
 

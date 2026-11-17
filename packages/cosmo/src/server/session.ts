@@ -1,5 +1,12 @@
-import { objektSummariesSchema, sessionUserSchema } from "../session-parse";
-import { cosmoSessionApi, cosmoShop, guard, parseBody, sessionCookieHeader } from "./shop";
+import { errorKindOf, objektSummariesSchema, sessionUserSchema } from "../session-parse";
+import {
+  CosmoSessionError,
+  cosmoSessionApi,
+  cosmoShop,
+  guard,
+  parseBody,
+  sessionCookieHeader,
+} from "./shop";
 
 /** `nickname` and `address` of the cookie's owner; the rest of `users/me` is dropped. */
 export async function fetchSessionUser(cookie: string) {
@@ -7,6 +14,24 @@ export async function fetchSessionUser(cookie: string) {
     cosmoSessionApi("/bff/v4/users/me", { headers: sessionCookieHeader(cookie) }),
   );
   return parseBody(sessionUserSchema, data);
+}
+
+/**
+ * Uses the session once so Cosmo keeps it active. Reads only the status, never the body. A
+ * redirect is not followed and not a success: ofetch throws only from 400 up, so any other
+ * non-2xx is mapped here (`errorKindOf` gives `unexpected` below 400).
+ */
+export async function touchSession(cookie: string) {
+  const res = await guard(true, () =>
+    cosmoSessionApi.raw("/bff/v4/users/me", {
+      headers: sessionCookieHeader(cookie),
+      responseType: "text",
+      redirect: "manual",
+    }),
+  );
+  if (res.status < 200 || res.status >= 300) {
+    throw new CosmoSessionError(errorKindOf(res.status, null, true), res.status);
+  }
 }
 
 /** Ends the session at Cosmo. */

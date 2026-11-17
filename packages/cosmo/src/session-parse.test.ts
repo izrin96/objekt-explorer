@@ -404,6 +404,18 @@ describe("errorKindOf", () => {
     expect(errorKindOf(403, cosmoError, true)).toBe("dead");
   });
 
+  test("a text body (responseType text) is read as JSON", () => {
+    expect(errorKindOf(401, JSON.stringify(cosmoError), true)).toBe("dead");
+    expect(errorKindOf(403, JSON.stringify(cosmoError), true)).toBe("dead");
+    expect(errorKindOf(403, "Forbidden", true)).toBe("unavailable");
+  });
+
+  test("a redirect or other non-error status is unexpected, never dead", () => {
+    for (const status of [204, 301, 302, 304]) {
+      expect(errorKindOf(status, cosmoError, true)).toBe("unexpected");
+    }
+  });
+
   test("a 403 with an HTML body is unavailable", () => {
     expect(errorKindOf(403, firewall, true)).toBe("unavailable");
     expect(errorKindOf(403, undefined, true)).toBe("unavailable");

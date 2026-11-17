@@ -3,6 +3,12 @@ import { describe, expect, test } from "bun:test";
 import {
   addCounts,
   emptyCounts,
+  endedWhileKept,
+  createKeepAliveGuard,
+  keepAliveAgeMs,
+  keepAliveSwitch,
+  lastUseOf,
+  planKeepAlive,
   isCosmoWideOutage,
   parseCursor,
   MAX_PAGES,
@@ -292,5 +298,150 @@ describe("sync cursor counts", () => {
         { seen: 10, recorded: 20, applied: 30, skipped: 40 },
       ),
     ).toEqual({ seen: 11, recorded: 22, applied: 33, skipped: 44 });
+  });
+});
+
+describe("keep-alive", () => {
+  test("the age is 20 to 25 minutes and stable per id", () => {
+    for (let id = 1; id <= 1000; id++) {
+      const age = keepAliveAgeMs(id);
+      expect(age).toBeGreaterThanOrEqual(20 * MIN);
+      expect(age).toBeLessThanOrEqual(25 * MIN);
+      expect(keepAliveAgeMs(id)).toBe(age);
+    }
+  });
+
+  test("lastUseOf takes the later of last use and connect time", () => {
+    expect(lastUseOf({ lastUsedAt: null, createdAt: 500 })).toBe(500);
+    expect(lastUseOf({ lastUsedAt: 100, createdAt: 500 })).toBe(500);
+    expect(lastUseOf({ lastUsedAt: 900, createdAt: 500 })).toBe(900);
+  });
+
+  const far = now + 100 * HOUR;
+  const row = (id: number, lastUsedAt: number | null, over = {}) => ({
+    id,
+    lastUsedAt,
+    createdAt: now - 10 * HOUR,
+    cookieExpiresAt: far,
+    ...over,
+  });
+
+  test("a session one second short of its age is left out, one at it is kept", () => {
+    const age = keepAliveAgeMs(7);
+    expect(planKeepAlive([row(7, now - age + 1000)], now)).toEqual([]);
+    expect(planKeepAlive([row(7, now - age)], now)).toEqual([{ id: 7, idleMs: age }]);
+  });
+
+  test("an expired session is left out", () => {
+    expect(planKeepAlive([row(7, now - HOUR, { cookieExpiresAt: now })], now)).toEqual([]);
+  });
+
+  test("a freshly connected session waits its age from the connect", () => {
+    expect(planKeepAlive([row(7, null, { createdAt: now - 10 * MIN })], now)).toEqual([]);
+  });
+
+  test("orders 25 due sessions longest unused first, ties by id", () => {
+    const rows = Array.from({ length: 25 }, (_, i) => row(i + 1, now - (60 + (i % 5)) * MIN));
+    const plan = planKeepAlive(rows, now);
+    expect(plan).toHaveLength(25);
+    expect(plan[0]).toEqual({ id: 5, idleMs: 64 * MIN });
+    expect(plan.slice(0, 5).map((p) => p.id)).toEqual([5, 10, 15, 20, 25]);
+    for (let i = 1; i < plan.length; i++) {
+      expect(plan[i - 1]!.idleMs).toBeGreaterThanOrEqual(plan[i]!.idleMs);
+    }
+  });
+
+  test("a long-dead stale row never precedes a 30-minute-idle one", () => {
+    const plan = planKeepAlive(
+      [row(1, now - 30 * HOUR), row(2, now - 30 * MIN), row(3, now - 46 * MIN)],
+      now,
+    );
+    expect(plan.map((p) => p.id)).toEqual([2, 1, 3]);
+  });
+
+  test("a fresh reconnect is reached before 60 stale rows", () => {
+    const stale = Array.from({ length: 60 }, (_, i) => row(i + 100, now - (2 + i) * HOUR));
+    const plan = planKeepAlive(
+      [...stale, row(7, null, { createdAt: now - keepAliveAgeMs(7) })],
+      now,
+    );
+    expect(plan[0]!.id).toBe(7);
+    expect(plan).toHaveLength(61);
+  });
+
+  test("empty input gives an empty plan", () => {
+    expect(planKeepAlive([], now)).toEqual([]);
+  });
+
+  test("endedWhileKept turns at 45 minutes", () => {
+    expect(endedWhileKept(now - 45 * MIN + 1000, now)).toBe(true);
+    expect(endedWhileKept(now - 45 * MIN, now)).toBe(false);
+  });
+
+  test("keepAliveSwitch", () => {
+    const off = { on: false, unknown: false };
+    expect(keepAliveSwitch(undefined)).toEqual(off);
+    expect(keepAliveSwitch("")).toEqual(off);
+    expect(keepAliveSwitch("on")).toEqual({ on: true, unknown: false });
+    expect(keepAliveSwitch(" ON ")).toEqual({ on: true, unknown: false });
+    expect(keepAliveSwitch("off")).toEqual(off);
+    expect(keepAliveSwitch("yes")).toEqual({ on: false, unknown: true });
+  });
+});
+
+describe("keep-alive guard", () => {
+  test("5 dead answers in a row with no 2xx stop the phase", () => {
+    const g = createKeepAliveGuard(false);
+    for (let i = 0; i < 4; i++) expect(g.record("dead")).toBe("continue");
+    expect(g.record("dead")).toBe("dead_streak");
+  });
+
+  test("a non-dead answer breaks the dead streak", () => {
+    const g = createKeepAliveGuard(false);
+    for (let i = 0; i < 4; i++) g.record("dead");
+    g.record("busy");
+    for (let i = 0; i < 4; i++) expect(g.record("dead")).toBe("continue");
+  });
+
+  test("a 2xx anywhere in the run disables both stops", () => {
+    const g = createKeepAliveGuard(false);
+    g.record("ok");
+    for (let i = 0; i < 10; i++) expect(g.record("dead")).toBe("continue");
+    for (let i = 0; i < 10; i++) expect(g.record("refused")).toBe("continue");
+  });
+
+  test("3 refused or unexpected answers in a row stop the phase outside a backoff", () => {
+    const g = createKeepAliveGuard(false);
+    expect(g.record("refused")).toBe("continue");
+    expect(g.record("unexpected")).toBe("continue");
+    expect(g.record("refused")).toBe("failures");
+  });
+
+  test("a dead or ok answer breaks the failure streak", () => {
+    const g = createKeepAliveGuard(false);
+    g.record("refused");
+    g.record("refused");
+    g.record("dead");
+    expect(g.record("refused")).toBe("continue");
+  });
+
+  test("in a backoff refused and unexpected skip on, busy and unavailable stop", () => {
+    const g = createKeepAliveGuard(true);
+    for (let i = 0; i < 5; i++) expect(g.record("refused")).toBe("continue");
+    expect(g.record("unexpected")).toBe("continue");
+    expect(g.record("busy")).toBe("stop");
+    expect(g.record("unavailable")).toBe("stop");
+  });
+
+  test("outside a backoff busy and unavailable do not stop the guard", () => {
+    const g = createKeepAliveGuard(false);
+    expect(g.record("busy")).toBe("continue");
+    expect(g.record("unavailable")).toBe("continue");
+  });
+
+  test("the dead streak also applies in a backoff", () => {
+    const g = createKeepAliveGuard(true);
+    for (let i = 0; i < 4; i++) g.record("dead");
+    expect(g.record("dead")).toBe("dead_streak");
   });
 });

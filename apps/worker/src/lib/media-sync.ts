@@ -159,3 +159,87 @@ export function parseCursor(raw: unknown): SyncCursor | null {
     },
   };
 }
+
+const KEEPALIVE_AGE_MS = 25 * MIN;
+const KEEPALIVE_JITTER_MINUTES = 6;
+const KEPT_WINDOW_MS = 45 * MIN;
+export const KEEPALIVE_SLICE = 20;
+export const KEEPALIVE_BACKOFF_SLICE = 5;
+
+/** 25 minutes minus 0..5 from the id, so 20 to 25: it never adds, which keeps the worst idle time bounded. */
+export function keepAliveAgeMs(id: number) {
+  return KEEPALIVE_AGE_MS - (hashId(id) % KEEPALIVE_JITTER_MINUTES) * MIN;
+}
+
+/** The later of last use and connect time (a reconnect resets `created_at`); epoch ms. */
+export function lastUseOf(s: { lastUsedAt: number | null; createdAt: number }) {
+  return s.lastUsedAt === null ? s.createdAt : Math.max(s.lastUsedAt, s.createdAt);
+}
+
+type KeepAliveCandidate = {
+  id: number;
+  lastUsedAt: number | null;
+  createdAt: number;
+  cookieExpiresAt: number;
+};
+
+/**
+ * Sessions past their own keep-alive age and before their expiry, in two tiers. Tier 1 is
+ * sessions used under 45 minutes ago, still savable; tier 2 is the rest, already likely dead.
+ * Each tier is longest unused first, ties by id, so a pile of stale rows never starves a session
+ * that can still be saved. The caller applies the slice, since it counts requests sent.
+ */
+export function planKeepAlive(sessions: readonly KeepAliveCandidate[], now: number) {
+  return sessions
+    .filter((s) => s.cookieExpiresAt > now)
+    .map((s) => ({ id: s.id, lastUse: lastUseOf(s) }))
+    .filter((s) => now - s.lastUse >= keepAliveAgeMs(s.id))
+    .toSorted(
+      (a, b) =>
+        Number(!endedWhileKept(a.lastUse, now)) - Number(!endedWhileKept(b.lastUse, now)) ||
+        a.lastUse - b.lastUse ||
+        a.id - b.id,
+    )
+    .map((s) => ({ id: s.id, idleMs: now - s.lastUse }));
+}
+
+export const KEEPALIVE_DEAD_STREAK = 5;
+export const KEEPALIVE_FAILURE_STREAK = 3;
+
+/**
+ * Decides after each touch answer whether the phase goes on. Without a 2xx in the run, a streak of
+ * dead answers or (outside a backoff) of refused or unexpected ones means the problem is not the
+ * sessions, so it stops before marking or sending more. `stop` is a backoff meeting busy or
+ * unavailable.
+ */
+export function createKeepAliveGuard(backingOff: boolean) {
+  let sawOk = false;
+  let deadStreak = 0;
+  let failureStreak = 0;
+  return {
+    record(kind: "ok" | "dead" | "busy" | "unavailable" | "refused" | "unexpected") {
+      const dead = kind === "dead";
+      const failure = kind === "refused" || kind === "unexpected";
+      deadStreak = dead ? deadStreak + 1 : 0;
+      failureStreak = failure ? failureStreak + 1 : 0;
+      if (kind === "ok") sawOk = true;
+      if (backingOff && (kind === "busy" || kind === "unavailable")) return "stop" as const;
+      if (sawOk) return "continue" as const;
+      if (deadStreak >= KEEPALIVE_DEAD_STREAK) return "dead_streak" as const;
+      if (!backingOff && failureStreak >= KEEPALIVE_FAILURE_STREAK) return "failures" as const;
+      return "continue" as const;
+    },
+  };
+}
+
+/** Cosmo ended a session that was used under 45 minutes ago, so not for idleness. */
+export function endedWhileKept(lastUse: number, now: number) {
+  return now - lastUse < KEPT_WINDOW_MS;
+}
+
+/** `COSMO_SESSION_KEEPALIVE`: only `on` turns it on; any other non-empty value other than `off` is off and unknown. */
+export function keepAliveSwitch(raw: string | undefined) {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (value === "on") return { on: true, unknown: false };
+  return { on: false, unknown: value !== "" && value !== "off" };
+}

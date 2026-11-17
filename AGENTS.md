@@ -150,6 +150,7 @@ A single root `.env`, copied from `.env.example`, is shared by every app. Packag
 - `COSMO_PROXY` — optional HTTP proxy for Cosmo API calls only (the `browser` service leaves through it too)
 - `COSMO_SESSION_KEY` — 32 bytes in base64 (`openssl rand -base64 32`, never `COSMO_KEY`) that seals connected accounts' Cosmo cookies in `cosmo_session`; read by web and worker. Unset, connecting is unavailable and the worker's `collection-media` job stays off. A changed key leaves older rows unreadable until their owners reconnect
 - `COSMO_BROWSER_URL`, `COSMO_BROWSER_TOKEN` — the `browser` service's websocket (`ws://browser:3000?token=<COSMO_BROWSER_TOKEN>`; locally `ws://127.0.0.1:3001?token=…`) and the token compose requires to start it; the web mints Cosmo's reCAPTCHA token there for QR sign-in
+- `COSMO_SESSION_KEEPALIVE` — `on` keeps live Cosmo sessions in use between syncs; unset or `off` is off, any other value is off with a warning. Worker only, read once per start; see `apps/worker/AGENTS.md` (Collection media).
 - `COSMO_OBJEKT_WRITES` — comma list of the indexer writes taken from connected accounts' objekt reads: `anchors`, `untransferable`, `transferable`. Empty records and reports only. Read by worker and web, so restart them together (the plan script ignores it and plans as if every word were on); read `apps/worker/AGENTS.md` (Cosmo objekt data) before enabling a word
 
 Full list in `.env.example`.

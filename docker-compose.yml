@@ -18,6 +18,7 @@ services:
       - S3_PUBLIC_URL
       - COSMO_KEY
       - COSMO_SESSION_KEY
+      - COSMO_SESSION_KEEPALIVE
       - COSMO_OBJEKT_WRITES
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY

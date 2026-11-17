@@ -22,7 +22,7 @@ Any signed-in user SHALL be able to start a QR sign-in, check it, enter its code
 - **THEN** only rin.trades's own account is listed
 
 ### Requirement: Collection data section says what is shared
-The Collection data section SHALL show, above Connect a Cosmo account and before any sign-in, what the site stores (an encrypted Cosmo sign-in kept until disconnected and 180 days at most, and the Cosmo nickname and wallet address), what it reads (the held collections' media and colours, keeping nothing else), what others see (the media, not linked to the user) and how to stop (Disconnect, or the Cosmo app).
+The Collection data section SHALL show, above Connect a Cosmo account and before any sign-in, what the site stores (an encrypted Cosmo sign-in kept until disconnected and 180 days at most, and the Cosmo nickname and wallet address), what it reads (the held collections' media and colours, keeping nothing else), what others see (the media, not linked to the user) and how to stop (Disconnect, or deleting the account).
 
 #### Scenario: Before connecting
 - **WHEN** a signed-in user with no connected account opens `/account/collection-data`
@@ -230,8 +230,8 @@ Disconnect SHALL ask for confirmation, then delete the stored session and ask Co
 ### Requirement: Signed-out session
 A session Cosmo refuses with its own error SHALL be marked signed out, its stored sign-in SHALL be erased, it SHALL NOT be sent to Cosmo again, and it SHALL be shown with Reconnect. A signed-out row SHALL be deleted 30 days after it was signed out, unless reconnected.
 
-#### Scenario: Signed out in the Cosmo app
-- **WHEN** rin.t signs the site's session out from the Cosmo app and the next sync is refused
+#### Scenario: Ended at Cosmo
+- **WHEN** Cosmo ends the site's session and the next sync is refused
 - **THEN** rin.t's row shows signed out with Reconnect, its stored sign-in is erased, and later syncs skip it
 
 #### Scenario: Signed out for 30 days

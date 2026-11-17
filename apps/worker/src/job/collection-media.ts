@@ -1,7 +1,12 @@
 import { nextModifiedAt } from "@repo/api/lib/collection-bump";
 import { publishUsers } from "@repo/api/realtime";
 import { RENEW_NOTICE_DAYS } from "@repo/api/schemas/cosmo-session";
-import { fetchObjektSummaries, fetchSessionUser, logoutSession } from "@repo/cosmo/server/session";
+import {
+  fetchObjektSummaries,
+  fetchSessionUser,
+  logoutSession,
+  touchSession,
+} from "@repo/cosmo/server/session";
 import { CosmoSessionError } from "@repo/cosmo/server/shop";
 import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
@@ -45,7 +50,15 @@ import { currentCopy } from "@/lib/media-copy";
 import {
   addCounts,
   createRunBudget,
+  endedWhileKept,
   isCosmoWideOutage,
+  createKeepAliveGuard,
+  KEEPALIVE_BACKOFF_SLICE,
+  KEEPALIVE_DEAD_STREAK,
+  KEEPALIVE_FAILURE_STREAK,
+  KEEPALIVE_SLICE,
+  keepAliveSwitch,
+  lastUseOf,
   nextBackoff,
   nextPage,
   nextSyncAt,
@@ -53,6 +66,7 @@ import {
   PAGE_SIZE,
   parkAfterFailure,
   parseCursor,
+  planKeepAlive,
   spacingMs,
   type SyncCounts,
   type SyncCursor,
@@ -76,6 +90,7 @@ const TRANSFERABLE_CHUNK = 500;
 
 // read once per process: a change takes a restart, as for every worker env
 const writeModes = objektWriteModes(process.env.COSMO_OBJEKT_WRITES);
+const keepAlive = keepAliveSwitch(process.env.COSMO_SESSION_KEEPALIVE);
 
 const backoffStore = createBackoffStore(
   {
@@ -88,6 +103,7 @@ const backoffStore = createBackoffStore(
 
 let warnedNoKey = false;
 let warnedUnknownModes = false;
+let warnedUnknownKeepAlive = false;
 
 const epochMs = (column: unknown) => sql<number>`(extract(epoch from ${column}) * 1000)::float8`;
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -121,7 +137,9 @@ type Run = {
   failedSessions: number[];
   recorded: number;
   markedDead: number;
-  /** The indexer's final height read before the run's first Cosmo request; null records no objekts. */
+  /** Sessions a keep-alive found signed out: hours since connect, and whether Cosmo ended it while kept. */
+  keepEnded: { hours: number; kept: boolean }[];
+  /** The indexer's final height, read before the first page request (touches may come first); null records no objekts. */
   chainHeight: number | null;
   objektsRecorded: number;
   objektsFailed: number;
@@ -173,6 +191,7 @@ async function runSyncOnce() {
     failedSessions: [],
     recorded: 0,
     markedDead: 0,
+    keepEnded: [],
     chainHeight: null,
     objektsRecorded: 0,
     objektsFailed: 0,
@@ -180,7 +199,12 @@ async function runSyncOnce() {
 
   const backoff = await backoffStore.read();
   const backingOff = backoff !== null && backoff.until > Date.now();
-  if (!backingOff) await syncPhase(run, sessionKey);
+  try {
+    await keepAlivePhase(run, sessionKey, backingOff);
+  } catch (error) {
+    mediaLog.warn(`Keep-alive failed: ${errorCode(error)}`);
+  }
+  if (!backingOff && !run.cosmoDown) await syncPhase(run, sessionKey);
 
   if (run.cosmoDown) {
     const minutes = nextBackoff(backoff?.minutes ?? null);
@@ -208,6 +232,9 @@ async function runSyncOnce() {
   if (run.cosmoDown) {
     mediaLog.warn(`Cosmo unavailable; no sync for ${nextBackoff(backoff?.minutes ?? null)} min`);
   }
+  if (run.keepEnded.length > 5) {
+    mediaLog.warn(`Keep-alive found ${run.keepEnded.length} sessions signed out in one run`);
+  }
   if (run.objektsFailed > 0) {
     mediaLog.warn(`${run.objektsFailed} objekts not recorded; the next sync records them`);
   }
@@ -230,9 +257,173 @@ async function runSyncOnce() {
     retired > 0
   ) {
     const columns = wrote.map(([name, n]) => `${name} ${n}`).join(", ") || "none";
+    const ended = run.keepEnded.length > 0 ? `; ${keepEndedSummary(run.keepEnded)}` : "";
     mediaLog.info(
-      `${run.requests} Cosmo requests; recorded ${run.recorded} collections; objekts recorded ${run.objektsRecorded}; wrote ${applied.rows} collections (${columns}); ${run.markedDead} sessions marked dead; ${retired} dead sessions removed`,
+      `${run.requests} Cosmo requests; recorded ${run.recorded} collections; objekts recorded ${run.objektsRecorded}; wrote ${applied.rows} collections (${columns}); ${run.markedDead} sessions marked dead${ended}; ${retired} dead sessions removed`,
     );
+  }
+}
+
+// -- keep-alive phase ------------------------------------------------------------------------
+
+function keepEndedSummary(ended: Run["keepEnded"]) {
+  const hours = (kept: boolean) =>
+    ended
+      .filter((e) => e.kept === kept)
+      .map((e) => `${e.hours.toFixed(1)} h`)
+      .join(", ");
+  const kept = hours(true);
+  return `keep-alive ended: kept ${kept || "none"}; idle ${ended.filter((e) => !e.kept).length}`;
+}
+
+async function keepAliveRows(now: number) {
+  const lastUse = sql`greatest(${cosmoSession.lastUsedAt}, ${cosmoSession.createdAt})`;
+  const rows = await db
+    .select({
+      id: cosmoSession.id,
+      userId: cosmoSession.userId,
+      cosmoAddress: cosmoSession.cosmoAddress,
+      objektsConsented: cosmoSession.objektsConsented,
+      cookieSealed: cosmoSession.cookieSealed,
+      syncCursor: cosmoSession.syncCursor,
+      lastError: cosmoSession.lastError,
+      syncRequestedAt: epochMs(cosmoSession.syncRequestedAt).mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
+      nextSyncAt: epochMs(cosmoSession.nextSyncAt).mapWith(Number),
+      cookieExpiresAt: epochMs(cosmoSession.cookieExpiresAt).mapWith(Number),
+      lastUsedAt: epochMs(cosmoSession.lastUsedAt).mapWith((v) => (v === null ? null : Number(v))),
+      createdAt: epochMs(cosmoSession.createdAt).mapWith(Number),
+    })
+    .from(cosmoSession)
+    .where(
+      and(
+        isNull(cosmoSession.deadAt),
+        isNotNull(cosmoSession.cookieSealed),
+        sql`${cosmoSession.cookieExpiresAt} > ${iso(now)}`,
+        sql`${cosmoSession.lastError} is distinct from 'key_unreadable'`,
+        sql`${lastUse} <= ${iso(now - 20 * MIN)}`,
+      ),
+    )
+    // savable sessions first, as planKeepAlive does: a pile of stale rows must not fill the limit
+    .orderBy(sql`(${lastUse} < ${iso(now - 45 * MIN)})`, lastUse)
+    .limit(DUE_READ_LIMIT);
+  return rows.flatMap((r) =>
+    r.cookieSealed === null ? [] : [{ ...r, cookieSealed: r.cookieSealed }],
+  );
+}
+
+/**
+ * Uses each live session that has been idle for its keep-alive age, longest unused first, so
+ * Cosmo does not end it for idleness. It runs before the sync, since a missed touch kills a
+ * session and a late sync costs nothing. It reads only the status of Cosmo's answer.
+ */
+async function keepAlivePhase(run: Run, sessionKey: string, backingOff: boolean) {
+  if (!keepAlive.on) {
+    if (keepAlive.unknown && !warnedUnknownKeepAlive) {
+      warnedUnknownKeepAlive = true;
+      mediaLog.warn("COSMO_SESSION_KEEPALIVE is not on or off; keep-alive stays off");
+    }
+    return;
+  }
+
+  const now = Date.now();
+  const rows = await keepAliveRows(now);
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const plan = planKeepAlive(rows, now);
+  const slice = backingOff ? KEEPALIVE_BACKOFF_SLICE : KEEPALIVE_SLICE;
+
+  const streak = createKeepAliveGuard(backingOff);
+  let sent = 0;
+  let capped = 0;
+  for (const [index, due] of plan.entries()) {
+    // the slice counts requests sent: a cookie that does not open costs no place
+    if (sent >= slice) {
+      capped = plan.length - index;
+      break;
+    }
+    const session = byId.get(due.id);
+    if (!session) continue;
+
+    let cookie: string;
+    try {
+      cookie = open(
+        session.cookieSealed,
+        sessionKey,
+        sessionAad(session.userId, session.cosmoAddress),
+      );
+    } catch {
+      mediaBeat.count("keepalive key_unreadable");
+      continue;
+    }
+    if (!run.budget.canRequest()) break;
+
+    // a disconnect or renew since the read: no request for a row that is gone
+    const [still] = await db
+      .select({ id: cosmoSession.id })
+      .from(cosmoSession)
+      .where(ownRow(session))
+      .limit(1);
+    if (!still) continue;
+
+    await pace(run);
+    sent += 1;
+    let decision: ReturnType<typeof streak.record>;
+    try {
+      await touchSession(cookie);
+    } catch (error) {
+      if (!(error instanceof CosmoSessionError)) throw error;
+      if (error.kind === "dead") {
+        if (!backingOff) run.cosmoAnswered = true;
+        const before = run.markedDead;
+        await markDead(run, session, "session_dead", Date.now());
+        if (run.markedDead > before) {
+          const kept = endedWhileKept(lastUseOf(session), Date.now());
+          run.keepEnded.push({ hours: (Date.now() - session.createdAt) / HOUR, kept });
+          mediaBeat.count(kept ? "keepalive ended_kept" : "keepalive ended_idle");
+        }
+        mediaLog.debug(`Keep-alive session ${session.id} signed out`);
+        decision = streak.record("dead");
+        if (decision === "dead_streak") {
+          mediaLog.warn(
+            `Keep-alive stopped after ${KEEPALIVE_DEAD_STREAK} sessions signed out in a row`,
+          );
+          break;
+        }
+        continue;
+      }
+      mediaLog.debug(`Keep-alive session ${session.id} failed: ${error.kind}`);
+      if (isCosmoWideOutage(error.kind, run.cosmoAnswered) && !backingOff) {
+        run.cosmoDown = true;
+        return;
+      }
+      mediaBeat.count(`keepalive failed ${error.kind}`);
+      decision = streak.record(error.kind);
+      if (decision === "failures") {
+        mediaLog.warn(
+          `Keep-alive stopped after ${KEEPALIVE_FAILURE_STREAK} failed touches in a row`,
+        );
+        break;
+      }
+      if (decision === "stop") break;
+      continue;
+    }
+
+    streak.record("ok");
+    if (!backingOff) run.cosmoAnswered = true;
+    const answeredAt = Date.now();
+    await db
+      .update(cosmoSession)
+      .set({ lastUsedAt: iso(answeredAt) })
+      .where(ownRow(session));
+    mediaBeat.count("keepalive touched");
+    mediaBeat.max("keepalive idle_max_min", Math.round((answeredAt - lastUseOf(session)) / MIN));
+    mediaLog.debug(`Keep-alive session ${session.id} touched`);
+  }
+
+  if (capped > 0) {
+    mediaBeat.count("keepalive capped", capped);
+    if (!backingOff) mediaLog.warn(`Keep-alive: ${capped} sessions left for later runs`);
   }
 }
 
@@ -387,7 +578,7 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
 
   const stamped = await db
     .update(cosmoSession)
-    .set({ lastAttemptAt: iso(startedAt), lastUsedAt: iso(startedAt) })
+    .set({ lastAttemptAt: iso(startedAt) })
     .where(ownRow(session))
     .returning({ id: cosmoSession.id });
   // the row was reconnected since it was read: leave it to the next run
@@ -403,7 +594,11 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
     await pace(run);
     const me = await fetchSessionUser(cookie);
     run.cosmoAnswered = true;
-    await db.update(cosmoSession).set({ cosmoNickname: me.nickname }).where(ownRow(session));
+    // last use is Cosmo's answer, never the attempt: a failed request must not read as use
+    await db
+      .update(cosmoSession)
+      .set({ cosmoNickname: me.nickname, lastUsedAt: iso(Date.now()) })
+      .where(ownRow(session));
 
     const startAt = Math.max(
       0,
