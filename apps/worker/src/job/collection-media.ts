@@ -25,22 +25,29 @@ import { and, eq, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 
 import { errorCode } from "@/lib/error-code";
 import { expiryNotices } from "@/lib/expiry-notice";
-import { log } from "@/lib/log";
+import { heartbeat, log } from "@/lib/log";
 import { createBackoffStore } from "@/lib/media-backoff";
+import { currentCopy } from "@/lib/media-copy";
 import {
+  addCounts,
   createRunBudget,
+  isCosmoWideOutage,
   nextBackoff,
   nextPage,
   nextSyncAt,
   orderDue,
   PAGE_SIZE,
   parkAfterFailure,
+  parseCursor,
   spacingMs,
+  type SyncCounts,
+  type SyncCursor,
 } from "@/lib/media-sync";
 import { redis } from "@/lib/redis";
 import { objectUrl } from "@/lib/s3";
 
 const mediaLog = log("collection-media");
+const mediaBeat = heartbeat(mediaLog);
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -70,7 +77,8 @@ type SessionRow = {
   userId: string;
   cosmoAddress: string;
   cookieSealed: string;
-  syncCursor: { artist: string; page: number } | null;
+  syncCursor: unknown;
+  lastError: string | null;
   syncRequestedAt: number | null;
   nextSyncAt: number;
   cookieExpiresAt: number;
@@ -88,6 +96,8 @@ type Run = {
   rejectedHosts: Set<string>;
   keyUnreadable: number;
   failedSessions: number[];
+  recorded: number;
+  markedDead: number;
 };
 
 async function pace(run: Run) {
@@ -108,6 +118,14 @@ export async function syncCollectionMedia() {
 }
 
 async function runSync() {
+  try {
+    await runSyncOnce();
+  } finally {
+    mediaBeat.flush();
+  }
+}
+
+async function runSyncOnce() {
   const sessionKey = process.env.COSMO_SESSION_KEY;
   if (!sessionKey) {
     if (!warnedNoKey) {
@@ -126,6 +144,8 @@ async function runSync() {
     rejectedHosts: new Set(),
     keyUnreadable: 0,
     failedSessions: [],
+    recorded: 0,
+    markedDead: 0,
   };
 
   const backoff = await backoffStore.read();
@@ -163,11 +183,15 @@ async function runSync() {
     );
   }
 
+  mediaBeat.count("runs");
+  mediaBeat.count("Cosmo requests", run.requests);
+
+  // a run that only read Cosmo and changed nothing stays silent; the heartbeat counts it
   const wrote = Object.entries(applied.columns).filter(([, n]) => n > 0);
-  if (run.requests > 0 || wrote.length > 0 || retired > 0) {
+  if (applied.rows > 0 || run.recorded > 0 || run.markedDead > 0 || retired > 0) {
     const columns = wrote.map(([name, n]) => `${name} ${n}`).join(", ") || "none";
     mediaLog.info(
-      `${run.requests} Cosmo requests; wrote ${applied.rows} collections (${columns}); ${retired} dead sessions removed`,
+      `${run.requests} Cosmo requests; recorded ${run.recorded} collections; wrote ${applied.rows} collections (${columns}); ${run.markedDead} sessions marked dead; ${retired} dead sessions removed`,
     );
   }
 }
@@ -182,6 +206,7 @@ async function dueSessions(now: number) {
       cosmoAddress: cosmoSession.cosmoAddress,
       cookieSealed: cosmoSession.cookieSealed,
       syncCursor: cosmoSession.syncCursor,
+      lastError: cosmoSession.lastError,
       syncRequestedAt: epochMs(cosmoSession.syncRequestedAt).mapWith((v) =>
         v === null ? null : Number(v),
       ),
@@ -201,6 +226,7 @@ async function dueSessions(now: number) {
       ),
     )
     .orderBy(
+      sql`(${cosmoSession.lastError} is not distinct from 'cosmo_unavailable')`,
       sql`(${cosmoSession.syncCursor} is null)`,
       sql`${cosmoSession.syncRequestedAt} asc nulls last`,
       cosmoSession.nextSyncAt,
@@ -220,25 +246,36 @@ async function syncPhase(run: Run, sessionKey: string) {
       const outcome = await syncSession(run, session, sessionKey);
       if (outcome === "stop") break;
     } catch (error) {
-      // a fault of ours (database, parsing): park the session so it cannot eat every run
+      // a fault of ours (database, parsing): park the session so it cannot eat every run; the
+      // run's one warn counts it
       run.failedSessions.push(session.id);
-      mediaLog.error(`Session ${session.id} failed: ${errorCode(error)}`);
+      mediaLog.debug(`Session ${session.id} failed: ${errorCode(error)}`);
       await db
         .update(cosmoSession)
         .set({ lastError: "unexpected_response", ...parkAfterFailure(Date.now()) })
-        .where(eq(cosmoSession.id, session.id))
+        .where(ownRow(session))
         .catch(() => undefined);
     }
   }
 }
 
+/**
+ * Every worker write to a session row carries the cookie this run read: a Renew in between puts a
+ * fresh cookie and request on the row, and a stale write (a park, a result) must not touch them.
+ * A write that matches nothing is skipped.
+ */
+function ownRow(session: SessionRow) {
+  return and(eq(cosmoSession.id, session.id), eq(cosmoSession.cookieSealed, session.cookieSealed));
+}
+
 /** Marks a session dead and erases its cookie, but only while the row still holds `sealed`. */
 async function markDead(
+  run: Run,
   session: SessionRow,
   error: "session_dead" | "session_expired",
   now: number,
 ) {
-  await db
+  const marked = await db
     .update(cosmoSession)
     .set({
       deadAt: iso(now),
@@ -247,9 +284,9 @@ async function markDead(
       syncCursor: null,
       syncRequestedAt: null,
     })
-    .where(
-      and(eq(cosmoSession.id, session.id), eq(cosmoSession.cookieSealed, session.cookieSealed)),
-    );
+    .where(ownRow(session))
+    .returning({ id: cosmoSession.id });
+  run.markedDead += marked.length;
 }
 
 async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
@@ -271,7 +308,7 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
       await db
         .update(cosmoSession)
         .set({ lastError: "key_unreadable", ...parkAfterFailure(startedAt) })
-        .where(eq(cosmoSession.id, session.id));
+        .where(ownRow(session));
       return "next";
     }
   }
@@ -282,29 +319,30 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
       // best effort: the cookie may still work at Cosmo, and the row is dead either way
       await logoutSession(cookie).catch(() => undefined);
     }
-    await markDead(session, "session_expired", Date.now());
+    await markDead(run, session, "session_expired", Date.now());
     return "next";
   }
   if (cookie === null) return "next";
 
-  await db
+  const stamped = await db
     .update(cosmoSession)
     .set({ lastAttemptAt: iso(startedAt), lastUsedAt: iso(startedAt) })
-    .where(eq(cosmoSession.id, session.id));
+    .where(ownRow(session))
+    .returning({ id: cosmoSession.id });
+  // the row was reconnected since it was read: leave it to the next run
+  if (stamped.length === 0) return "next";
 
   const stats: SyncStats = { seen: 0, recorded: 0, skipped: 0, slugs: new Set() };
+  const carried = parseCursor(session.syncCursor);
   // where the next run resumes: the page being read, so a failed page is read again
-  let position = session.syncCursor;
-  let cursor = session.syncCursor;
+  let position = carried;
+  let cursor = carried;
 
   try {
     await pace(run);
     const me = await fetchSessionUser(cookie);
     run.cosmoAnswered = true;
-    await db
-      .update(cosmoSession)
-      .set({ cosmoNickname: me.nickname })
-      .where(eq(cosmoSession.id, session.id));
+    await db.update(cosmoSession).set({ cosmoNickname: me.nickname }).where(ownRow(session));
 
     const startAt = Math.max(
       0,
@@ -315,10 +353,14 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
       cursor = null;
       while (true) {
         if (!run.budget.canRequest()) {
-          await storeCursor(session, { artist, page });
+          await storeCursor(session, {
+            artist,
+            page,
+            stats: await progress(carried, stats, true),
+          });
           return "next";
         }
-        position = { artist, page };
+        position = { artist, page, stats: carried?.stats ?? emptyStats };
         await pace(run);
         const result = await fetchObjektSummaries(cookie, { artistId: artist, page });
         const items = result.collections.length + result.skipped;
@@ -335,55 +377,87 @@ async function syncSession(run: Run, session: SessionRow, sessionKey: string) {
     }
   } catch (error) {
     if (!(error instanceof CosmoSessionError)) throw error;
-    return handleCosmoError(run, session, error, position);
+    const saved = position && {
+      artist: position.artist,
+      page: position.page,
+      stats: await progress(carried, stats, true),
+    };
+    return handleCosmoError(run, session, error, saved);
   }
 
-  const applied = await countIndexed([...stats.slugs]);
+  const total = await progress(carried, stats, false);
   const done = Date.now();
   await db
     .update(cosmoSession)
     .set({
       lastSyncedAt: iso(done),
-      lastSync: {
-        seen: stats.seen,
-        recorded: stats.recorded,
-        applied,
-        skipped: stats.skipped,
-      },
+      lastSync: total,
       nextSyncAt: iso(nextSyncAt(session.id, done)),
       lastError: null,
       syncCursor: null,
       // a request made while this sync ran is kept for the next
       syncRequestedAt: sql`CASE WHEN ${cosmoSession.syncRequestedAt} <= ${iso(startedAt)} THEN NULL ELSE ${cosmoSession.syncRequestedAt} END`,
     })
-    .where(eq(cosmoSession.id, session.id));
+    .where(ownRow(session));
   return "next";
 }
 
-async function storeCursor(session: SessionRow, cursor: { artist: string; page: number }) {
-  await db.update(cosmoSession).set({ syncCursor: cursor }).where(eq(cosmoSession.id, session.id));
+const emptyStats: SyncCounts = { seen: 0, recorded: 0, applied: 0, skipped: 0 };
+
+/**
+ * The counts of the whole sync so far: those carried in the cursor plus this run's. A sync spans
+ * runs, so `last_sync` must not report only the last one. `tolerant` lets a cursor save survive
+ * an indexer read that fails (the applied count is then short), where the final write throws.
+ */
+async function progress(carried: SyncCursor | null, stats: SyncStats, tolerant: boolean) {
+  const slugs = [...stats.slugs];
+  const applied = tolerant ? await countIndexed(slugs).catch(() => 0) : await countIndexed(slugs);
+  return addCounts(carried?.stats ?? emptyStats, {
+    seen: stats.seen,
+    recorded: stats.recorded,
+    applied,
+    skipped: stats.skipped,
+  });
+}
+
+async function storeCursor(session: SessionRow, cursor: SyncCursor) {
+  await db.update(cosmoSession).set({ syncCursor: cursor }).where(ownRow(session));
 }
 
 async function handleCosmoError(
   run: Run,
   session: SessionRow,
   error: CosmoSessionError,
-  cursor: { artist: string; page: number } | null,
+  cursor: SyncCursor | null,
 ) {
   const now = Date.now();
   if (error.kind === "dead") {
     run.cosmoAnswered = true;
-    await markDead(session, "session_dead", now);
+    await markDead(run, session, "session_dead", now);
     return "next";
   }
-  if (error.kind === "busy" || error.kind === "unavailable") {
-    // Cosmo-wide, not the session's fault: keep its place, cursor and due time
+  if (isCosmoWideOutage(error.kind, run.cosmoAnswered)) {
+    // nothing has answered this run: Cosmo-wide, not the session's fault, so keep its place and due time
     run.cosmoDown = true;
     await db
       .update(cosmoSession)
       .set({ lastError: "cosmo_unavailable", ...(cursor ? { syncCursor: cursor } : {}) })
-      .where(eq(cosmoSession.id, session.id));
+      .where(ownRow(session));
     return "stop";
+  }
+  if (error.kind === "busy" || error.kind === "unavailable") {
+    // Cosmo answered others this run, so this session's own page keeps failing: park it, keep its
+    // cursor, and go on, or it would be first again every run
+    await db
+      .update(cosmoSession)
+      .set({
+        lastError: "cosmo_unavailable",
+        ...parkAfterFailure(now),
+        ...(cursor ? { syncCursor: cursor } : {}),
+      })
+      .where(ownRow(session));
+    run.failedSessions.push(session.id);
+    return "next";
   }
   run.cosmoAnswered = true;
   await db
@@ -393,7 +467,7 @@ async function handleCosmoError(
       ...parkAfterFailure(now),
       ...(cursor ? { syncCursor: cursor } : {}),
     })
-    .where(eq(cosmoSession.id, session.id));
+    .where(ownRow(session));
   run.failedSessions.push(session.id);
   return "next";
 }
@@ -442,6 +516,7 @@ async function recordPage(run: Run, page: Page, stats: SyncStats) {
     if (before && !valuesChanged && next.confirmedAt === before.confirmedAt) continue;
     if (valuesChanged) {
       stats.recorded += 1;
+      run.recorded += 1;
       stats.slugs.add(slug);
     }
     writes.push({
@@ -579,7 +654,10 @@ async function applyPhase() {
     })
     .from(collectionMedia);
   if (records.length === 0) return result;
-  const bySlug = new Map(records.map((r) => [r.slug, r]));
+  // a copy of an earlier source must not be applied: planMediaWrite trusts the copy it is given
+  const bySlug = new Map(
+    records.map((r) => [r.slug, { ...r, frontMediaCopy: currentCopy(r, copyPrefix) }]),
+  );
 
   let backImageBudget = BACK_IMAGES_PER_RUN;
   await chunk([...bySlug.keys()], APPLY_CHUNK, async (slugs) => {

@@ -35,6 +35,7 @@ export function nextPage(p: {
 type DueSession = {
   id: number;
   syncCursor: unknown;
+  lastError?: string | null;
   syncRequestedAt: number | null;
   nextSyncAt: number;
   cookieExpiresAt: number;
@@ -42,16 +43,19 @@ type DueSession = {
 
 /**
  * Live sessions that are due, in the order to sync them: a cursor first (finish what was
- * started), then requested ones by request time, then the rest by `nextSyncAt`. Times are epoch ms.
+ * started), then requested ones by request time, then the rest by `nextSyncAt`. A session whose
+ * last run ended in `cosmo_unavailable` goes after all of them, cursor or not, so another session
+ * probes Cosmo first and one persistently failing page cannot starve the rest. Times are epoch ms.
  */
 export function orderDue<T extends DueSession>(sessions: readonly T[], now: number) {
-  const rank = (s: T) => (s.syncCursor ? 0 : s.syncRequestedAt !== null ? 1 : 2);
+  const rank = (s: T) =>
+    s.lastError === "cosmo_unavailable" ? 3 : s.syncCursor ? 0 : s.syncRequestedAt !== null ? 1 : 2;
   return sessions
     .filter((s) => s.syncRequestedAt !== null || s.nextSyncAt <= now || s.cookieExpiresAt <= now)
     .toSorted(
       (a, b) =>
         rank(a) - rank(b) ||
-        (rank(a) === 2 ? 0 : (a.syncRequestedAt ?? 0) - (b.syncRequestedAt ?? 0)) ||
+        (rank(a) >= 2 ? 0 : (a.syncRequestedAt ?? 0) - (b.syncRequestedAt ?? 0)) ||
         a.nextSyncAt - b.nextSyncAt ||
         a.id - b.id,
     );
@@ -109,6 +113,49 @@ export function createRunBudget(now: () => number = Date.now) {
     /** A session costs at least `users/me` and one page. */
     canStartSession() {
       return RUN_REQUESTS - spent >= SESSION_MIN_REQUESTS && timeLeft();
+    },
+  };
+}
+
+/**
+ * Whether a Cosmo error is Cosmo-wide (back off for everyone) rather than this session's own
+ * failure: only a busy or unavailable answer while nothing in this run has been answered yet. Once
+ * Cosmo has answered any request, the same error belongs to the session that hit it.
+ */
+export function isCosmoWideOutage(kind: string, answeredThisRun: boolean) {
+  return (kind === "busy" || kind === "unavailable") && !answeredThisRun;
+}
+
+export type SyncCounts = { seen: number; recorded: number; applied: number; skipped: number };
+export type SyncCursor = { artist: string; page: number; stats: SyncCounts };
+
+export const emptyCounts = (): SyncCounts => ({ seen: 0, recorded: 0, applied: 0, skipped: 0 });
+
+export function addCounts(a: SyncCounts, b: SyncCounts): SyncCounts {
+  return {
+    seen: a.seen + b.seen,
+    recorded: a.recorded + b.recorded,
+    applied: a.applied + b.applied,
+    skipped: a.skipped + b.skipped,
+  };
+}
+
+const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0);
+
+/** Reads `sync_cursor`; a cursor from before the counts were carried has none, and starts from zero. */
+export function parseCursor(raw: unknown): SyncCursor | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const { artist, page, stats } = raw as Record<string, unknown>;
+  if (typeof artist !== "string" || typeof page !== "number" || !Number.isFinite(page)) return null;
+  const s = (typeof stats === "object" && stats !== null ? stats : {}) as Record<string, unknown>;
+  return {
+    artist,
+    page,
+    stats: {
+      seen: count(s.seen),
+      recorded: count(s.recorded),
+      applied: count(s.applied),
+      skipped: count(s.skipped),
     },
   };
 }

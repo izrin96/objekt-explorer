@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  addCounts,
+  emptyCounts,
+  isCosmoWideOutage,
+  parseCursor,
   MAX_PAGES,
   nextBackoff,
   nextPage,
@@ -203,5 +207,90 @@ describe("parkAfterFailure", () => {
       nextSyncAt: new Date(now + 6 * HOUR).toISOString(),
       syncRequestedAt: null,
     });
+  });
+});
+
+describe("orderDue after cosmo_unavailable", () => {
+  const s = (id: number, over: Record<string, unknown> = {}) => ({
+    id,
+    syncCursor: null as { artist: string; page: number } | null,
+    syncRequestedAt: null as number | null,
+    nextSyncAt: now - HOUR,
+    cookieExpiresAt: now + 100 * 24 * HOUR,
+    lastError: null as string | null,
+    ...over,
+  });
+
+  test("a session that last failed with cosmo_unavailable sorts after every other, cursor or not", () => {
+    const sessions = [
+      s(1, { lastError: "cosmo_unavailable", syncCursor: { artist: "tripleS", page: 2 } }),
+      s(2, { syncRequestedAt: now - 1 }),
+      s(3),
+      s(4, { lastError: "unexpected_response" }),
+    ];
+    expect(orderDue(sessions, now).map((x) => x.id)).toEqual([2, 3, 4, 1]);
+  });
+
+  test("several of them keep next_sync_at then id order among themselves", () => {
+    const sessions = [
+      s(9, { lastError: "cosmo_unavailable", nextSyncAt: now - 1 }),
+      s(5, { lastError: "cosmo_unavailable", nextSyncAt: now - 2 }),
+      s(7, { lastError: "cosmo_unavailable", nextSyncAt: now - 2 }),
+    ];
+    expect(orderDue(sessions, now).map((x) => x.id)).toEqual([5, 7, 9]);
+  });
+});
+
+describe("isCosmoWideOutage", () => {
+  test("busy or unavailable is Cosmo-wide while nothing was answered", () => {
+    expect(isCosmoWideOutage("busy", false)).toBe(true);
+    expect(isCosmoWideOutage("unavailable", false)).toBe(true);
+  });
+
+  test("once Cosmo answered, the same error is the session's own", () => {
+    expect(isCosmoWideOutage("busy", true)).toBe(false);
+    expect(isCosmoWideOutage("unavailable", true)).toBe(false);
+  });
+
+  test("other kinds are never Cosmo-wide", () => {
+    expect(isCosmoWideOutage("dead", false)).toBe(false);
+    expect(isCosmoWideOutage("unexpected", false)).toBe(false);
+  });
+});
+
+describe("sync cursor counts", () => {
+  test("parses a cursor with counts", () => {
+    const stats = { seen: 5, recorded: 2, applied: 1, skipped: 3 };
+    expect(parseCursor({ artist: "tripleS", page: 4, stats })).toEqual({
+      artist: "tripleS",
+      page: 4,
+      stats,
+    });
+  });
+
+  test("an old cursor without counts starts from zero", () => {
+    expect(parseCursor({ artist: "tripleS", page: 4 })).toEqual({
+      artist: "tripleS",
+      page: 4,
+      stats: emptyCounts(),
+    });
+  });
+
+  test("bad fields become zero and a bad cursor is null", () => {
+    expect(
+      parseCursor({ artist: "a", page: 1, stats: { seen: "x", recorded: -1 } })?.stats,
+    ).toEqual(emptyCounts());
+    expect(parseCursor(null)).toBeNull();
+    expect(parseCursor({ artist: 3, page: 1 })).toBeNull();
+    expect(parseCursor({ artist: "a" })).toBeNull();
+  });
+
+  test("addCounts sums field by field", () => {
+    expect(
+      addCounts(
+        { seen: 1, recorded: 2, applied: 3, skipped: 4 },
+        { seen: 10, recorded: 20, applied: 30, skipped: 40 },
+      ),
+    ).toEqual({ seen: 11, recorded: 22, applied: 33, skipped: 44 });
   });
 });

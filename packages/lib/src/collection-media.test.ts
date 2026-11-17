@@ -115,10 +115,16 @@ describe("rejectedHosts", () => {
 });
 
 describe("acceptMediaUrl", () => {
-  test("accepts the two probed hosts and any *.cosmo.fans", () => {
+  test("accepts the two probed hosts only", () => {
     expect(acceptMediaUrl(motion)).toBe(true);
     expect(acceptMediaUrl(band)).toBe(true);
-    expect(acceptMediaUrl("https://cdn.cosmo.fans/x.mp4")).toBe(true);
+    expect(acceptMediaUrl("https://resources.cosmo.fans/x.mp4")).toBe(true);
+    expect(acceptMediaUrl("https://imagedelivery.net/x/y/public")).toBe(true);
+  });
+
+  test("another cosmo.fans subdomain is refused", () => {
+    expect(acceptMediaUrl("https://foo.cosmo.fans/x.mp4")).toBe(false);
+    expect(acceptMediaUrl("https://cdn.cosmo.fans/x.mp4")).toBe(false);
   });
 
   test("an http URL is refused", () => {

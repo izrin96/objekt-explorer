@@ -54,7 +54,7 @@ export type MediaWrite = Partial<
 
 const URL_FIELDS = ["frontMedia", "bandImageUrl", "backImage"] as const;
 
-/** https, an allowlisted host (`imagedelivery.net`, `resources.cosmo.fans`, any `*.cosmo.fans`), 255 characters at most. */
+/** https, no credentials or port, one of the two exact hosts in `ALLOWED_HOSTS`, `MAX_URL_LENGTH` (1,024) characters at most. */
 export function acceptMediaUrl(url: string) {
   if (url.length === 0 || url.length > MAX_URL_LENGTH) return false;
   let parsed: URL;
@@ -65,8 +65,7 @@ export function acceptMediaUrl(url: string) {
   }
   if (parsed.protocol !== "https:") return false;
   if (parsed.username || parsed.password || parsed.port) return false;
-  const host = parsed.hostname;
-  return ALLOWED_HOSTS.has(host) || host.endsWith(".cosmo.fans");
+  return ALLOWED_HOSTS.has(parsed.hostname);
 }
 
 /** Our copy's URL: under `copyPrefix` and short enough for the indexer's `front_media`. */

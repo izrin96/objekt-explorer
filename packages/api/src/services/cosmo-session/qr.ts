@@ -15,6 +15,7 @@ import {
   connectAllowed,
   connectBlocked,
   cookieExpiry,
+  lastCertifyTry,
   pollFallback,
   pollState,
   startRefusal,
@@ -27,7 +28,15 @@ import type { CosmoSessionRefusal } from "../../schemas/cosmo-session";
 import { globalRateLimited, ipRateLimited, userRateLimited } from "../redis";
 import { refuseSession } from "./refusal";
 import { sessionsAvailable, signOutCookies, signOutSealed, type SealedSession } from "./sessions";
-import { clearTicket, readTicket, recordWrongCode, rememberState, storeTicket } from "./ticket";
+import {
+  acquireCertifyLock,
+  clearTicket,
+  readTicket,
+  releaseCertifyLock,
+  rememberState,
+  reserveCertifyTry,
+  storeTicket,
+} from "./ticket";
 
 const kindOf = (err: unknown): CosmoErrorKind =>
   err instanceof CosmoSessionError ? err.kind : "unavailable";
@@ -90,15 +99,17 @@ export async function pollQr(userId: string) {
 }
 
 async function readPoll(userId: string): Promise<PollState> {
-  if (await userRateLimited("cosmo-qr-poll", userId, 30, 60)) refuseRateLimit();
   const stored = await readTicket(userId);
   if (stored === "unavailable") refuseSession("cosmo_session_unavailable");
   if (stored === "none") return { state: "expired" };
 
   const now = Date.now();
-  // over the site's budget the poll is not refused: it answers from the last state, so a busy
-  // minute only slows the dialog
-  if (await globalRateLimited("cosmo-qr-poll", 120, 60)) {
+  // over the caller's budget (or the far higher site ceiling) the poll is not refused: it answers
+  // from the last state, so a busy minute only slows the dialog
+  if (
+    (await userRateLimited("cosmo-qr-poll", userId, 30, 60)) ||
+    (await globalRateLimited("cosmo-qr-poll", 600, 60))
+  ) {
     return pollFallback(stored.last, stored.expireAt, now);
   }
   let state: PollState;
@@ -245,24 +256,40 @@ export async function certifyQr(userId: string, otp: number) {
   if (stored === "unavailable") refuseSession("cosmo_session_unavailable");
   if (stored === "none") refuseSession("cosmo_session_expired");
 
+  // one certify per user at a time, so parallel requests cannot each spend a try
+  const lock = await acquireCertifyLock(userId);
+  if (lock === "unavailable") refuseSession("cosmo_session_unavailable");
+  if (lock === "busy") refuseRateLimit();
+
   let signedIn: Awaited<ReturnType<typeof certifyLoginTicket>>;
   try {
-    signedIn = await certifyLoginTicket(stored.ticket, otp);
-  } catch (err) {
-    const outcome = certifyOutcome(
-      kindOf(err),
-      codeDeadline(stored.last, stored.expireAt),
-      Date.now(),
-    );
-    // a wrong code keeps the ticket for a few more tries; anything else ends it
-    if (outcome === "wrong_code") {
-      const counted = await recordWrongCode(userId, stored.ticket);
-      if (counted === "unavailable") refuseSession("cosmo_session_unavailable");
-      if (counted !== "counted") refuseSession("cosmo_session_expired");
-      refuseSession("cosmo_session_wrong_code");
+    // reserved before Cosmo is asked, and counted whatever the outcome: the cap cannot be raced
+    const reserved = await reserveCertifyTry(userId, stored.ticket);
+    if (reserved === "unavailable") refuseSession("cosmo_session_unavailable");
+    if (reserved === "gone") refuseSession("cosmo_session_expired");
+    if (reserved === "exhausted") {
+      await clearTicket(userId, stored.ticket);
+      refuseSession("cosmo_session_expired");
     }
-    await clearTicket(userId, stored.ticket);
-    refuseSession(outcome === "expired" ? "cosmo_session_expired" : "cosmo_session_cosmo_error");
+    try {
+      signedIn = await certifyLoginTicket(stored.ticket, otp);
+    } catch (err) {
+      const outcome = certifyOutcome(
+        kindOf(err),
+        codeDeadline(stored.last, stored.expireAt),
+        Date.now(),
+      );
+      // a wrong code keeps the ticket while tries remain; anything else ends it
+      if (outcome === "wrong_code" && !lastCertifyTry(reserved.tries)) {
+        refuseSession("cosmo_session_wrong_code");
+      }
+      await clearTicket(userId, stored.ticket);
+      refuseSession(
+        outcome === "cosmo_error" ? "cosmo_session_cosmo_error" : "cosmo_session_expired",
+      );
+    }
+  } finally {
+    await releaseCertifyLock(userId, lock.token);
   }
 
   // from here Cosmo holds a session: any way out but a stored row signs it out

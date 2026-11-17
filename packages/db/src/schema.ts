@@ -997,7 +997,12 @@ export const cosmoSession = pgTable(
     nextSyncAt: timestamp("next_sync_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
-    syncCursor: jsonb("sync_cursor").$type<{ artist: string; page: number }>(),
+    syncCursor: jsonb("sync_cursor").$type<{
+      artist: string;
+      page: number;
+      // counts of this sync so far, carried across runs; absent on a cursor from before they were
+      stats?: { seen: number; recorded: number; applied: number; skipped: number };
+    }>(),
     lastUsedAt: timestamp("last_used_at", { mode: "string", withTimezone: true }),
     lastAttemptAt: timestamp("last_attempt_at", { mode: "string", withTimezone: true }),
     lastSyncedAt: timestamp("last_synced_at", { mode: "string", withTimezone: true }),

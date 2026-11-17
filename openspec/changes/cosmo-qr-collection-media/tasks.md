@@ -23,6 +23,12 @@ These are built. Each stays open until the owner runs the check named here, sinc
 - 8.4: the seeded copy runs (a refused sniff, an off-allowlist source, a redirect).
 - 9.1: a collection without media unchanged on the local dev server.
 
+**Local live checks, 2026-11-17** (owner-approved seeded rows; worktree `.env.local` adds a throwaway `COSMO_SESSION_KEY`, `COSMO_BROWSER_URL` and `S3_ENDPOINT` on dead local ports; every seeded cookie sealed under a second throwaway key, so nothing reached Cosmo or the bucket). Passed: 5.3, 5.5, 6.1, 6.2, 6.4, 6.5, 8.2, 8.4, 9.1, 10.6. Still open:
+- 5.4: every local check passed; the `x-real-ip` read on production is not run.
+- 6.3: Connect sends the start request and the `unavailable` state renders; `minting` and `busy` are not rendered (suggest `/state-machine`), and a real start stays with 8.8.
+- 5.5: the ban deleted the row, but no sign-out was sent, since the seeded cookie cannot open. A real sign-out is first exercised in production.
+- 8.4: the redirect case used `https://shop.cosmo.fans/` (308).
+
 ## 1. Cosmo client: parsing (pure)
 
 - [x] 1.1 Add `zod` (`"catalog:"`) to `packages/cosmo/package.json`, then create `packages/cosmo/src/session-parse.ts`:
@@ -102,7 +108,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   The migration `20261117022946_cosmo_session_collection_media` was never applied anywhere, so delete its folder and run `bun run --filter=@repo/db db:generate` again, rather than adding a second migration. Read the SQL: two `CREATE TABLE`s, their indexes, foreign key and CHECKs, nothing else. Do not run `db:migrate`.
 
   Lint, typecheck and build pass for `@repo/db` and `@repo/api`.
-- [ ] 4.2 **(owner)** Apply the migration locally (`.env.local` on the compose Postgres) with `db:migrate`. On production, apply it with `docker compose run --build --rm migrate` before the deploy that reads the tables.
+- [ ] 4.2 **(owner)** Apply the migration locally (`.env.local` on the compose Postgres) with `db:migrate` (done 2026-11-17: both tables and `expiry_notified_at` present). On production, apply it with `docker compose run --build --rm migrate` before the deploy that reads the tables.
 
 ## 5. API: sign-in and sessions (`packages/api`)
 
@@ -119,7 +125,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `cosmoMediaSummarySchema`: `{ live, signedOut, recorded }` integers and `lastSyncedAt`, nothing else.
 
   Lint, typecheck and build pass for `@repo/api`.
-- [ ] 5.3 Create `packages/api/src/services/cosmo-session/`:
+- [x] 5.3 Create `packages/api/src/services/cosmo-session/`:
   - `ticket.ts`: the `cosmo-qr:<userId>` store, holding `{ticket, expireAt, last}`. It fails closed: an unreachable Redis returns `unavailable`.
   - `qr.ts`: `startQr`, `pollQr` and `certifyQr` (Decision 4).
     - Poll over the global limit returns `last` without a Cosmo call.
@@ -144,7 +150,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - read-only on production: the web's requests carry `x-real-ip` (log its presence, never its value, on one request), since without it `ipRateLimited` keys every caller as `unknown` and becomes a site-wide limit.
 
   Lint, typecheck and build pass for `@repo/api`.
-- [ ] 5.5 Call `revokeSessionsOf`:
+- [x] 5.5 Call `revokeSessionsOf`:
   - in `services/account/anonymize.ts`, inside the scrub transaction;
   - in `syncBan` (`services/moderation/core.ts`), in the branch that revokes the user's site sessions on a new ban, and return the cookies so `applyModAction` signs them out after commit.
 
@@ -156,14 +162,14 @@ These are built. Each stays open until the owner runs the check named here, sinc
 
 ## 6. Web: the Collection data section
 
-- [ ] 6.1 Add the section (load `vercel-react-best-practices` first):
+- [x] 6.1 Add the section (load `vercel-react-best-practices` first):
   - Add `/account/collection-data` to `SECTIONS` in `features/account/account-nav.tsx`, after `/account/profiles`.
   - Add `routes/(container)/account/collection-data.tsx`, with a loader on `cosmoSessionsOptions` and a `head` title.
   - Create `features/cosmo-session/queries.ts`.
   - Add the section label, title, the consent text of Decision 14 and the refusal strings (`api_errors_cosmo_session_*`, one per code in `COSMO_SESSION_REFUSALS`) to `messages/en.json`, `ko.json` and `ja.json` (ko 합니다체, ja full-width ？).
 
   On the local dev server: a signed-in user sees the section with the consent text and the empty state; with `COSMO_SESSION_KEY` unset in `.env.local` it says Cosmo sign-in is not set up; a signed-out visitor lands on `/login?redirect=/account/collection-data`. Lint, typecheck and build pass for `web`.
-- [ ] 6.2 Create `features/cosmo-session/connect-flow.ts` (pure) and `connect-flow.test.ts`:
+- [x] 6.2 Create `features/cosmo-session/connect-flow.ts` (pure) and `connect-flow.test.ts`:
   - the dialog's states: `minting`, `qr`, `code`, `submitting`, `connected`, `expired`, `wrongCode`, `cosmoError`, `unavailable`, `busy`, `limit`, `notAllowed`, `rateLimited`;
   - transitions from each procedure result and refusal code;
   - `remaining(expiresAt, now)` as `m:ss`, clamped at `0:00`;
@@ -185,7 +191,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - the `minting`, `unavailable` and `busy` states render.
 
   Suggest the user run `/state-machine` on the dialog. Lint, typecheck and build pass for `web`.
-- [ ] 6.4 Build the list in `features/cosmo-session/sessions-view.tsx` (load `vercel-react-best-practices` first):
+- [x] 6.4 Build the list in `features/cosmo-session/sessions-view.tsx` (load `vercel-react-best-practices` first):
   - the consent text above it;
   - each row as `web-cosmo-session`'s Connected account list requirement says, with a line in en, ko and ja for each `last_error` code (`key_unreadable` says to reconnect);
   - Sync now, with the list refetching every 10 s while any row has `syncRequested`;
@@ -195,7 +201,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `font-mono` for addresses.
 
   Read-only verified with a seeded local row (see Local rows): Sync now and Disconnect are checked up to the request they send. Lint, typecheck and build pass for `web`.
-- [ ] 6.5 Add the Cosmo media summary line to the Collections tab (load `vercel-react-best-practices` first): a query on `admin.cosmoMediaSummary` in `features/moderation/` beside the collections queries, drawn as a " · " line above the table, with en, ko and ja strings. On the local dev server an admin sees the line with zeros, or "no Cosmo account is connected". Lint, typecheck and build pass for `web`.
+- [x] 6.5 Add the Cosmo media summary line to the Collections tab (load `vercel-react-best-practices` first): a query on `admin.cosmoMediaSummary` in `features/moderation/` beside the collections queries, drawn as a " · " line above the table, with en, ko and ja strings. On the local dev server an admin sees the line with zeros, or "no Cosmo account is connected". Lint, typecheck and build pass for `web`.
 
 ## 7. Collection media planning (pure, `packages/lib`)
 
@@ -231,7 +237,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `RunBudget`: 50 requests and 4 minutes, with `canStartSession()` false below 2 requests left.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 8.2 Create `apps/worker/src/job/collection-media.ts` (Decision 10):
+- [x] 8.2 Create `apps/worker/src/job/collection-media.ts` (Decision 10):
   - **Sync phase**, skipped while `collection-media:backoff` (through `@/lib/redis`, with an in-process copy when Redis is unreachable) is in the future:
     - Read due sessions with `db` and `orderDue`; open each cookie with `process.env.COSMO_SESSION_KEY` and `sessionAad`. A failure to open skips that session with no Cosmo call: `last_error = key_unreadable`, `next_sync_at = now + 6 hours`, `dead_at` and the cookie unchanged; one `warn` per run carries the count.
     - An expired session (`cookie_expires_at` passed): sign out, set `dead_at`, `last_error = session_expired`, `cookie_sealed = null`.
@@ -255,13 +261,13 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `sniffVideo(bytes)` (Decision 9, Downloading safely): `video/mp4` (`mp4`) for `ftyp` with an allowed MP4 major brand, `audio/mp4` (`m4a`) for the brand `M4A `, `video/webm` (`webm`) for `1A 45 DF A3`, `audio/ogg` (`ogg`) for `OggS`, `audio/mpeg` (`mp3`) for an `ID3` tag or an MPEG layer III frame sync, else null. Voice files share the key folder, cap and budget;
   - `isPublicAddress(ip)`: false for loopback, private, link-local, unique-local and other reserved IPv4 and IPv6 addresses;
   - `dueCopies(records, indexerSlugs, now)`: the motion sources that pass `acceptMediaUrl`, whose copy is missing or not current, whose `front_media_failed_at` is null or over 6 hours old, and whose record's slug is in `indexerSlugs`, grouped by source with the slugs that share it, oldest `observed_at` first, and sources already copied for another record returned as reuses;
-  - `createCopyBudget(now)`: 20 objects, 200 MB and 5 minutes, and a stop after 3 downloads in a row fail with a 429, a 5xx or a timeout;
-  - `MAX_BYTES`: 30 MB.
+  - `createCopyBudget(now)`: 20 objects, 300 MB (raised from 200 MB on 2026-11-17) and 5 minutes, and a stop after 3 downloads in a row fail with a 429, a 5xx or a timeout;
+  - `MAX_BYTES`: 64 MB (raised from 30 MB on 2026-11-17, with the QuickTime brand accepted as `video/mp4`, after sample voice files of 47 MB and in QuickTime).
 
-  Tests cover: one source always gives one key, and two sources two keys; a slug or URL path never appears in a key; a changed source makes a copy not current; MP4, M4A, WebM, Ogg, MP3 with an ID3 tag and MP3 from a frame sync, an HTML body and a 3-byte body; a QuickTime, a HEIC, an AVIF and an ADTS AAC header (refused); `127.0.0.1`, `10.0.0.1`, `169.254.169.254`, `::1` and `fd00::1` (not public) and a public address; a source failed 5 hours ago (not due) and 7 hours ago (due); a record with only a band image (nothing due); a slug missing from the indexer (not due); two records with one motion source (one download); the budget stopping at 20 objects, at 200 MB and after 3 failures in a row.
+  Tests cover: one source always gives one key, and two sources two keys; a slug or URL path never appears in a key; a changed source makes a copy not current; MP4, M4A, WebM, Ogg, MP3 with an ID3 tag and MP3 from a frame sync, an HTML body and a 3-byte body; a QuickTime header (stored as `video/mp4`), a HEIC, an AVIF and an ADTS AAC header (refused); `127.0.0.1`, `10.0.0.1`, `169.254.169.254`, `::1` and `fd00::1` (not public) and a public address; a source failed 5 hours ago (not due) and 7 hours ago (due); a record with only a band image (nothing due); a slug missing from the indexer (not due); two records with one motion source (one download); the budget stopping at 20 objects, at 300 MB and after 3 failures in a row.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 8.4 Create the copy job (Decision 9):
+- [x] 8.4 Create the copy job (Decision 9):
   - In `src/lib/s3.ts`, add `putObject(key, body, contentType)`, which carries `CACHE_CONTROL` (`putWebp` now calls it), and `mediaKeyFromUrl(url)`, which returns a key only under `collection-media/`. `keyFromUrl` stays limited to `collection-images/`.
   - Create `job/copy-collection-media.ts`. It reads `collection_media` with `db` and the matching indexer slugs (`slug = ANY($1)`, read only), then runs `dueCopies`. For each due record, one at a time:
     - check the source with `acceptMediaUrl` again, resolve its host (every address, IPv4 and IPv6) and refuse unless each passes `isPublicAddress`;
@@ -280,7 +286,8 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `process-collection-images.ts` is unchanged, and `putWebp` still puts `image/webp` with `CACHE_CONTROL` through `putObject`.
   - Read the cleanup script's diff: it lists both prefixes and never deletes a key the two columns name. Do not run it.
   - Lint, typecheck and build pass for `worker`.
-- [ ] 8.5 Before the deploy, review the branch: run `/code-review` and the `security-auditor` agent on the diff, against Decision 6's threat model, Decision 4's limits and Decision 9's download rules. Fix what they find, or record why not in design.md, Risks. Lint, typecheck and build pass for every package the fixes touch.
+- [x] 8.5 Before the deploy, review the branch: run `/code-review` and the `security-auditor` agent on the diff, against Decision 6's threat model, Decision 4's limits and Decision 9's download rules. Fix what they find, or record why not in design.md, Risks. Lint, typecheck and build pass for every package the fixes touch.
+  Done 2026-11-17. Fixed: certify tries reserved atomically under a per-user lock (3 per ticket); QR polls limited per user, not site-wide; a session's repeated busy/unavailable page parks that session instead of backing off every session; a motion copy is applied only while it matches the current source; download hosts exactly `resources.cosmo.fans` and `imagedelivery.net`; worker session writes guarded by the cookie they read; `last_sync` totals carried across runs in `sync_cursor`; quiet runs feed the heartbeat; late dialog results from an earlier attempt are dropped; `COSMO_BROWSER_TOKEN` required by compose. Waiting on 8.8: audio-only MP4 voice files, per-account back-image URLs, `x-real-ip` (5.4).
 - [ ] 8.6 **(owner)** On production, read-only, count the rows with `back_image = ''`, the rows with `accent_color = ''`, the rows whose `text_color` would change once a sync records, and the Motion collections (for the bucket's size, Decision 9). Voice collections cannot be counted yet, since nothing has filled `has_audio`: the first syncs size them (8.8). Record the numbers in design.md, Open questions.
 - [ ] 8.7 **(owner)** On the VPS: set `COSMO_SESSION_KEY` (`openssl rand -base64 32`, never `COSMO_KEY`), `COSMO_BROWSER_TOKEN` and `COSMO_BROWSER_URL` for `web` and `worker`; start `browser`; apply the migration (4.2); deploy the web and the worker. Check: `/account/collection-data` shows the consent text and Connect (not "not set up"), and the worker logs neither the missing-key nor the missing-bucket `warn`.
 - [ ] 8.8 **(owner)** After the deploy:
@@ -291,10 +298,11 @@ These are built. Each stays open until the owner runs the check named here, sinc
   5. Record `frontMedia`'s host and length, the first copied video's container and size, a voice Double's `frontMedia` format (audio or video, and the sniffed type, or the reason it was refused), whether Motion collections came back without a class filter, and how `order=newest` sorts, in design.md. Add the host to the allowlist if it is new. If voice media is audio, open the Metadata label follow-up (Decision 12, Voice copies).
   6. Check the Collections tab's summary counts the session.
   7. Session renewal (design.md, Non-Goals and Open questions). Record, never a value: the certify response's content type and body shape; and whether a call made with the stored cookie (`users/me` or a summaries page) answers with a `Set-Cookie: user-session` carrying a later `Expires` than the stored one (rolling renewal). If it does, open a follow-up that stores the new cookie; the 180-day cap stays.
+  8. Objekt keys (for the transferability and serial follow-ups). From one summaries page, record the key names and value types of an `objekts[]` entry, never a value: whether it carries the token id, the serial (`objektNo` or similar), the mint time, and anything else per objekt. Record them in design.md, Open questions.
 
 ## 9. Web: media in the drawer
 
-- [ ] 9.1 Load `vercel-react-best-practices` first, then:
+- [x] 9.1 Load `vercel-react-best-practices` first, then:
   - In `apps/web/src/features/objekt/objekt-flip.tsx`, give the front face a `<video muted loop playsInline preload="metadata" poster={frontImage}>` when `frontMedia` is set, with the band still drawn over it. Under `useMediaQuery("(prefers-reduced-motion: reduce)")`, show `ObjektArtwork` instead.
   - In `drawer/metadata.tsx`, add a Motion row (`MetaLink` to `frontMedia`, when set) and a Voice row (Yes or No).
   - Add the strings in en, ko and ja.
@@ -324,7 +332,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - The three strings of Decision 15 in `messages/en.json`, `ko.json` and `ja.json`.
 
   Tests: `row-text.test.ts` for 13 days, 1 day and today; `tone.test.ts` for the clock; `sections.test.ts` placing it under Today, never Needs you. `bun run test --filter=web` passes. Lint, typecheck and build pass for `web`.
-- [ ] 10.6 **(owner)** With approval for the seeded rows (see Local rows), on the local database: a live row 10 days and 12 hours from expiry gets one notice in its owner's bell on the next worker run, reading "expires in 10 days", and a second run adds none; a row 20 days out and a dead row get none; activating the notice opens `/account/collection-data`. The renew path is first exercised at the first renew on production.
+- [x] 10.6 **(owner)** With approval for the seeded rows (see Local rows), on the local database: a live row 10 days and 12 hours from expiry gets one notice in its owner's bell on the next worker run, reading "expires in 10 days", and a second run adds none; a row 20 days out and a dead row get none; activating the notice opens `/account/collection-data`. The renew path is first exercised at the first renew on production.
 
 ## 11. Docs
 
@@ -342,4 +350,4 @@ These are built. Each stays open until the owner runs the check named here, sinc
 ## Workflow follow-up
 
 - Archive the change with `/opsx:archive` once 8.8 and 10.6 are done.
-- Follow-ups: transferability and grid locks from `objekts[]`, linking a profile by QR code, sound on voice objekts, and, depending on 8.8, a Metadata label for audio voice copies and storing a rolling cookie.
+- Follow-ups: transferability and grid locks from `objekts[]`; confirmed serials from `objekts[]` (token id and serial, if 8.8 step 8 finds both) stored as serial anchors, so a connected owner's serials count as confirmed, not estimated; linking a profile by QR code, sound on voice objekts, and, depending on 8.8, a Metadata label for audio voice copies and storing a rolling cookie.

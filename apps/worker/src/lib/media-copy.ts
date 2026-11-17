@@ -9,9 +9,9 @@ import { acceptMediaUrl } from "@repo/lib/collection-media";
 const MIN = 60_000;
 const MB = 1024 * 1024;
 
-export const MAX_BYTES = 30 * MB;
+export const MAX_BYTES = 64 * MB;
 const RUN_OBJECTS = 20;
-const RUN_BYTES = 200 * MB;
+const RUN_BYTES = 300 * MB;
 const RUN_MS = 5 * MIN;
 const FAIL_STREAK = 3;
 const RETRY_AFTER_MS = 6 * 60 * MIN;
@@ -40,6 +40,15 @@ export function copyIsCurrent(copyUrl: string, sourceUrl: string, copyPrefix: st
   return COPY_EXTS.some((ext) => rest === `motion/${hash}.${ext}`);
 }
 
+/** The record's copy only while it was made from the record's current source, else null. */
+export function currentCopy(
+  record: { frontMedia: string | null; frontMediaCopy: string | null },
+  copyPrefix: string,
+) {
+  const { frontMedia: source, frontMediaCopy: copy } = record;
+  return source && copy && copyIsCurrent(copy, source, copyPrefix) ? copy : null;
+}
+
 const COPY_EXTS: readonly MediaExt[] = ["mp4", "webm", "m4a", "mp3", "ogg"];
 
 const MP4_BRANDS = new Set([
@@ -53,6 +62,8 @@ const MP4_BRANDS = new Set([
   "mp42",
   "avc1",
   "M4V ",
+  // voice Doubles ship some files as QuickTime; H.264 in a `qt` box plays as video/mp4
+  "qt  ",
 ]);
 
 function ascii(bytes: Uint8Array, from: number, to: number) {
@@ -61,7 +72,7 @@ function ascii(bytes: Uint8Array, from: number, to: number) {
 
 /**
  * The content type comes from the bytes, never from the response header. `ftyp` alone also opens
- * QuickTime, HEIC and AVIF, so the major brand must be an MP4 or M4A one. MP3 is an ID3 tag or an
+ * HEIC and AVIF, so the major brand must be an MP4, QuickTime or M4A one. MP3 is an ID3 tag or an
  * MPEG layer III frame sync (not ADTS AAC, which shares the first byte); Ogg is `OggS`.
  */
 export function sniffVideo(bytes: Uint8Array) {

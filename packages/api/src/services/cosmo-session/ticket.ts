@@ -1,5 +1,5 @@
-import { countWrongCode, type PollState } from "../../lib/cosmo-qr";
-import { redis, redisFailOpen } from "../redis";
+import { MAX_CERTIFY_TRIES, type PollState } from "../../lib/cosmo-qr";
+import { redis, redisFailOpen, redisTry } from "../redis";
 
 /** What the server issued to one user: the ticket never comes from the client. */
 export type QrTicket = {
@@ -8,8 +8,8 @@ export type QrTicket = {
   expireAt: number;
   /** the last state a poll saw, for answers that skip Cosmo */
   last: PollState | null;
-  /** wrong codes sent so far; absent is 0 */
-  wrong?: number;
+  /** certify calls reserved so far; absent is 0 */
+  tries?: number;
 };
 
 const keyOf = (userId: string) => `cosmo-qr:${userId}`;
@@ -101,24 +101,66 @@ export async function rememberState(userId: string, read: QrTicket, last: PollSt
   await updateTicket(userId, read.ticket, (current) => ({ ...current, last }));
 }
 
+// Reads and bumps the count in one script, so parallel certifies cannot all pass the cap. -1 is a
+// ticket that is no longer this one, -2 one with no tries left. Mirrors `lastCertifyTry`.
+const RESERVE_SCRIPT = `
+local raw = redis.call("GET", KEYS[1])
+if not raw then return -1 end
+local ok, t = pcall(cjson.decode, raw)
+if not ok or type(t) ~= "table" or t.ticket ~= ARGV[1] then return -1 end
+local tries = tonumber(t.tries) or 0
+if tries >= tonumber(ARGV[2]) then return -2 end
+t.tries = tries + 1
+redis.call("SET", KEYS[1], cjson.encode(t), "KEEPTTL")
+return t.tries
+`;
+
 /**
- * Counts one wrong code on the ticket. `over` when it was the last one allowed (the ticket is
- * deleted), `gone` when the ticket is no longer this one.
+ * Reserves one certify call on the ticket before Cosmo is asked. `tries` is the count including
+ * this call, `exhausted` when the ticket has no calls left, `gone` when it is no longer this one.
  */
-export async function recordWrongCode(
+export async function reserveCertifyTry(
   userId: string,
   ticket: string,
-): Promise<"counted" | "over" | "gone" | "unavailable"> {
-  let over = false;
-  const result = await updateTicket(userId, ticket, (current) => {
-    const counted = countWrongCode(current);
-    over = counted.over;
-    return { ...current, wrong: counted.wrong };
-  });
-  if (result === "gone" || result === "unavailable") return result;
-  if (!over) return "counted";
-  await clearTicket(userId, ticket);
-  return "over";
+): Promise<{ tries: number } | "exhausted" | "gone" | "unavailable"> {
+  const reply = await redisFailOpen("cosmo qr", () =>
+    redis.send("EVAL", [RESERVE_SCRIPT, "1", keyOf(userId), ticket, String(MAX_CERTIFY_TRIES)]),
+  );
+  if (reply === null) return "unavailable";
+  const code = Number(reply);
+  if (code === -1) return "gone";
+  if (code === -2) return "exhausted";
+  return { tries: code };
+}
+
+const lockKeyOf = (userId: string) => `cosmo-qr-certify:${userId}`;
+const LOCK_MS = 15_000;
+const UNLOCK_SCRIPT = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("DEL", KEYS[1]) end
+return 0
+`;
+
+/**
+ * Takes the user's certify lock so their codes go to Cosmo one at a time. Returns the token to
+ * release it with, `busy` when another certify holds it, `unavailable` when Redis cannot say.
+ */
+export async function acquireCertifyLock(
+  userId: string,
+): Promise<{ token: string } | "busy" | "unavailable"> {
+  const token = crypto.randomUUID();
+  // NX answers nil when the lock is held, so a failed call is told apart by `ok`, not by null
+  const set = await redisTry("cosmo qr", () =>
+    redis.send("SET", [lockKeyOf(userId), token, "NX", "PX", String(LOCK_MS)]),
+  );
+  if (!set.ok) return "unavailable";
+  return set.value === "OK" ? { token } : "busy";
+}
+
+/** Frees the lock only if it is still the caller's; it expires on its own otherwise. */
+export async function releaseCertifyLock(userId: string, token: string) {
+  await redisFailOpen("cosmo qr", () =>
+    redis.send("EVAL", [UNLOCK_SCRIPT, "1", lockKeyOf(userId), token]),
+  );
 }
 
 /** Deletes the ticket only if it is still this one. */

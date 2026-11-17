@@ -200,7 +200,7 @@ services:
     expose:
       - "3000"
     environment:
-      - TOKEN=${COSMO_BROWSER_TOKEN}
+      - TOKEN=${COSMO_BROWSER_TOKEN:?set COSMO_BROWSER_TOKEN}
       - CONCURRENT=2
       - QUEUED=4
       - TIMEOUT=60000

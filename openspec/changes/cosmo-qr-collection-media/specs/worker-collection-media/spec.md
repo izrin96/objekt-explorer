@@ -73,7 +73,7 @@ The site SHALL put its own copy of the recorded motion video or voice file, and 
 - **THEN** the collection still shows the site's own idntt Special band image, and nothing is downloaded for the recorded one
 
 ### Requirement: Media copied into the site's storage
-The site SHALL copy each recorded motion video, and each voice file recorded in the same field, from Cosmo into its own storage, and serve that copy. A source copied once SHALL NOT be downloaded again, even after the indexer is rebuilt. A failed copy SHALL leave the collection as it was and be tried again after 6 hours. Each copy run, every 10 minutes, SHALL download at most 20 files and 200 MB.
+The site SHALL copy each recorded motion video, and each voice file recorded in the same field, from Cosmo into its own storage, and serve that copy. A source copied once SHALL NOT be downloaded again, even after the indexer is rebuilt. A failed copy SHALL leave the collection as it was and be tried again after 6 hours. Each copy run, every 10 minutes, SHALL download at most 20 files and 300 MB.
 
 #### Scenario: Motion video copied
 - **WHEN** a sync records a 4 MB MP4 motion video for a collection
@@ -88,10 +88,10 @@ The site SHALL copy each recorded motion video, and each voice file recorded in 
 - **THEN** the collection keeps showing the old copy until the new one is stored, and then shows the new one
 
 ### Requirement: Safe media downloads
-A copy SHALL be downloaded only from the accepted hosts, and only when they resolve to public addresses, following no redirect and sending no Cosmo sign-in. A file over 30 MB SHALL be refused. A file SHALL be stored only when its bytes are MP4 or WebM video, or M4A, MP3 or Ogg audio, whatever type the host declares, and SHALL be stored with the type its bytes show.
+A copy SHALL be downloaded only from the accepted hosts, and only when they resolve to public addresses, following no redirect and sending no Cosmo sign-in. A file over 64 MB SHALL be refused. A file SHALL be stored only when its bytes are MP4 (QuickTime included) or WebM video, or M4A, MP3 or Ogg audio, whatever type the host declares, and SHALL be stored with the type its bytes show.
 
 #### Scenario: Oversized file
-- **WHEN** a recorded motion video is 45 MB
+- **WHEN** a recorded motion video is 70 MB
 - **THEN** nothing is stored for it, the collection carries no motion video, and the copy is tried again 6 hours later
 
 #### Scenario: Redirected download
@@ -106,8 +106,12 @@ A copy SHALL be downloaded only from the accepted hosts, and only when they reso
 - **WHEN** a voice Double's recorded media is a 2 MB MP3 served as `application/octet-stream`
 - **THEN** it is stored as `audio/mpeg` in the site's storage, and the collection carries the copy's address
 
+#### Scenario: QuickTime voice video
+- **WHEN** a voice Double's recorded media is a 47 MB QuickTime video
+- **THEN** it is stored as `video/mp4` in the site's storage, and the collection carries the copy's address
+
 #### Scenario: Refused media type
-- **WHEN** a recorded file's bytes are ADTS AAC, QuickTime, HEIC or AVIF
+- **WHEN** a recorded file's bytes are ADTS AAC, HEIC or AVIF
 - **THEN** nothing is stored for it, and the copy is tried again 6 hours later
 
 ### Requirement: Back image and accent colour fill only what is missing

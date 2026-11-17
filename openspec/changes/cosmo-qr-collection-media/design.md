@@ -335,7 +335,7 @@ The owner's decision: media gathered from sessions is copied into our bucket (R2
 | Back image (`backImage`)               | no copy here: the apply fills `back_image`, and `process-collection-images` copies it (Decision 8)    |
 | Voice flag, accent and text colour     | none: they are not media                                                                              |
 
-**Voice.** A voice Double carries its media in `frontMedia` as a Motion collection does, so it takes the same path: the same record columns, key folder, 30 MB cap, budget and download rules. Only the sniff tells video from audio. Its real format is unknown until a voice collection syncs (Open questions, settled by task 8.8).
+**Voice.** A voice Double carries its media in `frontMedia` as a Motion collection does, so it takes the same path: the same record columns, key folder, 64 MB cap, budget and download rules. Only the sniff tells video from audio. Sample voice files seen before the first sync were videos with a sound track, not audio-only: MP4 (`mp42`, about 47 MB) and QuickTime (`qt  `, about 14 MB). The QuickTime brand is accepted and stored as `video/mp4`, and the cap was raised from 30 MB to 64 MB for them. Task 8.8 confirms this on Cosmo's own files.
 
 **Where the URL lives.** The indexer's `front_media` holds **our** URL and nothing else. Cosmo's URL, the source, stays in the record (`collection_media.front_media`), beside our copy's URL (`front_media_copy`). The reasons:
 
@@ -384,8 +384,8 @@ Due copies are grouped by source, so one source is downloaded once a run however
 
 | Limit                      | Value                                                       |
 | -------------------------- | ----------------------------------------------------------- |
-| Downloads                  | one at a time; at most 20 objects and 200 MB per run        |
-| Size                       | 30 MB, video or audio                                       |
+| Downloads                  | one at a time; at most 20 objects and 300 MB per run        |
+| Size                       | 64 MB, video or audio                                       |
 | Timeout                    | 60 s per video, with no retry within a run                  |
 | Wall time                  | no new download starts after 5 minutes                      |
 | Repeated failures          | the run stops after 3 downloads in a row fail with a 429, a 5xx or a timeout |
@@ -398,9 +398,9 @@ That is up to 2,880 objects a day, enough to drain a first sync's backlog within
 - The host is resolved first, and every address it resolves to must be public: a loopback, private, link-local, unique-local or other reserved address, IPv4 or IPv6, refuses the copy. The `*.cosmo.fans` wildcard trusts Cosmo's DNS, and this keeps a stray record from reaching the VPS's own network. The gap between the lookup and the fetch's own lookup is accepted, since every host is on the allowlist.
 - `fetch` with `redirect: "manual"`: any 3xx is a failure, counted by host, so the job never follows a redirect off the allowlist.
 - No cookie, session or Cosmo header is sent. The fetch is a plain public GET, with no proxy, as the image job's are.
-- A `Content-Length` over the cap aborts before the body. The body is read as a stream with a running count and aborted past the cap, since the header may be absent or wrong. It is held in memory, at most 30 MB, one at a time, so the put can carry its length.
+- A `Content-Length` over the cap aborts before the body. The body is read as a stream with a running count and aborted past the cap, since the header may be absent or wrong. It is held in memory, at most 64 MB, one at a time, so the put can carry its length.
 - The content type comes from the bytes, never from the response header:
-  - `video/mp4` needs `ftyp` at bytes 4 to 7 and a major brand of `isom`, `iso2` to `iso6`, `mp41`, `mp42`, `avc1` or `M4V ` at bytes 8 to 11. That refuses QuickTime, HEIC and AVIF, which share `ftyp`.
+  - `video/mp4` needs `ftyp` at bytes 4 to 7 and a major brand of `isom`, `iso2` to `iso6`, `mp41`, `mp42`, `avc1`, `M4V ` or `qt  ` (QuickTime, which voice Doubles use) at bytes 8 to 11. That refuses HEIC and AVIF, which share `ftyp`.
   - `audio/mp4` (`.m4a`) needs `ftyp` with the major brand `M4A `.
   - `video/webm` needs `1A 45 DF A3` first.
   - `audio/ogg` needs `OggS` first.
@@ -558,7 +558,7 @@ When a live session has fewer than 14 days left before its `cookie_expires_at`, 
 - **The browser as a shared resource.** Any signed-in user can make the server open a page. → Per-user, per-IP and global start limits, a container that runs 2 pages and queues 4, and a 20 s cap per page. Many accounts on many addresses can still use up the global limit for a minute; that denies sign-in only, never the site, and the global limit exists to protect the container and Cosmo.
 - **One IP for every session.** Cosmo may limit or block our egress as sessions grow. → The worker's global budget (600 requests an hour), serial requests, jitter and persistent backoff; a firewall 403 never marks a session dead.
 - **More stored sign-ins.** → Decision 6, Threat model: ciphertext only at rest, a key outside the database, a 180-day max age, no cookie on dead rows.
-- **Bucket growth.** Every motion or voice collection any account holds adds one file to R2. → 30 MB per file and 200 MB per run at most (Decision 9). The owner counts the motion collections before the first sync (task 8.6) and reads the first copied video's size after it (task 8.8).
+- **Bucket growth.** Every motion or voice collection any account holds adds one file to R2. → 64 MB per file and 300 MB per run at most (Decision 9). The owner counts the motion collections before the first sync (task 8.6) and reads the first copied video's size after it (task 8.8).
 - **Media hosts refuse the worker.** Cosmo's media hosts may block our egress, as its API firewall does. → A copy that fails leaves the row as it was and is retried 6 hours later; three failures in a row end the run. Nothing shows Cosmo's URL meanwhile, so a block delays media and exposes nothing.
 - **Bytes changed behind a URL.** Our key is named by the source URL, so a change Cosmo makes under the same URL is never copied. → The front image makes the same bet with `image_sync_hash`, and a media URL carries its own id.
 - **Certify timeout.** After a timeout, a session may exist at Cosmo that we never saw. → It is harmless to us. It appears in the account holder's Cosmo sessions, and they can end it there. The dialog tells the user to start again.
@@ -580,7 +580,7 @@ When a live session has fewer than 14 days left before its `cookie_expires_at`, 
 ## Open Questions
 
 - **`frontMedia`.** Its exact shape and host for Motion and for voice Doubles: a URL string, under 1,024 characters? Seen only as null.
-- **Motion files.** Their container (MP4 or WebM, or something the sniff refuses) and size. The 30 MB cap is a guess, and a larger file is refused until it is raised.
+- **Motion files.** Their container (MP4 or WebM, or something the sniff refuses) and size. The 64 MB cap rests on sample files (a 47 MB voice video), and a larger file is refused until it is raised.
 - **Voice files.** Is a voice Double's `frontMedia` audio (M4A, MP3, Ogg, or a refused type such as ADTS AAC) or a video with sound? Settled by the first real connect (task 8.8); an audio answer brings the Metadata label follow-up (Decision 12).
 - **Certify body and rolling renewal.** The certify body's content type and shape, and whether Cosmo answers a call made with the cookie with a new `Set-Cookie` carrying a later `Expires`. Task 8.8 records both, never a value. A rolling cookie would be stored by a follow-up; the 180-day cap stays (Non-Goals).
 - **Redirects.** Do the media hosts answer a plain GET directly, or redirect (to a signed or regional URL)? The copy follows no redirect, so a redirecting host copies nothing until it is allowed.

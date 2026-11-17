@@ -188,7 +188,7 @@ type Outcome<T> = { ok: true; value: T } | { ok: false };
  * commands while disconnected and retries forever, so an outage would hang the call rather than
  * throw: skip it when down (starting a reconnect), and give up after a short wait.
  */
-async function redisTry<T>(scope: string, command: () => Promise<T>): Promise<Outcome<T>> {
+export async function redisTry<T>(scope: string, command: () => Promise<T>): Promise<Outcome<T>> {
   if (!redis.connected) {
     connect();
     return { ok: false };

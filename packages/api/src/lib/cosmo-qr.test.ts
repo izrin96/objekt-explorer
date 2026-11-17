@@ -3,8 +3,8 @@ import { describe, expect, test } from "bun:test";
 import {
   certifyOutcome,
   codeDeadline,
-  countWrongCode,
-  MAX_WRONG_CODES,
+  lastCertifyTry,
+  MAX_CERTIFY_TRIES,
   connectAllowed,
   connectBlocked,
   cookieExpiry,
@@ -204,14 +204,12 @@ describe("codeDeadline", () => {
   });
 });
 
-describe("countWrongCode", () => {
-  test("starts at 1 for a ticket with no count", () => {
-    expect(countWrongCode({})).toEqual({ wrong: 1, over: false });
-  });
-  test("the third wrong code ends the attempt", () => {
-    expect(MAX_WRONG_CODES).toBe(3);
-    expect(countWrongCode({ wrong: 1 })).toEqual({ wrong: 2, over: false });
-    expect(countWrongCode({ wrong: 2 })).toEqual({ wrong: 3, over: true });
+describe("lastCertifyTry", () => {
+  test("a ticket allows 3 certify calls, the third being the last", () => {
+    expect(MAX_CERTIFY_TRIES).toBe(3);
+    expect(lastCertifyTry(1)).toBe(false);
+    expect(lastCertifyTry(2)).toBe(false);
+    expect(lastCertifyTry(3)).toBe(true);
   });
 });
 

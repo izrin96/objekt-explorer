@@ -4,6 +4,7 @@ import {
   copyIsCurrent,
   copyKey,
   createCopyBudget,
+  currentCopy,
   dueCopies,
   failureForStatus,
   isPublicAddress,
@@ -62,6 +63,24 @@ describe("copyIsCurrent", () => {
   });
 });
 
+describe("currentCopy", () => {
+  const copyOf = (source: string) =>
+    `${prefix}motion/${copyKey(source, "mp4").slice("collection-media/motion/".length)}`;
+
+  test("keeps the copy made from the current source", () => {
+    expect(currentCopy({ frontMedia: a, frontMediaCopy: copyOf(a) }, prefix)).toBe(copyOf(a));
+  });
+
+  test("drops the copy of an old source", () => {
+    expect(currentCopy({ frontMedia: b, frontMediaCopy: copyOf(a) }, prefix)).toBeNull();
+  });
+
+  test("null stays null, and a copy with no source is dropped", () => {
+    expect(currentCopy({ frontMedia: a, frontMediaCopy: null }, prefix)).toBeNull();
+    expect(currentCopy({ frontMedia: null, frontMediaCopy: copyOf(a) }, prefix)).toBeNull();
+  });
+});
+
 describe("sniffVideo", () => {
   test("MP4 by an allowed major brand", () => {
     for (const brand of ["isom", "iso2", "iso6", "mp41", "mp42", "avc1", "M4V "]) {
@@ -100,8 +119,11 @@ describe("sniffVideo", () => {
     });
   });
 
-  test("refuses QuickTime, HEIC and AVIF, which share ftyp", () => {
-    expect(sniffVideo(ftyp("qt  "))).toBeNull();
+  test("stores QuickTime as video/mp4", () => {
+    expect(sniffVideo(ftyp("qt  "))).toEqual({ contentType: "video/mp4", ext: "mp4" });
+  });
+
+  test("refuses HEIC and AVIF, which share ftyp", () => {
     expect(sniffVideo(ftyp("heic"))).toBeNull();
     expect(sniffVideo(ftyp("avif"))).toBeNull();
   });
@@ -270,15 +292,15 @@ describe("createCopyBudget", () => {
 
   test("bytes read by a failed download count", () => {
     const budget = createCopyBudget(start);
-    budget.failure("other", 200 * 1024 * 1024);
+    budget.failure("other", 300 * 1024 * 1024);
     expect(budget.canStart(start)).toBe(false);
   });
 
-  test("stops at 200 MB", () => {
+  test("stops at 300 MB", () => {
     const budget = createCopyBudget(start);
     budget.success(MAX_BYTES);
     expect(budget.canStart(start)).toBe(true);
-    for (let i = 0; i < 6; i++) budget.success(MAX_BYTES);
+    for (let i = 0; i < 4; i++) budget.success(MAX_BYTES);
     expect(budget.canStart(start)).toBe(false);
   });
 

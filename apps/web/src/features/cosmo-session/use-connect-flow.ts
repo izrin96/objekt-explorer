@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
@@ -30,6 +30,8 @@ export function useConnectFlow() {
   const [now, setNow] = useState(Date.now);
   // a new key per attempt, so a finished attempt's last answer never reaches the next one
   const [attempt, setAttempt] = useState(0);
+  // bumped on every start and close; a late reply from an earlier attempt carries a stale id and is dropped
+  const attemptId = useRef(0);
   const [seenPoll, setSeenPoll] = useState(0);
   const [seenPollError, setSeenPollError] = useState(0);
 
@@ -74,31 +76,46 @@ export function useConnectFlow() {
   }
 
   function start() {
+    const mine = ++attemptId.current;
     setOpen(true);
     setState(minting());
     setNow(Date.now());
     setAttempt((current) => current + 1);
     // only the latest call's callbacks run, so a reply to an abandoned start is dropped
     mint.mutate(undefined, {
-      onSuccess: (result) => setState(started(result, Date.now())),
-      onError: (error) => setState(refused(minting(), errorReason(error).reason)),
+      onSuccess: (result) => {
+        if (attemptId.current === mine) setState(started(result, Date.now()));
+      },
+      onError: (error) => {
+        if (attemptId.current === mine) setState(refused(minting(), errorReason(error).reason));
+      },
     });
   }
 
   function submit(otp: number) {
+    const mine = attemptId.current;
     setState(submitting(view));
     certify.mutate(
       { otp },
       {
-        onSuccess: ({ nickname }) => setState(connected(nickname)),
-        onError: (error) => setState((prev) => refused(prev, errorReason(error).reason)),
+        onSuccess: ({ nickname }) => {
+          if (attemptId.current === mine) setState(connected(nickname));
+        },
+        onError: (error) => {
+          if (attemptId.current === mine) {
+            setState((prev) => refused(prev, errorReason(error).reason));
+          }
+        },
       },
     );
   }
 
   return {
     open,
-    close: () => setOpen(false),
+    close: () => {
+      attemptId.current++;
+      setOpen(false);
+    },
     start,
     submit,
     view,

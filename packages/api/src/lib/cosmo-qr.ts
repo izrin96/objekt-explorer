@@ -120,14 +120,14 @@ export function logoutConfirmed(result: { ok: true } | { ok: false; kind: CosmoE
   return result.ok || result.kind === "dead";
 }
 
-/** Wrong codes one ticket accepts; the last one ends the attempt, so 100 codes cannot be tried. */
-export const MAX_WRONG_CODES = 3;
+/**
+ * Certify calls one ticket allows, whatever their outcome: each is reserved before Cosmo is
+ * asked, so 100 codes cannot be tried by sending them in parallel.
+ */
+export const MAX_CERTIFY_TRIES = 3;
 
-/** The count after one more wrong code, and whether it ends the attempt. */
-export function countWrongCode(ticket: { wrong?: number }, max = MAX_WRONG_CODES) {
-  const wrong = (ticket.wrong ?? 0) + 1;
-  return { wrong, over: wrong >= max };
-}
+/** Whether `tries` reserved calls (this one included) leave none for another code. */
+export const lastCertifyTry = (tries: number, max = MAX_CERTIFY_TRIES) => tries >= max;
 
 /**
  * When a refused code stops being "wrong" and becomes "late". Before any poll saw the code step
