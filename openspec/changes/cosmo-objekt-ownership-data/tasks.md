@@ -200,7 +200,7 @@
 
 ## 10. Docs
 
-- [ ] 10.1 Update the agent docs. If task 11.1 of `cosmo-qr-collection-media` is still open, do it first, so these sections land beside its Collection media sections.
+- [x] 10.1 Update the agent docs. If task 11.1 of `cosmo-qr-collection-media` is still open, do it first, so these sections land beside its Collection media sections.
   - **`apps/worker/AGENTS.md`**:
     - A Cosmo objekt data section: recorded from the same pages, the holder and minted checks, the chain height, the due flags, rows kept for good (nothing deletes them) and untouched by disconnect or account deletion, grid use and the reason stored but not shown, `COSMO_OBJEKT_WRITES` read by worker and web and the plan script. Names follow Cosmo's terms (Decision 12).
     - The transferable guards, their two directions, and the permanent `cosmo_transferable` records.
