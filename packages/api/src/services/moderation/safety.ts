@@ -22,6 +22,14 @@ export function notBlockedBy(viewerId: string, other: UserRef) {
   )`;
 }
 
+/** The viewer blocked this account: their own block only, never the reverse, which stays hidden. */
+export async function blockedByViewer(viewerId: string, otherId: string) {
+  const { rows } = await db.execute<{ blocked: boolean }>(
+    sql`SELECT NOT ${notBlockedBy(viewerId, otherId)} AS blocked`,
+  );
+  return rows[0]?.blocked ?? false;
+}
+
 /**
  * The one definition of an active sanction, over a `user_sanction` row: not revoked and not
  * past its end. A warn is a notice, never active.

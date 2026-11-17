@@ -30,6 +30,8 @@ export const publicProfileSchema = baseProfileSchema.extend({
   messageable: z.boolean().nullish(),
   /** the owner's account id, set by the profile page's read only when `user` is shown */
   userId: z.string().optional(),
+  /** the viewer blocked the owner; only the profile page's read sets it */
+  blockedByMe: z.boolean().optional(),
   /** the owner's reputation, set with `userId` only */
   reputation: reputationSchema.optional(),
   /** set by the profile page's read only, and only when `user` is shown */

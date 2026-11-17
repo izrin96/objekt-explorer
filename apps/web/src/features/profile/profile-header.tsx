@@ -136,7 +136,12 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
 
           {/* only when the profile shows its owner: a hidden owner's account is never named */}
           {profile.userId !== undefined && !isProfileAuthed && (
-            <SafetyMenu userId={profile.userId} name={nickname} report />
+            <SafetyMenu
+              userId={profile.userId}
+              name={nickname}
+              report
+              blockedByMe={profile.blockedByMe === true}
+            />
           )}
 
           {isProfileAuthed && (

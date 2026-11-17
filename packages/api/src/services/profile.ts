@@ -11,7 +11,7 @@ import { refuse } from "../lib/refuse";
 import { HOUR_MS } from "../lib/time";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./account/auth";
-import { messageBarred } from "./moderation/safety";
+import { blockedByViewer, messageBarred } from "./moderation/safety";
 import { fetchOwnerSummary } from "./objekt/catalog";
 import { getCache, redis, redisFailOpen } from "./redis";
 import { reputationOf } from "./reputation";
@@ -73,15 +73,18 @@ async function toProfilePage(profile: UserAddress, user: ProfileUser | null, cur
   if (!user) return { ...shown, messageable: false };
   const own = user.id === currentUser?.id;
   // a blocked pair sees no button at all, as with Nobody, rather than a refusal
-  const [reputation, barred] = await Promise.all([
+  const viewerId = currentUser?.id;
+  const [reputation, barred, blockedByMe] = await Promise.all([
     reputationOf([user.id]),
-    own ? false : messageBarred(currentUser?.id, user.id),
+    own ? false : messageBarred(viewerId, user.id),
+    own || !viewerId ? false : blockedByViewer(viewerId, user.id),
   ]);
   return {
     ...shown,
     userId: user.id,
     reputation: reputation.get(user.id),
     bio: profile.bio,
+    blockedByMe,
     messageable: !own && !barred && isMessageable(toMessagePref(user.messagePref)),
   };
 }

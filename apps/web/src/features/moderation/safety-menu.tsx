@@ -6,16 +6,18 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
+import { useUnblock } from "./actions";
 import { useSafetyDialogs } from "./safety-dialogs";
 
 /**
- * Block, and Report… where the surface allows it, for another signed-in account. Renders
- * nothing signed out or for the viewer's own account.
+ * Block (Unblock once the viewer has blocked them), and Report… where the surface allows it,
+ * for another signed-in account. Renders nothing signed out or for the viewer's own account.
  */
 export function SafetyMenu({
   userId,
   name,
   report = false,
+  blockedByMe = false,
   post,
   extraItems,
   className,
@@ -23,6 +25,8 @@ export function SafetyMenu({
   userId: string;
   name: string;
   report?: boolean;
+  /** the viewer's own block, which turns Block into Unblock */
+  blockedByMe?: boolean;
   /** the Trade post Report… names, by its anchor list id */
   post?: { listId: number; attachment: string };
   /** the surface's own items, above Block */
@@ -36,6 +40,7 @@ export function SafetyMenu({
       userId={userId}
       name={name}
       report={report}
+      blockedByMe={blockedByMe}
       post={post}
       extraItems={extraItems}
       className={className}
@@ -47,6 +52,7 @@ function SafetyMenuInner({
   userId,
   name,
   report,
+  blockedByMe,
   post,
   extraItems,
   className,
@@ -54,11 +60,13 @@ function SafetyMenuInner({
   userId: string;
   name: string;
   report: boolean;
+  blockedByMe: boolean;
   post: { listId: number; attachment: string } | undefined;
   extraItems: ReactNode;
   className?: string;
 }) {
   const safety = useSafetyDialogs({ userId, name, post });
+  const unblock = useUnblock();
 
   return (
     <>
@@ -77,10 +85,17 @@ function SafetyMenuInner({
         </MenuTrigger>
         <MenuPopup align="end" className="min-w-44">
           {extraItems}
-          <MenuItem variant="destructive" onClick={safety.openBlock}>
-            <ProhibitIcon />
-            {m.mod_block()}
-          </MenuItem>
+          {blockedByMe ? (
+            <MenuItem onClick={() => unblock.mutate({ userId })}>
+              <ProhibitIcon />
+              {m.mod_unblock()}
+            </MenuItem>
+          ) : (
+            <MenuItem variant="destructive" onClick={safety.openBlock}>
+              <ProhibitIcon />
+              {m.mod_block()}
+            </MenuItem>
+          )}
           {report ? (
             <MenuItem onClick={safety.openReport}>
               <FlagIcon />
