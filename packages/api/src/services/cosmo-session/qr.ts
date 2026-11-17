@@ -199,6 +199,7 @@ function storeSession(
         cookieSealed: sealed,
         cookieExpiresAt: cookieExpiresAt.toISOString(),
         syncRequestedAt: now,
+        objektsConsented: true,
       })
       .onConflictDoUpdate({
         target: cosmoSession.cosmoAddress,
@@ -210,6 +211,7 @@ function storeSession(
           // the 180 days run from this connect
           createdAt: now,
           syncRequestedAt: now,
+          objektsConsented: true,
           deadAt: null,
           lastError: null,
           syncCursor: null,

@@ -12,24 +12,36 @@
  * read-only. APPLY=1 sets each mismatched row to the chain's value, only while the row still
  * holds the value read and no `transferability_update` newer than B exists for the token.
  *
+ * It never reverts a Cosmo-confirmed value (`cosmo_transferable`, app database): a mismatch
+ * against one is held, whatever its age and whether the token moved since, unless the token has a
+ * `transferability_update` above the record's chain height. Then the chain wins: APPLY=1 writes
+ * the chain value with the rest and marks the record superseded, only where its write landed.
+ * APPLY=1 reads the records again inside each page's write transaction, so one stored meanwhile
+ * is honoured. Both runs print the "held by Cosmo" and "Cosmo record superseded" counts. Both need
+ * the migrated app database, since they read `cosmo_transferable`.
+ *
  *   PGOPTIONS='-c default_transaction_read_only=on' bun run --env-file=../../.env src/script/fix-transferability.ts
  *   APPLY=1 bun run --env-file=../../.env src/script/fix-transferability.ts
  *
  * LIMIT=<n> stops after n objekts (a sample), AFTER=<id> resumes after an objekt id, PER_CALL
  * (default 500) sets the tokens per aggregate3 call and RATE (default 8) the calls per second.
  */
+import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transferabilityUpdates } from "@repo/db/indexer/schema";
+import { cosmoTransferable } from "@repo/db/schema";
 import { Addresses } from "@repo/lib";
 import { and, asc, eq, gt, inArray, lt, ne, notExists, notInArray, sql } from "drizzle-orm";
 
 import {
   type CheckedObjekt,
+  type CosmoHold,
   type Mismatch,
   type Tally,
   MULTICALL3,
   addToTally,
   compareWithChain,
+  cosmoHold,
   decodeAggregate3,
   encodeAggregate3,
 } from "@/lib/transferability-check";
@@ -157,12 +169,29 @@ async function readChain(rows: Row[]) {
   }
 }
 
+type IndexerTx = Parameters<Parameters<typeof indexer.transaction>[0]>[0];
+
+/**
+ * Weighs the page against the Cosmo records and writes what they let through, in one indexer
+ * transaction: the records are read inside it, right before the write, so a record the worker
+ * stored after the page was weighed for the counts still holds its token. Returns the ids the
+ * write landed on, so only those mark a Cosmo record superseded, and the weighing it used.
+ */
 async function applyPage(mismatches: Mismatch[]) {
-  let updated = 0;
+  return indexer.transaction(async (tx) => {
+    const weighed = await weighCosmo(mismatches, tx);
+    const writable = mismatches.filter((m) => weighed.get(m.id)?.hold !== "held");
+    const updated = await writeChain(writable, tx);
+    return { updated, weighed };
+  });
+}
+
+async function writeChain(mismatches: Mismatch[], tx: IndexerTx) {
+  const updated = new Set<string>();
   for (const chain of [true, false]) {
     const ids = mismatches.filter((m) => m.chain === chain).map((m) => m.id);
     if (ids.length === 0) continue;
-    const rows = await indexer
+    const rows = await tx
       .update(objekts)
       .set({ transferable: chain })
       .where(
@@ -171,7 +200,7 @@ async function applyPage(mismatches: Mismatch[]) {
           eq(objekts.transferable, !chain),
           ne(objekts.owner, Addresses.SPIN),
           notExists(
-            indexer
+            tx
               .select({ one: sql`1` })
               .from(transferabilityUpdates)
               .where(
@@ -184,9 +213,71 @@ async function applyPage(mismatches: Mismatch[]) {
         ),
       )
       .returning({ id: objekts.id });
-    updated += rows.length;
+    for (const row of rows) updated.add(row.id);
   }
   return updated;
+}
+
+type Weighed = { hold: CosmoHold; block: number | null; observedAt: string | null };
+
+/**
+ * Weighs each mismatch against its Cosmo-confirmed value: the record from the app database, then
+ * the newest `transferability_update` block of tokens that have one, through `reader`.
+ */
+async function weighCosmo(mismatches: Mismatch[], reader: IndexerTx | typeof indexer = indexer) {
+  const ids = mismatches.map((m) => m.id);
+  const records = new Map(
+    (
+      await db
+        .select({
+          tokenId: cosmoTransferable.tokenId,
+          transferable: cosmoTransferable.transferable,
+          chainHeight: cosmoTransferable.chainHeight,
+          supersededAt: cosmoTransferable.supersededAt,
+          observedAt: sql<string>`to_json(${cosmoTransferable.observedAt}) #>> '{}'`,
+        })
+        .from(cosmoTransferable)
+        .where(sql`${cosmoTransferable.tokenId} = ANY(${sql.param(ids)}::varchar[])`)
+    ).map((r) => [r.tokenId, r] as const),
+  );
+  const newest = new Map<string, number>();
+  const recorded = ids.filter((id) => records.has(id));
+  if (recorded.length > 0) {
+    const { rows } = await reader.execute<{ token_id: string; block: number }>(sql`
+      SELECT token_id, max(block_number)::int AS block FROM transferability_update
+      WHERE token_id = ANY(${sql.param(recorded)}::text[])
+      GROUP BY token_id
+    `);
+    for (const row of rows) newest.set(row.token_id, row.block);
+  }
+  const weighed = new Map<string, Weighed>();
+  for (const m of mismatches) {
+    const record = records.get(m.id);
+    const block = newest.get(m.id) ?? null;
+    weighed.set(m.id, {
+      hold: cosmoHold(m, record, block),
+      block,
+      observedAt: record?.observedAt ?? null,
+    });
+  }
+  return weighed;
+}
+
+/** Only the record the script weighed: a newer Cosmo confirmation since is left as it is. */
+async function markSuperseded(marks: { id: string; block: number; observedAt: string }[]) {
+  if (marks.length === 0) return 0;
+  const { rows } = await db.execute<{ token_id: string }>(sql`
+    UPDATE cosmo_transferable ct
+    SET superseded_at = now(), superseded_block = u.block
+    FROM unnest(
+      ${sql.param(marks.map((m) => m.id))}::varchar[],
+      ${sql.param(marks.map((m) => m.block))}::int[],
+      ${sql.param(marks.map((m) => m.observedAt))}::timestamptz[]
+    ) AS u(token_id, block, observed_at)
+    WHERE ct.token_id = u.token_id AND ct.observed_at = u.observed_at AND ct.superseded_at IS NULL
+    RETURNING ct.token_id
+  `);
+  return rows.length;
 }
 
 const all: Tally = new Map();
@@ -196,6 +287,9 @@ let checked = 0;
 let skipped = 0;
 let failedCalls = 0;
 let updated = 0;
+let heldByCosmo = 0;
+let cosmoSuperseded = 0;
+let markedSuperseded = 0;
 let after = process.env.AFTER ?? "";
 const started = Date.now();
 let lastReport = 0;
@@ -231,7 +325,24 @@ while (true) {
     pageMismatches.push(...mismatches);
   }
 
-  if (APPLY && pageMismatches.length > 0) updated += await applyPage(pageMismatches);
+  if (pageMismatches.length > 0) {
+    const { updated: landed, weighed } = APPLY
+      ? await applyPage(pageMismatches)
+      : { updated: new Set<string>(), weighed: await weighCosmo(pageMismatches) };
+    const writable = pageMismatches.filter((m) => weighed.get(m.id)?.hold !== "held");
+    heldByCosmo += pageMismatches.length - writable.length;
+    const superseded = writable.flatMap((m) => {
+      const w = weighed.get(m.id);
+      return w?.hold === "superseded" && w.block !== null && w.observedAt !== null
+        ? [{ id: m.id, block: w.block, observedAt: w.observedAt }]
+        : [];
+    });
+    cosmoSuperseded += superseded.length;
+    if (APPLY) {
+      updated += landed.size;
+      markedSuperseded += await markSuperseded(superseded.filter((s) => landed.has(s.id)));
+    }
+  }
 
   if (checked - lastReport >= 100_000) {
     lastReport = checked;
@@ -279,6 +390,12 @@ console.log(
 );
 console.log(`sample true in DB, false on chain: ${samples["true-in-db"].join(", ") || "none"}`);
 console.log(`sample false in DB, true on chain: ${samples["false-in-db"].join(", ") || "none"}`);
+console.log(`held by Cosmo ${heldByCosmo}`);
+console.log(
+  APPLY
+    ? `Cosmo record superseded ${cosmoSuperseded} (marked ${markedSuperseded})`
+    : `Cosmo record superseded ${cosmoSuperseded}`,
+);
 console.log(APPLY ? `updated ${updated} objekts` : "dry run: nothing written");
 
 process.exit(0);

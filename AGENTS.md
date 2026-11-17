@@ -147,6 +147,10 @@ A single root `.env`, copied from `.env.example`, is shared by every app. Packag
 - `BETTER_AUTH_SECRET` — auth encryption key
 - `SITE_URL` — public origin, read at runtime: Better Auth's base URL and the only origin it accepts; the client uses the page's own origin, so no build bakes a domain in
 - `COSMO_KEY` — encrypted API key for Cosmo SDK
+- `COSMO_PROXY` — optional HTTP proxy for Cosmo API calls only (the `browser` service leaves through it too)
+- `COSMO_SESSION_KEY` — 32 bytes in base64 (`openssl rand -base64 32`, never `COSMO_KEY`) that seals connected accounts' Cosmo cookies in `cosmo_session`; read by web and worker. Unset, connecting is unavailable and the worker's `collection-media` job stays off. A changed key leaves older rows unreadable until their owners reconnect
+- `COSMO_BROWSER_URL`, `COSMO_BROWSER_TOKEN` — the `browser` service's websocket (`ws://browser:3000?token=<COSMO_BROWSER_TOKEN>`; locally `ws://127.0.0.1:3001?token=…`) and the token compose requires to start it; the web mints Cosmo's reCAPTCHA token there for QR sign-in
+- `COSMO_OBJEKT_WRITES` — comma list of the indexer writes taken from connected accounts' objekt reads: `anchors`, `untransferable`, `transferable`. Empty records and reports only. Read by worker and web, so restart them together (the plan script ignores it and plans as if every word were on); read `apps/worker/AGENTS.md` (Cosmo objekt data) before enabling a word
 
 Full list in `.env.example`.
 
@@ -154,7 +158,7 @@ Full list in `.env.example`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo. S3 storage and mail are external services configured through `.env`. Running Centrifugo locally, or changing `centrifugo/config.json`: read Centrifugo in `apps/web/AGENTS.md` first.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, `browser` (headless Chromium from browserless that mints the reCAPTCHA token for Cosmo QR sign-in over CDP; no published port, reached at `COSMO_BROWSER_URL`), two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo. S3 storage and mail are external services configured through `.env`. Running Centrifugo locally, or changing `centrifugo/config.json`: read Centrifugo in `apps/web/AGENTS.md` first.
 
 ## Error tracking
 

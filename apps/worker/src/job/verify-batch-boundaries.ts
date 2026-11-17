@@ -1,8 +1,8 @@
 /**
  * Boundary drift verifier for un-anchored offline batches.
  *
- * Anchored batches (with a pre-cutoff v1 objekt or a manual anchor) are
- * shielded — their serials come from the anchor regardless of the stored range,
+ * Anchored batches (with a pre-cutoff v1 objekt, a manual anchor, or a
+ * confirmed serial that `withConfirmed` keeps) are shielded — their serials come from the anchor regardless of the stored range,
  * so a drifted boundary is harmless. Un-anchored batches (reserved entirely after the v1 cutoff) have
  * no ground truth, so a boundary that was guessed from an unminted (404) token
  * which later minted as *foreign* would silently shift their serials.
@@ -22,6 +22,7 @@
  *   DRY_RUN=1 bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
  *   DRY_RUN=1 PROBES=recent bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
  *   RECENT=1 DRY_RUN=1 bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
+ * Confirmed serials count only with `anchors` in this process's COSMO_OBJEKT_WRITES.
  */
 import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
@@ -30,6 +31,7 @@ import { chunk, slugifyObjekt } from "@repo/lib";
 import { and, asc, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
+import { loadConfirmedSerials, reportMerges } from "@/job/confirmed-serials";
 import {
   discoverBatches,
   dropSpanMemo,
@@ -41,9 +43,11 @@ import {
   storeRanges,
   tokenIdRange,
 } from "@/job/serial-batches";
+import type { ConfirmedSerial } from "@/lib/cosmo-anchors";
 import { driftCandidates, onlyTriedTokens } from "@/lib/drift-candidates";
 import { insideDrop } from "@/lib/drop-grid";
 import { heartbeat, log, type Logger } from "@/lib/log";
+import { type MergeTally, mergeTally, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { discoveryBoundaries, V1_CUTOFF_MS } from "@/lib/serial-math";
 import {
@@ -137,6 +141,8 @@ type CheckContext = {
   dryRun: boolean;
   spans: ReturnType<typeof gridSpans>;
   logger: Logger;
+  confirmed: Map<string, ConfirmedSerial[]>;
+  tally: MergeTally;
 };
 
 type CheckResult = {
@@ -153,7 +159,7 @@ type CheckResult = {
  */
 async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<CheckResult> {
   const result: CheckResult = { outcome: "clean", drifted: false, gridSkipped: false, probes: 0 };
-  const { scope, dryRun, logger, spans } = ctx;
+  const { scope, dryRun, logger, spans, tally } = ctx;
   const batches = t.batches ?? [];
   if (batches.length === 0) return result;
 
@@ -165,9 +171,13 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
 
   if (rows.length === 0) return result;
 
-  const manualAnchors = t.anchors ?? [];
+  const manual = t.anchors ?? [];
+  const confirmed = ctx.confirmed.get(t.slug);
+  const stored = withConfirmed(manual, confirmed, rows, batches);
+  tally.record(t.id, stored);
+  const anchors = stored.anchors;
   const isAnchored = (b: Batch) =>
-    manualAnchors.some((a) => a.tokenId >= b.start && a.tokenId <= b.end) ||
+    anchors.some((a) => a.tokenId >= b.start && a.tokenId <= b.end) ||
     rows.some((o) => {
       const tid = parseInt(o.id);
       return (
@@ -292,7 +302,8 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
     logger.debug(`${t.slug}: Cosmo API error during rediscovery, skipping`);
     return { ...result, outcome: "failed" };
   }
-  const next = await fitRanges(t.id, t.season, fresh, rows, manualAnchors, {
+  const fitAnchors = withConfirmed(manual, confirmed, rows, fresh).anchors;
+  const next = await fitRanges(t.id, t.season, fresh, rows, fitAnchors, {
     knownForeign: [...knownForeign, ...discoveryBoundaries(fresh)],
     dropSpanOf: spans.dropSpanOf,
   });
@@ -304,7 +315,9 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
     return result;
   }
 
-  const updated = await rewriteSerials(rows, next.batches, manualAnchors, logger, t.slug);
+  const merge = withConfirmed(manual, confirmed, rows, next.batches);
+  tally.record(t.id, merge);
+  const updated = await rewriteSerials(rows, next.batches, merge.anchors, logger, t.slug);
   result.outcome = "fixed";
   logger.info(`${t.slug}: fixed — ${next.batches.length} batches, ${updated} serials updated`);
   return result;
@@ -325,10 +338,14 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
   const failed: string[] = [];
 
   const spans = gridSpans();
+  const confirmed = await loadConfirmedSerials(targets.map((t) => t.slug));
+  const tally = mergeTally();
 
   await chunk(targets, CONCURRENCY, async (group) => {
     const results = await Promise.all(
-      group.map((t) => checkCollection(t, { scope, dryRun, spans, logger: verifyLog })),
+      group.map((t) =>
+        checkCollection(t, { scope, dryRun, spans, logger: verifyLog, confirmed, tally }),
+      ),
     );
     for (const [i, r] of results.entries()) {
       if (r.drifted) drifted++;
@@ -348,6 +365,7 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
       "." +
       (failed.length ? ` Failed (API): ${failed.length} — ${failed.join(", ")}` : ""),
   );
+  reportMerges(tally);
 }
 
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -399,7 +417,10 @@ export async function verifyRecentDrift(dryRun = false) {
   const spans = gridSpans();
   const fixed: string[] = [];
   const failed: string[] = [];
-  for (const target of ids.length > 0 ? await loadTargets(ids) : []) {
+  const targets = ids.length > 0 ? await loadTargets(ids) : [];
+  const confirmed = await loadConfirmedSerials(targets.map((t) => t.slug));
+  const tally = mergeTally();
+  for (const target of targets) {
     let outcome: Awaited<ReturnType<typeof checkCollection>>["outcome"];
     try {
       ({ outcome } = await checkCollection(target, {
@@ -407,6 +428,8 @@ export async function verifyRecentDrift(dryRun = false) {
         dryRun,
         spans,
         logger: verifyLog,
+        confirmed,
+        tally,
       }));
     } catch (error) {
       // one bad candidate must not stop the rest, pass after pass
@@ -438,6 +461,7 @@ export async function verifyRecentDrift(dryRun = false) {
       `recent pass: ${failed.length} drifted collection(s) not fixed — ${failed.join(", ")}`,
     );
   }
+  reportMerges(tally);
   verifyLog.debug(`recent pass done in ${seconds}s`);
 }
 

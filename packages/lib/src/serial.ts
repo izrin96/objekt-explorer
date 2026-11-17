@@ -4,7 +4,8 @@ export const V1_CUTOFF_MS = Date.parse("2026-06-04T08:07:02Z");
 
 /**
  * `anchored`: the objekt sits in a reserved range that also holds a serial
- * Cosmo supplied or a manual anchor, so its serial follows from that one.
+ * Cosmo supplied, a manual anchor or a serial a connected account's Cosmo read
+ * confirmed (while the serial job may use those), so its serial follows from that one.
  */
 export function isSerialEstimated(mintedAt: Date | string, anchored: boolean) {
   return !anchored && new Date(mintedAt).getTime() >= V1_CUTOFF_MS;

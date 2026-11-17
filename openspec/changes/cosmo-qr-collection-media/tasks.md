@@ -338,7 +338,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
 
 ## 11. Docs
 
-- [ ] 11.1 Update the agent docs for this change:
+- [x] 11.1 Update the agent docs for this change:
   - **`apps/indexer/AGENTS.md`** (Staff colours on `collection`): `front_media`, `has_audio`, and `back_image`, `accent_color` and `text_color` on existing rows are also written from outside, by the worker's `collection-media` job. `front_media` holds only our bucket's URL. `band_image_url` stays unwritten, so the web's hardcoded band map shows. Never add them to `collectionFields`.
   - **`apps/worker/AGENTS.md`**: a Collection media section covering the two phases (the expiry notices in the apply phase, claimed through `expiry_notified_at`), the due order, the request budget and backoff, the merge rule, apply rules, the back image budget, what dead means and the 30-day deletion, a key that fails to open (skipped, never dead), the job as the only writer, and no replay script needed. Beside it, the copy job: `collection-media/` keys named by the source's hash, never Cosmo's URL on a collection, the download rules and budget, `front_media_failed_at`, band images recorded but never copied, no inline delete, and the cleanup script sweeping both prefixes.
   - **`packages/db/AGENTS.md`**: Cosmo sessions (owned by `user_id`, sealed cookie with the owner in its AAD, null once dead, never `access_token`, cleanup paths, `expiry_notified_at` cleared by every connect) and Collection media (the record as the source after a rebuild, with no session or user column; Cosmo's URL as the source and our copy's URL beside it; `band_image_url` recorded for later, never copied or shown).

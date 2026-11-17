@@ -7,6 +7,7 @@ import {
   type Tally,
   addToTally,
   compareWithChain,
+  cosmoHold,
   decodeAggregate3,
   encodeAggregate3,
 } from "./transferability-check";
@@ -134,5 +135,48 @@ describe("addToTally", () => {
       Welcome: { checked: 1, "true-in-db": 0, "false-in-db": 0 },
       "(no collection)": { checked: 1, "true-in-db": 0, "false-in-db": 1 },
     });
+  });
+});
+
+describe("cosmoHold", () => {
+  const record = (extra: object = {}) => ({
+    transferable: false,
+    chainHeight: 900,
+    supersededAt: null,
+    ...extra,
+  });
+  // the chain reads true where the database holds Cosmo's confirmed false
+  const mismatch = { chain: true };
+
+  test("applies with no record", () => {
+    expect(cosmoHold(mismatch, null, 950)).toBe("apply");
+    expect(cosmoHold(mismatch, undefined, null)).toBe("apply");
+  });
+
+  test("applies when the record agrees with the chain value", () => {
+    expect(cosmoHold(mismatch, record({ transferable: true }), null)).toBe("apply");
+  });
+
+  test("holds a disagreeing record with no newer update", () => {
+    expect(cosmoHold(mismatch, record(), null)).toBe("held");
+    expect(cosmoHold(mismatch, record(), 850)).toBe("held");
+  });
+
+  test("an update above the record's height supersedes it", () => {
+    expect(cosmoHold(mismatch, record(), 901)).toBe("superseded");
+  });
+
+  test("an update at exactly the record's height still holds", () => {
+    expect(cosmoHold(mismatch, record(), 900)).toBe("held");
+  });
+
+  test("applies over a record already superseded", () => {
+    const gone = record({ supersededAt: "2026-11-17T00:00:00.000Z" });
+    expect(cosmoHold(mismatch, gone, null)).toBe("apply");
+  });
+
+  test("a record whose token moved since is still held", () => {
+    const moved = { ...record(), receivedAt: "2026-11-10T00:00:00.000Z" };
+    expect(cosmoHold(mismatch, moved, null)).toBe("held");
   });
 });

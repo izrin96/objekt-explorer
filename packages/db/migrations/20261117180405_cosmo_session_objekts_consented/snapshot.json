@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ac21fde5-7da4-468c-a3f2-687d2903b742",
+  "prevIds": [
+    "2f13a5a9-8c63-42b1-8428-4d82687a31d5"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "cosmo_session",
+        "objekts_consented"
+      ],
+      "writes": [
+        "s|col|public.cosmo_session.objekts_consented",
+        "n|col|public.cosmo_session.objekts_consented",
+        "e|col|public.cosmo_session.objekts_consented"
+      ],
+      "reads": [
+        "n|tbl|public.cosmo_session",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_session",
+        "name": "objekts_consented",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

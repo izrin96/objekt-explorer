@@ -95,9 +95,53 @@ const summaryCollectionSchema = z.object({
 });
 export type SummaryCollection = z.infer<typeof summaryCollectionSchema>;
 
-const summaryItemSchema = z.object({ collection: summaryCollectionSchema });
+// What only an objekt's holder sees; every other field Cosmo sends is dropped as it parses
+const summaryObjektSchema = z
+  .object({
+    metadata: z.object({
+      tokenId: z.number().int().positive().safe(),
+      // int4 and varchar(255) bounds: a bad entry is skipped alone, not the page's upsert
+      objektNo: z.number().int().positive().max(2_147_483_647),
+      collectionId: z.string().min(1).max(200),
+      transferable: z.boolean(),
+    }),
+    inventory: z.object({
+      usedForGrid: z
+        .boolean()
+        .nullish()
+        .transform((v) => v ?? false),
+      owner: z
+        .string()
+        .regex(/^0x[0-9a-fA-F]{40}$/)
+        .transform((v) => v.toLowerCase()),
+      status: z.string(),
+    }),
+    nonTransferableReason: z
+      .string()
+      .nullish()
+      .transform((v) => (v == null ? null : /^[a-z0-9-]{1,64}$/.test(v) ? v : "other")),
+  })
+  .transform(({ metadata, inventory, nonTransferableReason }) => ({
+    tokenId: String(metadata.tokenId),
+    objektNo: metadata.objektNo,
+    collectionId: metadata.collectionId,
+    transferable: metadata.transferable,
+    nonTransferableReason,
+    usedForGrid: inventory.usedForGrid,
+    owner: inventory.owner,
+    status: inventory.status,
+  }));
+export type SummaryObjekt = z.infer<typeof summaryObjektSchema>;
+
+// `count` and `objekts` never cost the collection its media: a null or malformed one reads as absent
+const summaryItemSchema = z.object({
+  collection: summaryCollectionSchema,
+  count: z.number().nullish().catch(null),
+  objekts: z.array(z.unknown()).nullish().catch(null),
+});
 
 // Each item parses alone, so one malformed collection costs one `skipped`, not the page.
+// Each objekt parses alone too: a bad one adds to `skippedObjekts`, never to `skipped`.
 export const objektSummariesSchema = z
   .object({
     collectionCount: z.number(),
@@ -105,13 +149,26 @@ export const objektSummariesSchema = z
   })
   .transform(({ collectionCount, collections: items }) => {
     const collections: SummaryCollection[] = [];
+    const objekts: SummaryObjekt[] = [];
     let skipped = 0;
+    let skippedObjekts = 0;
+    let partial = 0;
     for (const item of items) {
       const parsed = summaryItemSchema.safeParse(item);
-      if (parsed.success) collections.push(parsed.data.collection);
-      else skipped++;
+      if (!parsed.success) {
+        skipped++;
+        continue;
+      }
+      const { collection, count, objekts: entries } = parsed.data;
+      collections.push(collection);
+      for (const entry of entries ?? []) {
+        const objekt = summaryObjektSchema.safeParse(entry);
+        if (objekt.success) objekts.push(objekt.data);
+        else skippedObjekts++;
+      }
+      if (count != null && entries && count !== entries.length) partial++;
     }
-    return { collectionCount, collections, skipped };
+    return { collectionCount, collections, skipped, objekts, skippedObjekts, partial };
   });
 export type ObjektSummaries = z.infer<typeof objektSummariesSchema>;
 

@@ -1,0 +1,1 @@
+ALTER TABLE "cosmo_session" ADD COLUMN "objekts_consented" boolean DEFAULT false NOT NULL;

@@ -1,0 +1,655 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2f13a5a9-8c63-42b1-8428-4d82687a31d5",
+  "prevIds": [
+    "13a2369c-c8e4-45d7-829f-17d869e1b3f3"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "cosmo_objekt"
+      ],
+      "writes": [
+        "s|tbl|public.cosmo_objekt",
+        "n|tbl|public.cosmo_objekt",
+        "e|tbl|public.cosmo_objekt",
+        "n|rel|public.cosmo_objekt",
+        "n|type|public.cosmo_objekt",
+        "n|rel|public.cosmo_objekt_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "cosmo_transferable"
+      ],
+      "writes": [
+        "s|tbl|public.cosmo_transferable",
+        "n|tbl|public.cosmo_transferable",
+        "e|tbl|public.cosmo_transferable",
+        "n|rel|public.cosmo_transferable",
+        "n|type|public.cosmo_transferable",
+        "n|rel|public.cosmo_transferable_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "cosmo_objekt",
+        "cosmo_objekt_confirmed_idx"
+      ],
+      "writes": [
+        "s|idx|public.cosmo_objekt_confirmed_idx",
+        "n|idx|public.cosmo_objekt_confirmed_idx",
+        "e|idx|public.cosmo_objekt_confirmed_idx",
+        "n|rel|public.cosmo_objekt_confirmed_idx"
+      ],
+      "reads": [
+        "n|tbl|public.cosmo_objekt",
+        "n|sch|public",
+        "n|col|public.cosmo_objekt.slug"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "cosmo_objekt",
+        "cosmo_objekt_serial_due_idx"
+      ],
+      "writes": [
+        "s|idx|public.cosmo_objekt_serial_due_idx",
+        "n|idx|public.cosmo_objekt_serial_due_idx",
+        "e|idx|public.cosmo_objekt_serial_due_idx",
+        "n|rel|public.cosmo_objekt_serial_due_idx"
+      ],
+      "reads": [
+        "n|tbl|public.cosmo_objekt",
+        "n|sch|public",
+        "n|col|public.cosmo_objekt.slug"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "cosmo_objekt",
+        "cosmo_objekt_transferable_due_idx"
+      ],
+      "writes": [
+        "s|idx|public.cosmo_objekt_transferable_due_idx",
+        "n|idx|public.cosmo_objekt_transferable_due_idx",
+        "e|idx|public.cosmo_objekt_transferable_due_idx",
+        "n|rel|public.cosmo_objekt_transferable_due_idx"
+      ],
+      "reads": [
+        "n|tbl|public.cosmo_objekt",
+        "n|sch|public",
+        "n|col|public.cosmo_objekt.observed_at"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "cosmo_objekt",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "cosmo_transferable",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "token_id",
+        "type": "varchar(20)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "slug",
+        "type": "varchar(255)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "objekt_no",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "transferable",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "non_transferable_reason",
+        "type": "varchar(64)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "used_for_grid",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "chain_height",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "observed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "received_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "serial_eligible",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "serial_due",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "serial_checked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "transferable_due",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "transferable_outcome",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "transferable_checked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "token_id",
+        "type": "varchar(20)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "transferable",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "observed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "chain_height",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "received_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "confirmed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "superseded_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "superseded_block",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_confirmed_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "slug",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"serial_eligible\"",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_serial_due_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "slug",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"serial_due\"",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_transferable_due_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "observed_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"transferable_due\"",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_pkey",
+        "columns": [
+          "token_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "cosmo_transferable_pkey",
+        "columns": [
+          "token_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_token_id_check",
+        "value": "\"token_id\" ~ '^[0-9]+$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_objekt_no_check",
+        "value": "\"objekt_no\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_reason_check",
+        "value": "\"non_transferable_reason\" IS NULL OR \"non_transferable_reason\" ~ '^[a-z0-9-]+$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_objekt",
+        "name": "cosmo_objekt_outcome_check",
+        "value": "\"transferable_outcome\" IS NULL OR \"transferable_outcome\" IN ('matched','moved','chain_newer','spin','missing','report_untransferable','report_transferable','written_untransferable','written_transferable','raced')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "cosmo_transferable_token_id_check",
+        "value": "\"token_id\" ~ '^[0-9]+$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cosmo_transferable",
+        "name": "cosmo_transferable_superseded_check",
+        "value": "(\"superseded_at\" IS NULL) = (\"superseded_block\" IS NULL)",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

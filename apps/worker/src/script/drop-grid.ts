@@ -20,6 +20,10 @@
  * minted (as many members as the season's largest other A drop of the artist);
  * any other fitted drop is reported and left unmarked.
  *
+ * Confirmed serials (cosmo_objekt) join the manual anchors only when this
+ * process's COSMO_OBJEKT_WRITES holds `anchors`: run it with the worker's value.
+ * They count as known serials beside the v1 serials and manual anchors.
+ *
  *   bun run --env-file=../../.env src/script/drop-grid.ts
  *   bun run --env-file=../../.env src/script/drop-grid.ts Cream02
  *   bun run --env-file=../../.env src/script/drop-grid.ts Cream02 356A triples
@@ -30,6 +34,7 @@ import { collections } from "@repo/db/indexer/schema";
 import { preBlockSeasons } from "@repo/lib/serial";
 import { and, eq, inArray, like, notInArray } from "drizzle-orm";
 
+import { loadConfirmedSerials } from "@/job/confirmed-serials";
 import {
   applyGridWrites,
   type DropKey,
@@ -41,9 +46,11 @@ import {
   planGridWrites,
 } from "@/job/serial-batches";
 import { type DropGrid, fitMemberRun } from "@/lib/drop-grid";
+import { mergeTally, tallyDetails, tallyWarning } from "@/lib/merge-tally";
 import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const APPLY = process.env.APPLY === "1";
+const tally = mergeTally();
 const CROWDED_RUN = 10;
 
 type Batch = { start: number; end: number };
@@ -123,7 +130,10 @@ async function review(
   unmarked?: string,
 ) {
   const span = { start, end: grid.end };
-  const plans = await planGridWrites(members, start, grid);
+  const plans = await planGridWrites(members, start, grid, {
+    confirmed: await loadConfirmedSerials(members.map((m) => m.slug)),
+    tally,
+  });
 
   let known = 0;
   let exactBefore = 0;
@@ -266,5 +276,10 @@ if (unmarkedDrops.length > 0) {
 }
 if (unchecked.length > 0) {
   console.log(`[drop-grid] fitted with no known serial to check: ${unchecked.join("; ")}`);
+}
+const warning = tallyWarning(tally);
+if (warning) {
+  console.log(`[drop-grid] ${warning}`);
+  for (const line of tallyDetails(tally)) console.log(`  ${line}`);
 }
 process.exit(0);

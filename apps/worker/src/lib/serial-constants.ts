@@ -10,3 +10,6 @@ export const preAssignedCollections = [
   "cream02-xinyu-315z",
   "cream02-yeonji-315z",
 ];
+
+// objekts minted within this window are left for a later run
+export const MINT_DELAY_MS = 120 * 1000;

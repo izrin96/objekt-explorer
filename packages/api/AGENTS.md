@@ -49,7 +49,7 @@ When `/api/v1` needs a different shape (a path parameter wants `{ address }`), c
 
 ## Staff procedures
 
-`moderator` (`orpc.ts`) answers NOT_FOUND to everyone who is not staff, signed out included; `adminOnly` (`moderator.use`) adds FORBIDDEN for a moderator. The `admin` router (`routers/admin.ts`: the banner feed and removal, collection colours and Refresh collection list, and the Trade tracking and Message totals reads) is mounted on `/rpc` only, never `/api/v1`.
+`moderator` (`orpc.ts`) answers NOT_FOUND to everyone who is not staff, signed out included; `adminOnly` (`moderator.use`) adds FORBIDDEN for a moderator. The `admin` router (`routers/admin.ts`: the banner feed and removal, collection colours and Refresh collection list, Cosmo media summary (`cosmoMediaSummary`, `adminOnly`: counts and one time, never an address, nickname or user) and the Trade tracking and Message totals reads) is mounted on `/rpc` only, never `/api/v1`.
 
 ## Staff totals
 
@@ -70,6 +70,14 @@ Every link change goes through `services/account/cosmo-link.ts` (user link and u
 Every write that changes `user_address.user_id` (link, unlink, staff move and unlink, the account scrub) sets `is_default = false`; `user_address_default_linked` refuses a flag on an unlinked row, and `cosmoLink.setDefault` clears the account's flag before setting the new one, so `user_address_default_idx` keeps one per account.
 
 A block (`blockUser`, and the report's also-block) locks both users' rows `FOR NO KEY UPDATE` in id order through `lockUsersForWrite` before the `user_block` insert, so an offer create or accept, which re-reads blocks after `lockParties`' `FOR SHARE`, either sees the block or finished first; it then cancels offers inside the same transaction, the same order a sanction write takes.
+
+## Cosmo sessions
+
+The `cosmoSession` router (`routers/cosmo-session.ts`) is on `authed`, every read and write is filtered by `user_id`, and it is mounted on `/rpc` only, never `/api/v1`. No procedure takes a ticket or returns a cookie, sealed or not: the ticket is issued to and stored for the caller (Redis, `cosmo-qr:<userId>`) and reaches only that user inside the QR code. Failures from Cosmo are `CosmoSessionError` (`kind` and `status`, never a URL or body); the web shows `cosmo_session_*` refusals through `services/cosmo-session/refusal.ts`.
+
+- **The ticket store fails closed**: `readTicket` answers `unavailable` when Redis cannot be read, and nothing reaches Cosmo without a store to hold its ticket (`cosmo-verify.ts` does the same).
+- **Certify** reads the ticket before sending the code, takes one lock per user, and reserves its try before Cosmo is asked, so parallel requests cannot spend extra tries. It then stores the session in one transaction that takes `"user"` `FOR SHARE` first (a ban or scrub that committed is seen, and refused as `cosmo_session_not_allowed`), then the user's advisory lock (the 3-account limit), then the address's, then the session rows, the order a ban or the account scrub takes. Any way out after Cosmo issued a session but before the row is stored signs it out. A renew is a certify of the same Cosmo account: it re-seals the row, restarts the 180 days, clears `expiry_notified_at` and marks the row's unread `cosmo_session_expiry` notice read.
+- **Revocation**: `anonymizeUser` and `syncBan`'s revoking branch delete the user's sessions inside their transaction (`revokeSessionsOf`) and sign them out at Cosmo after commit (`signOutSealed`).
 
 ## Privacy and Trade
 

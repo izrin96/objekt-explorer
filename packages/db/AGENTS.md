@@ -25,7 +25,19 @@ A column can leave `schema.ts` before it leaves the database: generate the migra
 
 ## Collection colours
 
-Staff colour fixes live on the indexer's `collection` row: `text_color` and `background_color` hold the colour shown, and `source_text_color` / `source_background_color` (Drizzle-owned, `20261104150000_collection_colour_source`) hold the value a staff colour replaced, as the source gave it, null where the source applies. `collection_staff_colors` requires a staff-set colour to be lowercase `#` and six hex digits; a source stays unchecked, since 20 production rows hold malformed ones. The history is the app's `mod_audit` (`collection_override` entries); the worker's `replay-collection-colours.ts` puts it back on the rows after a resync. `.env.local`'s read-only indexer is what stops a local save from reaching production: it fails at the row lock and writes nothing, so keep `default_transaction_read_only=on` there.
+Staff colour fixes live on the indexer's `collection` row: `text_color` and `background_color` hold the colour shown, and `source_text_color` / `source_background_color` (Drizzle-owned, `20261104150000_collection_colour_source`) hold the value a staff colour replaced, as the source gave it, null where the source applies. `collection_staff_colors` requires a staff-set colour to be lowercase `#` and six hex digits; a source stays unchecked, since 20 production rows hold malformed ones. The history is the app's `mod_audit` (`collection_override` entries); no script puts it back on the rows after a resync (`apps/indexer/AGENTS.md`, Staff colours on `collection`). `.env.local`'s read-only indexer is what stops a local save from reaching production: it fails at the row lock and writes nothing, so keep `default_transaction_read_only=on` there.
+
+## Cosmo sessions
+
+`cosmo_session` is owned by `user_id` (cascade, but `anonymizeUser` deletes explicitly, since the user row is scrubbed, not deleted); `cosmo_address` is unique, so one Cosmo account has one row. `cookie_sealed` is AES-256-GCM under `COSMO_SESSION_KEY` with AAD `cosmo_session:<user_id>:<lowercased address>`, so a ciphertext copied to another row or owner fails to open; it is null once the session is dead, and a CHECK ties `dead_at IS NULL` to `cookie_sealed IS NOT NULL`. The sealed cookie never goes into `access_token`, whose readers take `findFirst()`, and no procedure returns it. Cleanup paths: disconnect, `anonymizeUser`, a new ban (`syncBan`), a reconnect of the same Cosmo account by anyone, and the worker deleting rows 30 days after `dead_at`. Every connect or renew clears `expiry_notified_at`, so the next 180-day cycle notifies again.
+
+## Collection media
+
+`collection_media` (one row per collection slug) is the source after an indexer rebuild: the worker's apply writes it back onto the rows. It has no session or user column, so the site records not which account shared a collection. `front_media` is Cosmo's URL and `front_media_copy` our bucket's, kept side by side; the indexer's `front_media` only ever receives the copy. `band_image_url` is recorded for later and never copied or shown. `has_voice` once true stays true, and `front_media_failed_at` times the last failed copy. Merge, apply and copy rules are in `apps/worker/AGENTS.md`.
+
+## Cosmo objekt reads
+
+`cosmo_objekt` and `cosmo_transferable` are keyed by token id, with no user, session, address or foreign key: what a connected account's session reported about a token. They sit in the app database, not the indexer's, so they survive an indexer rebuild (the stored reads write their corrections again) and need no indexer migration. `cosmo_objekt` holds Cosmo's latest read of each token and is the store of confirmed serials (`serial_eligible`, loaded by `cosmo_objekt_confirmed_idx`); `cosmo_transferable` holds the confirmed `transferable` value. The `serial_due` and `transferable_due` flags and their partial indexes make "what is new" one index scan on tables that reach millions of rows. Both tables are kept for good: no job deletes a row and no account event touches one. Rules are in `apps/worker/AGENTS.md`, Cosmo objekt data.
 
 ## Link history
 

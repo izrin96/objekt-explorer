@@ -34,6 +34,9 @@ export const serverEnv = createEnv({
       .refine((key) => Buffer.from(key, "base64").length === 32, "must be 32 bytes, base64")
       .optional(),
     COSMO_BROWSER_URL: z.string().min(1).optional(),
+    // a comma list read through objektWriteModes; the estimate mark counts confirmed serials
+    // only with `anchors`, the same word that lets the worker's serial job use them
+    COSMO_OBJEKT_WRITES: z.string().optional(),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
     SITE_URL: z.url(),
