@@ -1,13 +1,14 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections } from "@repo/db/indexer/schema";
+import { collections, objekts as objektTable } from "@repo/db/indexer/schema";
 import { listEntries, lists, tradePost } from "@repo/db/schema";
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { anyCopyItem, anyEntryOf } from "../../../lib/offer-any-item";
 import { orderByCollection, pageByCollection } from "../../../lib/offer-paging";
 import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
+import { byCollectionNo, cursorFor, memberRanks, rankOf } from "../../../lib/picker-sort";
 import { copyKey } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import type { CollectionFilters } from "../../../schemas/common/filters";
@@ -18,6 +19,7 @@ import {
   type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { getArtists } from "../../artist";
 import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { pickerTagsFor } from "../../trade/feed/near";
 import { askableOnTrade, postPartnerSql } from "../../trade/lists";
@@ -45,14 +47,14 @@ import {
   wantSlugsOf,
 } from "./shared";
 
-/** Of `slugs`, the collections `filters` keep. */
-async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>) {
-  if (slugs.length === 0) return new Set<string>();
+/** Of `slugs`, the collections `filters` keep, with the number and member Collection No. orders by. */
+async function collectionKeysOf(slugs: string[], filters?: Partial<CollectionFilters>) {
+  if (slugs.length === 0) return new Map<string, { no: string; member: string }>();
   const rows = await indexer
-    .select({ slug: collections.slug })
+    .select({ slug: collections.slug, no: collections.collectionNo, member: collections.member })
     .from(collections)
     .where(and(inArray(collections.slug, slugs), ...collectionWhere(filters)));
-  return new Set(rows.map((row) => row.slug));
+  return new Map(rows.map((row) => [row.slug, { no: row.no, member: row.member }]));
 }
 
 /** With Only what I want on, the collections on the sender's want lists; else null, keeping all. */
@@ -271,23 +273,35 @@ export async function theirPickerPage(
   me: string,
   addressed: Addressed,
   offset: number,
-  { filters, matchOnly, fromList }: PickerNarrowing,
+  { filters, matchOnly, fromList, sort, transferableOnly }: PickerNarrowing,
 ) {
-  const [{ items, listed, partnerLists }, wanted] = await Promise.all([
+  const byNo = sort === "collectionNo";
+  const [{ items, listed, partnerLists }, wanted, artists] = await Promise.all([
     resolveTheirItems(me, addressed, fromList),
     myWantsIf(me, matchOnly),
+    byNo ? getArtists() : null,
   ]);
   let shown = items;
+  // an any item stays: it is never a non-transferable copy (`anyCopyItem` counts spares only)
+  if (transferableOnly) shown = shown.filter((item) => item.objektId === null || item.transferable);
   if (wanted) shown = shown.filter((item) => wanted.has(item.collectionSlug));
-  if (filters && Object.values(filters).some((value) => value?.length)) {
-    const kept = await filterSlugs(unique(shown.map((item) => item.collectionSlug)), filters);
-    shown = shown.filter((item) => kept.has(item.collectionSlug));
-  }
-  const { page: slice, nextOffset } = pageByCollection(
-    orderByCollection(shown),
-    offset,
-    CANDIDATE_PAGE_SIZE,
-  );
+  const filtered = filters && Object.values(filters).some((value) => value?.length);
+  // one read serves the facet filters and the Collection No. keys
+  const keys =
+    filtered || byNo
+      ? await collectionKeysOf(unique(shown.map((item) => item.collectionSlug)), filters)
+      : null;
+  if (filtered && keys) shown = shown.filter((item) => keys.has(item.collectionSlug));
+  const grouped = orderByCollection(shown);
+  const ranks = artists && memberRanks(artists);
+  const ordered =
+    ranks && keys
+      ? byCollectionNo(grouped, (item) => {
+          const key = keys.get(item.collectionSlug);
+          return key && { no: key.no, rank: rankOf(ranks, key.member) };
+        })
+      : grouped;
+  const { page: slice, nextOffset } = pageByCollection(ordered, offset, CANDIDATE_PAGE_SIZE);
   const [tags, collections] = await Promise.all([
     matchOnly
       ? pickerTagsFor(
@@ -322,13 +336,13 @@ async function keptObjekts(
   const mine = [...found.values()].filter(
     (objekt) => held.has(objekt.owner) && (!wanted || wanted.has(objekt.slug)),
   );
-  const slugs = filters ? await filterSlugs(unique(mine.map((o) => o.slug)), filters) : null;
+  const slugs = filters ? await collectionKeysOf(unique(mine.map((o) => o.slug)), filters) : null;
   return mine.filter((objekt) => !slugs || slugs.has(objekt.slug));
 }
 
 /** Every copy the partner holds of `slugs`, the collections the countered offer gave, which lead the first page. */
-async function keptCollections(slugs: string[], addresses: string[]) {
-  const copies = await fetchCopies(slugs, addresses);
+async function keptCollections(slugs: string[], addresses: string[], narrow?: SQL) {
+  const copies = await fetchCopies(slugs, addresses, narrow);
   return orderByCollection(
     copies.map((objekt) => ({
       objekt,
@@ -348,11 +362,13 @@ export async function theirCollectionPage(
 ) {
   const { partnerId } = addressed;
   // the other reads don't refuse, so `not_listed` is still the first refusal here
-  const [hasLists, addresses, myWants, countered] = await Promise.all([
+  const sort = narrowing.sort ?? "default";
+  const [hasLists, addresses, myWants, countered, artists] = await Promise.all([
     partnerHasLists(partnerId),
     collectionAddresses(partnerId),
     myWantsIf(me, narrowing.matchOnly),
     counteredGives(addressed.conversationId, me),
+    sort === "collectionNo" ? getArtists() : null,
   ]);
   if (hasLists) refuseOffer("not_listed");
   // the kept objekts' collections lead the first page whole, so every page leaves them out; the
@@ -361,15 +377,22 @@ export async function theirCollectionPage(
     (await keptObjekts(countered, addresses, narrowing.filters, myWants)).map((o) => o.slug),
   );
   const none = { page: [], nextCursor: null };
+  // keptSlugs stays as it is under the switch: a kept collection with no transferable copy left
+  // just vanishes, and no page brings it back
+  const transferable = narrowing.transferableOnly ? eq(objektTable.transferable, true) : undefined;
+  // a cursor of the other sort's kind reads as page one
+  const after = cursorFor(sort, cursor);
   const [{ page, nextCursor }, kept] = await Promise.all([
     addresses.length === 0 || myWants?.size === 0
       ? none
-      : ownedGroupPage(addresses, cursor, {
+      : ownedGroupPage(addresses, after, {
           filters: narrowing.filters,
           slugs: myWants && [...myWants],
           exclude: keptSlugs,
+          where: transferable,
+          ...(artists && { order: { sort: "collectionNo", ranks: memberRanks(artists) } }),
         }),
-    cursor || keptSlugs.length === 0 ? [] : keptCollections(keptSlugs, addresses),
+    after || keptSlugs.length === 0 ? [] : keptCollections(keptSlugs, addresses, transferable),
   ]);
   const objekts = [...kept, ...page];
   const ids = objekts.map((o) => o.id);

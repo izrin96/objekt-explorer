@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import { PICKER_SORTS } from "../constants";
 import { chatPartnerSchema, chatTargetSchema, FLAG_CATEGORIES } from "./chat";
 import { receivedAtCursorSchema, timestampTextSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
@@ -217,7 +218,19 @@ export const suggestInputSchema = z.object({
   lead: z.string().min(1).optional(),
 });
 
-export type CandidateCursor = z.infer<typeof receivedAtCursorSchema>;
+export { PICKER_SORTS, type PickerSort } from "../constants";
+
+/** Named `slug`, not `id`, so the newest cursor's required `id` rejects it rather than stripping it into a wrong page. */
+const collectionNoCursorSchema = z.object({
+  sort: z.literal("collectionNo"),
+  no: z.string().max(100),
+  rank: z.int32(),
+  receivedAt: timestampTextSchema,
+  slug: z.string().min(1).max(200),
+});
+
+export const candidateCursorSchema = z.union([receivedAtCursorSchema, collectionNoCursorSchema]);
+export type CandidateCursor = z.infer<typeof candidateCursorSchema>;
 
 /** How the offer picker narrows a side. */
 const pickerNarrowingSchema = z.object({
@@ -232,6 +245,10 @@ const pickerNarrowingSchema = z.object({
   objektIds: z.array(objektIdSchema).min(1).max(OFFER_SIDE_LIMIT).optional(),
   /** mine: every copy of these collections, unpaged, for a counter's any-copy asks */
   copiesOf: z.array(slugSchema).min(1).max(OFFER_SIDE_LIMIT).optional(),
+  /** The grid reads only: "default" is the picker's own order. Absent reads as "default". */
+  sort: z.enum(PICKER_SORTS).optional(),
+  /** The grid reads only: leave out copies whose objekt is not transferable */
+  transferableOnly: z.boolean().optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
 
@@ -239,7 +256,7 @@ export const candidatesInputSchema = addressedSchema
   .extend({
     side: z.enum(["mine", "theirs", "theirs-collection"]),
     /** mine and theirs-collection: where the next page starts */
-    cursor: receivedAtCursorSchema.optional(),
+    cursor: candidateCursorSchema.optional(),
     /** theirs: where the next page starts in the resolved list */
     offset: z.number().int().min(0).optional(),
     ...pickerNarrowingSchema.shape,

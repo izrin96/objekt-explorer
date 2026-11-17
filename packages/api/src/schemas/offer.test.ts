@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   type CandidateItem,
+  candidatesInputSchema,
   listedAsAny,
   noteObjekts,
   offerPayloadSchema,
@@ -152,5 +153,44 @@ describe("listedAsAny", () => {
 
   test("a copy is never an any copy", () => {
     expect(listedAsAny(anyItem({ objektId: "5745609", hidden: 2 }))).toBe(false);
+  });
+});
+
+describe("candidatesInputSchema cursor", () => {
+  const base = { conversationId: 1, side: "mine" as const };
+  const receivedAt = "2026-10-17 00:00:00.123456+00";
+
+  test("today's input parses unchanged", () => {
+    const input = { ...base, cursor: { receivedAt, id: "seoyeon-101z" } };
+    expect(candidatesInputSchema.parse(input)).toEqual(input);
+  });
+
+  test("a Collection No. cursor parses with its slug", () => {
+    const cursor = {
+      sort: "collectionNo" as const,
+      no: "101Z",
+      rank: 3,
+      receivedAt,
+      slug: "atom01-seoyeon-101z",
+    };
+    expect(candidatesInputSchema.parse({ ...base, sort: "collectionNo", cursor }).cursor).toEqual(
+      cursor,
+    );
+  });
+
+  test("a Collection No. cursor without sort fails", () => {
+    const cursor = { no: "101Z", rank: 3, receivedAt, slug: "atom01-seoyeon-101z" };
+    expect(candidatesInputSchema.safeParse({ ...base, cursor }).success).toBe(false);
+  });
+
+  test("a receivedAt and slug with no id fails", () => {
+    expect(
+      candidatesInputSchema.safeParse({ ...base, cursor: { receivedAt, slug: "x" } }).success,
+    ).toBe(false);
+  });
+
+  test("sort and transferableOnly are optional", () => {
+    expect(candidatesInputSchema.safeParse({ ...base }).success).toBe(true);
+    expect(candidatesInputSchema.safeParse({ ...base, sort: "newest" }).success).toBe(false);
   });
 });

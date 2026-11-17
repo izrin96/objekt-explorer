@@ -8,6 +8,8 @@ import { type SQL, and, asc, desc, eq, gt, inArray, lt, notInArray, or, sql } fr
 
 import { NOTHING_ASKED } from "../../../lib/offer-recipient-rules";
 import type { itemFlags } from "../../../lib/offer-rules";
+import { type MemberRanks, UNRANKED, cursorFor } from "../../../lib/picker-sort";
+import { collectionNoAfter, collectionNoOrder } from "../../../lib/picker-sort-sql";
 import { unique } from "../../../lib/unique";
 import { type CollectionFilters } from "../../../schemas/common/filters";
 import {
@@ -276,13 +278,15 @@ export async function ownedPage(
   cursor: CandidateCursor | undefined,
   narrowing: OwnedNarrowing,
 ) {
+  // a Collection No. cursor cannot reach this read from the web; one that does reads as page one
+  const after = cursorFor("default", cursor);
   const rows = await ownedQuery(
     addresses,
     narrowing,
-    cursor
+    after
       ? or(
-          lt(objekts.receivedAt, cursor.receivedAt),
-          and(eq(objekts.receivedAt, cursor.receivedAt), lt(objekts.id, cursor.id)),
+          lt(objekts.receivedAt, after.receivedAt),
+          and(eq(objekts.receivedAt, after.receivedAt), lt(objekts.id, after.id)),
         )
       : undefined,
   )
@@ -299,6 +303,8 @@ export async function ownedPage(
   };
 }
 
+export type PickerOrder = { sort: "default" } | { sort: "collectionNo"; ranks: MemberRanks };
+
 /**
  * The addresses' objekts as whole collections, newest-received collection first, one page after
  * `cursor`: collections are added while they fit `CANDIDATE_PAGE_SIZE`, and one over it is a page
@@ -306,11 +312,20 @@ export async function ownedPage(
  * `where` narrows objekt columns, so the aggregate counts exactly the rows the page returns; the
  * filters, `slugs` and `exclude` narrow collections, before the window sum, so a page never comes
  * back short of what it counted.
+ * Under `order.sort` `collectionNo` the collections run by number, then member rank
+ * (`lib/picker-sort.ts`), and the cursor is the matching kind; one of the other kind reads as
+ * the first page.
  */
 export async function ownedGroupPage(
   addresses: string[],
   cursor: CandidateCursor | undefined,
-  { filters, slugs, where, exclude }: OwnedNarrowing & { exclude?: readonly string[] },
+  {
+    filters,
+    slugs,
+    where,
+    exclude,
+    order = { sort: "default" },
+  }: OwnedNarrowing & { exclude?: readonly string[]; order?: PickerOrder },
 ) {
   const mine = and(inArray(objekts.owner, addresses), where);
   // aggregated over `objekt` alone: joining `collection` first makes the planner scan it
@@ -325,32 +340,63 @@ export async function ownedGroupPage(
       .where(mine)
       .groupBy(objekts.collectionId),
   );
+  const byNo = order.sort === "collectionNo";
+  const after = byNo ? cursorFor("collectionNo", cursor) : cursorFor("default", cursor);
+  // one row per member name, so the join cannot repeat a collection and break the window sum
+  const roster = byNo
+    ? sql`unnest(${sql.param([...order.ranks.keys()])}::text[], ${sql.param([...order.ranks.values()])}::int[]) AS r(name, rank)`
+    : null;
+  const rank = byNo ? sql<number>`coalesce(r.rank, ${UNRANKED}::int)` : sql<number>`0`;
+  const windowOrder = byNo
+    ? collectionNoOrder({
+        no: sql`${collections.collectionNo}`,
+        rank,
+        received: sql`${g.received}`,
+        slug: sql`${collections.slug}`,
+      })
+    : sql`${g.received} desc, ${collections.slug} desc`;
   // the slug is text, as the cursor holds it: `collection.id` is a uuid, which an old cursor's
   // objekt id would fail to cast
-  const w = indexer.$with("w").as(
-    indexer
-      .select({
-        collectionId: g.collectionId,
-        slug: collections.slug,
-        received: g.received,
-        n: g.n,
-        before:
-          sql<number>`coalesce(sum(${g.n}) over (order by ${g.received} desc, ${collections.slug} desc rows between unbounded preceding and 1 preceding), 0)::int`.as(
-            "before",
-          ),
-      })
-      .from(g)
-      .innerJoin(collections, eq(collections.id, g.collectionId))
-      .where(
-        and(
-          ...collectionWhere(filters),
-          slugs ? inArray(collections.slug, [...slugs]) : undefined,
-          exclude?.length ? notInArray(collections.slug, [...exclude]) : undefined,
-          cursor
-            ? sql`(${g.received}, ${collections.slug}) < (${cursor.receivedAt}::timestamptz, ${cursor.id}::text)`
-            : undefined,
+  let wFrom = indexer
+    .select({
+      collectionId: g.collectionId,
+      slug: collections.slug,
+      collectionNo: collections.collectionNo,
+      member: collections.member,
+      // read only under collectionNo, where it is the roster rank
+      rank: rank.as("rank"),
+      received: g.received,
+      n: g.n,
+      before:
+        sql<number>`coalesce(sum(${g.n}) over (order by ${windowOrder} rows between unbounded preceding and 1 preceding), 0)::int`.as(
+          "before",
         ),
+    })
+    .from(g)
+    .innerJoin(collections, eq(collections.id, g.collectionId))
+    .$dynamic();
+  if (roster) wFrom = wFrom.leftJoin(roster, sql`r.name = lower(${collections.member})`);
+  const w = indexer.$with("w").as(
+    wFrom.where(
+      and(
+        ...collectionWhere(filters),
+        slugs ? inArray(collections.slug, [...slugs]) : undefined,
+        exclude?.length ? notInArray(collections.slug, [...exclude]) : undefined,
+        !after
+          ? undefined
+          : "sort" in after
+            ? collectionNoAfter(
+                {
+                  no: sql`${collections.collectionNo}`,
+                  rank,
+                  received: sql`${g.received}`,
+                  slug: sql`${collections.slug}`,
+                },
+                after,
+              )
+            : sql`(${g.received}, ${collections.slug}) < (${after.receivedAt}::timestamptz, ${after.id}::text)`,
       ),
+    ),
   );
   const p = indexer.$with("p").as(
     indexer
@@ -368,15 +414,41 @@ export async function ownedGroupPage(
       mintedAt: objekts.mintedAt,
       slug: p.slug,
       receivedAt: objekts.receivedAt,
+      collectionNo: p.collectionNo,
+      member: p.member,
+      groupRank: p.rank,
       groupReceivedAt: sql<string>`${p.received}::text`,
       more: sql<boolean>`exists (select 1 from ${w} where ${w.before} > 0 and ${w.before} + ${w.n} > ${CANDIDATE_PAGE_SIZE})`,
     })
     .from(p)
     .innerJoin(objekts, and(eq(objekts.collectionId, p.collectionId), mine))
-    .orderBy(desc(p.received), desc(p.slug), asc(objekts.serial), asc(objekts.id));
+    .orderBy(
+      ...(byNo
+        ? [
+            collectionNoOrder({
+              no: sql`${p.collectionNo}`,
+              rank: sql`${p.rank}`,
+              received: sql`${p.received}`,
+              slug: sql`${p.slug}`,
+            }),
+          ]
+        : [desc(p.received), desc(p.slug)]),
+      asc(objekts.serial),
+      asc(objekts.id),
+    );
   const last = rows.at(-1);
   return {
-    page: rows.map(({ groupReceivedAt: _, more: __, ...row }) => lowerOwner(row)),
-    nextCursor: last?.more ? { receivedAt: last.groupReceivedAt, id: last.slug } : null,
+    page: rows.map(({ groupReceivedAt: _, groupRank: __, more: ___, ...row }) => lowerOwner(row)),
+    nextCursor: !last?.more
+      ? null
+      : byNo
+        ? {
+            sort: "collectionNo" as const,
+            no: last.collectionNo,
+            rank: last.groupRank,
+            receivedAt: last.groupReceivedAt,
+            slug: last.slug,
+          }
+        : { receivedAt: last.groupReceivedAt, id: last.slug },
   };
 }

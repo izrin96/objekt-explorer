@@ -6,12 +6,14 @@ import { and, asc, eq, inArray, or } from "drizzle-orm";
 
 import { orderByCollection, pageByCollection } from "../../../lib/offer-paging";
 import { giveNarrowing, itemFlags } from "../../../lib/offer-rules";
+import { byCollectionNo, cursorFor, memberRanks, rankOf } from "../../../lib/picker-sort";
 import { unique } from "../../../lib/unique";
 import {
   CANDIDATE_PAGE_SIZE,
   type CandidateCursor,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { getArtists } from "../../artist";
 import { anchoredSerialIds } from "../../objekt/serial-anchored";
 import { pickerTagsFor } from "../../trade/feed/near";
 import { boundOfferList } from "../../trade/lists";
@@ -76,6 +78,8 @@ async function listWhere(me: string, slug: string) {
   );
 }
 
+const DEFAULT_VIEW = { sort: "default", transferableOnly: false } as const;
+
 // `mineCandidates` names its collection map `collections`, which hides the table there
 const slugIn = (slugs: string[]) => inArray(collections.slug, slugs);
 
@@ -93,14 +97,25 @@ export async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: CandidateCursor | undefined,
-  { filters, matchOnly, wantList, fromList, objektIds, copiesOf }: PickerNarrowing,
+  { filters, matchOnly, wantList, fromList, objektIds, copiesOf, ...picked }: PickerNarrowing,
 ) {
-  const [linked, partnerWants, named, fromWhere] = await Promise.all([
+  // an objektIds or copiesOf read resolves existing picks and their flags, not a grid: sorting or
+  // hiding there would drop flags the builder needs
+  const { sort, transferableOnly } =
+    objektIds || copiesOf
+      ? DEFAULT_VIEW
+      : { sort: picked.sort ?? "default", transferableOnly: picked.transferableOnly ?? false };
+  // a cursor of the other sort's kind reads as page one, everywhere the cursor is read
+  const after = cursorFor(sort, cursor);
+  const hideUntransferable = transferableOnly ? eq(objekts.transferable, true) : undefined;
+  const [linked, partnerWants, named, fromWhere, artists] = await Promise.all([
     linkedAddresses([me]),
     matchOnly ? wantSlugsOf(addressed.partnerId, true) : null,
     wantList === undefined ? null : wantListOf(wantList),
     fromList === undefined ? undefined : listWhere(me, fromList),
+    sort === "collectionNo" ? getArtists() : null,
   ]);
+  const ranks = artists && memberRanks(artists);
   const keptSlugs = giveNarrowing(addressed.partnerId, partnerWants, named);
   const addresses = [...(linked.get(me) ?? [])];
   if (addresses.length === 0 || keptSlugs?.length === 0 || fromWhere === null)
@@ -110,12 +125,17 @@ export async function mineCandidates(
     copiesOf
       ? copiesRead(addresses, { filters, slugs: copiesOf, where: fromWhere })
       : // an objektIds read is flags for a few copies, not a grid, so it stays a flat page
-        (objektIds ? ownedPage : ownedGroupPage)(addresses, cursor, {
+        (objektIds ? ownedPage : ownedGroupPage)(addresses, after, {
           filters,
           slugs: keptSlugs,
-          where: and(fromWhere, objektIds ? inArray(objekts.id, objektIds) : undefined),
+          where: and(
+            fromWhere,
+            objektIds ? inArray(objekts.id, objektIds) : undefined,
+            hideUntransferable,
+          ),
+          ...(ranks && { order: { sort: "collectionNo", ranks } }),
         }),
-    cursor || fromList !== undefined || objektIds !== undefined
+    after || fromList !== undefined || objektIds !== undefined
       ? []
       : db
           .select({
@@ -131,7 +151,11 @@ export async function mineCandidates(
 
   const mine = new Set(addresses);
   // the list-first section narrows by the picker's filters, as the page below does
-  const narrow = and(...collectionWhere(filters), copiesOf ? slugIn(copiesOf) : undefined);
+  const narrow = and(
+    ...collectionWhere(filters),
+    copiesOf ? slugIn(copiesOf) : undefined,
+    hideUntransferable,
+  );
   const [haveTokens, haveCopies] = await Promise.all([
     fetchObjekts(
       haveEntries.flatMap((e) => (e.objektId ? [e.objektId] : [])),
@@ -159,7 +183,7 @@ export async function mineCandidates(
   }
   const keptNow = copiesOf ?? keptSlugs;
   const kept = keptNow ? new Set(keptNow) : null;
-  const ordered = orderByCollection(
+  const grouped = orderByCollection(
     [...suggestedObjekts.values()]
       .filter((s) => !kept || kept.has(s.objekt.slug))
       .map((s) => ({
@@ -169,6 +193,12 @@ export async function mineCandidates(
         serial: s.objekt.serial,
       })),
   );
+  const ordered = ranks
+    ? byCollectionNo(grouped, ({ suggestion: { objekt } }) => ({
+        no: objekt.collectionNo,
+        rank: rankOf(ranks, objekt.member),
+      }))
+    : grouped;
   // a copies read serves every ask at once, so no collection's have-list copies may be cut
   const suggestedList = (
     copiesOf ? ordered : pageByCollection(ordered, 0, CANDIDATE_PAGE_SIZE).page

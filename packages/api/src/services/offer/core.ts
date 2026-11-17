@@ -161,6 +161,8 @@ export type IndexedObjekt = {
   mintedAt: string;
   slug: string;
   receivedAt: string;
+  collectionNo: string;
+  member: string;
 };
 
 export const objektColumns = {
@@ -171,6 +173,8 @@ export const objektColumns = {
   mintedAt: objekts.mintedAt,
   slug: collections.slug,
   receivedAt: objekts.receivedAt,
+  collectionNo: collections.collectionNo,
+  member: collections.member,
 };
 
 export const lowerOwner = (row: IndexedObjekt) =>

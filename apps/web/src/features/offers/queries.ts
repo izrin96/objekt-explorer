@@ -8,6 +8,8 @@ import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
 import { retryUnlessRefused } from "@/lib/orpc-error";
 import { pollUnlessLive } from "@/stores/user-socket";
 
+import { type PickerView, viewInput } from "./picker-view";
+
 export type OfferAddress = { conversationId: number } | { target: ChatTarget };
 
 /** What the picker narrows a side to; empty arrays mean no filter. */
@@ -51,7 +53,12 @@ export const theirCandidatesOptions = (to: OfferAddress) =>
   });
 
 /** The picker's view: resolved whole on the server, then paged, so a long list does not land at once. */
-export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters, fromList?: string) =>
+export const theirPickerOptions = (
+  to: OfferAddress,
+  filters: PickerFilters,
+  view: PickerView,
+  fromList?: string,
+) =>
   orpc.offer.candidates.infiniteOptions({
     input: (offset: number) => ({
       ...to,
@@ -59,6 +66,7 @@ export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters, fro
       offset,
       fromList,
       ...toInput(filters),
+      ...viewInput(view),
     }),
     initialPageParam: 0,
     getNextPageParam: (page) => page.nextOffset ?? undefined,
@@ -70,6 +78,7 @@ const cursorOptions = (
   side: "mine" | "theirs-collection",
   to: OfferAddress,
   filters: PickerFilters,
+  view: PickerView,
   fromList?: string,
   wantList?: string,
 ) =>
@@ -81,6 +90,7 @@ const cursorOptions = (
       fromList,
       wantList,
       ...toInput(filters),
+      ...viewInput(view),
     }),
     initialPageParam: undefined as CandidateCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
@@ -91,13 +101,17 @@ const cursorOptions = (
 export const myCandidatesOptions = (
   to: OfferAddress,
   filters: PickerFilters,
+  view: PickerView,
   fromList?: string,
   wantList?: string,
-) => cursorOptions("mine", to, filters, fromList, wantList);
+) => cursorOptions("mine", to, filters, view, fromList, wantList);
 
 /** What a partner with no lists holds at addresses they show. */
-export const theirCollectionOptions = (to: OfferAddress, filters: PickerFilters) =>
-  cursorOptions("theirs-collection", to, filters);
+export const theirCollectionOptions = (
+  to: OfferAddress,
+  filters: PickerFilters,
+  view: PickerView,
+) => cursorOptions("theirs-collection", to, filters, view);
 
 /** The viewer's copies of every collection `slugs`, in one read, to stand in for a counter's any-copy asks. */
 export const myAskCopiesOptions = (to: OfferAddress, slugs: string[]) =>

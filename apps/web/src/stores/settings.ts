@@ -1,3 +1,4 @@
+import { PICKER_SORTS, type PickerSort } from "@repo/api/constants";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -24,6 +25,10 @@ type SettingsState = {
   currency: string;
   /** Trade's Your posts shown or hidden; null until chosen, so it follows its default */
   myPostsShown: boolean | null;
+  /** the offer pickers' Sort choice, shared by all three */
+  offerPickerSort: PickerSort;
+  /** the offer pickers' "Hide not transferable" switch, shared by all three */
+  offerPickerHideUntransferable: boolean;
   set: (patch: Partial<Omit<SettingsState, "set">>) => void;
 };
 
@@ -53,9 +58,20 @@ export const useSettings = create<SettingsState>()(
       hideBanner: false,
       currency: "USD",
       myPostsShown: null,
+      offerPickerSort: "default",
+      offerPickerHideUntransferable: false,
       set: (patch) => set(patch),
     }),
-    { name: SETTINGS_STORAGE_KEY, storage: seededStorage(seedSettings) },
+    {
+      name: SETTINGS_STORAGE_KEY,
+      storage: seededStorage(seedSettings),
+      // a sort a later build stored would fail every picker request after a rollback
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as Partial<SettingsState>) };
+        if (!PICKER_SORTS.includes(merged.offerPickerSort)) merged.offerPickerSort = "default";
+        return merged;
+      },
+    },
   ),
 );
 

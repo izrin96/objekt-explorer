@@ -23,8 +23,17 @@ export function seededStorage(seed: () => object | undefined) {
         local.setItem(name, seeded);
         return seeded;
       },
-      setItem: (name, value) => local.setItem(name, value),
-      removeItem: (name) => local.removeItem(name),
+      setItem: (name, value) => {
+        // zustand's persist does not catch a throwing setItem; the in-memory value must stand
+        try {
+          local.setItem(name, value);
+        } catch {}
+      },
+      removeItem: (name) => {
+        try {
+          local.removeItem(name);
+        } catch {}
+      },
     };
   });
 }

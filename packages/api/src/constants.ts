@@ -7,3 +7,7 @@ export const OBJEKT_PREVIEW_SIZE = 5;
 
 /** Keeps multi-row statements under the 65535 bind parameter cap. */
 export const TOKEN_CHUNK_SIZE = 5000;
+
+/** The offer picker's orders; lives here so the web settings store needn't load the offer schemas. */
+export const PICKER_SORTS = ["default", "collectionNo"] as const;
+export type PickerSort = (typeof PICKER_SORTS)[number];
