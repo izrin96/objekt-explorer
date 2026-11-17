@@ -256,7 +256,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - Locally, with a seeded row (see Local rows) holding a value sealed under another key, a run warns once, sends nothing for it, sets `key_unreadable` and leaves `dead_at` and the cookie unchanged.
   - Lint, typecheck and build pass for `worker`.
 - [x] 8.3 Create `apps/worker/src/lib/media-copy.ts` (pure) and `media-copy.test.ts` (Decision 9):
-  - `copyKey(sourceUrl, ext)`: `collection-media/motion/<first 32 hex of sha256(sourceUrl)>.<ext>`, with no other input reaching the key;
+  - `copyKey(sourceUrl, ext, folder)`: `collection-media/<motion|voice>/<first 32 hex of sha256(sourceUrl)>.<ext>`, with no other input reaching the key (`voice/` added 2026-11-17 for voice collections);
   - `copyIsCurrent(copyUrl, sourceUrl, copyPrefix)`: true when the copy's key carries the source's hash;
   - `sniffVideo(bytes)` (Decision 9, Downloading safely): `video/mp4` (`mp4`) for `ftyp` with an allowed MP4 major brand, `audio/mp4` (`m4a`) for the brand `M4A `, `video/webm` (`webm`) for `1A 45 DF A3`, `audio/ogg` (`ogg`) for `OggS`, `audio/mpeg` (`mp3`) for an `ID3` tag or an MPEG layer III frame sync, else null. Voice files share the key folder, cap and budget;
   - `isPublicAddress(ip)`: false for loopback, private, link-local, unique-local and other reserved IPv4 and IPv6 addresses;

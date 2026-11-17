@@ -13,6 +13,7 @@ import { log } from "@/lib/log";
 import {
   type CopyFailure,
   copyKey,
+  type MediaFolder,
   createCopyBudget,
   dueCopies,
   failureForStatus,
@@ -84,7 +85,7 @@ async function readCapped(response: Response, host: string, signal: AbortSignal)
 }
 
 /** Downloads one source and puts it in the bucket; returns the stored URL and the bytes. */
-async function copyOne(source: string) {
+async function copyOne(source: string, folder: MediaFolder) {
   if (!acceptMediaUrl(source)) throw new CopyFailed("rejected", "other", "unknown");
   const host = new URL(source).hostname;
   await assertPublicHost(host);
@@ -116,7 +117,7 @@ async function copyOne(source: string) {
   const media = sniffVideo(bytes);
   if (!media) throw new CopyFailed("not_media", "other", host, bytes.length);
 
-  const key = copyKey(source, media.ext);
+  const key = copyKey(source, media.ext, folder);
   try {
     await putObject(key, bytes, media.contentType);
   } catch {
@@ -177,6 +178,7 @@ async function runCopy() {
       frontMediaCopy: collectionMedia.frontMediaCopy,
       frontMediaFailedAt: epochMs(collectionMedia.frontMediaFailedAt).mapWith(Number),
       observedAt: epochMs(collectionMedia.observedAt).mapWith(Number),
+      hasVoice: collectionMedia.hasVoice,
     })
     .from(collectionMedia)
     .where(isNotNull(collectionMedia.frontMedia));
@@ -199,7 +201,7 @@ async function runCopy() {
   for (const download of downloads) {
     if (!budget.canStart(Date.now())) break;
     try {
-      const { url, size } = await copyOne(download.source);
+      const { url, size } = await copyOne(download.source, download.voice ? "voice" : "motion");
       budget.success(size);
       await recordCopy(download.source, url, download.slugs);
       copied += 1;

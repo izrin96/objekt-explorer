@@ -23,17 +23,26 @@ const ftyp = (brand: string) => bytes(0, 0, 0, 0x18, ...text("ftyp"), ...text(br
 
 describe("copyKey", () => {
   test("one source always gives one key, and two sources two", () => {
-    expect(copyKey(a, "mp4")).toBe(copyKey(a, "mp4"));
-    expect(copyKey(a, "mp4")).not.toBe(copyKey(b, "mp4"));
+    expect(copyKey(a, "mp4", "motion")).toBe(copyKey(a, "mp4", "motion"));
+    expect(copyKey(a, "mp4", "motion")).not.toBe(copyKey(b, "mp4", "motion"));
   });
 
   test("the key is a 32-hex hash and the extension, in the motion folder", () => {
-    expect(copyKey(a, "webm")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.webm$/);
-    expect(copyKey(a, "m4a")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.m4a$/);
+    expect(copyKey(a, "webm", "motion")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.webm$/);
+    expect(copyKey(a, "m4a", "motion")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.m4a$/);
+  });
+
+  test("a voice collection's copy goes in the voice folder, with the same hash", () => {
+    expect(copyKey(a, "mp4", "voice")).toMatch(/^collection-media\/voice\/[0-9a-f]{32}\.mp4$/);
+    expect(copyKey(a, "mp4", "voice").slice(-36)).toBe(copyKey(a, "mp4", "motion").slice(-36));
   });
 
   test("no slug or URL path reaches the key", () => {
-    const key = copyKey("https://resources.cosmo.fans/secret-path/atom01-yeonji-101z.mp4", "mp4");
+    const key = copyKey(
+      "https://resources.cosmo.fans/secret-path/atom01-yeonji-101z.mp4",
+      "mp4",
+      "motion",
+    );
     expect(key).not.toContain("secret-path");
     expect(key).not.toContain("atom01");
     expect(key).not.toContain("yeonji");
@@ -42,7 +51,7 @@ describe("copyKey", () => {
 
 describe("copyIsCurrent", () => {
   const url = (source: string, ext = "mp4") =>
-    `${prefix}motion/${copyKey(source, "mp4").slice("collection-media/motion/".length, -3)}${ext}`;
+    `${prefix}motion/${copyKey(source, "mp4", "motion").slice("collection-media/motion/".length, -3)}${ext}`;
 
   test("true when the key carries the source's hash", () => {
     expect(copyIsCurrent(url(a), a, prefix)).toBe(true);
@@ -50,6 +59,11 @@ describe("copyIsCurrent", () => {
     for (const ext of ["m4a", "mp3", "ogg"]) {
       expect(copyIsCurrent(url(a, ext), a, prefix)).toBe(true);
     }
+  });
+
+  test("a copy in the voice folder is current too", () => {
+    expect(copyIsCurrent(url(a).replace("/motion/", "/voice/"), a, prefix)).toBe(true);
+    expect(copyIsCurrent(url(a).replace("/motion/", "/other/"), a, prefix)).toBe(false);
   });
 
   test("a changed source makes the copy not current", () => {
@@ -65,7 +79,7 @@ describe("copyIsCurrent", () => {
 
 describe("currentCopy", () => {
   const copyOf = (source: string) =>
-    `${prefix}motion/${copyKey(source, "mp4").slice("collection-media/motion/".length)}`;
+    `${prefix}motion/${copyKey(source, "mp4", "motion").slice("collection-media/motion/".length)}`;
 
   test("keeps the copy made from the current source", () => {
     expect(currentCopy({ frontMedia: a, frontMediaCopy: copyOf(a) }, prefix)).toBe(copyOf(a));
@@ -187,14 +201,27 @@ describe("dueCopies", () => {
     frontMediaCopy: null,
     frontMediaFailedAt: null,
     observedAt: now - 10 * HOUR,
+    hasVoice: false,
     ...over,
   });
   const copyOf = (source: string) =>
-    `${prefix}${copyKey(source, "mp4").slice("collection-media/".length)}`;
+    `${prefix}${copyKey(source, "mp4", "motion").slice("collection-media/".length)}`;
 
   test("a record with a missing copy is due", () => {
     const { downloads } = dueCopies([record({ slug: "s1" })], indexer, now, prefix);
-    expect(downloads).toEqual([{ source: a, slugs: ["s1"], observedAt: now - 10 * HOUR }]);
+    expect(downloads).toEqual([
+      { source: a, slugs: ["s1"], observedAt: now - 10 * HOUR, voice: false },
+    ]);
+  });
+
+  test("a source any voice record shares is copied as voice", () => {
+    const { downloads } = dueCopies(
+      [record({ slug: "s1" }), record({ slug: "s2", hasVoice: true })],
+      indexer,
+      now,
+      prefix,
+    );
+    expect(downloads.map((d) => d.voice)).toEqual([true]);
   });
 
   test("a failure 5 hours ago is not due, 7 hours ago is", () => {
@@ -237,7 +264,9 @@ describe("dueCopies", () => {
       now,
       prefix,
     );
-    expect(downloads).toEqual([{ source: a, slugs: ["s1", "s2"], observedAt: now - 20 * HOUR }]);
+    expect(downloads).toEqual([
+      { source: a, slugs: ["s1", "s2"], observedAt: now - 20 * HOUR, voice: false },
+    ]);
   });
 
   test("the oldest observed_at goes first", () => {

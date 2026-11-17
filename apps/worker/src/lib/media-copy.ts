@@ -16,16 +16,18 @@ const RUN_MS = 5 * MIN;
 const FAIL_STREAK = 3;
 const RETRY_AFTER_MS = 6 * 60 * MIN;
 
-const KEY_DIR = "collection-media/motion/";
+const KEY_DIR = "collection-media/";
 const HASH_LENGTH = 32;
 
-// Voice collections carry their audio file as `frontMedia`, so audio shares the copy path, the key
-// folder and the size cap with video.
+// Voice collections carry their media (a video with sound so far) as `frontMedia`, so they share the
+// copy path and the size cap with motion; only the key folder differs.
 export type MediaExt = "mp4" | "webm" | "m4a" | "mp3" | "ogg";
+export type MediaFolder = "motion" | "voice";
+const FOLDERS: readonly MediaFolder[] = ["motion", "voice"];
 
-/** Only the source URL's hash and the sniffed extension reach the key: no slug, no URL path. */
-export function copyKey(sourceUrl: string, ext: MediaExt) {
-  return `${KEY_DIR}${sourceHash(sourceUrl)}.${ext}`;
+/** Only the folder, the source URL's hash and the sniffed extension reach the key: no slug, no URL path. */
+export function copyKey(sourceUrl: string, ext: MediaExt, folder: MediaFolder) {
+  return `${KEY_DIR}${folder}/${sourceHash(sourceUrl)}.${ext}`;
 }
 
 function sourceHash(sourceUrl: string) {
@@ -37,7 +39,7 @@ export function copyIsCurrent(copyUrl: string, sourceUrl: string, copyPrefix: st
   if (!copyUrl.startsWith(copyPrefix)) return false;
   const rest = copyUrl.slice(copyPrefix.length);
   const hash = sourceHash(sourceUrl);
-  return COPY_EXTS.some((ext) => rest === `motion/${hash}.${ext}`);
+  return FOLDERS.some((folder) => COPY_EXTS.some((ext) => rest === `${folder}/${hash}.${ext}`));
 }
 
 /** The record's copy only while it was made from the record's current source, else null. */
@@ -177,9 +179,11 @@ export type CopyRecord = {
   frontMediaCopy: string | null;
   frontMediaFailedAt: number | null;
   observedAt: number;
+  hasVoice: boolean;
 };
 
-export type DueDownload = { source: string; slugs: string[]; observedAt: number };
+/** `voice` when any record sharing the source is a voice collection: its copy goes under `voice/`. */
+export type DueDownload = { source: string; slugs: string[]; observedAt: number; voice: boolean };
 /** A source whose copy already exists for another record: set `copyUrl`, download nothing. */
 export type DueReuse = { source: string; copyUrl: string; slugs: string[] };
 
@@ -217,8 +221,14 @@ export function dueCopies(
       continue;
     }
     if (r.frontMediaFailedAt !== null && now - r.frontMediaFailedAt <= RETRY_AFTER_MS) continue;
-    const group = groups.get(source) ?? { source, slugs: [], observedAt: r.observedAt };
+    const group = groups.get(source) ?? {
+      source,
+      slugs: [],
+      observedAt: r.observedAt,
+      voice: false,
+    };
     group.slugs.push(r.slug);
+    group.voice ||= r.hasVoice;
     group.observedAt = Math.min(group.observedAt, r.observedAt);
     groups.set(source, group);
   }
@@ -232,7 +242,7 @@ export function dueCopies(
 export type CopyFailure = "rate_limited" | "server_error" | "timeout" | "other";
 
 /**
- * One run's limits: 20 attempts (a failed one counts too), 200 MB and 5 minutes, and a stop after
+ * One run's limits: 20 attempts (a failed one counts too), 300 MB and 5 minutes, and a stop after
  * 3 downloads in a row fail with a 429, a 5xx or a timeout. Any other outcome ends the streak. Bytes read by a failed
  * download count, so a host that keeps cutting off still spends the budget.
  */

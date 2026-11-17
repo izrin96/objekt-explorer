@@ -335,7 +335,7 @@ The owner's decision: media gathered from sessions is copied into our bucket (R2
 | Back image (`backImage`)               | no copy here: the apply fills `back_image`, and `process-collection-images` copies it (Decision 8)    |
 | Voice flag, accent and text colour     | none: they are not media                                                                              |
 
-**Voice.** A voice Double carries its media in `frontMedia` as a Motion collection does, so it takes the same path: the same record columns, key folder, 64 MB cap, budget and download rules. Only the sniff tells video from audio. Sample voice files seen before the first sync were videos with a sound track, not audio-only: MP4 (`mp42`, about 47 MB) and QuickTime (`qt  `, about 14 MB). The QuickTime brand is accepted and stored as `video/mp4`, and the cap was raised from 30 MB to 64 MB for them. Task 8.8 confirms this on Cosmo's own files.
+**Voice.** A voice Double carries its media in `frontMedia` as a Motion collection does, so it takes the same path: the same record columns, 64 MB cap, budget and download rules. Only the sniff tells video from audio. Sample voice files seen before the first sync were videos with a sound track, not audio-only: MP4 (`mp42`, about 47 MB) and QuickTime (`qt  `, about 14 MB). The QuickTime brand is accepted and stored as `video/mp4`, and the cap was raised from 30 MB to 64 MB for them. Task 8.8 confirms this on Cosmo's own files.
 
 **Where the URL lives.** The indexer's `front_media` holds **our** URL and nothing else. Cosmo's URL, the source, stays in the record (`collection_media.front_media`), beside our copy's URL (`front_media_copy`). The reasons:
 
@@ -373,7 +373,7 @@ The copy job writes only the bucket and the record. The apply (Decision 8) stays
 
 Due copies are grouped by source, so one source is downloaded once a run however many records share it, and the oldest `observed_at` goes first. A source already copied for another record is reused with no download, since the key is the same. A failure is written to every record with that source.
 
-**Keys.** `collection-media/motion/<h>.<mp4|webm|m4a|mp3|ogg>`, the extension from the sniff, where `<h>` is the first 32 hex digits of the SHA-256 of the source URL:
+**Keys.** `collection-media/<motion|voice>/<h>.<mp4|webm|m4a|mp3|ogg>` (`voice/` when any record sharing the source has voice, else `motion/`; the folder never decides whether a copy is current), the extension from the sniff, where `<h>` is the first 32 hex digits of the SHA-256 of the source URL:
 
 - No slug, URL path or other reported string reaches the key; only a hash and an extension from the sniff do.
 - The same source always gives the same key, so a retry after a crash overwrites the same object (no orphan), and a video shared by several collections is stored once.
