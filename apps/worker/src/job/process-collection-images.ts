@@ -5,6 +5,7 @@ import { chunk } from "@repo/lib";
 import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { ofetch } from "ofetch";
 
+import { backImageOnly, imageSyncHash } from "@/lib/image-sync";
 import { log } from "@/lib/log";
 import { redis } from "@/lib/redis";
 import { deleteObject, FOLDER, keyFromUrl, s3Url, uploadWebp } from "@/lib/s3";
@@ -54,16 +55,6 @@ async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
   return await img.webp({ quality: 80 }).toBuffer();
 }
 
-// thumbnailImage is deliberately not part of the hash: the thumbnail is derived
-// from frontImage at 2x, so thumbnailImage is never a fetch source and a change
-// to it alone would queue a pointless reprocess. Must stay in sync with the md5
-// expression in the query below.
-function computeHash(front: string, back: string) {
-  const hasher = new Bun.CryptoHasher("md5");
-  hasher.update(`${front}|${back}`);
-  return hasher.digest("hex");
-}
-
 type CollectionRow = Pick<
   Collection,
   | "slug"
@@ -72,6 +63,7 @@ type CollectionRow = Pick<
   | "processedFrontImage"
   | "processedThumbnailImage"
   | "processedBackImage"
+  | "imageSyncHash"
 >;
 
 // a backlog run can outlast the 10-minute cron; `safeRun`'s lock keeps an overlapping run from
@@ -85,6 +77,7 @@ export async function processCollectionImages() {
       processedFrontImage: collections.processedFrontImage,
       processedThumbnailImage: collections.processedThumbnailImage,
       processedBackImage: collections.processedBackImage,
+      imageSyncHash: collections.imageSyncHash,
     })
     .from(collections)
     .where(
@@ -109,7 +102,9 @@ export async function processCollectionImages() {
   let failed = 0;
 
   await chunk(needsProcessing, BATCH_SIZE, async (batch) => {
-    const results = await Promise.all(batch.map((c) => processOne(c)));
+    const results = await Promise.all(
+      batch.map((c) => (backImageOnly(c) ? processBackOnly(c) : processOne(c))),
+    );
     for (const ok of results) {
       if (ok) succeeded++;
       else failed++;
@@ -140,6 +135,30 @@ async function deleteQuietly(keys: string[]) {
       }
     }),
   );
+}
+
+/** Uploads only the new back image; the front and thumbnail stay as they are. */
+async function processBackOnly(c: CollectionRow) {
+  const backKey = `back/${c.slug}-${Date.now()}.webp`;
+  let uploaded = false;
+  try {
+    const buf = await ofetch(replaceUrlSize(c.backImage, "original"), FETCH_OPTS);
+    await uploadWebp(backKey, await convertToWebp(buf));
+    uploaded = true;
+    await indexer
+      .update(collections)
+      .set({
+        processedBackImage: s3Url(backKey),
+        imageSyncHash: imageSyncHash(c.frontImage, c.backImage),
+      })
+      .where(eq(collections.slug, c.slug));
+    imagesLog.debug(`Processed back of ${c.slug}`);
+    return true;
+  } catch (err) {
+    imagesLog.error(`Failed for ${c.slug}:`, err);
+    if (uploaded) await deleteQuietly([`${FOLDER}/${backKey}`]);
+    return false;
+  }
 }
 
 async function processOne(c: CollectionRow) {
@@ -183,7 +202,7 @@ async function processOne(c: CollectionRow) {
       }),
     );
 
-    const hash = computeHash(c.frontImage, c.backImage);
+    const hash = imageSyncHash(c.frontImage, c.backImage);
 
     await indexer
       .update(collections)

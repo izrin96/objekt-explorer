@@ -262,7 +262,10 @@ export function planMediaWrite(
   const accent = cleanColour(record.accentColor);
   if (row.accentColor === "" && accent) set.accentColor = accent;
   const text = cleanColour(record.textColor);
-  if (row.sourceTextColor === null && text && text !== row.textColor) set.textColor = text;
+  // many rows store capitals (`#FFFFFF`) and Cosmo sends lowercase: only a real change is written
+  if (row.sourceTextColor === null && text && text !== row.textColor?.toLowerCase()) {
+    set.textColor = text;
+  }
 
   return { set, backImageBudget };
 }

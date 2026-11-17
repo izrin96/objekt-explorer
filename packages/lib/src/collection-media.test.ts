@@ -351,6 +351,12 @@ describe("planMediaWrite", () => {
     expect(plan(rec({ textColor: "#000000" })).set).toEqual({});
   });
 
+  test("text_color: a difference in capitals only is no change", () => {
+    const upper = { ...row, textColor: "#FFFFFF" };
+    expect(plan(rec({ textColor: "#ffffff" }), 5, upper).set).toEqual({});
+    expect(plan(rec({ textColor: "#000000" }), 5, upper).set).toEqual({ textColor: "#000000" });
+  });
+
   test("text_color: a staff override (source_text_color set) is never touched", () => {
     const staff = { ...row, textColor: "#abcdef", sourceTextColor: "#111111" };
     expect(plan(rec({ textColor: "#ffffff" }), 5, staff).set).toEqual({});
