@@ -6,6 +6,7 @@ import { isGridDrop, preBlockSeasons } from "@repo/lib/serial";
 import { and, between, eq, inArray, isNotNull, isNull, like, lte, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
+import type { ConfirmedSerial } from "@/lib/cosmo-anchors";
 import {
   type DropGrid,
   type DropRegion,
@@ -16,6 +17,7 @@ import {
   rosterComplete,
 } from "@/lib/drop-grid";
 import type { Logger } from "@/lib/log";
+import { type MergeTally, withConfirmed } from "@/lib/merge-tally";
 import {
   anchorGapHoles,
   anchorGaps,
@@ -544,13 +546,19 @@ export type GridPlan = {
 /**
  * Each member's ranges with its slot of a fitted drop or run merged in, and
  * the serial updates they give, anchors passed. `mintedBefore` leaves younger
- * mints to the populate job's own delay.
+ * mints to the populate job's own delay. `confirmed` (by slug) joins each
+ * member's manual anchors through `withConfirmed`, and `anchors` holds the
+ * result, merged against the member's new ranges.
  */
 export async function planGridWrites(
   members: DropMember[],
   start: number,
   grid: DropGrid,
-  opts: { mintedBefore?: string } = {},
+  opts: {
+    mintedBefore?: string;
+    confirmed?: Map<string, ConfirmedSerial[]>;
+    tally?: MergeTally;
+  } = {},
 ): Promise<GridPlan[]> {
   const span = { start, end: grid.end };
   const ids = members.map((m) => m.id);
@@ -576,8 +584,15 @@ export async function planGridWrites(
 
   return members.map((member, i) => {
     const own = rows.filter((r) => r.collectionId === member.id);
-    const anchors = anchorsOf.get(member.id) ?? [];
     const batches = mergeGridRanges(member.batches, grid.ranges[i]!, span, member.tokens);
+    const merge = withConfirmed(
+      anchorsOf.get(member.id) ?? [],
+      opts.confirmed?.get(member.slug),
+      own,
+      batches,
+    );
+    opts.tally?.record(member.id, merge);
+    const { anchors } = merge;
     const rangesChange =
       batches.length !== member.batches.length ||
       batches.some(
@@ -681,7 +696,7 @@ export async function storeRanges(
 /**
  * Recompute a collection's offline serials from its ranges, anchors passed,
  * write those that changed, and warn when serials already shown move.
- * Returns how many were written.
+ * Returns how many were written. `tx` writes inside the caller's transaction.
  */
 export async function rewriteSerials(
   rows: { id: string; serial: number; mintedAt: string }[],
@@ -689,6 +704,7 @@ export async function rewriteSerials(
   anchors: ManualAnchor[],
   logger: Logger,
   label: string,
+  tx?: IndexerTransaction,
 ) {
   const updates = computeOfflineSerialUpdates(rows, batches, anchors);
   if (updates.length === 0) return 0;
@@ -696,7 +712,7 @@ export async function rewriteSerials(
   if (shift) {
     logger.warn(`${label}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`);
   }
-  await writeSerialUpdates(updates);
+  await writeSerialUpdates(updates, tx);
   return updates.length;
 }
 

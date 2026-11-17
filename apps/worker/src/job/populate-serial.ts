@@ -4,8 +4,14 @@ import { chunk } from "@repo/lib";
 import { OPEN_DROP_DAYS, preBlockSeasons } from "@repo/lib/serial";
 import { and, eq, gte, notInArray, inArray, like, or, lte, sql } from "drizzle-orm";
 
+import type { ConfirmedSerial } from "@/lib/cosmo-anchors";
+import { errorCode } from "@/lib/error-code";
 import { heartbeat, log, type Logger } from "@/lib/log";
-import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
+import { type MergeTally, mergeTally, withConfirmed } from "@/lib/merge-tally";
+import {
+  preAssignedCollections as excludeCollections,
+  MINT_DELAY_MS,
+} from "@/lib/serial-constants";
 import {
   computeOnlineSerials,
   planRediscovery,
@@ -13,6 +19,13 @@ import {
   V1_CUTOFF_MS,
 } from "@/lib/serial-math";
 
+import {
+  applyConfirmedSerials,
+  loadConfirmedSerials,
+  offlineBeat,
+  offlineLog,
+  reportMerges,
+} from "./confirmed-serials";
 import {
   applyGridWrites,
   discoverBatches,
@@ -28,13 +41,8 @@ import {
 
 const COLLECTION_CONCURRENCY = 5;
 
-// objekts minted within this window are left for a later run
-const MINT_DELAY_MS = 120 * 1000;
-
 const onlineLog = log("serial-online");
 const onlineBeat = heartbeat(onlineLog);
-const offlineLog = log("serial-offline");
-const offlineBeat = heartbeat(offlineLog);
 
 /** One line for a run that wrote serials, from each collection's count of objekts updated. */
 function logWritten(logger: Logger, counts: number[]) {
@@ -158,15 +166,16 @@ async function processCollection(collectionId: string): Promise<number> {
 }
 
 export async function populateSerialOffline() {
+  const tally = mergeTally();
   // a failed settle must not hold back the serials of new mints
   try {
-    await settleOpenDrops();
+    await settleOpenDrops(tally);
   } catch (error) {
     offlineLog.warn(`open drops not settled this run: ${String(error)}`);
   }
 
   const affectedCollections = await indexer
-    .selectDistinctOn([collections.id], { id: collections.id })
+    .selectDistinctOn([collections.id], { id: collections.id, slug: collections.slug })
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
     .where(
@@ -182,9 +191,14 @@ export async function populateSerialOffline() {
 
   offlineBeat.count("runs");
   offlineBeat.count("collections checked", affectedCollections.length);
+  const confirmed = await loadConfirmedSerials(affectedCollections.map((c) => c.slug));
   const outcomes: OfflineOutcome[] = [];
   await chunk(affectedCollections, COLLECTION_CONCURRENCY, async (batch) => {
-    outcomes.push(...(await Promise.all(batch.map(({ id }) => processCollectionOffline(id)))));
+    outcomes.push(
+      ...(await Promise.all(
+        batch.map(({ id, slug }) => processCollectionOffline(id, confirmed.get(slug), tally)),
+      )),
+    );
   });
   logWritten(
     offlineLog,
@@ -194,6 +208,12 @@ export async function populateSerialOffline() {
   if (apiErrors > 0) {
     offlineLog.warn(`Cosmo API failed for ${apiErrors} collections; they retry next run`);
   }
+  try {
+    await applyConfirmedSerials(tally);
+  } catch (error) {
+    offlineLog.warn(`confirmed serials not applied this run: ${errorCode(error)}`);
+  }
+  reportMerges(tally);
   offlineBeat.flush();
 }
 
@@ -204,7 +224,7 @@ export async function populateSerialOffline() {
  * drop closed by a foreign mint after its last member's waits for a member's
  * rediscovery to pick up its grid.
  */
-async function settleOpenDrops() {
+async function settleOpenDrops(tally: MergeTally) {
   const since = new Date(Date.now() - OPEN_DROP_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const open = await indexer
     .select({
@@ -237,7 +257,7 @@ async function settleOpenDrops() {
   for (const key of open) {
     const name = `${key.season} ${key.collectionNo} ${key.artist}`;
     try {
-      const updates = await settleDrop(name, key);
+      const updates = await settleDrop(name, key, tally);
       if (updates !== null) settled.push(`${name} (${updates} serials)`);
     } catch (error) {
       failed++;
@@ -252,7 +272,7 @@ async function settleOpenDrops() {
 }
 
 /** Serials written when the drop settled, or null when it did not. */
-async function settleDrop(name: string, key: DropKey) {
+async function settleDrop(name: string, key: DropKey, tally: MergeTally) {
   const { drop, grid } = await fitDrop(key);
   if (!drop || !grid || !drop.pinned || !drop.complete) {
     const why = !grid ? "no fit" : !drop.pinned ? "not start-pinned" : "members still to mint";
@@ -261,6 +281,8 @@ async function settleDrop(name: string, key: DropKey) {
   }
   const plans = await planGridWrites(drop.members, drop.region.start, grid, {
     mintedBefore: new Date(Date.now() - MINT_DELAY_MS).toISOString(),
+    confirmed: await loadConfirmedSerials(drop.members.map((m) => m.slug)),
+    tally,
   });
   await applyGridWrites(
     plans,
@@ -289,7 +311,11 @@ type OfflineOutcome = number | "skipped" | "api error";
  *     write the ones that changed (heals serials shifted by a newly-discovered
  *     batch). Pre-cutoff v1 serials are never overwritten.
  */
-async function processCollectionOffline(collectionId: string): Promise<OfflineOutcome> {
+async function processCollectionOffline(
+  collectionId: string,
+  confirmed: ConfirmedSerial[] | undefined,
+  tally: MergeTally,
+): Promise<OfflineOutcome> {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -323,6 +349,7 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
 
   const presentTokenIds = allObjekts.map((o) => parseInt(o.id));
 
+  const manual = collection.serialAnchors ?? [];
   let batches = collection.serialBatches ?? [];
 
   // (re)discover batches when unknown or a token falls outside known ranges
@@ -352,7 +379,7 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
       collection.season,
       batches,
       allObjekts,
-      collection.serialAnchors ?? [],
+      withConfirmed(manual, confirmed, allObjekts, batches).anchors,
     );
     batches = next.batches;
 
@@ -366,14 +393,16 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
   }
 
   // Recompute the serial of every objekt from the batch ranges (anchored on
-  // pre-cutoff v1 serials and manual anchors) and update any that differ. This
+  // pre-cutoff v1 serials, manual anchors and confirmed serials) and update any that differ. This
   // heals objekts whose serial was written before a new/intermediate batch was
   // discovered (which shifts every later serial), not just newly-minted
   // serial=0 objekts.
+  const merge = withConfirmed(manual, confirmed, allObjekts, batches);
+  tally.record(collectionId, merge);
   const updated = await rewriteSerials(
     allObjekts,
     batches,
-    collection.serialAnchors ?? [],
+    merge.anchors,
     offlineLog,
     collectionId,
   );

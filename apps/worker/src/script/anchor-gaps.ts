@@ -7,6 +7,9 @@
  * A gap between two anchored ranges only counts in the table: it shows a
  * boundary the range rules got wrong.
  *
+ * Confirmed serials (cosmo_objekt) join the manual anchors only when this
+ * process's COSMO_OBJEKT_WRITES holds `anchors`: run it with the worker's value.
+ *
  * Read-only. One season, or all of them:
  *
  *   bun run --env-file=../../.env src/script/anchor-gaps.ts [season]
@@ -16,6 +19,8 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, or } from "drizzle-orm";
 
+import { loadConfirmedSerials } from "@/job/confirmed-serials";
+import { mergeTally, tallyDetails, tallyWarning, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections } from "@/lib/serial-constants";
 import { anchorGaps, V1_CUTOFF_MS } from "@/lib/serial-math";
 
@@ -39,6 +44,9 @@ const targets = await indexer
     ),
   )
   .orderBy(asc(collections.slug));
+
+const confirmed = await loadConfirmedSerials(targets.map((t) => t.slug));
+const tally = mergeTally();
 
 type SeasonStats = {
   collections: number;
@@ -72,7 +80,9 @@ async function processOne(t: (typeof targets)[number]) {
   }
   s.collections++;
 
-  const gaps = anchorGaps(rows, batches, t.anchors ?? []);
+  const merge = withConfirmed(t.anchors ?? [], confirmed.get(t.slug), rows, batches);
+  tally.record(t.id, merge);
+  const gaps = anchorGaps(rows, batches, merge.anchors);
   if (gaps.length === 0) return;
   s.withGap++;
 
@@ -99,6 +109,12 @@ async function processOne(t: (typeof targets)[number]) {
 await chunk(targets, CONCURRENCY, async (group) => {
   await Promise.all(group.map((t) => processOne(t)));
 });
+
+const warning = tallyWarning(tally);
+if (warning) {
+  console.log(`[anchor-gaps] ${warning}`);
+  for (const line of tallyDetails(tally)) console.log(`  ${line}`);
+}
 
 console.table(
   [...bySeason.entries()]

@@ -14,15 +14,21 @@
  *   bun run --env-file=../../.env src/script/backfill-offline-serials.ts
  *
  * Requires the serial_batches migration to be applied first.
+ *
+ * Confirmed serials (cosmo_objekt) join the manual anchors only when this
+ * process's COSMO_OBJEKT_WRITES holds `anchors`: run it with the worker's value.
  */
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 
+import { loadConfirmedSerials } from "@/job/confirmed-serials";
 import { discoverBatches } from "@/job/serial-batches";
+import type { Anchor } from "@/lib/cosmo-anchors";
+import { mergeTally, tallyDetails, tallyWarning, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
-import { computeOfflineSerials, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
+import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
@@ -51,16 +57,14 @@ console.log(
   `[backfill] ${DRY_RUN ? "DRY RUN — " : ""}${FORCE ? "FORCE — all" : "resume — remaining"} ${targets.length} offline collections`,
 );
 
+const confirmed = await loadConfirmedSerials(targets.map((t) => t.slug));
+const tally = mergeTally();
+
 let totalUpdated = 0;
 let touchedCollections = 0;
 const failed: string[] = [];
 
-async function processOne(t: {
-  id: string;
-  slug: string;
-  cid: string;
-  anchors: ManualAnchor[] | null;
-}) {
+async function processOne(t: { id: string; slug: string; cid: string; anchors: Anchor[] | null }) {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -90,7 +94,9 @@ async function processOne(t: {
     return;
   }
 
-  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS, t.anchors ?? []);
+  const merge = withConfirmed(t.anchors ?? [], confirmed.get(t.slug), allObjekts, batches);
+  tally.record(t.id, merge);
+  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS, merge.anchors);
   const byId = new Map(allObjekts.map((o) => [o.id, o] as const));
 
   const updates: { id: string; newSerial: number }[] = [];
@@ -145,6 +151,12 @@ async function processOne(t: {
 await chunk(targets, CONCURRENCY, async (group) => {
   await Promise.all(group.map((t) => processOne(t)));
 });
+
+const warning = tallyWarning(tally);
+if (warning) {
+  console.log(`[backfill] ${warning}`);
+  for (const line of tallyDetails(tally)) console.log(`  ${line}`);
+}
 
 console.log(
   `[backfill] Done. ${DRY_RUN ? "Would update" : "Updated"} ${totalUpdated} serials across ${touchedCollections} collections.` +

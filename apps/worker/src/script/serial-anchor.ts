@@ -16,12 +16,20 @@
  *   bun run --env-file=../../.env src/script/serial-anchor.ts list [slug]
  *
  * Requires the serial_anchors migration to be applied first.
+ *
+ * A new anchor is checked against manual anchors and v1 serials only, so a
+ * confirmed serial (cosmo_objekt) never refuses it; the rewrite keeps the
+ * confirmed serials it does not outrank when this process's
+ * COSMO_OBJEKT_WRITES holds `anchors`: run it with the worker's value. Only
+ * the manual list is ever stored.
  */
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 
+import { loadConfirmedSerials } from "@/job/confirmed-serials";
 import { writeSerialUpdates } from "@/job/serial-batches";
+import { tallyDetails, tallyWarning, mergeTally, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { checkManualAnchor, computeOfflineSerialUpdates } from "@/lib/serial-math";
 
@@ -104,7 +112,16 @@ async function change(tokenId: number, next: (existing: StoredAnchor[]) => Store
   const anchors = next(existing);
   const batches = collection.batches ?? [];
 
-  const updates = computeOfflineSerialUpdates(rows, batches, anchors);
+  const confirmed = (await loadConfirmedSerials([collection.slug])).get(collection.slug);
+  const merge = withConfirmed(anchors, confirmed, rows, batches);
+  const tally = mergeTally();
+  tally.record(collection.id, merge);
+  const warning = tallyWarning(tally);
+  if (warning) {
+    console.log(`[serial-anchor] ${warning}`);
+    for (const line of tallyDetails(tally)) console.log(`  ${line}`);
+  }
+  const updates = computeOfflineSerialUpdates(rows, batches, merge.anchors);
   const current = rows.find((o) => parseInt(o.id) === tokenId)!;
   const previous = existing.find((a) => a.tokenId === tokenId);
   const added = anchors.find((a) => a.tokenId === tokenId);
@@ -139,7 +156,7 @@ async function change(tokenId: number, next: (existing: StoredAnchor[]) => Store
     .from(objekts)
     .where(eq(objekts.collectionId, collection.id))
     .orderBy(asc(objekts.id));
-  const remaining = computeOfflineSerialUpdates(after, batches, anchors);
+  const remaining = computeOfflineSerialUpdates(after, batches, merge.anchors);
   console.log(
     remaining.length === 0
       ? `[serial-anchor] applied; read back: 0 differences`

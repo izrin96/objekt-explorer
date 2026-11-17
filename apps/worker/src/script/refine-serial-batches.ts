@@ -11,6 +11,9 @@
  *
  * Dry run by default. APPLY=1 writes the refined ranges and serials.
  *
+ * Confirmed serials (cosmo_objekt) join the manual anchors only when this
+ * process's COSMO_OBJEKT_WRITES holds `anchors`: run it with the worker's value.
+ *
  *   bun run --env-file=../../.env src/script/refine-serial-batches.ts
  *   APPLY=1 bun run --env-file=../../.env src/script/refine-serial-batches.ts
  */
@@ -20,8 +23,10 @@ import { chunk } from "@repo/lib";
 import { preBlockSeasons } from "@repo/lib/serial";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
+import { loadConfirmedSerials } from "@/job/confirmed-serials";
 import { fitRanges, rewriteSerials, storeRanges } from "@/job/serial-batches";
 import { log } from "@/lib/log";
+import { mergeTally, tallyDetails, tallyWarning, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOfflineSerialUpdates, holdoutExact } from "@/lib/serial-math";
 
@@ -48,6 +53,11 @@ const targets = await indexer
   .orderBy(asc(collections.slug));
 
 console.log(`[refine] ${APPLY ? "APPLY" : "DRY RUN"} — ${targets.length} offline collections`);
+const confirmed = await loadConfirmedSerials(targets.map((t) => t.slug));
+const tally = mergeTally();
+if (confirmed.size > 0) {
+  console.log(`[refine] confirmed serials in ${confirmed.size} collection(s)`);
+}
 
 type SeasonStats = {
   collections: number;
@@ -95,9 +105,19 @@ async function processOne(t: (typeof targets)[number]) {
     .orderBy(asc(objekts.id));
   if (rows.length === 0) return;
 
+  const manual = t.anchors ?? [];
+  const own = confirmed.get(t.slug);
   // no shared drop-fit memo: this run writes ranges as it goes, which can change a drop's fit
-  const grids = await fitRanges(t.id, t.season, stored, rows, t.anchors ?? []);
+  const grids = await fitRanges(
+    t.id,
+    t.season,
+    stored,
+    rows,
+    withConfirmed(manual, own, rows, stored).anchors,
+  );
   const refined = grids.batches;
+  const merge = withConfirmed(manual, own, rows, refined);
+  tally.record(t.id, merge);
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));
   const storedEnds = new Set(stored.map((b) => b.end));
@@ -106,7 +126,7 @@ async function processOne(t: (typeof targets)[number]) {
     (b) => storedEnds.has(b.end) && !storedKeys.has(`${b.start}-${b.end}`),
   ).length;
 
-  const updates = computeOfflineSerialUpdates(rows, refined, t.anchors ?? []);
+  const updates = computeOfflineSerialUpdates(rows, refined, merge.anchors);
 
   const before = holdoutExact(rows, stored);
   const after = holdoutExact(rows, refined);
@@ -135,12 +155,18 @@ async function processOne(t: (typeof targets)[number]) {
   if (!APPLY) return;
 
   await storeRanges(t.id, stored, grids);
-  await rewriteSerials(rows, refined, t.anchors ?? [], refineLog, t.slug);
+  await rewriteSerials(rows, refined, merge.anchors, refineLog, t.slug);
 }
 
 await chunk(targets, CONCURRENCY, async (group) => {
   await Promise.all(group.map((t) => processOne(t)));
 });
+
+const warning = tallyWarning(tally);
+if (warning) {
+  console.log(`[refine] ${warning}`);
+  for (const line of tallyDetails(tally)) console.log(`  ${line}`);
+}
 
 const pct = (n: number, d: number) => (d === 0 ? "-" : `${((100 * n) / d).toFixed(1)}%`);
 console.table(

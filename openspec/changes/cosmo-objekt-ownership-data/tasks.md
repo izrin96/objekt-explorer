@@ -110,19 +110,21 @@
   - that the manual anchors come back unchanged, and that an empty `confirmed` returns `manual` as is.
 
   `bun test apps/worker` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 5.2 Every serial path reads both sources. Read `apps/worker/docs/offline-serials.md` first.
+- [x] 5.2 Every serial path reads both sources. Read `apps/worker/docs/offline-serials.md` first.
   - Create `apps/worker/src/job/confirmed-serials.ts` with `loadConfirmedSerials(slugs)`: one `db` query of eligible rows (Decision 5, The loader), grouped by slug, returning an empty map unless `objektWriteModes(process.env.COSMO_OBJEKT_WRITES).anchors`. It imports `db` and worker modules only.
   - Wherever `collection.serial_anchors` reaches `fitRanges`, `computeOfflineSerials`, `computeOfflineSerialUpdates` or `rewriteSerials`, pass `mergeAnchors` of it and the loaded confirmed serials: `job/populate-serial.ts`, `job/serial-batches.ts` (including the grid writes' anchor read), `job/verify-batch-boundaries.ts`, `script/refine-serial-batches.ts`, `script/anchor-gaps.ts` and `script/backfill-offline-serials.ts`. Load once per collection, or once per run where the path already reads many collections. The holdout calls that pass `[]` stay. `script/serial-anchor.ts` checks a new manual anchor against manual anchors and v1 serials only, and rewrites with the merged list. Every path reads the switch from its own env (Decision 5, The switch is per process); say so in each changed script's header comment.
   - Each merge adds its conflicts and refusals to the `serial-offline` heartbeat, and the run logs as Decision 11 says.
 
   Read-only verified, with approval for seeded local rows: seed eligible `cosmo_objekt` rows for real tokens of one offline post-cutoff collection whose batch has no anchor, one with its production serial and one one higher. Run `refine-serial-batches.ts` dry for that collection with `COSMO_OBJEKT_WRITES=anchors`: it lists the serials the merged anchor would move. Without the variable its output matches a run before this change. `import-boundary.test.ts` passes. Lint, typecheck and build pass for `worker`.
-- [ ] 5.3 Add `applyConfirmedSerials()` to `job/confirmed-serials.ts`, and call it as the last step of `populateSerialOffline` (`job/populate-serial.ts`), after the collection loop, in its own try/catch that logs one `warn` on failure. It returns at once unless `anchors` is on.
+- [x] 5.3 Add `applyConfirmedSerials()` to `job/confirmed-serials.ts`, and call it as the last step of `populateSerialOffline` (`job/populate-serial.ts`), after the collection loop, in its own try/catch that logs one `warn` on failure. It returns at once unless `anchors` is on.
   - From `db`: up to 20 `slug`s with `serial_due` rows whose `serial_eligible` is not false, observed in the last 30 days and `serial_checked_at` null or over 6 hours old, oldest `observed_at` first; then those rows.
   - Per slug, from `indexer`: the collection (`id`, `on_offline`, `slug`, `serial_batches`, `serial_anchors`), and every objekt `(id, serial, minted_at)` minted before `now − MINT_DELAY_MS` (export the constant from `populate-serial.ts`). Judge rows whose `serial_eligible` is null with `serialEligible`, and store those judgements in one app statement before the load. Then `loadConfirmedSerials`, `mergeAnchors` and `rewriteSerials`.
   - Then one app statement stores `serial_checked_at = now()`, and sets `serial_due = false` except on rows still unjudged. A 55P03 skips the slug for this run.
   - It never writes `collection.serial_anchors`.
 
   Read-only verified, with the seeded rows of 5.2: call `applyConfirmedSerials()` once from `bun -e` with `COSMO_OBJEKT_WRITES=anchors`. It logs (`debug`) the serials it would move, and the write fails at the read-only indexer. Without the variable it reads nothing. Lint, typecheck and build pass for `worker`.
+
+  Built 2026-11-17: checks, build and `import-boundary.test.ts` pass. The read-only verified runs of 5.2 and 5.3 (seeded local rows) are still pending.
 
 ## 6. The plan script
 
