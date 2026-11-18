@@ -31,3 +31,20 @@ export function pinnedByConfirmed(candidates: PinCandidate[], confirmed: Confirm
   }
   return ids;
 }
+
+/**
+ * The online post-cutoff tokens whose shown serial is the one a connected account's read
+ * confirmed. Only the read token counts: a token counted on from it may sit past a serial Cosmo
+ * never minted or minted twice. Comparing with the shown serial covers a read the worker has not
+ * applied yet and one it left out as a conflict.
+ */
+export function exactByOwnRead(
+  reads: { tokenId: string; objektNo: number }[],
+  rows: { id: string; serial: number; postCutoff: boolean; online: boolean }[],
+) {
+  const shown = new Map(rows.map((r) => [r.id, r] as const));
+  return reads.flatMap((read) => {
+    const row = shown.get(read.tokenId);
+    return row?.postCutoff && row.online && row.serial === read.objektNo ? [read.tokenId] : [];
+  });
+}

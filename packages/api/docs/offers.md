@@ -38,7 +38,7 @@ Part of `packages/api/AGENTS.md`, which points here.
 
 ## Estimated serials
 
-`serialEstimated` (and a `ShownSerial`'s `estimated`) comes from `isSerialEstimated(mintedAt, anchored)` (`@repo/lib/serial`), with `anchored` read through `anchoredSerialIds` (`services/objekt/serial-anchored.ts`), never from mint time alone: a post-cutoff objekt whose reserved range also holds a pre-cutoff serial or a manual anchor has an exact serial. Load the set once for the objekts a read returns, beside its other reads, as the pickers, `shownSerials` and `hydrateCards` do. The query mirrors how the worker pins a range (`apps/worker/docs/offline-serials.md`).
+`serialEstimated` (and a `ShownSerial`'s `estimated`) comes from `isSerialEstimated(mintedAt, anchored)` (`@repo/lib/serial`), with `anchored` read through `anchoredSerialIds` (`services/objekt/serial-anchored.ts`), never from mint time alone: a post-cutoff objekt whose reserved range also holds a pre-cutoff serial or a manual anchor has an exact serial. With `online-anchors` in `COSMO_OBJEKT_WRITES`, so does an online objekt whose own serial a connected account's read confirmed while its shown serial equals the read (`exactByOwnRead`, `lib/confirmed-pins.ts`); tokens counted on from a read stay estimated, since Cosmo's unminted serials and double mints can sit between reads. Load the set once for the objekts a read returns, beside its other reads, as the pickers, `shownSerials` and `hydrateCards` do. The query mirrors how the worker pins a range (`apps/worker/docs/offline-serials.md`).
 
 ## Wrong copies
 

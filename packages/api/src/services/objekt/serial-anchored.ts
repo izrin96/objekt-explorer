@@ -7,7 +7,7 @@ import { objektWriteModes } from "@repo/lib/cosmo-objekt-writes";
 import { V1_CUTOFF_MS } from "@repo/lib/serial";
 import { and, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 
-import { type PinCandidate, pinnedByConfirmed } from "../../lib/confirmed-pins";
+import { exactByOwnRead, type PinCandidate, pinnedByConfirmed } from "../../lib/confirmed-pins";
 import { unique } from "../../lib/unique";
 
 const ANCHORED_BATCH = 500;
@@ -15,15 +15,70 @@ const ANCHORED_BATCH = 500;
 /**
  * The post-cutoff objekts whose reserved range also holds a serial Cosmo
  * supplied, a manual anchor or, with `COSMO_OBJEKT_WRITES` holding `anchors`,
- * a serial a connected account's Cosmo read confirmed. Reads anchoring the way
+ * a serial a connected account's Cosmo read confirmed; and, with `online-anchors`,
+ * the online objekts whose own serial a read confirmed. Reads anchoring the way
  * the worker's `computeOfflineSerials` and `mergeAnchors` pin a range, so the
  * three must change together.
  */
 export async function anchoredSerialIds(ids: string[]): Promise<Set<string>> {
-  const cutoff = new Date(V1_CUTOFF_MS).toISOString();
   // process.env, not serverEnv: the worker bundles this module through offer/verify, and importing
   // env.ts there kills it on start (apps/worker/AGENTS.md)
-  const withConfirmed = objektWriteModes(process.env.COSMO_OBJEKT_WRITES).anchors;
+  const modes = objektWriteModes(process.env.COSMO_OBJEKT_WRITES);
+  const asked = unique(ids);
+  const [ranged, ownRead] = await Promise.all([
+    rangeAnchoredIds(asked, modes.anchors),
+    modes.onlineAnchors ? onlineReadIds(asked) : [],
+  ]);
+  for (const id of ownRead) ranged.add(id);
+  return ranged;
+}
+
+/**
+ * The online post-cutoff objekts whose own serial a connected account's read confirmed, shown as
+ * read (`exactByOwnRead`). The indexer read runs only when an asked id has a read.
+ */
+async function onlineReadIds(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  try {
+    const reads = await chunkMap(ids, ANCHORED_BATCH, (batch) =>
+      db
+        .select({ tokenId: cosmoObjekt.tokenId, objektNo: cosmoObjekt.objektNo })
+        .from(cosmoObjekt)
+        .where(and(inArray(cosmoObjekt.tokenId, batch), sql`${cosmoObjekt.serialEligible}`)),
+    );
+    if (reads.length === 0) return [];
+    const cutoff = new Date(V1_CUTOFF_MS).toISOString();
+    const rows = await chunkMap(
+      reads.map((r) => r.tokenId),
+      ANCHORED_BATCH,
+      (batch) =>
+        indexer
+          .select({
+            id: objekts.id,
+            serial: objekts.serial,
+            postCutoff: sql<boolean>`${objekts.mintedAt} >= ${cutoff}`,
+            // pre-assigned online collections have batches and number like offline ones
+            online: sql<boolean>`${collections.onOffline} = 'online' and ${collections.serialBatches} is null`,
+          })
+          .from(objekts)
+          .innerJoin(collections, eq(collections.id, objekts.collectionId))
+          .where(inArray(objekts.id, batch)),
+    );
+    return exactByOwnRead(reads, rows);
+  } catch (error) {
+    // the serial then reads as estimated, the safe error
+    const code = (error as { code?: string }).code ?? "unknown";
+    console.warn(`[serial-anchored] online reads not read (${code})`);
+    return [];
+  }
+}
+
+/**
+ * The post-cutoff objekts whose reserved range holds a v1 serial, a manual anchor or, with
+ * `withConfirmed`, an agreeing confirmed serial.
+ */
+async function rangeAnchoredIds(ids: string[], withConfirmed: boolean): Promise<Set<string>> {
+  const cutoff = new Date(V1_CUTOFF_MS).toISOString();
 
   const holdingBatch = (column: "start" | "end") => sql<
     string | null
@@ -46,7 +101,7 @@ export async function anchoredSerialIds(ids: string[]): Promise<Set<string>> {
             between (b->>'start')::bigint and (b->>'end')::bigint)))`;
 
   if (!withConfirmed) {
-    const rows = await chunkMap(unique(ids), ANCHORED_BATCH, (batch) =>
+    const rows = await chunkMap(ids, ANCHORED_BATCH, (batch) =>
       indexer
         .select({ id: objekts.id })
         .from(objekts)
@@ -65,7 +120,7 @@ export async function anchoredSerialIds(ids: string[]): Promise<Set<string>> {
 
   // every post-cutoff id with a stored batch, so the ones not yet anchored can be tried against
   // the confirmed serials
-  const rows = await chunkMap(unique(ids), ANCHORED_BATCH, (batch) =>
+  const rows = await chunkMap(ids, ANCHORED_BATCH, (batch) =>
     indexer
       .select({
         id: objekts.id,

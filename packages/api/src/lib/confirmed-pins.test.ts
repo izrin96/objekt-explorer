@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { pinnedByConfirmed } from "./confirmed-pins";
+import { exactByOwnRead, pinnedByConfirmed } from "./confirmed-pins";
 
 const candidate = { id: "1000", slug: "a-1", start: 1000, end: 1099 };
 
@@ -71,5 +71,41 @@ describe("pinnedByConfirmed", () => {
     const settled = { slug: "a-1", tokenId: "1010", objektNo: 11, settled: true };
     expect(pinnedByConfirmed([candidate], [settled, due])).toEqual([]);
     expect(pinnedByConfirmed([candidate], [settled, { ...due, objektNo: 41 }])).toEqual(["1000"]);
+  });
+});
+
+describe("exactByOwnRead", () => {
+  const row = (
+    id: string,
+    serial: number,
+    extra: { postCutoff?: boolean; online?: boolean } = {},
+  ) => ({
+    id,
+    serial,
+    postCutoff: true,
+    online: true,
+    ...extra,
+  });
+
+  test("a read shown as read is exact", () => {
+    expect(exactByOwnRead([{ tokenId: "1", objektNo: 1990 }], [row("1", 1990)])).toEqual(["1"]);
+  });
+
+  test("a read the site shows differently is not", () => {
+    expect(exactByOwnRead([{ tokenId: "1", objektNo: 1990 }], [row("1", 1663)])).toEqual([]);
+  });
+
+  test("a pre-cutoff token is not", () => {
+    const rows = [row("1", 5, { postCutoff: false })];
+    expect(exactByOwnRead([{ tokenId: "1", objektNo: 5 }], rows)).toEqual([]);
+  });
+
+  test("a token of a collection with batches is left to the range pins", () => {
+    const rows = [row("1", 5, { online: false })];
+    expect(exactByOwnRead([{ tokenId: "1", objektNo: 5 }], rows)).toEqual([]);
+  });
+
+  test("a token the indexer lacks is not", () => {
+    expect(exactByOwnRead([{ tokenId: "9", objektNo: 5 }], [row("1", 5)])).toEqual([]);
   });
 });
