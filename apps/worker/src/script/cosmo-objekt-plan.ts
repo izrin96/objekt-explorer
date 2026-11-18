@@ -4,8 +4,9 @@
  * before turning a word on. It writes nothing.
  *
  * Serials: per collection, the serials `mergeAnchors` of the manual anchors and the confirmed
- * serials would move (count and range, from `shiftedSerials`), the conflicts and refusals, and
- * the online and v1 serials Cosmo and the indexer disagree on (compared only, never written).
+ * serials would move (count and range, from `shiftedSerials`), the conflicts and refusals; for an
+ * online collection, the serials `onlineAnchors` would move against mint order; and the v1
+ * serials Cosmo and the indexer disagree on (compared only, never written).
  *
  * Transferable: `judgeTransferable` with both directions on, over every row whatever its due
  * flags: outcomes, the writes by direction, non-transferable reason and class (and the
@@ -30,6 +31,7 @@ import { cosmoObjekt, cosmoTransferable } from "@repo/db/schema";
 import { and, asc, count, eq, gt, inArray, sql } from "drizzle-orm";
 
 import { mergeAnchors } from "@/lib/cosmo-anchors";
+import { serialEligible } from "@/lib/cosmo-objekts";
 import {
   BREAKER_CAP,
   BREAKER_FLOOR,
@@ -39,8 +41,11 @@ import {
   outcomeCounts,
   transferableBreaker,
 } from "@/lib/cosmo-transferable";
+import { onlineAnchors } from "@/lib/online-anchors";
+import { preAssignedCollections } from "@/lib/serial-constants";
 import {
   V1_CUTOFF_MS,
+  computeOnlineSerials,
   computeOfflineSerialUpdates,
   computeOfflineSerials,
   shiftedSerials,
@@ -89,15 +94,35 @@ function spreadBucket(distance: number) {
 
 async function serialPlan(app: Tx) {
   heading(`Confirmed serials${SLUG ? ` (${SLUG})` : ""}`);
+  // every slug with a judged read: an online one is planned with its reads judged afresh, so the
+  // plan shows the online moves before the one-off re-judge writes them
   const bySlug = await app
     .select({
       slug: cosmoObjekt.slug,
-      confirmed: count(sql`1`).mapWith(Number),
+      confirmed: sql<number>`count(*) filter (where ${cosmoObjekt.serialEligible})`.mapWith(Number),
     })
     .from(cosmoObjekt)
-    .where(and(sql`${cosmoObjekt.serialEligible}`, SLUG ? eq(cosmoObjekt.slug, SLUG) : undefined))
+    .where(
+      and(
+        sql`${cosmoObjekt.serialEligible} is not null`,
+        SLUG ? eq(cosmoObjekt.slug, SLUG) : undefined,
+      ),
+    )
     .groupBy(cosmoObjekt.slug)
     .orderBy(asc(cosmoObjekt.slug));
+  const onlineSlugs = new Set<string>();
+  for (const part of chunk(
+    bySlug.map((b) => b.slug),
+    CHUNK,
+  )) {
+    const found = await indexer
+      .select({ slug: collections.slug, batches: collections.serialBatches })
+      .from(collections)
+      .where(and(inArray(collections.slug, part), eq(collections.onOffline, "online")));
+    for (const c of found) {
+      if (!c.batches && !preAssignedCollections.includes(c.slug)) onlineSlugs.add(c.slug);
+    }
+  }
   const [states] = await app
     .select({
       eligible: sql<number>`count(*) filter (where ${cosmoObjekt.serialEligible})`.mapWith(Number),
@@ -110,7 +135,7 @@ async function serialPlan(app: Tx) {
     .from(cosmoObjekt)
     .where(SLUG ? eq(cosmoObjekt.slug, SLUG) : undefined);
   console.log(
-    `${states!.eligible} confirmed, ${states!.notEligible} not eligible, ${states!.unjudged} not judged yet; ${bySlug.length} collection(s) with confirmed serials`,
+    `${states!.eligible} confirmed, ${states!.notEligible} not eligible, ${states!.unjudged} not judged yet; ${bySlug.filter((b) => b.confirmed > 0).length} collection(s) with confirmed serials`,
   );
 
   let moved = 0;
@@ -118,6 +143,18 @@ async function serialPlan(app: Tx) {
   // how far each confirmed serial sits from the serial the manual anchors alone give
   const spread = new Map<string, number>();
   for (const { slug, confirmed: confirmedCount } of bySlug) {
+    if (onlineSlugs.has(slug)) {
+      const [online] = await indexer
+        .select({ id: collections.id })
+        .from(collections)
+        .where(eq(collections.slug, slug))
+        .limit(1);
+      const result = await onlinePlan(app, slug, online!.id);
+      moved += result.moved;
+      quiet += result.quiet ? 1 : 0;
+      continue;
+    }
+    if (confirmedCount === 0) continue;
     const [collection] = await indexer
       .select({
         id: collections.id,
@@ -211,7 +248,102 @@ async function serialPlan(app: Tx) {
   await serialDifferences(app);
 }
 
-/** Online and v1 serials Cosmo and the indexer disagree on. Compared only. */
+/**
+ * One online collection: the serials its confirmed serials would move against mint order alone,
+ * as `processCollection` numbers it with `online-anchors` on.
+ */
+async function onlinePlan(app: Tx, slug: string, collectionId: string) {
+  const reads = await app
+    .select({
+      tokenId: cosmoObjekt.tokenId,
+      objektNo: cosmoObjekt.objektNo,
+      observedAt: cosmoObjekt.observedAt,
+      receivedAt: cosmoObjekt.receivedAt,
+      eligible: cosmoObjekt.serialEligible,
+    })
+    .from(cosmoObjekt)
+    .where(eq(cosmoObjekt.slug, slug));
+  // most online collections hold only v1 reads or reads that match; skip loading those whole
+  const readTokens = await indexer
+    .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
+    .from(objekts)
+    .where(
+      inArray(
+        objekts.id,
+        reads.map((r) => r.tokenId),
+      ),
+    );
+  const readSerial = new Map(readTokens.map((o) => [o.id, o] as const));
+  const differs = reads.some((r) => {
+    const own = readSerial.get(r.tokenId);
+    return own && Date.parse(own.mintedAt) >= V1_CUTOFF_MS && own.serial !== r.objektNo;
+  });
+  if (!differs) return { moved: 0, quiet: true };
+
+  const rows = await indexer
+    .select({
+      id: objekts.id,
+      serial: objekts.serial,
+      mintedAt: objekts.mintedAt,
+      receivedAt: objekts.receivedAt,
+    })
+    .from(objekts)
+    .where(eq(objekts.collectionId, collectionId))
+    .orderBy(asc(objekts.id));
+  const sorted = rows.toSorted((a, b) => Number(a.id) - Number(b.id));
+  const isNew = sorted.every((o) => o.serial === 0);
+  const headSkip = !isNew && sorted[0]?.serial === 0;
+  const byId = new Map(sorted.map((o) => [o.id, o] as const));
+  let rejudged = 0;
+  const confirmed = reads.flatMap(({ receivedAt, eligible, ...read }) => {
+    if (eligible) return [read];
+    if (eligible === null) return [];
+    const own = byId.get(read.tokenId);
+    const live = own && serialEligible({ slug, receivedAt }, { ...own, slug, onOffline: "online" });
+    if (!live) return [];
+    rejudged += 1;
+    return [read];
+  });
+  const confirmedCount = confirmed.length;
+  const merge = onlineAnchors(confirmed, sorted, headSkip);
+
+  // only what the anchors change: mint order alone may also heal an inversion
+  const without = new Map(sorted.map((o) => [o.id, o.serial] as const));
+  for (const u of computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip, []).updates) {
+    without.set(u.id, u.newSerial);
+  }
+  const updates = computeOnlineSerials(
+    sorted,
+    V1_CUTOFF_MS,
+    headSkip,
+    merge.anchors,
+  ).updates.filter((u) => without.get(u.id) !== u.newSerial);
+  if (updates.length === 0 && merge.conflicts.length === 0 && merge.refused.length === 0) {
+    return { moved: 0, quiet: true };
+  }
+  const deltas = updates.map((u) => u.newSerial - without.get(u.id)!);
+  console.log(
+    `\n${slug} (online): ${confirmedCount} confirmed (${rejudged} once re-judged), ${merge.anchors.length} kept as anchors, ${merge.conflicts.length} conflict(s), ${merge.refused.length} refused`,
+  );
+  if (updates.length > 0) {
+    console.log(
+      `  would move ${updates.length} serial(s) by ${Math.min(...deltas)}..${Math.max(...deltas)}`,
+    );
+    for (const u of updates.slice(0, SAMPLE)) {
+      console.log(`    ${u.id}: ${without.get(u.id)} -> ${u.newSerial}`);
+    }
+    if (updates.length > SAMPLE) console.log(`    (+${updates.length - SAMPLE} more)`);
+  }
+  for (const c of merge.conflicts) {
+    console.log(`  conflict: token ${c.tokenId} Cosmo ${c.objektNo}, lower than an earlier read`);
+  }
+  for (const r of merge.refused) {
+    console.log(`  refused: token ${r.tokenId} Cosmo ${r.objektNo}: ${r.reason}`);
+  }
+  return { moved: updates.length, quiet: false };
+}
+
+/** V1 serials, and reads not yet eligible, that Cosmo and the indexer disagree on. Compared only. */
 async function serialDifferences(app: Tx) {
   heading("Cosmo serials of tokens the serial job never anchors on (compared only)");
   type Tally = { checked: number; differ: number; samples: string[] };

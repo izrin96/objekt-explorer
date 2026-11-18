@@ -15,30 +15,44 @@ export type IndexerObjekt = {
   receivedAt: Date | string;
   slug: string;
   onOffline: "online" | "offline";
+  serial: number;
 };
 
 /**
- * Whether a read's serial may anchor its collection. False for another slug's token, an online
- * collection that is not pre-assigned, or a mint before the v1 cutoff: online and v1 serials are
- * compared elsewhere, never used. Otherwise true only while the indexer's `received_at` is the one
- * recorded with the read (`read.receivedAt`, set only once the holder check passed), so the chain
+ * Whether a read's serial may anchor its collection. False for another slug's token or a mint
+ * before the v1 cutoff: v1 serials are compared elsewhere, never used. Otherwise true only while
+ * the indexer's `received_at` is the one recorded with the read (`read.receivedAt`, set only once the holder check passed), so the chain
  * confirmed the holder Cosmo answered for; null when the indexer lacks the token, or lacked it at
  * the read. Null is never eligible on Cosmo's word alone: a later read can settle it.
  */
 export function serialEligible(
   read: { slug: string; receivedAt: Date | string | null },
-  indexerObjekt: Omit<IndexerObjekt, "owner"> | null | undefined,
+  indexerObjekt: Omit<IndexerObjekt, "owner" | "serial"> | null | undefined,
 ): boolean | null {
   if (!indexerObjekt) return null;
   if (indexerObjekt.slug !== read.slug) return false;
-  if (indexerObjekt.onOffline !== "offline" && !preAssignedCollections.includes(read.slug)) {
-    return false;
-  }
   if (new Date(indexerObjekt.mintedAt).getTime() < V1_CUTOFF_MS) return false;
   if (read.receivedAt === null) return null;
   return new Date(indexerObjekt.receivedAt).getTime() === new Date(read.receivedAt).getTime()
     ? true
     : null;
+}
+
+/**
+ * Whether a read queues a rewrite of its collection. An online read whose serial the indexer
+ * already holds is settled at once: it still anchors every later rewrite, but numbering already
+ * agrees with it, and queuing every matching read would fill the due pool for nothing.
+ */
+export function serialDue(
+  eligible: boolean | null,
+  objektNo: number,
+  indexerObjekt: Pick<IndexerObjekt, "slug" | "onOffline" | "serial"> | null | undefined,
+) {
+  if (eligible === false) return false;
+  if (!indexerObjekt) return true;
+  const online =
+    indexerObjekt.onOffline === "online" && !preAssignedCollections.includes(indexerObjekt.slug);
+  return !online || indexerObjekt.serial !== objektNo;
 }
 
 export type ObservedRow = {
@@ -49,6 +63,7 @@ export type ObservedRow = {
   nonTransferableReason: string | null;
   usedForGrid: boolean;
   serialEligible: boolean | null;
+  serialDue: boolean;
   chainHeight: number;
   observedAt: string;
   /** The indexer's `received_at` at record time; null when the indexer lacked the token. */
@@ -96,6 +111,7 @@ export function observationsOf(
       // delete first so the later entry also takes the later position
       byToken.delete(o.tokenId);
     }
+    const eligible = serialEligible({ slug, receivedAt }, indexed);
     byToken.set(o.tokenId, {
       tokenId: o.tokenId,
       slug,
@@ -103,7 +119,8 @@ export function observationsOf(
       transferable: o.transferable,
       nonTransferableReason: o.nonTransferableReason,
       usedForGrid: o.usedForGrid,
-      serialEligible: serialEligible({ slug, receivedAt }, indexed),
+      serialEligible: eligible,
+      serialDue: serialDue(eligible, o.objektNo, indexed),
       chainHeight,
       observedAt,
       receivedAt,

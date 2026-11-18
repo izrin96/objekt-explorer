@@ -15,7 +15,7 @@ import { rewriteSerials } from "@/job/serial-batches";
 import type { ConfirmedSerial } from "@/lib/cosmo-anchors";
 import { serialEligible } from "@/lib/cosmo-objekts";
 import { errorCode } from "@/lib/error-code";
-import { heartbeat, log } from "@/lib/log";
+import { heartbeat, log, type Logger } from "@/lib/log";
 import {
   type MergeTally,
   mergeTally,
@@ -30,7 +30,6 @@ export const offlineLog = log("serial-offline");
 export const offlineBeat = heartbeat(offlineLog);
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DUE_SLUGS = 20;
 const DUE_WINDOW_MS = 30 * DAY_MS;
 const RECHECK_MS = 6 * 60 * 60 * 1000;
 
@@ -39,10 +38,29 @@ export function confirmedAnchorsOn() {
   return objektWriteModes(process.env.COSMO_OBJEKT_WRITES).anchors;
 }
 
-/** The confirmed serials of `slugs`, by slug; empty, with no query, unless `anchors` is on. */
+/** Whether this process's `COSMO_OBJEKT_WRITES` lets confirmed serials anchor online collections. */
+export function onlineAnchorsOn() {
+  return objektWriteModes(process.env.COSMO_OBJEKT_WRITES).onlineAnchors;
+}
+
+/**
+ * The confirmed serials of offline (and pre-assigned) `slugs`, by slug; empty, with no query,
+ * unless `anchors` is on. Online collections read theirs through `loadOnlineConfirmedSerials`.
+ */
 export async function loadConfirmedSerials(slugs: string[]) {
+  if (!confirmedAnchorsOn()) return new Map<string, ConfirmedSerial[]>();
+  return readConfirmedSerials(slugs);
+}
+
+/** One online collection's confirmed serials; empty, with no query, unless `online-anchors` is on. */
+export async function loadOnlineConfirmedSerials(slug: string) {
+  if (!onlineAnchorsOn()) return [];
+  return (await readConfirmedSerials([slug])).get(slug) ?? [];
+}
+
+async function readConfirmedSerials(slugs: string[]) {
   const bySlug = new Map<string, ConfirmedSerial[]>();
-  if (!confirmedAnchorsOn() || slugs.length === 0) return bySlug;
+  if (slugs.length === 0) return bySlug;
   const rows = await db
     .select({
       slug: cosmoObjekt.slug,
@@ -78,7 +96,7 @@ export function reportMerges(tally: MergeTally) {
   if (refused > 0) offlineBeat.count("confirmed refused", refused);
 }
 
-type DueRow = {
+export type DueRow = {
   tokenId: string;
   slug: string;
   observedAt: string;
@@ -86,12 +104,62 @@ type DueRow = {
   serialEligible: boolean | null;
 };
 
-type SlugOutcome = {
+export type SlugOutcome = {
   // serials written, or null when the collection was not rewritten
   written: number | null;
   // rows done with: judged not eligible, or eligible and in the rewritten collection
   settled: Set<string>;
 };
+
+export type SerialKind = "offline" | "online";
+
+const DUE_SLUGS: Record<SerialKind, number> = { offline: 20, online: 100 };
+
+function dueRowWhere(now: number) {
+  return and(
+    // the bare column matches cosmo_objekt_serial_due_idx's predicate
+    sql`${cosmoObjekt.serialDue}`,
+    sql`${cosmoObjekt.serialEligible} is not false`,
+    gte(cosmoObjekt.observedAt, new Date(now - DUE_WINDOW_MS).toISOString()),
+    or(
+      isNull(cosmoObjekt.serialCheckedAt),
+      lt(cosmoObjekt.serialCheckedAt, new Date(now - RECHECK_MS).toISOString()),
+    ),
+  );
+}
+
+/**
+ * The due slugs of one kind, oldest read first. Only reads that would move a serial are due, so
+ * the pool is small and read whole: a window over both kinds would let one kind's backlog starve
+ * the other. A slug the indexer lacks goes to the offline step, which settles it.
+ */
+async function dueSlugsOf(kind: SerialKind, now: number) {
+  const due = await db
+    .select({ slug: cosmoObjekt.slug })
+    .from(cosmoObjekt)
+    .where(dueRowWhere(now))
+    .groupBy(cosmoObjekt.slug)
+    .orderBy(sql`min(${cosmoObjekt.observedAt})`);
+  if (due.length === 0) return [];
+  const known = await indexer
+    .select({ slug: collections.slug, onOffline: collections.onOffline })
+    .from(collections)
+    .where(
+      inArray(
+        collections.slug,
+        due.map((d) => d.slug),
+      ),
+    );
+  const online = new Set(
+    known
+      .filter((c) => c.onOffline === "online" && !preAssignedCollections.includes(c.slug))
+      .map((c) => c.slug),
+  );
+  return due
+    .map((d) => d.slug)
+    .filter((slug) => online.has(slug) === (kind === "online"))
+    .slice(0, DUE_SLUGS[kind]);
+}
 
 /**
  * The last step of `populateSerialOffline`: rewrite the collections with new confirmed serials,
@@ -102,27 +170,25 @@ type SlugOutcome = {
 export async function applyConfirmedSerials(tally?: MergeTally) {
   if (!confirmedAnchorsOn()) return;
   const runTally = tally ?? mergeTally();
+  await applyDue("offline", (slug, rows) => confirmSlug(slug, rows, runTally), {
+    log: offlineLog,
+    beat: offlineBeat,
+  });
+  if (!tally) reportMerges(runTally);
+}
 
+/**
+ * Rewrite every due collection of one kind through `confirm`, then store the check on its rows.
+ * A lock timeout leaves the slug unchecked for the next run; any other failure stamps it so it
+ * waits out RECHECK_MS instead of taking a slot every run.
+ */
+export async function applyDue(
+  kind: SerialKind,
+  confirm: (slug: string, rows: DueRow[]) => Promise<SlugOutcome>,
+  report: { log: Logger; beat: ReturnType<typeof heartbeat> },
+) {
   const now = Date.now();
-  const dueRow = and(
-    // the bare column matches cosmo_objekt_serial_due_idx's predicate
-    sql`${cosmoObjekt.serialDue}`,
-    sql`${cosmoObjekt.serialEligible} is not false`,
-    gte(cosmoObjekt.observedAt, new Date(now - DUE_WINDOW_MS).toISOString()),
-    or(
-      isNull(cosmoObjekt.serialCheckedAt),
-      lt(cosmoObjekt.serialCheckedAt, new Date(now - RECHECK_MS).toISOString()),
-    ),
-  );
-  const slugs = (
-    await db
-      .select({ slug: cosmoObjekt.slug })
-      .from(cosmoObjekt)
-      .where(dueRow)
-      .groupBy(cosmoObjekt.slug)
-      .orderBy(sql`min(${cosmoObjekt.observedAt})`)
-      .limit(DUE_SLUGS)
-  ).map((r) => r.slug);
+  const slugs = await dueSlugsOf(kind, now);
   if (slugs.length === 0) return;
 
   const due: DueRow[] = await db
@@ -134,7 +200,7 @@ export async function applyConfirmedSerials(tally?: MergeTally) {
       serialEligible: cosmoObjekt.serialEligible,
     })
     .from(cosmoObjekt)
-    .where(and(dueRow, inArray(cosmoObjekt.slug, slugs)));
+    .where(and(dueRowWhere(now), inArray(cosmoObjekt.slug, slugs)));
 
   let rewritten = 0;
   let moved = 0;
@@ -143,7 +209,7 @@ export async function applyConfirmedSerials(tally?: MergeTally) {
   for (const slug of slugs) {
     const rows = due.filter((r) => r.slug === slug);
     try {
-      const outcome = await confirmSlug(slug, rows, runTally);
+      const outcome = await confirm(slug, rows);
       await markChecked(rows, outcome.settled);
       if ((outcome.written ?? 0) > 0) rewritten++;
       moved += outcome.written ?? 0;
@@ -152,30 +218,27 @@ export async function applyConfirmedSerials(tally?: MergeTally) {
       if (findPgError(error, (e) => e.code === "55P03" || e.code === "40P01")) lockTimeouts++;
       else {
         failed++;
-        offlineLog.debug(`${slug}: confirmed serials failed: ${errorCode(error)}`);
-        // stamped but not settled, so the slug waits out RECHECK_MS instead of taking a slot
-        // every run
+        report.log.debug(`${slug}: confirmed serials failed: ${errorCode(error)}`);
         try {
           await markChecked(rows, new Set());
         } catch (stampError) {
-          offlineLog.debug(`${slug}: check not stamped: ${errorCode(stampError)}`);
+          report.log.debug(`${slug}: check not stamped: ${errorCode(stampError)}`);
         }
       }
     }
   }
 
-  offlineBeat.count("confirmed slugs checked", slugs.length);
+  report.beat.count("confirmed slugs checked", slugs.length);
   if (moved > 0) {
-    offlineLog.info(
+    report.log.info(
       `confirmed serials: rewrote ${rewritten} collection(s), ${moved} serial(s) moved`,
     );
   }
   if (lockTimeouts > 0 || failed > 0) {
-    offlineLog.warn(
+    report.log.warn(
       `confirmed serials: ${lockTimeouts} collection(s) waited on an indexer lock, ${failed} failed; they retry next run`,
     );
   }
-  if (!tally) reportMerges(runTally);
 }
 
 /** Judge, merge and rewrite one collection with its confirmed serials. */
@@ -254,7 +317,11 @@ async function confirmSlug(slug: string, rows: DueRow[], tally: MergeTally): Pro
  * a row has no recorded `received_at`, so the chain never confirmed its holder: it can be judged
  * false (another slug, online, a v1 mint) but never true; a later read settles it.
  */
-async function judgeUnjudged(slug: string, rows: DueRow[], eligible: Map<string, boolean | null>) {
+export async function judgeUnjudged(
+  slug: string,
+  rows: DueRow[],
+  eligible: Map<string, boolean | null>,
+) {
   const unjudged = rows.filter((r) => r.serialEligible === null);
   if (unjudged.length === 0) return;
   const recorded = new Map(unjudged.map((r) => [r.tokenId, r.receivedAt] as const));

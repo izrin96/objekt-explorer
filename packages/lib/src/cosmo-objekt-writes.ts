@@ -1,4 +1,4 @@
-const WORDS = ["anchors", "untransferable", "transferable"] as const;
+const WORDS = ["anchors", "online-anchors", "untransferable", "transferable"] as const;
 
 /**
  * Parses `COSMO_OBJEKT_WRITES`, a comma list of the indexer writes the owner turned on.
@@ -12,6 +12,7 @@ export function objektWriteModes(raw: string | undefined) {
   const known = new Set<string>(WORDS);
   return {
     anchors: words.includes("anchors"),
+    onlineAnchors: words.includes("online-anchors"),
     untransferable: words.includes("untransferable"),
     transferable: words.includes("transferable"),
     unknown: words.filter((w) => !known.has(w)),

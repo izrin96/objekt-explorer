@@ -33,7 +33,7 @@ const objekt = (id: number | string, serial: number, mintedAt = POST) => ({
 describe("computeOnlineSerials", () => {
   test("numbers post-cutoff objekts by tokenId order", () => {
     const rows = [objekt(1, 0), objekt(2, 0), objekt(3, 0)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false).updates).toEqual([
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, []).updates).toEqual([
       { id: "1", newSerial: 1 },
       { id: "2", newSerial: 2 },
       { id: "3", newSerial: 3 },
@@ -42,14 +42,14 @@ describe("computeOnlineSerials", () => {
 
   test("never changes a pre-cutoff serial, even out of tokenId order", () => {
     const rows = [objekt(1, 5, PRE), objekt(2, 3, PRE), objekt(3, 0)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false).updates).toEqual([
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, []).updates).toEqual([
       { id: "3", newSerial: 6 },
     ]);
   });
 
   test("continues above the highest pre-cutoff serial of a sparse collection", () => {
     const rows = [objekt(1, 1, PRE), objekt(2, 40, PRE), objekt(3, 0), objekt(4, 0)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false).updates).toEqual([
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, []).updates).toEqual([
       { id: "3", newSerial: 41 },
       { id: "4", newSerial: 42 },
     ]);
@@ -57,7 +57,7 @@ describe("computeOnlineSerials", () => {
 
   test("heals a late-indexed objekt into tokenId order", () => {
     const rows = [objekt(1, 1), objekt(2, 3), objekt(3, 2)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false).updates).toEqual([
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, []).updates).toEqual([
       { id: "2", newSerial: 2 },
       { id: "3", newSerial: 3 },
     ]);
@@ -65,7 +65,7 @@ describe("computeOnlineSerials", () => {
 
   test("keeps a head serial 0 without spending a serial on it", () => {
     const rows = [objekt(1, 0), objekt(2, 0), objekt(3, 0)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, true).updates).toEqual([
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, true, []).updates).toEqual([
       { id: "2", newSerial: 1 },
       { id: "3", newSerial: 2 },
     ]);
@@ -73,7 +73,67 @@ describe("computeOnlineSerials", () => {
 
   test("reports nothing when every serial is already right", () => {
     const rows = [objekt(1, 1, PRE), objekt(2, 2), objekt(3, 3)];
-    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false).updates).toEqual([]);
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, []).updates).toEqual([]);
+  });
+
+  test("an anchor ahead of mint order moves it and every later token", () => {
+    const rows = [objekt(1, 1, PRE), objekt(2, 2), objekt(3, 3), objekt(4, 4)];
+    expect(
+      computeOnlineSerials(rows, V1_CUTOFF_MS, false, [{ tokenId: "3", serial: 330 }]).updates,
+    ).toEqual([
+      { id: "3", newSerial: 330 },
+      { id: "4", newSerial: 331 },
+    ]);
+  });
+
+  test("two anchors with different shifts each set the tokens after them", () => {
+    const rows = [objekt(10, 0), objekt(11, 0), objekt(12, 0), objekt(13, 0)];
+    const anchors = [
+      { tokenId: "10", serial: 120 },
+      { tokenId: "12", serial: 230 },
+    ];
+    expect(computeOnlineSerials(rows, V1_CUTOFF_MS, false, anchors).updates).toEqual([
+      { id: "10", newSerial: 120 },
+      { id: "11", newSerial: 121 },
+      { id: "12", newSerial: 230 },
+      { id: "13", newSerial: 231 },
+    ]);
+  });
+
+  test("a later anchor at or below the running count repeats a serial", () => {
+    const rows = [100, 101, 102, 103, 104, 105].map((id) => objekt(id, 0));
+    const anchors = [
+      { tokenId: "100", serial: 120 },
+      { tokenId: "105", serial: 124 },
+    ];
+    const serials = computeOnlineSerials(rows, V1_CUTOFF_MS, false, anchors).updates.map(
+      (u) => u.newSerial,
+    );
+    expect(serials).toEqual([120, 121, 122, 123, 124, 124]);
+  });
+
+  test("tokens before the first anchor keep mint order", () => {
+    const rows = [objekt(1, 1), objekt(2, 2), objekt(3, 3)];
+    expect(
+      computeOnlineSerials(rows, V1_CUTOFF_MS, false, [{ tokenId: "3", serial: 9 }]).updates,
+    ).toEqual([{ id: "3", newSerial: 9 }]);
+  });
+
+  test("an anchor that matches mint order moves nothing", () => {
+    const rows = [objekt(1, 1), objekt(2, 2)];
+    expect(
+      computeOnlineSerials(rows, V1_CUTOFF_MS, false, [{ tokenId: "2", serial: 2 }]).updates,
+    ).toEqual([]);
+  });
+
+  test("anchors leave the head serial 0 and pre-cutoff serials alone", () => {
+    const rows = [objekt(1, 0, PRE), objekt(2, 7, PRE), objekt(3, 0), objekt(4, 0)];
+    expect(
+      computeOnlineSerials(rows, V1_CUTOFF_MS, true, [{ tokenId: "4", serial: 50 }]).updates,
+    ).toEqual([
+      { id: "3", newSerial: 8 },
+      { id: "4", newSerial: 50 },
+    ]);
   });
 });
 

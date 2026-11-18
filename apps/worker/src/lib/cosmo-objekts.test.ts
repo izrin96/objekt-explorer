@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { SummaryObjekt } from "@repo/cosmo/session-parse";
 
-import { type IndexerObjekt, observationsOf, serialEligible } from "./cosmo-objekts";
+import { type IndexerObjekt, observationsOf, serialDue, serialEligible } from "./cosmo-objekts";
 
 const ME = "0x1111111111111111111111111111111111111111";
 const OTHER = "0x3333333333333333333333333333333333333333";
@@ -29,6 +29,7 @@ const indexed = (extra: Partial<IndexerObjekt> = {}): IndexerObjekt => ({
   receivedAt: RECEIVED,
   slug: "summer26-seoyeon-101z",
   onOffline: "offline",
+  serial: 5,
   ...extra,
 });
 
@@ -51,8 +52,17 @@ describe("serialEligible", () => {
     expect(serialEligible(read, indexed({ slug: "summer26-seoyeon-102z" }))).toBe(false);
   });
 
-  test("false for an online collection", () => {
-    expect(serialEligible(read, indexed({ onOffline: "online" }))).toBe(false);
+  test("true for an online token minted after the cutoff", () => {
+    expect(serialEligible(read, indexed({ onOffline: "online" }))).toBe(true);
+  });
+
+  test("false for an online token minted before the cutoff", () => {
+    expect(serialEligible(read, indexed({ onOffline: "online", mintedAt: PRE }))).toBe(false);
+  });
+
+  test("null for a moved online token", () => {
+    const moved = indexed({ onOffline: "online", receivedAt: "2026-11-20T00:00:00.000Z" });
+    expect(serialEligible(read, moved)).toBeNull();
   });
 
   test("true for a pre-assigned online collection", () => {
@@ -76,15 +86,45 @@ describe("serialEligible", () => {
   });
 
   test("the false rules need no holder check", () => {
-    expect(serialEligible({ ...read, receivedAt: null }, indexed({ onOffline: "online" }))).toBe(
-      false,
-    );
+    expect(
+      serialEligible({ ...read, receivedAt: null }, indexed({ slug: "summer26-seoyeon-102z" })),
+    ).toBe(false);
     expect(serialEligible({ ...read, receivedAt: null }, indexed({ mintedAt: PRE }))).toBe(false);
   });
 
   test("the same instant in another notation matches", () => {
     const other = { ...read, receivedAt: "2026-08-01 09:00:00+09" };
     expect(serialEligible(other, indexed())).toBe(true);
+  });
+});
+
+describe("serialDue", () => {
+  const online = (serial: number) => indexed({ onOffline: "online", serial });
+
+  test("an online read that matches the indexer is settled", () => {
+    expect(serialDue(true, 5, online(5))).toBe(false);
+  });
+
+  test("an online read that differs is due", () => {
+    expect(serialDue(true, 332, online(5))).toBe(true);
+  });
+
+  test("an offline read is due whatever the serial", () => {
+    expect(serialDue(true, 5, indexed({ serial: 5 }))).toBe(true);
+  });
+
+  test("a pre-assigned online collection is due like an offline one", () => {
+    expect(serialDue(true, 5, indexed({ slug: "cream02-jiyeon-315z", onOffline: "online" }))).toBe(
+      true,
+    );
+  });
+
+  test("a read not eligible is never due", () => {
+    expect(serialDue(false, 9, online(5))).toBe(false);
+  });
+
+  test("a read the indexer lacks is due, so it gets judged", () => {
+    expect(serialDue(null, 9, undefined)).toBe(true);
   });
 });
 
@@ -104,6 +144,7 @@ describe("observationsOf", () => {
         nonTransferableReason: "challenge-reward",
         usedForGrid: true,
         serialEligible: true,
+        serialDue: true,
         chainHeight: 900,
         observedAt: NOW,
         receivedAt: RECEIVED,
@@ -156,9 +197,9 @@ describe("observationsOf", () => {
     expect(rows).toHaveLength(1);
   });
 
-  test("an online collection's read is judged not eligible", () => {
+  test("an online collection's post-cutoff read is judged eligible", () => {
     const { rows } = observe([objekt("1")], [["1", indexed({ onOffline: "online" })]]);
-    expect(rows[0]?.serialEligible).toBe(false);
+    expect(rows[0]?.serialEligible).toBe(true);
   });
 
   test("a read whose collection differs from the indexer's is not eligible", () => {

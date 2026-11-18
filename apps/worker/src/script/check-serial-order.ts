@@ -2,6 +2,8 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 
+import { loadOnlineConfirmedSerials } from "@/job/confirmed-serials";
+import { onlineAnchors } from "@/lib/online-anchors";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOnlineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
@@ -21,7 +23,8 @@ type ObjektRow = { id: string; serial: number; mintedAt: string };
  *
  * The job self-heals a collection only when it gets a new serial-0 mint; this
  * script covers collections that drifted but have no pending mint to trigger the
- * job. Default dry-run; `--apply` writes.
+ * job. Default dry-run; `--apply` writes. Run it with the worker's
+ * `COSMO_OBJEKT_WRITES`, or it drops the online anchors.
  */
 async function main() {
   console.log(
@@ -69,7 +72,12 @@ async function main() {
     const isNew = sorted.every((o) => o.serial === 0);
     const headSkip = !isNew && sorted[0]!.serial === 0;
 
-    const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip);
+    // the worker's online anchors, so a sweep never undoes an anchored serial
+    const merge = onlineAnchors(await loadOnlineConfirmedSerials(slug), sorted, headSkip);
+    if (merge.conflicts.length > 0) {
+      console.log(`  ⚠️  ${slug}: ${merge.conflicts.length} confirmed serial(s) conflict, unused`);
+    }
+    const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip, merge.anchors);
 
     if (updates.length === 0) {
       cleanCollections++;

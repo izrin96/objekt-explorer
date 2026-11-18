@@ -51,9 +51,10 @@ async function indexedHolders(tokenIds: string[]) {
     received_at: string;
     slug: string;
     on_offline: IndexerObjekt["onOffline"];
+    serial: number;
   }>(sql`
     SELECT o.id, lower(o.owner) AS owner, to_json(o.minted_at) #>> '{}' AS minted_at,
-      to_json(o.received_at) #>> '{}' AS received_at, c.slug, c.on_offline
+      to_json(o.received_at) #>> '{}' AS received_at, c.slug, c.on_offline, o.serial
     FROM objekt o JOIN collection c ON c.id = o.collection_id
     WHERE o.id = ANY(${sql.param(tokenIds)}::varchar[])
   `);
@@ -66,6 +67,7 @@ async function indexedHolders(tokenIds: string[]) {
         receivedAt: r.received_at,
         slug: r.slug,
         onOffline: r.on_offline,
+        serial: r.serial,
       },
     ]),
   );
@@ -78,7 +80,7 @@ const REJUDGE_AFTER = "7 days";
  * A repeated read only refreshes `observed_at` and `chain_height`: the transferable step judges
  * the row again only when `transferable`, the reason, `objekt_no`, `slug` or the recorded
  * `received_at` changed, or its last judgement is older than REJUDGE_AFTER. A serial is the token's for life,
- * so only a changed `objekt_no` or `slug` re-judges eligibility or queues a rewrite, and an
+ * so only a changed `objekt_no` or `slug` re-judges eligibility or queues a rewrite (`serialDue`), and an
  * operator's `serial_eligible = false` survives repeated reads. An older read never overwrites a
  * newer one. Returns the rows written and how many of them were new or changed.
  */
@@ -93,8 +95,10 @@ async function upsertObjekts(rows: ObservedRow[], chainHeight: number, observedA
         ${sql.param(rows.map((r) => r.nonTransferableReason))}::varchar[],
         ${sql.param(rows.map((r) => r.usedForGrid))}::boolean[],
         ${sql.param(rows.map((r) => r.serialEligible))}::boolean[],
+        ${sql.param(rows.map((r) => r.serialDue))}::boolean[],
         ${sql.param(rows.map((r) => r.receivedAt))}::timestamptz[]
-      ) AS r(token_id, slug, objekt_no, transferable, reason, used_for_grid, eligible, received_at)
+      ) AS r(token_id, slug, objekt_no, transferable, reason, used_for_grid, eligible, due,
+        received_at)
     ),
     -- every sub-statement sees the snapshot before the upsert, so this is the rows as they were
     prev AS (
@@ -107,8 +111,7 @@ async function upsertObjekts(rows: ObservedRow[], chainHeight: number, observedA
         non_transferable_reason, used_for_grid, chain_height, observed_at, received_at,
         serial_eligible, serial_due, transferable_due)
       SELECT r.token_id, r.slug, r.objekt_no, r.transferable, r.reason, r.used_for_grid,
-        ${chainHeight}, ${observedAt}::timestamptz, r.received_at, r.eligible,
-        r.eligible IS DISTINCT FROM false, true
+        ${chainHeight}, ${observedAt}::timestamptz, r.received_at, r.eligible, r.due, true
       FROM incoming r
       ON CONFLICT (token_id) DO UPDATE SET
         slug = excluded.slug,
@@ -132,9 +135,8 @@ async function upsertObjekts(rows: ObservedRow[], chainHeight: number, observedA
             OR co.serial_eligible IS NULL
           THEN excluded.serial_eligible ELSE co.serial_eligible END,
         serial_due = CASE
-          WHEN (co.objekt_no <> excluded.objekt_no OR co.slug <> excluded.slug)
-            AND excluded.serial_eligible IS DISTINCT FROM false
-          THEN true ELSE co.serial_due END
+          WHEN co.objekt_no <> excluded.objekt_no OR co.slug <> excluded.slug
+          THEN excluded.serial_due ELSE co.serial_due END
       WHERE co.observed_at <= excluded.observed_at
       RETURNING co.token_id, co.transferable, co.non_transferable_reason, co.objekt_no, co.slug,
         co.received_at

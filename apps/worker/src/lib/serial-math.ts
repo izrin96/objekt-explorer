@@ -27,12 +27,17 @@ export { V1_CUTOFF_MS };
  *    of being appended at the very end.
  *  - `headSkip`: when true, the lowest-tokenId objekt (idx 0) is an intentional
  *    permanent serial 0 — preserved and consuming no serial.
+ *  - `anchors`: confirmed serials (`onlineAnchors`). An anchored token takes its
+ *    serial and the tokens after it count on from there, so Cosmo's serials that
+ *    never became mints, and its double mints, show up at the anchor.
  */
 export function computeOnlineSerials(
   sortedByTokenId: { id: string; serial: number; mintedAt: string }[],
   cutoffMs: number,
   headSkip: boolean,
+  anchors: { tokenId: string; serial: number }[],
 ): { updates: { id: string; newSerial: number }[] } {
+  const anchored = new Map(anchors.map((a) => [a.tokenId, a.serial] as const));
   // highest serial among trusted pre-cutoff objekts; post-cutoff serials continue
   // above it so a reassignment can never collide with an existing serial.
   let maxPre = 0;
@@ -49,7 +54,9 @@ export function computeOnlineSerials(
     // pre-cutoff: trust the stored serial, never change it
     if (Date.parse(o.mintedAt) < cutoffMs) return;
 
-    const canonical = next++;
+    // an anchor restarts the count, so later tokens follow it and may repeat a serial
+    const canonical = anchored.get(o.id) ?? next;
+    next = canonical + 1;
     if (canonical !== o.serial) {
       updates.push({ id: o.id, newSerial: canonical });
     }

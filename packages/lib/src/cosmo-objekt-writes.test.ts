@@ -2,7 +2,13 @@ import { describe, expect, test } from "bun:test";
 
 import { objektWriteModes } from "./cosmo-objekt-writes";
 
-const off = { anchors: false, untransferable: false, transferable: false, unknown: [] };
+const off = {
+  anchors: false,
+  onlineAnchors: false,
+  untransferable: false,
+  transferable: false,
+  unknown: [],
+};
 
 describe("objektWriteModes", () => {
   test("unset and empty turn nothing on", () => {
@@ -25,10 +31,20 @@ describe("objektWriteModes", () => {
   test("all three", () => {
     expect(objektWriteModes("anchors,untransferable,transferable")).toEqual({
       anchors: true,
+      onlineAnchors: false,
       untransferable: true,
       transferable: true,
       unknown: [],
     });
+  });
+
+  test("online anchors are their own word", () => {
+    expect(objektWriteModes("anchors,online-anchors")).toEqual({
+      ...off,
+      anchors: true,
+      onlineAnchors: true,
+    });
+    expect(objektWriteModes("online-anchors").anchors).toBe(false);
   });
 
   test("an unknown word is reported and ignored", () => {

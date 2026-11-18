@@ -7,7 +7,14 @@ import { and, eq, gte, notInArray, inArray, like, or, lte, sql } from "drizzle-o
 import type { ConfirmedSerial } from "@/lib/cosmo-anchors";
 import { errorCode } from "@/lib/error-code";
 import { heartbeat, log, type Logger } from "@/lib/log";
-import { type MergeTally, mergeTally, withConfirmed } from "@/lib/merge-tally";
+import {
+  type MergeTally,
+  mergeTally,
+  tallyDetails,
+  tallyWarning,
+  withConfirmed,
+} from "@/lib/merge-tally";
+import { onlineAnchors } from "@/lib/online-anchors";
 import {
   preAssignedCollections as excludeCollections,
   MINT_DELAY_MS,
@@ -21,7 +28,11 @@ import {
 
 import {
   applyConfirmedSerials,
+  applyDue,
+  judgeUnjudged,
   loadConfirmedSerials,
+  loadOnlineConfirmedSerials,
+  onlineAnchorsOn,
   offlineBeat,
   offlineLog,
   reportMerges,
@@ -70,8 +81,9 @@ function logWritten(logger: Logger, counts: number[]) {
 // excludeCollections and populateSerialOffline).
 
 export async function populateSerial() {
+  const tally = mergeTally();
   const collectionDiscover = await indexer
-    .selectDistinctOn([collections.id], { id: collections.id })
+    .selectDistinctOn([collections.id], { id: collections.id, slug: collections.slug })
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
     .where(
@@ -90,10 +102,58 @@ export async function populateSerial() {
   onlineBeat.count("collections checked", collectionDiscover.length);
   const updated: number[] = [];
   await chunk(collectionDiscover, COLLECTION_CONCURRENCY, async (batch) => {
-    updated.push(...(await Promise.all(batch.map(({ id }) => processCollection(id)))));
+    const results = await Promise.all(batch.map((c) => processCollection(c, tally)));
+    updated.push(...results.map((r) => r.written));
   });
   logWritten(onlineLog, updated);
+  try {
+    await applyOnlineConfirmedSerials(tally);
+  } catch (error) {
+    onlineLog.warn(`confirmed serials not applied: ${errorCode(error)}`);
+  }
+  reportOnlineMerges(tally);
   onlineBeat.flush();
+}
+
+/** The run's conflicts and refusals of online confirmed serials, as one `warn`. */
+function reportOnlineMerges(tally: MergeTally) {
+  const line = tallyWarning(tally);
+  if (!line) return;
+  onlineLog.warn(line);
+  for (const detail of tallyDetails(tally)) onlineLog.debug(detail);
+}
+
+/**
+ * Online twin of `applyConfirmedSerials`: rewrite the online collections with new confirmed
+ * serials, since populate only revisits a collection holding a serial 0. Runs under this job's
+ * lock, so online serials keep one writer.
+ */
+async function applyOnlineConfirmedSerials(tally: MergeTally) {
+  if (!onlineAnchorsOn()) return;
+  await applyDue(
+    "online",
+    async (slug, rows) => {
+      const eligible = new Map(rows.map((r) => [r.tokenId, r.serialEligible] as const));
+      await judgeUnjudged(slug, rows, eligible);
+      const settled = new Set<string>();
+      for (const [tokenId, value] of eligible) if (value === false) settled.add(tokenId);
+
+      const [collection] = await indexer
+        .select({ id: collections.id, onOffline: collections.onOffline })
+        .from(collections)
+        .where(eq(collections.slug, slug))
+        .limit(1);
+      if (!collection || collection.onOffline !== "online") return { written: null, settled };
+
+      const result = await processCollection({ id: collection.id, slug }, tally);
+      // a read whose token is not yet among the rows, or was refused, stays due for a later run
+      for (const [tokenId, value] of eligible) {
+        if (value === true && result.anchored.has(tokenId)) settled.add(tokenId);
+      }
+      return { written: result.written, settled };
+    },
+    { log: onlineLog, beat: onlineBeat },
+  );
 }
 
 /**
@@ -105,7 +165,11 @@ export async function populateSerial() {
  *    inversions from out-of-order indexing. Pre-cutoff serials are trusted and
  *    never changed; an intentional head serial 0 is preserved.
  */
-async function processCollection(collectionId: string): Promise<number> {
+async function processCollection(
+  { id: collectionId, slug }: { id: string; slug: string },
+  tally: MergeTally,
+): Promise<{ written: number; anchored: Set<string> }> {
+  const none = { written: 0, anchored: new Set<string>() };
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -117,7 +181,7 @@ async function processCollection(collectionId: string): Promise<number> {
       ),
     );
 
-  if (allObjekts.length === 0) return 0;
+  if (allObjekts.length === 0) return none;
 
   const sorted = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
 
@@ -134,7 +198,7 @@ async function processCollection(collectionId: string): Promise<number> {
       .where(eq(collections.id, collectionId))
       .limit(1);
 
-    if (!collection) return 0;
+    if (!collection) return none;
 
     const firstTokenId = parseInt(sorted[0]!.id);
     const baseTokenId = await findBoundaryTokenId(collection.collectionId, firstTokenId, -1);
@@ -142,7 +206,7 @@ async function processCollection(collectionId: string): Promise<number> {
     if (baseTokenId !== firstTokenId) {
       onlineBeat.count("pre-assigned skipped");
       onlineLog.debug(`${collectionId}: pre-assigned, skipping`);
-      return 0;
+      return none;
     }
   }
 
@@ -155,14 +219,23 @@ async function processCollection(collectionId: string): Promise<number> {
   // An old collection may intentionally keep its lowest-tokenId objekt at serial
   // 0 (headSkip) — that objekt is preserved and the rest number from 1 after it.
   const headSkip = !isNew && sorted[0]!.serial === 0;
-  const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip);
+  const merge = onlineAnchors(await loadOnlineConfirmedSerials(slug), sorted, headSkip);
+  tally.record(collectionId, merge);
+  const anchored = new Set(merge.anchors.map((a) => a.tokenId));
+  const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip, merge.anchors);
 
-  if (updates.length === 0) return 0;
+  if (updates.length === 0) return { written: 0, anchored };
 
+  if (merge.anchors.length > 0) {
+    const shift = shiftedSerials(sorted, updates);
+    if (shift) {
+      onlineLog.warn(`${slug}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`);
+    }
+  }
   await writeSerialUpdates(updates);
   onlineBeat.count("objekts updated", updates.length);
   onlineLog.debug(`${collectionId}: updated ${updates.length} objekts`);
-  return updates.length;
+  return { written: updates.length, anchored };
 }
 
 export async function populateSerialOffline() {
