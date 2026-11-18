@@ -1,3 +1,4 @@
+import { COLLECTION_MODIFIED_AT_KEY, nextModifiedAt } from "@repo/api/lib/collection-bump";
 import { indexer } from "@repo/db/indexer";
 import type { Collection } from "@repo/db/indexer/schema";
 import { collections } from "@repo/db/indexer/schema";
@@ -114,7 +115,9 @@ export async function processCollectionImages() {
   });
 
   if (succeeded > 0) {
-    await redis.set("collection:modified-at", new Date().toISOString());
+    const previous = await redis.get(COLLECTION_MODIFIED_AT_KEY);
+    const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
+    await redis.set(COLLECTION_MODIFIED_AT_KEY, next);
   }
 
   imagesLog.info(`Done: ${succeeded} succeeded, ${failed} failed`);
