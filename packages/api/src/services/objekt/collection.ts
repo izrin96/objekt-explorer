@@ -1,6 +1,8 @@
 import { toIndexedArtist } from "@repo/cosmo/types/common";
+import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { collectionMedia } from "@repo/db/schema";
 import { Addresses } from "@repo/lib";
 import {
   dropStillMinting,
@@ -222,13 +224,13 @@ export async function collectionListModifiedAt() {
 const DRAWER_TTL_SECONDS = 60;
 
 export function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
-  return getCache(`collection-metadata:1:${slug}`, DRAWER_TTL_SECONDS, () =>
+  return getCache(`collection-metadata:2:${slug}`, DRAWER_TTL_SECONDS, () =>
     readCollectionMetadata(slug),
   );
 }
 
 async function readCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
-  const [[result], [row]] = await Promise.all([
+  const [[result], [row], [media]] = await Promise.all([
     indexer
       .select({
         total: count(),
@@ -256,11 +258,17 @@ async function readCollectionMetadata(slug: string): Promise<CollectionMetadataO
       .from(collections)
       .where(eq(collections.slug, slug))
       .limit(1),
+    db
+      .select({ frontMedia: collectionMedia.frontMedia })
+      .from(collectionMedia)
+      .where(eq(collectionMedia.slug, slug))
+      .limit(1),
   ]);
 
   const { topSerial, ...counts } = result ?? { total: 0, spin: 0, transferable: 0, topSerial: 0 };
   if (!row) return { ...counts, serialEstimate: null };
-  const { id, season, collectionNo, artist, onOffline, batches, ...images } = row;
+  const { id, season, collectionNo, artist, onOffline, batches, ...rest } = row;
+  const images = media?.frontMedia ? { ...rest, originalFrontMedia: media.frontMedia } : rest;
   if (onOffline !== "offline" || !batches || batches.length === 0) {
     return { ...counts, serialEstimate: null, ...images };
   }

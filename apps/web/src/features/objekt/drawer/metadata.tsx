@@ -59,7 +59,12 @@ export function MetadataPanel({
 }: {
   objekt: ValidObjekt;
   /** the collection's metadata, which carries the Cosmo URLs the collection list leaves out */
-  originals: Pick<CollectionMetadataOutput, "originalFrontImage" | "originalBackImage"> | undefined;
+  originals:
+    | Pick<
+        CollectionMetadataOutput,
+        "originalFrontImage" | "originalBackImage" | "originalFrontMedia"
+      >
+    | undefined;
   tokenId: string | null;
   mintedAt: Date | null;
 }) {
@@ -68,6 +73,7 @@ export function MetadataPanel({
   // not every surface tags its objekts, so derive it here
   const edition = getCollectionEdition(objekt);
   const kind = mediaKind(objekt.frontMedia);
+  const frontMedia = originals?.originalFrontMedia ?? objekt.frontMedia;
 
   return (
     /* `minmax(0,1fr)`: a bare `1fr` is floored at the value's min-content, and
@@ -133,12 +139,12 @@ export function MetadataPanel({
       </MetaRow>
       {kind === "video" ? (
         <MetaRow label={m.objekt_motion()} mono>
-          <MetaLink href={objekt.frontMedia} />
+          <MetaLink href={frontMedia} />
         </MetaRow>
       ) : null}
       {kind === "audio" ? (
         <MetaRow label={m.objekt_voice()} mono>
-          <MetaLink href={objekt.frontMedia} />
+          <MetaLink href={frontMedia} />
         </MetaRow>
       ) : (
         <MetaRow label={m.objekt_voice()}>

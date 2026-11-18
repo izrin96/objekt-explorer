@@ -18,6 +18,10 @@ export const collectionMetadataOutputSchema = z.object({
   // the Cosmo-hosted images, which the web's collection list leaves out
   originalFrontImage: z.string().optional(),
   originalBackImage: z.string().optional(),
+  originalFrontMedia: z.string().optional().meta({
+    description:
+      "Cosmo's URL of the motion or voice file, known once a connected account has synced the collection; frontMedia is the site's copy.",
+  }),
 });
 export type CollectionMetadataOutput = z.infer<typeof collectionMetadataOutputSchema>;
 
