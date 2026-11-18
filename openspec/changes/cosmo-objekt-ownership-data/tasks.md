@@ -237,5 +237,5 @@
 ## Workflow follow-up
 
 - Archive `cosmo-qr-collection-media` before this change: this change's `web-cosmo-session` delta modifies a requirement that change adds, and archive refuses it otherwise.
-- Archive this change with `/opsx:archive` once 9.2 to 9.4 are done.
+- Archive this change with `/opsx:archive` once 9.2 to 9.4 are done. Its `web-trade-offers`, `worker-cosmo-objekt-data` and `worker-offline-serials` deltas were synced into the main specs on 2026-11-19, and `online-confirmed-serials` and `online-read-serials-exact` were archived on top of them, so archive with `--skip-specs` after syncing only the `web-cosmo-session` delta by hand (`/opsx:sync`).
 - Follow-ups: show grid use and the non-transferable reason on the site (stored since this change; a reader treats them as current only while the indexer's `received_at` equals the row's recorded `received_at`), with labels for new reasons (9.6); lenticular pairs once something shows them.

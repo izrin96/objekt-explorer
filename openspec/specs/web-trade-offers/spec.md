@@ -325,7 +325,7 @@ An any-copy item SHALL read "Any serial · N available" in You get's picker and 
 - **THEN** the counter is sent, even though #537 is on a hidden-serial list
 
 ### Requirement: Estimated serials are marked
-A serial is exact when Cosmo supplied it or when it follows from one Cosmo supplied. That holds for an objekt minted before Cosmo's v1 metadata cutoff (2026-06-04 08:07:02 UTC), and for a later objekt that sits in an anchored range: a reserved token range of its collection that also holds a pre-cutoff objekt's serial or a reported serial recorded as a manual anchor. Every other serial of an objekt minted at or after the cutoff is one the system estimated. That covers an offline objekt in a range with no anchor, an objekt outside every stored range, and every post-cutoff objekt of an online collection.
+A serial is exact when Cosmo supplied it or when it follows from one Cosmo supplied. That holds for an objekt minted before Cosmo's v1 metadata cutoff (2026-06-04 08:07:02 UTC), and for a later objekt that sits in an anchored range: a reserved token range of its collection that also holds a pre-cutoff objekt's serial, a reported serial recorded as a manual anchor, or, while the operator lets the serial job use them, a serial a connected account's Cosmo read confirmed (see `worker-offline-serials`). An objekt of an online collection minted after the cutoff is exact when, while the operator lets the serial job use online reads, a connected account's read confirmed that objekt's own serial and the shown serial equals it (see `worker-online-serials`); a later objekt counted on from such a read is not. The mark SHALL count only confirmed serials the serial job has already rewritten the collection with, and SHALL NOT count a range whose confirmed serials, including ones not yet rewritten, disagree with each other, so the mark never calls a serial exact that the job left estimated. Every other serial of an objekt minted at or after the cutoff is one the system estimated. That covers an offline objekt in a range with no anchor, an objekt outside every stored range, and every other post-cutoff objekt of an online collection.
 
 Wherever a trade surface shows a specific objekt's serial, an estimated serial SHALL read with a leading "~", as in "HyeRin 301Z ~#1203", and its accessible name SHALL say it is an estimate. An exact serial SHALL read as today ("#1203"). An objekt not yet numbered SHALL show its name with no serial.
 
@@ -360,6 +360,34 @@ When any objekt shown in the builder, or any waiting leg on the trade page, has 
 #### Scenario: Not numbered yet
 - **WHEN** an offer holds an objekt minted a minute ago, before the worker numbered it
 - **THEN** the item shows its collection name with no serial
+
+#### Scenario: Confirmed serial anchors a range
+- **WHEN** confirmed serials are enabled, a connected account's read confirmed token 51000250 as serial 251, its range holds no manual anchor or pre-cutoff serial, and an offer holds another objekt of that range
+- **THEN** that objekt's serial reads with no mark
+
+#### Scenario: Confirmed serial not yet applied
+- **WHEN** confirmed serials are enabled and a connected account's read confirmed token 51000250 as serial 251 a minute ago, before the serial job rewrote its collection
+- **THEN** an objekt of that range still reads with "~" until the serial job has rewritten the collection
+
+#### Scenario: Confirmed serials not enabled
+- **WHEN** confirmed serials are not enabled and a range holds only a confirmed serial
+- **THEN** an objekt of that range reads with "~"
+
+#### Scenario: An online objekt with its own read
+- **WHEN** online reads are enabled, a connected account's read confirmed token 27735402 of Atom02 HeeJin 101Z as serial 1990, the site shows 1990, and an offer holds 27735402
+- **THEN** its serial reads "#1990" with no mark
+
+#### Scenario: An online objekt counted on from a read
+- **WHEN** an offer holds the token after 27735402 in Atom02 HeeJin 101Z, which has no read of its own and shows 1991
+- **THEN** its serial reads "~#1991"
+
+#### Scenario: An online read the site does not show
+- **WHEN** a read confirmed token 61000100 as 120, but the site still shows 118 because the serial job has not applied it or left it out as a conflict
+- **THEN** its serial reads "~#118"
+
+#### Scenario: Online reads not enabled
+- **WHEN** online reads are not enabled and a read confirmed token 27735402's serial
+- **THEN** its serial reads with "~"
 
 ### Requirement: My trades
 `/trade/mine` SHALL list the signed-in user's offers and trades in four groups:
