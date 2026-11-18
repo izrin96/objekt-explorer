@@ -1,12 +1,9 @@
 import { lookup } from "node:dns/promises";
 
 import { db } from "@repo/db";
-import { indexer } from "@repo/db/indexer";
-import { collections } from "@repo/db/indexer/schema";
 import { collectionMedia } from "@repo/db/schema";
-import { chunk } from "@repo/lib";
 import { acceptMediaUrl } from "@repo/lib/collection-media";
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 
 import { errorCode } from "@/lib/error-code";
 import { log } from "@/lib/log";
@@ -19,14 +16,15 @@ import {
   failureForStatus,
   isPublicAddress,
   MAX_BYTES,
+  MEDIA_PREFIX,
   sniffVideo,
 } from "@/lib/media-copy";
+import { epochMs, indexedSlugs } from "@/lib/media-db";
 import { mediaStorageConfigured, objectUrl, putObject } from "@/lib/s3";
 
 const copyLog = log("media-copy");
 
 const FETCH_TIMEOUT_MS = 60_000;
-const SLUG_CHUNK = 500;
 
 let warnedUnconfigured = false;
 
@@ -134,18 +132,6 @@ async function recordCopy(source: string, url: string, slugs: string[]) {
     .where(and(inArray(collectionMedia.slug, slugs), eq(collectionMedia.frontMedia, source)));
 }
 
-async function indexerSlugsOf(slugs: string[]) {
-  const found = new Set<string>();
-  await chunk(slugs, SLUG_CHUNK, async (part) => {
-    const rows = await indexer
-      .select({ slug: collections.slug })
-      .from(collections)
-      .where(inArray(collections.slug, part));
-    for (const row of rows) found.add(row.slug);
-  });
-  return found;
-}
-
 /**
  * Copies each recorded motion or voice file into the bucket and records our URL beside the
  * record (Decision 9). Writes the bucket and `collection_media` only: the apply in
@@ -169,8 +155,6 @@ async function runCopy() {
     return;
   }
 
-  // epoch milliseconds, since the driver's timestamptz strings are not a format `Date` promises to read
-  const epochMs = (column: unknown) => sql<number>`(extract(epoch from ${column}) * 1000)::float8`;
   const records = await db
     .select({
       slug: collectionMedia.slug,
@@ -187,9 +171,9 @@ async function runCopy() {
   const startedAt = Date.now();
   const { downloads, reuses } = dueCopies(
     records,
-    await indexerSlugsOf(records.map((r) => r.slug)),
+    await indexedSlugs(records.map((r) => r.slug)),
     startedAt,
-    objectUrl("collection-media/"),
+    objectUrl(MEDIA_PREFIX),
   );
   if (downloads.length === 0 && reuses.length === 0) return;
 

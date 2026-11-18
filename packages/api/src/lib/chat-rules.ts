@@ -8,9 +8,8 @@ import {
 } from "../schemas/chat";
 import type { ListType } from "../schemas/list";
 import { defaultProfile, type LinkedProfile } from "../schemas/trade-person";
+import { MINUTE_MS } from "./time";
 import { nameProfile, type PartnerIdentity } from "./trade-rank";
-
-const MINUTE_MS = 60 * 1000;
 
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
 

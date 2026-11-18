@@ -1,6 +1,8 @@
 // Where the collection-media sync keeps its Cosmo backoff (Decision 10): in Valkey, so a restart,
 // which runs the job at once, does not reset it; in process memory when Valkey is unreachable.
 
+import { HOUR_MS } from "@repo/api/lib/time";
+
 export type Backoff = { until: number; minutes: number };
 
 /** The stored value, or null when it is missing or not `{until, minutes}` numbers. */
@@ -25,7 +27,7 @@ export type BackoffKv = {
 };
 
 // the record outlives `until` so the next failing run doubles it, but a long quiet spell resets it
-const KEEP_AFTER_UNTIL_MS = 6 * 60 * 60 * 1000;
+const KEEP_AFTER_UNTIL_MS = 6 * HOUR_MS;
 
 async function within<T>(promise: Promise<T>, ms: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;

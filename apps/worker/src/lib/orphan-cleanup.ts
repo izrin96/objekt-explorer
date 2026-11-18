@@ -1,6 +1,8 @@
-const HOUR = 3_600_000;
-const MIN_AGE_MS = 2 * HOUR;
-const MEDIA_PREFIX = "collection-media/";
+import { HOUR_MS } from "@repo/api/lib/time";
+
+import { MEDIA_PREFIX } from "./media-copy";
+
+const MIN_AGE_MS = 2 * HOUR_MS;
 
 type Listed = { key: string; lastModified: number };
 

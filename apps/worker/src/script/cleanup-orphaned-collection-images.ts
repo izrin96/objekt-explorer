@@ -10,10 +10,9 @@ import { collections } from "@repo/db/indexer/schema";
 import { collectionMedia } from "@repo/db/schema";
 import { S3Client } from "bun";
 
+import { MEDIA_PREFIX } from "../lib/media-copy";
 import { planOrphans } from "../lib/orphan-cleanup";
 import { FOLDER, keyFromUrl, mediaKeyFromUrl } from "../lib/s3";
-
-const MEDIA_FOLDER = "collection-media";
 
 const endpoint = process.env.S3_ENDPOINT;
 const accessKeyId = process.env.S3_ACCESS_KEY;
@@ -31,13 +30,13 @@ const s3Config = { accessKeyId, secretAccessKey, endpoint, region };
 async function cleanupOrphanedCollectionImages() {
   const apply = process.env.APPLY === "1";
   const objects: { key: string; lastModified: number }[] = [];
-  for (const folder of [FOLDER, MEDIA_FOLDER]) {
-    console.log(`[cleanup] Listing objects in ${folder}...`);
+  for (const prefix of [`${FOLDER}/`, MEDIA_PREFIX]) {
+    console.log(`[cleanup] Listing objects in ${prefix}...`);
     let continuationToken: string | undefined;
 
     do {
       const listResult = await S3Client.list(
-        { prefix: `${folder}/`, continuationToken },
+        { prefix, continuationToken },
         { ...s3Config, bucket },
       );
 

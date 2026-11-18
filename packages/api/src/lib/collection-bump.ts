@@ -1,3 +1,6 @@
+/** When the collection list last changed, as an ISO string; a bump makes browsers refetch it. */
+export const COLLECTION_MODIFIED_AT_KEY = "collection:modified-at";
+
 /**
  * The next `collection:modified-at`, in ms: now, or a second past the stored one when that is
  * later. Last-Modified is floored to the second, so a bump in the same second as the date a

@@ -12,7 +12,11 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
 
-import { listModifiedMs, nextModifiedAt } from "../../lib/collection-bump";
+import {
+  COLLECTION_MODIFIED_AT_KEY,
+  listModifiedMs,
+  nextModifiedAt,
+} from "../../lib/collection-bump";
 import { type ListShape, type ShapedList, shapeRows } from "../../lib/collection-shape";
 import { tokenIdWindow } from "../../lib/token-id-window";
 import type {
@@ -24,8 +28,6 @@ import type {
 } from "../../schemas/collections";
 import { getCache, redis, redisFailOpen } from "../redis";
 import { getCollectionColumns } from "./collection-columns";
-
-const MODIFIED_AT_KEY = "collection:modified-at";
 
 type CollectionListQuery = Pick<CollectionListInput, "artist" | "at"> & Partial<ListShape>;
 
@@ -111,7 +113,7 @@ export async function fetchCollectionList(
   const whereQuery = and(...filters);
 
   const [stored, [latest]] = await Promise.all([
-    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+    redisFailOpen("collection modified-at", () => redis.get(COLLECTION_MODIFIED_AT_KEY)),
     indexer
       .select({ id: collections.id, createdAt: collections.createdAt })
       .from(collections)
@@ -193,11 +195,11 @@ export async function bumpCollectionList() {
   // past the list's last change, a new row's write included, not only the stored bump: a browser
   // given a time in this second would otherwise get a 304
   const previous = await collectionListModifiedAt().catch(() =>
-    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+    redisFailOpen("collection modified-at", () => redis.get(COLLECTION_MODIFIED_AT_KEY)),
   );
   const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
   const written = await redisFailOpen("collection modified-at bump", () =>
-    redis.set(MODIFIED_AT_KEY, next),
+    redis.set(COLLECTION_MODIFIED_AT_KEY, next),
   );
   return { refreshed: written !== null, modifiedAt: written === null ? null : next };
 }
@@ -205,7 +207,7 @@ export async function bumpCollectionList() {
 /** When the full collection list last changed, as `fetchCollectionList` reads it, unfloored. */
 export async function collectionListModifiedAt() {
   const [stored, [latest]] = await Promise.all([
-    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+    redisFailOpen("collection modified-at", () => redis.get(COLLECTION_MODIFIED_AT_KEY)),
     indexer
       .select({ id: collections.id, createdAt: collections.createdAt })
       .from(collections)

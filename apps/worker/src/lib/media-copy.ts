@@ -4,19 +4,20 @@
 import { createHash } from "node:crypto";
 import { isIPv4, isIPv6 } from "node:net";
 
+import { HOUR_MS, MINUTE_MS } from "@repo/api/lib/time";
 import { acceptMediaUrl } from "@repo/lib/collection-media";
 
-const MIN = 60_000;
 const MB = 1024 * 1024;
 
 export const MAX_BYTES = 64 * MB;
 const RUN_OBJECTS = 20;
 const RUN_BYTES = 300 * MB;
-const RUN_MS = 5 * MIN;
+const RUN_MS = 5 * MINUTE_MS;
 const FAIL_STREAK = 3;
-const RETRY_AFTER_MS = 6 * 60 * MIN;
+const RETRY_AFTER_MS = 6 * HOUR_MS;
 
-const KEY_DIR = "collection-media/";
+/** The bucket folder of every media copy; `s3.ts` and the orphan sweep read it from here. */
+export const MEDIA_PREFIX = "collection-media/";
 const HASH_LENGTH = 32;
 
 // Voice collections carry their media (a video with sound so far) as `frontMedia`, so they share the
@@ -27,7 +28,7 @@ const FOLDERS: readonly MediaFolder[] = ["motion", "voice"];
 
 /** Only the folder, the source URL's hash and the sniffed extension reach the key: no slug, no URL path. */
 export function copyKey(sourceUrl: string, ext: MediaExt, folder: MediaFolder) {
-  return `${KEY_DIR}${folder}/${sourceHash(sourceUrl)}.${ext}`;
+  return `${MEDIA_PREFIX}${folder}/${sourceHash(sourceUrl)}.${ext}`;
 }
 
 function sourceHash(sourceUrl: string) {

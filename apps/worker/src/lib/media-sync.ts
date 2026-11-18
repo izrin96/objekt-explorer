@@ -1,19 +1,18 @@
 // The pure rules of the collection-media sync (Decision 10): paging, due order, cadence, backoff
 // and the per-run budget. No database, Redis or Cosmo access, so it can be tested on its own.
 
-const MIN = 60_000;
-const HOUR = 60 * MIN;
+import { HOUR_MS, MINUTE_MS } from "@repo/api/lib/time";
 
 export const PAGE_SIZE = 30;
 export const MAX_PAGES = 40;
 const RUN_REQUESTS = 50;
-const RUN_MS = 4 * MIN;
+const RUN_MS = 4 * MINUTE_MS;
 const SESSION_MIN_REQUESTS = 2;
-const SYNC_EVERY_MS = 72 * HOUR;
+const SYNC_EVERY_MS = 72 * HOUR_MS;
 const JITTER_MINUTES = 360;
 const BACKOFF_FIRST = 5;
 const BACKOFF_CAP = 120;
-const RETRY_AFTER_MS = 6 * HOUR;
+const RETRY_AFTER_MS = 6 * HOUR_MS;
 
 /**
  * The page to read after `page` (1-based, the one just read), or null when the artist is done:
@@ -73,7 +72,7 @@ function hashId(id: number) {
 
 /** 72 hours after `completedAt`, plus the id hashed to 0..360 minutes so accounts connected together drift apart. */
 export function nextSyncAt(id: number, completedAt: number) {
-  return completedAt + SYNC_EVERY_MS + (hashId(id) % (JITTER_MINUTES + 1)) * MIN;
+  return completedAt + SYNC_EVERY_MS + (hashId(id) % (JITTER_MINUTES + 1)) * MINUTE_MS;
 }
 
 /**
@@ -160,15 +159,15 @@ export function parseCursor(raw: unknown): SyncCursor | null {
   };
 }
 
-const KEEPALIVE_AGE_MS = 25 * MIN;
+const KEEPALIVE_AGE_MS = 25 * MINUTE_MS;
 const KEEPALIVE_JITTER_MINUTES = 6;
-const KEPT_WINDOW_MS = 45 * MIN;
+const KEPT_WINDOW_MS = 45 * MINUTE_MS;
 export const KEEPALIVE_SLICE = 20;
 export const KEEPALIVE_BACKOFF_SLICE = 5;
 
 /** 25 minutes minus 0..5 from the id, so 20 to 25: it never adds, which keeps the worst idle time bounded. */
 export function keepAliveAgeMs(id: number) {
-  return KEEPALIVE_AGE_MS - (hashId(id) % KEEPALIVE_JITTER_MINUTES) * MIN;
+  return KEEPALIVE_AGE_MS - (hashId(id) % KEEPALIVE_JITTER_MINUTES) * MINUTE_MS;
 }
 
 /** The later of last use and connect time (a reconnect resets `created_at`); epoch ms. */

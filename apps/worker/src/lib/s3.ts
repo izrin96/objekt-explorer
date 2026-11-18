@@ -1,6 +1,8 @@
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { CACHE_CONTROL } from "@repo/lib/media";
 
+import { MEDIA_PREFIX } from "./media-copy";
+
 const endpoint = process.env.S3_ENDPOINT;
 const region = process.env.S3_REGION ?? "auto";
 const publicUrl = process.env.S3_PUBLIC_URL ?? endpoint;
@@ -69,14 +71,12 @@ export function keyFromUrl(url: string) {
   return key.startsWith(`${FOLDER}/`) ? key : null;
 }
 
-const MEDIA_FOLDER = "collection-media";
-
 /** Like `keyFromUrl`, for the `collection-media/` prefix; null for any other URL or key. */
 export function mediaKeyFromUrl(url: string) {
   const prefix = `${publicUrl}/`;
   if (!url.startsWith(prefix)) return null;
   const key = url.slice(prefix.length);
-  return key.startsWith(`${MEDIA_FOLDER}/`) ? key : null;
+  return key.startsWith(MEDIA_PREFIX) ? key : null;
 }
 
 /**
