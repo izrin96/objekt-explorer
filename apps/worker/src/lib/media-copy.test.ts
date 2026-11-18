@@ -23,22 +23,31 @@ const ftyp = (brand: string) => bytes(0, 0, 0, 0x18, ...text("ftyp"), ...text(br
 
 describe("copyKey", () => {
   test("one source always gives one key, and two sources two", () => {
-    expect(copyKey(a, "mp4", "motion")).toBe(copyKey(a, "mp4", "motion"));
-    expect(copyKey(a, "mp4", "motion")).not.toBe(copyKey(b, "mp4", "motion"));
+    expect(copyKey("s1", a, "mp4", "motion")).toBe(copyKey("s1", a, "mp4", "motion"));
+    expect(copyKey("s1", a, "mp4", "motion")).not.toBe(copyKey("s1", b, "mp4", "motion"));
   });
 
-  test("the key is a 32-hex hash and the extension, in the motion folder", () => {
-    expect(copyKey(a, "webm", "motion")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.webm$/);
-    expect(copyKey(a, "m4a", "motion")).toMatch(/^collection-media\/motion\/[0-9a-f]{32}\.m4a$/);
+  test("the key is slug-hash8 and the extension, in the motion folder", () => {
+    expect(copyKey("s1", a, "webm", "motion")).toMatch(
+      /^collection-media\/motion\/s1-[0-9a-f]{8}\.webm$/,
+    );
+    expect(copyKey("s1", a, "m4a", "motion")).toMatch(
+      /^collection-media\/motion\/s1-[0-9a-f]{8}\.m4a$/,
+    );
   });
 
   test("a voice collection's copy goes in the voice folder, with the same hash", () => {
-    expect(copyKey(a, "mp4", "voice")).toMatch(/^collection-media\/voice\/[0-9a-f]{32}\.mp4$/);
-    expect(copyKey(a, "mp4", "voice").slice(-36)).toBe(copyKey(a, "mp4", "motion").slice(-36));
+    expect(copyKey("s1", a, "mp4", "voice")).toMatch(
+      /^collection-media\/voice\/s1-[0-9a-f]{8}\.mp4$/,
+    );
+    const voiceHash = copyKey("s1", a, "mp4", "voice").match(/-([0-9a-f]{8})\./)?.[1];
+    const motionHash = copyKey("s1", a, "mp4", "motion").match(/-([0-9a-f]{8})\./)?.[1];
+    expect(voiceHash).toBe(motionHash);
   });
 
-  test("no slug or URL path reaches the key", () => {
+  test("no URL path reaches the key beyond the slug", () => {
     const key = copyKey(
+      "my-slug",
       "https://resources.cosmo.fans/secret-path/atom01-yeonji-101z.mp4",
       "mp4",
       "motion",
@@ -46,52 +55,68 @@ describe("copyKey", () => {
     expect(key).not.toContain("secret-path");
     expect(key).not.toContain("atom01");
     expect(key).not.toContain("yeonji");
+    expect(key).toContain("my-slug-");
   });
 });
 
 describe("copyIsCurrent", () => {
-  const url = (source: string, ext = "mp4") =>
-    `${prefix}motion/${copyKey(source, "mp4", "motion").slice("collection-media/motion/".length, -3)}${ext}`;
+  const url = (slug: string, source: string, ext = "mp4") => {
+    const key = copyKey(slug, source, "mp4", "motion");
+    const base = key.slice("collection-media/motion/".length, -4);
+    return `${prefix}motion/${base}.${ext}`;
+  };
 
-  test("true when the key carries the source's hash", () => {
-    expect(copyIsCurrent(url(a), a, prefix)).toBe(true);
-    expect(copyIsCurrent(url(a, "webm"), a, prefix)).toBe(true);
+  test("true when the key carries the slug and the source's hash", () => {
+    expect(copyIsCurrent(url("s1", a), "s1", a, prefix)).toBe(true);
+    expect(copyIsCurrent(url("s1", a, "webm"), "s1", a, prefix)).toBe(true);
     for (const ext of ["m4a", "mp3", "ogg"]) {
-      expect(copyIsCurrent(url(a, ext), a, prefix)).toBe(true);
+      expect(copyIsCurrent(url("s1", a, ext), "s1", a, prefix)).toBe(true);
     }
   });
 
   test("a copy in the voice folder is current too", () => {
-    expect(copyIsCurrent(url(a).replace("/motion/", "/voice/"), a, prefix)).toBe(true);
-    expect(copyIsCurrent(url(a).replace("/motion/", "/other/"), a, prefix)).toBe(false);
+    expect(copyIsCurrent(url("s1", a).replace("/motion/", "/voice/"), "s1", a, prefix)).toBe(true);
+    expect(copyIsCurrent(url("s1", a).replace("/motion/", "/other/"), "s1", a, prefix)).toBe(false);
   });
 
   test("a changed source makes the copy not current", () => {
-    expect(copyIsCurrent(url(a), b, prefix)).toBe(false);
+    expect(copyIsCurrent(url("s1", a), "s1", b, prefix)).toBe(false);
+  });
+
+  test("a different slug makes the copy not current", () => {
+    expect(copyIsCurrent(url("s1", a), "s2", a, prefix)).toBe(false);
   });
 
   test("a foreign host, a query string or another extension is not current", () => {
-    expect(copyIsCurrent(url(a).replace("cdn.example.com", "evil.net"), a, prefix)).toBe(false);
-    expect(copyIsCurrent(`${url(a)}?x=1`, a, prefix)).toBe(false);
-    expect(copyIsCurrent(url(a, "gif"), a, prefix)).toBe(false);
+    expect(
+      copyIsCurrent(url("s1", a).replace("cdn.example.com", "evil.net"), "s1", a, prefix),
+    ).toBe(false);
+    expect(copyIsCurrent(`${url("s1", a)}?x=1`, "s1", a, prefix)).toBe(false);
+    expect(copyIsCurrent(url("s1", a, "gif"), "s1", a, prefix)).toBe(false);
   });
 });
 
 describe("currentCopy", () => {
-  const copyOf = (source: string) =>
-    `${prefix}motion/${copyKey(source, "mp4", "motion").slice("collection-media/motion/".length)}`;
+  const copyOf = (slug: string, source: string) =>
+    `${prefix}motion/${copyKey(slug, source, "mp4", "motion").slice("collection-media/motion/".length)}`;
 
   test("keeps the copy made from the current source", () => {
-    expect(currentCopy({ frontMedia: a, frontMediaCopy: copyOf(a) }, prefix)).toBe(copyOf(a));
+    expect(
+      currentCopy({ slug: "s1", frontMedia: a, frontMediaCopy: copyOf("s1", a) }, prefix),
+    ).toBe(copyOf("s1", a));
   });
 
   test("drops the copy of an old source", () => {
-    expect(currentCopy({ frontMedia: b, frontMediaCopy: copyOf(a) }, prefix)).toBeNull();
+    expect(
+      currentCopy({ slug: "s1", frontMedia: b, frontMediaCopy: copyOf("s1", a) }, prefix),
+    ).toBeNull();
   });
 
   test("null stays null, and a copy with no source is dropped", () => {
-    expect(currentCopy({ frontMedia: a, frontMediaCopy: null }, prefix)).toBeNull();
-    expect(currentCopy({ frontMedia: null, frontMediaCopy: copyOf(a) }, prefix)).toBeNull();
+    expect(currentCopy({ slug: "s1", frontMedia: a, frontMediaCopy: null }, prefix)).toBeNull();
+    expect(
+      currentCopy({ slug: "s1", frontMedia: null, frontMediaCopy: copyOf("s1", a) }, prefix),
+    ).toBeNull();
   });
 });
 
@@ -204,8 +229,8 @@ describe("dueCopies", () => {
     hasVoice: false,
     ...over,
   });
-  const copyOf = (source: string) =>
-    `${prefix}${copyKey(source, "mp4", "motion").slice("collection-media/".length)}`;
+  const copyOf = (slug: string, source: string) =>
+    `${prefix}${copyKey(slug, source, "mp4", "motion").slice("collection-media/".length)}`;
 
   test("a record with a missing copy is due", () => {
     const { downloads } = dueCopies([record({ slug: "s1" })], indexer, now, prefix);
@@ -251,9 +276,9 @@ describe("dueCopies", () => {
   });
 
   test("a current copy is not due; a copy of another source is", () => {
-    const current = record({ slug: "s1", frontMediaCopy: copyOf(a) });
+    const current = record({ slug: "s1", frontMediaCopy: copyOf("s1", a) });
     expect(dueCopies([current], indexer, now, prefix)).toEqual({ downloads: [], reuses: [] });
-    const stale = record({ slug: "s1", frontMediaCopy: copyOf(b) });
+    const stale = record({ slug: "s1", frontMediaCopy: copyOf("s1", b) });
     expect(dueCopies([stale], indexer, now, prefix).downloads).toHaveLength(1);
   });
 
@@ -285,7 +310,7 @@ describe("dueCopies", () => {
   test("a source already copied for another record is a reuse, even after a recent failure", () => {
     const { downloads, reuses } = dueCopies(
       [
-        record({ slug: "s1", frontMediaCopy: copyOf(a) }),
+        record({ slug: "s1", frontMediaCopy: copyOf("s1", a) }),
         record({ slug: "s2", frontMediaFailedAt: now - HOUR }),
       ],
       indexer,
@@ -293,7 +318,7 @@ describe("dueCopies", () => {
       prefix,
     );
     expect(downloads).toEqual([]);
-    expect(reuses).toEqual([{ source: a, copyUrl: copyOf(a), slugs: ["s2"] }]);
+    expect(reuses).toEqual([{ source: a, copyUrl: copyOf("s1", a), slugs: ["s2"] }]);
   });
 });
 

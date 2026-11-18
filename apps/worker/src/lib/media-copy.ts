@@ -18,7 +18,7 @@ const RETRY_AFTER_MS = 6 * HOUR_MS;
 
 /** The bucket folder of every media copy; `s3.ts` and the orphan sweep read it from here. */
 export const MEDIA_PREFIX = "collection-media/";
-const HASH_LENGTH = 32;
+const SHORT_HASH = 8;
 
 // Voice collections carry their media (a video with sound so far) as `frontMedia`, so they share the
 // copy path and the size cap with motion; only the key folder differs.
@@ -26,30 +26,37 @@ export type MediaExt = "mp4" | "webm" | "m4a" | "mp3" | "ogg";
 export type MediaFolder = "motion" | "voice";
 const FOLDERS: readonly MediaFolder[] = ["motion", "voice"];
 
-/** Only the folder, the source URL's hash and the sniffed extension reach the key: no slug, no URL path. */
-export function copyKey(sourceUrl: string, ext: MediaExt, folder: MediaFolder) {
-  return `${MEDIA_PREFIX}${folder}/${sourceHash(sourceUrl)}.${ext}`;
+/** `collection-media/<folder>/<slug>-<hash8>.<ext>`, where hash8 is the first 8 hex of sha256(sourceUrl). */
+export function copyKey(slug: string, sourceUrl: string, ext: MediaExt, folder: MediaFolder) {
+  return `${MEDIA_PREFIX}${folder}/${slug}-${sourceHash(sourceUrl)}.${ext}`;
 }
 
 function sourceHash(sourceUrl: string) {
-  return createHash("sha256").update(sourceUrl).digest("hex").slice(0, HASH_LENGTH);
+  return createHash("sha256").update(sourceUrl).digest("hex").slice(0, SHORT_HASH);
 }
 
-/** True when the copy's key carries the source's hash, so a changed source makes the copy stale. */
-export function copyIsCurrent(copyUrl: string, sourceUrl: string, copyPrefix: string) {
+/** True when the copy's key carries the slug and the source's hash. */
+export function copyIsCurrent(
+  copyUrl: string,
+  slug: string,
+  sourceUrl: string,
+  copyPrefix: string,
+) {
   if (!copyUrl.startsWith(copyPrefix)) return false;
   const rest = copyUrl.slice(copyPrefix.length);
   const hash = sourceHash(sourceUrl);
-  return FOLDERS.some((folder) => COPY_EXTS.some((ext) => rest === `${folder}/${hash}.${ext}`));
+  return FOLDERS.some((folder) =>
+    COPY_EXTS.some((ext) => rest === `${folder}/${slug}-${hash}.${ext}`),
+  );
 }
 
 /** The record's copy only while it was made from the record's current source, else null. */
 export function currentCopy(
-  record: { frontMedia: string | null; frontMediaCopy: string | null },
+  record: { slug: string; frontMedia: string | null; frontMediaCopy: string | null },
   copyPrefix: string,
 ) {
-  const { frontMedia: source, frontMediaCopy: copy } = record;
-  return source && copy && copyIsCurrent(copy, source, copyPrefix) ? copy : null;
+  const { slug, frontMedia: source, frontMediaCopy: copy } = record;
+  return source && copy && copyIsCurrent(copy, slug, source, copyPrefix) ? copy : null;
 }
 
 const COPY_EXTS: readonly MediaExt[] = ["mp4", "webm", "m4a", "mp3", "ogg"];
@@ -204,7 +211,7 @@ export function dueCopies(
   const held = new Map<string, string>();
   for (const r of records) {
     const { frontMedia: source, frontMediaCopy: copy } = r;
-    if (source && copy && copyIsCurrent(copy, source, copyPrefix)) held.set(source, copy);
+    if (source && copy && copyIsCurrent(copy, r.slug, source, copyPrefix)) held.set(source, copy);
   }
 
   const groups = new Map<string, DueDownload>();
@@ -212,7 +219,7 @@ export function dueCopies(
   for (const r of records) {
     const source = r.frontMedia;
     if (!source || !indexerSlugs.has(r.slug) || !acceptMediaUrl(source)) continue;
-    if (r.frontMediaCopy && copyIsCurrent(r.frontMediaCopy, source, copyPrefix)) continue;
+    if (r.frontMediaCopy && copyIsCurrent(r.frontMediaCopy, r.slug, source, copyPrefix)) continue;
 
     const copyUrl = held.get(source);
     if (copyUrl) {

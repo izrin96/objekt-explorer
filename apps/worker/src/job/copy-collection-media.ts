@@ -83,7 +83,7 @@ async function readCapped(response: Response, host: string, signal: AbortSignal)
 }
 
 /** Downloads one source and puts it in the bucket; returns the stored URL and the bytes. */
-async function copyOne(source: string, folder: MediaFolder) {
+async function copyOne(slug: string, source: string, folder: MediaFolder) {
   if (!acceptMediaUrl(source)) throw new CopyFailed("rejected", "other", "unknown");
   const host = new URL(source).hostname;
   await assertPublicHost(host);
@@ -115,7 +115,7 @@ async function copyOne(source: string, folder: MediaFolder) {
   const media = sniffVideo(bytes);
   if (!media) throw new CopyFailed("not_media", "other", host, bytes.length);
 
-  const key = copyKey(source, media.ext, folder);
+  const key = copyKey(slug, source, media.ext, folder);
   try {
     await putObject(key, bytes, media.contentType);
   } catch {
@@ -185,7 +185,11 @@ async function runCopy() {
   for (const download of downloads) {
     if (!budget.canStart(Date.now())) break;
     try {
-      const { url, size } = await copyOne(download.source, download.voice ? "voice" : "motion");
+      const { url, size } = await copyOne(
+        download.slugs[0]!,
+        download.source,
+        download.voice ? "voice" : "motion",
+      );
       budget.success(size);
       await recordCopy(download.source, url, download.slugs);
       copied += 1;

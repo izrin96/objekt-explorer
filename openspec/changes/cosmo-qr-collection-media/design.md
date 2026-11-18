@@ -373,10 +373,10 @@ The copy job writes only the bucket and the record. The apply (Decision 8) stays
 
 Due copies are grouped by source, so one source is downloaded once a run however many records share it, and the oldest `observed_at` goes first. A source already copied for another record is reused with no download, since the key is the same. A failure is written to every record with that source.
 
-**Keys.** `collection-media/<motion|voice>/<h>.<mp4|webm|m4a|mp3|ogg>` (`voice/` when any record sharing the source has voice, else `motion/`; the folder never decides whether a copy is current), the extension from the sniff, where `<h>` is the first 32 hex digits of the SHA-256 of the source URL:
+**Keys.** `collection-media/<motion|voice>/<slug>-<h>.<mp4|webm|m4a|mp3|ogg>` (`voice/` when any record sharing the source has voice, else `motion/`; the folder never decides whether a copy is current), the extension from the sniff, where `<slug>` is the collection's slug and `<h>` is the first 8 hex digits of the SHA-256 of the source URL:
 
-- No slug, URL path or other reported string reaches the key; only a hash and an extension from the sniff do.
-- The same source always gives the same key, so a retry after a crash overwrites the same object (no orphan), and a video shared by several collections is stored once.
+- The slug makes keys human-readable in bucket listings. The short hash keeps them unique when a source changes.
+- The same slug and source always give the same key, so a retry after a crash overwrites the same object (no orphan).
 - A key's bytes never change under `CACHE_CONTROL`'s immutable year, as long as Cosmo never changes the bytes behind a URL. Media URLs carry their own ids, and the front image's `image_sync_hash` makes the same bet.
 - The prefix sits outside `collection-images/`, so the existing orphan sweep never sees these objects.
 
@@ -579,21 +579,34 @@ When a live session has fewer than 14 days left before its `cookie_expires_at`, 
 
 ## Open Questions
 
-- **`frontMedia`.** Its exact shape and host for Motion and for voice Doubles: a URL string, under 1,024 characters? Seen only as null.
-- **Motion files.** Their container (MP4 or WebM, or something the sniff refuses) and size. The 64 MB cap rests on sample files (a 47 MB voice video), and a larger file is refused until it is raised.
-- **Voice files.** Is a voice Double's `frontMedia` audio (M4A, MP3, Ogg, or a refused type such as ADTS AAC) or a video with sound? Settled by the first real connect (task 8.8); an audio answer brings the Metadata label follow-up (Decision 12).
-- **Certify body and rolling renewal.** The certify body's content type and shape, and whether Cosmo answers a call made with the cookie with a new `Set-Cookie` carrying a later `Expires`. Task 8.8 records both, never a value. A rolling cookie would be stored by a follow-up; the 180-day cap stays (Non-Goals).
-- **Redirects.** Do the media hosts answer a plain GET directly, or redirect (to a signed or regional URL)? The copy follows no redirect, so a redirecting host copies nothing until it is allowed.
-- **Bucket size.** How many motion and voice collections exist, and so roughly how much R2 storage the copies take? Settled by task 8.6's count and the first copied file (task 8.8).
-- **Unfiltered listing.** Does it include Motion, Unit and Special collections, and does paging past page 1 work as `collectionCount` implies? The probe fetched page 1 per query only.
+### Settled
+
+Settled by production data after 4 sessions synced (2026-11-18). Values are counts and types, never credentials or URLs.
+
+- **`frontMedia`.** A plain URL string on `resources.cosmo.fans`, ~89 characters, no query parameters. No signed or per-account URLs observed across 39 records and 4 sessions (see Per-account URLs below).
+- **Motion files.** All 27 copied Motion files are `video/mp4`. Mean: 15.4 MB; range: 6.5–35.3 MB.
+- **Voice files.** All 12 copied voice Doubles are `video/mp4` (video with sound), not audio-only. Mean: 31.4 MB; range: 9.8–46.9 MB. The Metadata label follow-up for audio voice copies (Decision 12) does not apply.
+- **Certify body.** Certify returns 201 with a bare string body and the `Set-Cookie: user-session` (Context item 5). No refresh token exists.
+- **Redirects.** `resources.cosmo.fans` answers a plain GET directly with no redirect. The copy job's no-redirect policy works as built.
+- **Per-account URLs.** No query parameters on any `front_media`, `back_image` or `band_image_url` across all records and 4 sessions. URLs appear to be static and not signed per account. No key-hashing change needed; if a future session shows query parameters, revisit.
+- **Unfiltered listing.** The job fetches without a `class[]` filter, and 2,532 records were observed across all classes (Motion, Double, and others). Paging works: 4 sessions completed full syncs (cursors null), which at size 30 means 80+ pages per session. Settled.
+- **`objekts[]`.** Keys documented in `cosmo-objekt-ownership-data` design.md (Decision 2): `metadata.tokenId`, `metadata.objektNo` (serial), `transferable`, `usedForGrid`, `nonTransferableReason`, `tokenAddress`, `collectionId`, and others per objekt.
+- **Headless reCAPTCHA from the VPS.** Passed (task 3.4): a token minted in the headless container through `COSMO_PROXY` was accepted.
+- **Proxy.** The browser container needs `COSMO_PROXY` to reach Cosmo through WARP; no credentials needed beyond the proxy URL.
+- **Sizing (8.6, 2026-11-18).** After 4 sessions synced 2,532 collection_media records (all matched to indexer rows; 0 unmatched):
+  - Indexer `back_image = ''`: 2,773 (all are collections no connected account holds; every observed record's back image was applied).
+  - Indexer `accent_color = ''`: 2,773 (same unobserved set; every observed accent was applied).
+  - `text_color` differs case-sensitively (record lowercase vs indexer uppercase, `source_text_color IS NULL`): 433. Case-insensitive: 0. The apply phase normalizes these to lowercase; the values are semantically the same.
+  - Motion collections on the indexer: 268. Voice Doubles observed so far (`has_voice`): 12 (total unknown — only collections held by connected accounts are seen).
+  - Copies in the bucket: 27 motion (416 MB) + 12 voice (377 MB) = 39 files, 793 MB total, all `video/mp4`.
+  - Projected bucket at full Motion coverage: 268 × 15.4 MB ≈ 4.1 GB. Voice total unknown (12 seen = 377 MB; grows as more accounts connect).
+
+### Still open
+
+- **Rolling renewal.** Whether Cosmo answers a call with `Set-Cookie` carrying a later `Expires`. Not yet observed; needs monitoring a session across calls.
 - **`order=newest`.** Does it sort by when the account received an objekt, or by release? Only the first would make an early stop safe.
 - **Special band images.** Does `class[]=Unit` also return Special collections? This matters only if a filtered pass is needed.
-- **Per-account URLs.** Do two accounts get the same `frontMedia` and `bandImageUrl` for one collection, or signed per-account URLs? The merge (Decision 8) holds either way, but per-account URLs would make every first value stick for 7 days. Since the site serves only our copy (Decision 9), no such URL is ever shown. But our keys are hashed from the source URL, so signed URLs would copy the same file again for every account and every new signature, leaving an orphan each time. If the first syncs show that, the key changes to a hash of the bytes (as `mirror-artist-images` does) or of the URL without its query.
-- **`objekts[]`.** Does it carry token ids? That decides how the transferability follow-up could map them.
 - **Wrong codes.** What status and body does a wrong code get, and how many attempts are allowed before the ticket dies?
 - **Other statuses.** Does Cosmo ever return a status beyond the two seen (`certified`, a cancel or deny)? The design treats any unknown one as expired.
 - **Rate limits.** What are Cosmo's limits on `objekt-summaries` and the sign-in endpoints, per IP? The 1 s spacing and the 600-an-hour ceiling are guesses.
 - **Refused-session body.** What body does Cosmo send with the 401 or 403 for a signed-out cookie? The probe recorded only the status. Decision 5 assumes its JSON error shape; the first dead session confirms it.
-- **Headless reCAPTCHA from the VPS.** Does a token minted in the headless container on the VPS pass? The probe minted in a real Chromium elsewhere. Task 3.4 settles it before any UI.
-- **Proxy.** Does the browser container need `COSMO_PROXY`'s egress, and does that proxy need credentials browserless can pass?
-- **Sizing.** How many indexer rows have `back_image = ''` or `accent_color = ''`, how many text colours would change, and how many collections are Motion? A read-only count the owner can approve before the first sync.
