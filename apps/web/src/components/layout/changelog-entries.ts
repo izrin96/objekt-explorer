@@ -5,6 +5,13 @@
  */
 export const CHANGELOG = [
   {
+    date: "2026-11-17 - 2026-11-18",
+    items: [
+      "Share collection data: connect your Cosmo account in Account › Collection data to help fill in motion videos, voice and colours for the collections you hold, and to correct the serials and transferability of your objekts.",
+      "Objekt details now play motion videos on the card. Tap the speaker to hear the voice where an objekt has one.",
+    ],
+  },
+  {
     date: "2026-11-14 - 2026-11-16",
     items: [
       "An offer now asks from one post. Choose it under 'Offer on' in Make offer. To ask from another post, send another offer once this one closes.",
