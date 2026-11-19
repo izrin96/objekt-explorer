@@ -10,7 +10,7 @@
  *
  * Transferable: `judgeTransferable` with both directions on, over every row whatever its due
  * flags: outcomes, the writes by direction, non-transferable reason and class (and the
- * untransferable reads left as reports because their reason is not trusted), what the breaker
+ * untransferable reads left as reports because Cosmo does not mark them gridded), what the breaker
  * would do with those writes, the distinct reasons, sample token ids, and the
  * `cosmo_transferable` records split by whether a newer
  * `transferability_update` exists (the ones `fix-transferability` would supersede, and the rest,
@@ -434,6 +434,7 @@ async function transferablePlan(app: Tx) {
         slug: cosmoObjekt.slug,
         transferable: cosmoObjekt.transferable,
         reason: cosmoObjekt.nonTransferableReason,
+        usedForGrid: cosmoObjekt.usedForGrid,
         chainHeight: cosmoObjekt.chainHeight,
         observedMs,
         receivedAt: sql<string | null>`to_json(${cosmoObjekt.receivedAt}) #>> '{}'`,
@@ -475,6 +476,7 @@ async function transferablePlan(app: Tx) {
             slug: read.slug,
             transferable: read.transferable,
             nonTransferableReason: read.reason,
+            usedForGrid: read.usedForGrid,
             observedAt: new Date(Number(read.observedMs)),
             receivedAt: read.receivedAt,
             chainHeight: read.chainHeight,
@@ -489,7 +491,7 @@ async function transferablePlan(app: Tx) {
           const sample = samples[direction]!;
           if (sample.length < SAMPLE) sample.push(read.tokenId);
         } else if (outcome === "report_untransferable") {
-          // with both directions on, only an untrusted reason leaves an untransferable read a report
+          // with both directions on, only a read not used in a grid leaves an untransferable read a report
           const key = `${read.reason ?? "no reason"} | ${found?.class ?? "?"}`;
           untrusted.set(key, (untrusted.get(key) ?? 0) + 1);
         }
@@ -511,7 +513,7 @@ async function transferablePlan(app: Tx) {
   for (const [direction, ids] of Object.entries(samples)) {
     console.log(`sample ${direction}: ${ids.join(", ") || "none"}`);
   }
-  console.log("\nUntransferable reads not written, reason not trusted | class");
+  console.log("\nUntransferable reads not written, not used in a grid | reason | class");
   for (const [key, n] of [...untrusted].sort(([a], [b]) => a.localeCompare(b))) {
     console.log(`  ${key}: ${n}`);
   }

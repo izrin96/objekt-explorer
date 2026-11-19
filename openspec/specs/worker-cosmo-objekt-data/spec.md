@@ -64,12 +64,20 @@ When enabled for that direction, a recorded transferability that differs from th
 - **WHEN** a read differs from the site for an objekt held by Cosmo's spin address
 - **THEN** the site's value is left as it is
 
-### Requirement: Only trusted reasons make an objekt untransferable
-A correction to not transferable SHALL be made only when Cosmo's non-transferable reason is `challenge-reward`, `welcome-objekt`, or a reason the operator added to the trusted list. Any other reason, or none, SHALL be counted as one the site would make untransferable and SHALL NOT change the site.
+### Requirement: Only grid use makes an objekt untransferable
+A correction to not transferable SHALL be made only when Cosmo marks the objekt used for a grid, whatever its non-transferable reason. Any other read, including one not transferable for `welcome-objekt`, SHALL be counted as one the site would make untransferable and SHALL NOT change the site. A read whose grid use differs from the last read of that token SHALL be judged again.
 
-#### Scenario: An untrusted reason
-- **WHEN** untransferable corrections are enabled and a read shows token 41200001 not transferable for a reason other than `challenge-reward` or `welcome-objekt`, or for none
+#### Scenario: A gridded objekt
+- **WHEN** untransferable corrections are enabled and a read shows token 41200001 not transferable and used for a grid, for `challenge-reward`, another reason or none, while the site shows it transferable
+- **THEN** the site shows 41200001 not transferable, unless another check of this spec leaves it as it is
+
+#### Scenario: An objekt not used for a grid
+- **WHEN** untransferable corrections are enabled and a read shows token 41200001 not transferable for `welcome-objekt`, not used for a grid, while the site shows it transferable
 - **THEN** the site's transferability is left as it is and the read is counted as one the site would make untransferable
+
+#### Scenario: Grid use changes
+- **WHEN** a read of token 41200001 matches the last one except that Cosmo now marks it used for a grid
+- **THEN** the read is judged again
 
 ### Requirement: Too many corrections at once stop the run
 Before writing any correction in a run, the site SHALL count the corrections the run plans. When they exceed 200, or exceed 20% of the reads the run judged and 50, the run SHALL write none of them, SHALL leave them to be judged again, and SHALL report the counts to the operator.

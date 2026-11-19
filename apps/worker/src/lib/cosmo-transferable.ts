@@ -23,22 +23,11 @@ export type TransferableRead = {
   slug: string;
   transferable: boolean;
   nonTransferableReason: string | null;
+  usedForGrid: boolean;
   observedAt: Time;
   receivedAt: Time | null;
   chainHeight: number;
 };
-
-/**
- * The non-transferable reasons an `untransferable` write trusts: the ones seen on production.
- * Any other reason, none or `"other"` is reported, never written. `EXTRA_UNTRANSFERABLE_REASONS`
- * is where the owner adds a reason after reading the plan script's list.
- */
-export const KNOWN_UNTRANSFERABLE_REASONS = ["challenge-reward", "welcome-objekt"] as const;
-export const EXTRA_UNTRANSFERABLE_REASONS: readonly string[] = [];
-const writableReasons = new Set<string>([
-  ...KNOWN_UNTRANSFERABLE_REASONS,
-  ...EXTRA_UNTRANSFERABLE_REASONS,
-]);
 
 export type TransferableMode = { untransferable: boolean; transferable: boolean };
 
@@ -80,9 +69,10 @@ export function judgeTransferable(
   if (objekt.owner.toLowerCase() === Addresses.SPIN.toLowerCase()) return "spin";
   if (objekt.transferable === read.transferable) return "matched";
   if (read.transferable) return mode.transferable ? "write_transferable" : "report_transferable";
-  const trusted =
-    read.nonTransferableReason !== null && writableReasons.has(read.nonTransferableReason);
-  return mode.untransferable && trusted ? "write_untransferable" : "report_untransferable";
+  // Only a gridded read writes. Cosmo's reasons label whole collections (`welcome-objekt` on every
+  // 100Z) while the chain locks per token, and Cosmo's app sends a welcome objekt the chain leaves
+  // open; a gridded one reads false in Cosmo even where an early-2025 update left it true on chain.
+  return mode.untransferable && read.usedForGrid ? "write_untransferable" : "report_untransferable";
 }
 
 /**

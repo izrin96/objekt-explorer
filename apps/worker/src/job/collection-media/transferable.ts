@@ -66,6 +66,7 @@ export async function applyCosmoTransferable(mode: TransferableMode) {
       slug: cosmoObjekt.slug,
       transferable: cosmoObjekt.transferable,
       nonTransferableReason: cosmoObjekt.nonTransferableReason,
+      usedForGrid: cosmoObjekt.usedForGrid,
       observedAt: isoOf(cosmoObjekt.observedAt),
       receivedAt: sql<string | null>`to_json(${cosmoObjekt.receivedAt}) #>> '{}'`,
       chainHeight: cosmoObjekt.chainHeight,

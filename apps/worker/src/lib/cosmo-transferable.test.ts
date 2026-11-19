@@ -14,12 +14,13 @@ import {
 
 const OBSERVED = "2026-11-17T00:00:00.000Z";
 const RECEIVED = "2026-11-01T00:00:00.000Z";
-// a trusted reason by default, so the untransferable direction can write
+// gridded by default, so the untransferable direction can write
 const read = (extra: Partial<TransferableRead> = {}): TransferableRead => ({
   tokenId: "101",
   slug: "summer26-seoyeon-101z",
   transferable: true,
   nonTransferableReason: "challenge-reward",
+  usedForGrid: true,
   observedAt: OBSERVED,
   receivedAt: RECEIVED,
   chainHeight: 900,
@@ -130,23 +131,23 @@ describe("judgeTransferable", () => {
   });
 });
 
-describe("untransferable writes trust only known reasons", () => {
-  test("challenge-reward and welcome-objekt write", () => {
-    for (const reason of ["challenge-reward", "welcome-objekt"]) {
-      const r = read({ transferable: false, nonTransferableReason: reason });
+describe("untransferable writes trust only grid use", () => {
+  test("a gridded read writes, whatever its reason", () => {
+    for (const reason of ["challenge-reward", "other", null]) {
+      const r = read({ transferable: false, nonTransferableReason: reason, usedForGrid: true });
       expect(judgeTransferable(objekt(), r, both)).toBe("write_untransferable");
     }
   });
 
-  test("any other reason, other or none is reported", () => {
-    for (const reason of ["grid-used", "other", null]) {
-      const r = read({ transferable: false, nonTransferableReason: reason });
+  test("a read not used in a grid is reported, welcome-objekt included", () => {
+    for (const reason of ["welcome-objekt", "challenge-reward", "other", null]) {
+      const r = read({ transferable: false, nonTransferableReason: reason, usedForGrid: false });
       expect(judgeTransferable(objekt(), r, both)).toBe("report_untransferable");
     }
   });
 
-  test("the transferable direction needs no reason", () => {
-    const r = read({ transferable: true, nonTransferableReason: null });
+  test("the transferable direction needs no grid use", () => {
+    const r = read({ transferable: true, nonTransferableReason: null, usedForGrid: false });
     expect(judgeTransferable(objekt({ transferable: false }), r, both)).toBe("write_transferable");
   });
 });

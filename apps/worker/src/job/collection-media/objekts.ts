@@ -125,6 +125,7 @@ async function upsertObjekts(rows: ObservedRow[], chainHeight: number, observedA
         transferable_due = CASE
           WHEN co.transferable <> excluded.transferable
             OR co.non_transferable_reason IS DISTINCT FROM excluded.non_transferable_reason
+            OR co.used_for_grid <> excluded.used_for_grid
             OR co.objekt_no <> excluded.objekt_no
             OR co.slug <> excluded.slug OR co.received_at IS DISTINCT FROM excluded.received_at
             OR co.transferable_checked_at IS NULL
