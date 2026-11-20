@@ -4,7 +4,6 @@ import {
   hiddenPostAtSql,
   offerMatchesWantSql,
   boundOfferListSql,
-  matchableListSql,
   tradePartnerSql,
 } from "@repo/api/services/trade/lists";
 import { db } from "@repo/db";
@@ -50,10 +49,9 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         l.list_type,
         l.match_sale, l.match_have, l.takes_swaps, l.user_id
       FROM list_entries e
-      JOIN lists l ON l.id = e.list_id
-      WHERE l.discoverable
-        AND ${matchableListSql("l")}
-        AND l.id IN (SELECT id FROM listed)
+      -- the post's Open to and takes_swaps, not the list's
+      JOIN on_trade l ON l.id = e.list_id
+      WHERE l.id IN (SELECT id FROM listed)
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),

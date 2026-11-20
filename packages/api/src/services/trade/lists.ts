@@ -1,7 +1,7 @@
 import { lists } from "@repo/db/schema";
 import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 
-import { column, offersSwapsSql } from "../../lib/trade-sql";
+import { column, offersSwapsSql, onTradeRowsSql } from "../../lib/trade-sql";
 import { notBlockedEither, notTradeSanctioned, ref, type UserRef } from "../moderation/safety";
 
 /**
@@ -97,6 +97,13 @@ export const hiddenPostAtSql = (viewer: UserRef, alias: string) =>
 /** {@link matchableList} over a raw `lists` row, aliased or not. */
 export const matchableListSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} = 'want' OR ${boundOfferListSql(alias)})`;
+
+/**
+ * Each matchable list side on Trade in a `trade_post` row, with the post's Trade state, bump and
+ * Open to (`onTradeRowsSql`): the body of `postsCte`'s `on_trade`, and the lists a read that
+ * matches against posts takes through it.
+ */
+export const onTradeSql = onTradeRowsSql(matchableListSql("l"));
 
 /**
  * Whether `viewer` sees `partner`'s lists on Trade: not hidden by the viewer, no block either

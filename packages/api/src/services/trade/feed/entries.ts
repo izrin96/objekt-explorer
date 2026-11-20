@@ -5,7 +5,7 @@ import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { tradeableEntries, untradeableKey } from "../../../lib/trade-feed";
 import type { FeedEntry } from "../../../lib/trade-posts";
-import { postRowSql } from "../../../lib/trade-sql";
+import { postRowSql, postStateSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import type { ListType } from "../../../schemas/list";
 import { redis, redisFailOpen } from "../../redis";
@@ -26,14 +26,15 @@ export const feedListColumns = {
   // the other half of the list's pair, from its `trade_post` row
   linkedListId: postPartnerSql("lists"),
   postId: postRowSql("lists"),
-  matchSale: lists.matchSale,
-  matchHave: lists.matchHave,
-  takesSwaps: lists.takesSwaps,
+  // the post's, from the side of its row, while on Trade (`postStateSql`)
+  matchSale: postStateSql("lists", "matchSale"),
+  matchHave: postStateSql("lists", "matchHave"),
+  takesSwaps: postStateSql("lists", "takesSwaps"),
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
   profileSlug: lists.profileSlug,
-  bumpedAt: lists.bumpedAt,
+  bumpedAt: postStateSql("lists", "bumpedAt"),
   updatedAt: lists.updatedAt,
 };
 

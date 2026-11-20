@@ -423,6 +423,7 @@ As decision 12. In order:
 - **`trade-post-reads-by-row`:**
   - builds posts from rows on `onTradeSql`, which already yields one row per side;
   - moves the viewer side (`recount`, `viewer.ts`, `my_want`), `staffPosts`, the report snapshot and `fetchHiddenPosts`' `CASE` to per-post state.
+- **`context.ts` reads both lists of a pair from `lists`.** Decision 8's table lists it as reading only the recipient's side, but `loadContext` (`apps/worker/src/job/want-alerts/context.ts`) loads both lists of every pair, so the partner's `sale` (from `takes_swaps`) and `wantsSwaps` (from `match_have`) come from `lists` and `judge` uses them (`lib/want-alert-match.ts`). They agree with the rows while a list is in at most one row; `trade-post-planner-shared` must move the partner half to the row. Found in the group 12 review, 2026-11-20.
 
 ## Assumptions and unverified facts
 
@@ -485,3 +486,105 @@ Part A, groups 1 to 5, built on 2026-11-20 from `6567a9c1`, uncommitted.
     - the end of localtest1's Browse. The page is virtualized, and the after capture rendered three people and then "No more posts". Scrolling showed sellingselling, lcvelettzr and the others, and `trade.people` as localtest1 returned nine people with no next cursor.
 
     No post, list, tag, bump label or count changed. Group 10 makes the byte comparison.
+
+- **Rollout A (7.1 and 7.2), 2026-11-20.** Part A was rebased onto main as `2f107ab3` and pushed together with three web fixes (`bff1b816..2f107ab3`). Docker CI/CD run 44703980434 succeeded. The owner ran the migrate, then brought up web A. The worker was not rebuilt. Exact times for the migration and for web A serving were not recorded: drizzle's `created_at` holds the folder's timestamp, not the time the migration was applied. The read-only production drift run after the deploy read 1,556 rows, and all six checks were 0, including checks 5 and 6, so no one wrote in the gap between the migrate and web A. The informational note listed 9 offers on a list that leads a row with no post id (8634, 8660, 8665, 8726, 8753, 8797, 8889, 8934, 9523), the same 9 as before the deploy. At that read, the latest bump on any row (08:27:53 UTC) was earlier than the push. The owner skipped the post-deploy smoke test, so no write by web A had been seen on production.
+- **Part B, groups 8 and 9 and task 10.1 (2026-11-20, approved by the owner; uncommitted, on `2f107ab3`).**
+  - **10.1, before any group 8 change.** `reads.ts` was run on part A's code, unedited. It refuses to start unless the `DATABASE_URL` and `REDIS_URL` hosts are local. It runs its reads against Redis database 14, which it empties first, so no cache another build or worktree wrote answers a read. It fixes JS `now` (`Date`) at 2026-11-20T12:00Z and writes every object with its keys sorted. Postgres `now()` is not fixed: it moves the 30-day idle cut and the 24-hour bump window. A read-only count on 2026-11-20 (per list, so a post sharing a fresher partner reads later) found no on-Trade list within 3 days past the cut and one within 7 days before it. The nearest goes idle in 5 days 8 hours, so 10.3 must run before about 2026-11-25 16:00 UTC. After that, a diff confined to posts that crossed the idle line is the baseline ageing, not a reader bug.
+    - What it reads, as localtest1, localtest2 and signed out: `trade.people`'s first page for each type (all, WTT, WTB, WTS) and, when signed in, for Mutual off, Any and Mutual (`peopleFeed`, input through `peopleInputSchema`); `trade.myPosts`; `fetchTradeCandidates` for each filter (all, mutual, they have, they want), over `resolveTradeSides`; the worker's `fetchPairs` over all entries (97,100 pairs); and the post counts of `atom02-seoyeon-323z`, `binary02-seoyeon-360z` and `divine01-yooyeon-324z`.
+    - What is sorted: candidates and pairs are sets, so they are sorted; the people pages keep the order the feed gives, which is part of what is compared.
+    - Two runs gave byte-identical files of 21,593,669 bytes (`cmp`). The file is `/private/tmp/claude-501/trade-post-state/reads-before.json`, outside the repo; the script and `normalize.ts` are in `script/` beside it.
+    - A read-only preview on part B's code, before migration B, showed one gap. Candidates' `theyHave` and `theyWant` come from `json_agg` with no `ORDER BY`, so a new plan returns the same rows in another order. `reads.ts` now sorts each candidate's arrays as well.
+    - Applying that sort to the saved file is equivalent to re-running on part A's code, since order is all it changes. That is `normalize.ts`; `reads-before.raw.json` is the unsorted original.
+    - The fixed script is deterministic: two runs on part B's code gave identical files. The normalized preview on part B's code, with the rows as migration A and the writers left them, equals `reads-before.json`. So 10.3 compares `normalize.ts` of `reads-after.json` with `reads-before.json`.
+    - `apps/worker/.trade-post-state/` is not out of lint as the header says: worker lint reads it and fails `bun run check` on `reads.ts`. Git shows it as untracked too. The script lives outside the repo and is copied in only to run.
+  - **Where the helpers live.** `onTradeRowsSql`, `sideOnTradeSql` and `postStateSql` are in `lib/trade-sql.ts`, so `trade-sql.test.ts` pins their text without importing `services/trade/lists.ts`, whose imports reach `@repo/db`. `lists.ts` exports `onTradeSql = onTradeRowsSql(matchableListSql("l"))`, and the test pins the body with a placeholder for the matchable condition. `fetchOwnTradeLists` filters on `sideOnTradeSql("lists")`, a helper the design did not name.
+  - **8.6, what still reads the five list columns** (`packages/api/src` and `apps/worker/src`, tests left out). Every hit is a writer, the drift script, `onTradeSql` and `postsCte`'s own columns, or a reader in decision 8's table:
+    - writers: `list/shared.ts`, `list/create.ts`, `list/edit.ts` (with its `openToColumns` and `takesSwapsColumn` guards), `trade/post.ts`, and `bumpPerson`'s statement;
+    - per person or per list: `lastBumpOf` (`mine.ts`), `personBumpedAt` (`shared.ts`), `PublicList` and the list page (`list/read.ts`);
+    - list-level `discoverable`: `visibleOnTrade` (`feed/shared.ts`), `market/aggregate.ts`, `offer/core.ts`, `offer/view.ts`, `offer/picker/{index,shared,theirs}.ts`, `chat/card-resolve.ts`, `trade/hidden.ts`, and the staff `discoverable` in `staffPosts` (`post-cards.ts`);
+    - the viewer's own lists: `matches/recount.ts`, `feed/viewer.ts`, `candidates.ts`' `my_want` and `my_have`, and `want-alerts/context.ts`;
+    - `want-alerts/index.ts`' newly discoverable set and `pairs.ts`' `wl` and `ol`;
+    - the report snapshot (`moderation/report.ts`);
+    - pure modules over values, not columns: `lib/*`, `want-alert-match.ts`, `want-alert-state.ts`.
+  - **Migration B is `20261120085525_trade_post_state_reconcile`.** It holds the `lock_timeout` line, with its comment saying writers of `lists` queue behind it; `LOCK TABLE "lists" IN EXCLUSIVE MODE` with the comment of task 9.1; and migration A's `UPDATE` byte for byte. A second `db:generate` reports no schema changes.
+  - **The baseline, taken again with the offer picker.** At the coordinator's request, `reads.ts` also reads `offer.suggest` (`suggestOffer`) both ways between localtest1 and localtest2, row and Mutual, without sorting, since its order is what a person sees (below). It was run twice on part A's code, in a scratch worktree of `2f107ab3` outside the repo (`git worktree add --detach`, removed after). The two runs gave byte-identical files of 21,616,061 bytes. That file is now the baseline:
+    - `reads-before.json`, sha256 `a1675e0ab467af0d241603d71b46ba983118559b902a27affb520cd7cdc70d17`. `reads-before.raw.json` is the same bytes, since this script already sorts each candidate's arrays and `normalize.ts` changes nothing.
+    - `reads-before.v1.json` and `reads-before.v1.raw.json` are the first baseline, with no picker reads.
+    - The script's sha256 is `8e3b7481…e868`.
+    - One run on part B's code, before migration B, is byte-identical to it (`reads-preview-B.json`), the four picker reads included, in their order.
+    - 10.3 compares `reads-after.json` with `reads-before.json`; `normalize.ts` is a no-op on both.
+  - **The Redis isolation held.** `reads.ts` and `explain.ts` read through local Redis database **14**, which they empty first; the coordinator accepted that local write. After the runs, database 14 holds only the script's cache keys and database 0, the shared one, 18 others. The first run printed no "emptying" line, so database 14 was empty before it.
+  - **The indexer.** `.env.local` points `INDEXER_DATABASE_URL` at production with `default_transaction_read_only=on`, as on the local stack, so the match and picker reads check holdings against it, read-only. A transfer between 10.1 and 10.3 can change a match, so a diff in the holdings that matches rest on is not a reader bug.
+  - **The order of a candidate's matches.** `fetchTradeCandidates` builds `they_have` and `they_want` with `json_agg` and no `ORDER BY` (`candidates.ts`, the `grouped` CTE), so their order is the plan's. That was already so before; part B's `on_trade` changes the plan. Where the order goes:
+    - **Visible: the offer picker's preselected items.** `recount`'s `groupBySlug` (`lib/trade-rank.ts:145-153`, used at `:232` and `:274`) keeps first-seen order, so the order sets `theyHaveIWant` and `iHaveTheyWant` and each match's `partnerListIds`. `fillMatches` and `matchesThrough` (`lib/offer-prefill.ts:84-125`) filter and keep that order. `suggestOffer` builds `chooseMatchPicks`' input in it (`services/offer/picker/index.ts:277-290`), and `pick` (`lib/offer-prefill.ts:44-49`) takes one copy per match in that order and cuts at `OFFER_SIDE_LIMIT` (200). So the order of the preselected items in Make offer, and which ones a cut past 200 leaves out, follow it. The returned `picks` are not sorted again.
+    - **Set-only:** `chooseList` → `oneListOf` (`lib/offer-recipient-rules.ts:289-304`) counts matches per list and breaks ties by the candidate lists' order, which comes from a separate read. `personMatch` sorts both sides by slug (`matches/index.ts:43`). The people pages carry counts, and they were byte-identical.
+    - **What was done.** Per the coordinator's first answer (a), `candidates.ts` was left alone at first, and the picker's output for localtest1 and localtest2, both ways, row and Mutual, was compared in order on part A's and part B's code: identical. These are small (2 and 4 items), so a larger picker could still reorder once under part B's plan, as it could under any plan change before.
+  - **`they_have` ordered, by the owner's decision of 2026-11-20.** An Opus review of part B returned "proceed", with one finding to fix: `they_have`'s `json_agg` had no `ORDER BY`. The owner decided to order it in part B, accepting a one-time change in the order of Make offer's preselected items (and which fall past `OFFER_SIDE_LIMIT`), then stable for good. `candidates.ts`' `grouped` CTE now aggregates `they_have` `ORDER BY collection_slug, list_id, objekt_id NULLS LAST, trade, sale`.
+    - That is the order `they_want` already has. Its `json_agg(DISTINCT jsonb …)` sorts the objects in jsonb order: with equal keys, jsonb compares values key by key in its storage order (shorter keys first), so slug, then list id.
+    - Slug first gives the prefill in collection order, as `personMatch` sorts its sides (`matches/index.ts:43`), and `recount`'s `groupBySlug` keeps it.
+    - The key covers every field the object emits, so two rows that tie emit identical JSON, and the order is total over what reaches the picker.
+    - `they_want` is unchanged. No test pins this SQL.
+    - **10.3's picker comparison.** `reads.ts compare <before> <after>` requires every read to be byte-identical, except the four `offer.suggest` reads. Those must be identical, or else hold the same `give` and `get` items with every other field equal, reported as "order only". This one-time order difference is accepted. The candidate reads were already compared as sets (`reads.ts` sorts each candidate's arrays), so the new `ORDER BY` does not move them. Self-test: reversing one picker side passes as "order only"; dropping one pair fails. `script/reads.ts` sha256 `0e081907…3748`.
+  - **10.5, the "before" half (part A's code, read-only on the local database, `EXPLAIN (ANALYZE, COSTS OFF, TIMING OFF)`).** Saved as `/private/tmp/claude-501/trade-post-state/explain-before.txt`, by `script/explain.ts`.
+    - `postsCte`'s people read (`fetchBumpPeople`, signed out, all types): `on_trade` is a bitmap scan of `lists` through **`lists_trade_feed_idx`** (505 index rows, 439 kept). `trade_post` is read by a sequential scan (411 rows) for the pairing, and by `trade_post_lead_list_id_idx` for the folded-want check (110 loops).
+    - The market's `countedListings` (a per-slug count): a bitmap scan of `lists` through **`lists_trade_feed_idx`** too (166 sale lists kept).
+    - `lists_trade_discoverable_idx` appears in neither plan.
+
+- **10.2, 10.3 and 10.5's "after" half (2026-11-20, approved by the owner; local only).**
+  - **10.2.** `DATABASE_URL` and `REDIS_URL` both pointed at `localhost`. `db:migrate` applied `20261120085525_trade_post_state_reconcile` (migrations applied successfully, exit 0). The read-only drift run then read 411 rows, **0 on all six checks**, both notes 0, "in step".
+  - **10.3.** `reads.ts` on part B's code, uncommitted, with `they_have` ordered, gave `reads-after.json`: 21,616,061 bytes, sha256 `a1675e0a…0d17`, the same as `reads-before.json`. `reads.ts compare reads-before.json reads-after.json` reported "in step", with no key order-only, and `cmp` finds the files byte-identical.
+    - So every people page, My posts, the candidates, the 97,100 alert pairs, the collection counts and the four offer-picker reads (2 and 4 items, in order) are unchanged.
+    - The picker reads kept their order, since the `ORDER BY` the order rule set (slug, then list id) is the order these few items already came in.
+    - Both files stay in `/private/tmp/claude-501/trade-post-state/` until the owner has seen the result; delete them after.
+  - **10.5, before and after** (`EXPLAIN (ANALYZE, COSTS OFF, TIMING OFF)`, read-only on the local database; `explain-before.txt` on part A's code, `explain-after.txt` on part B's after migration B):
+    - **`postsCte`'s people read.** Before, `on_trade` was a bitmap scan of `lists` through `lists_trade_feed_idx` (505 index rows, 439 kept). After, it is a sequential scan of `trade_post` (411 rows), a VALUES scan of its two sides (about 1.07 kept per row), and an index scan of `lists_pkey` per side (441 lookups, 439 kept). `lists_trade_feed_idx` no longer appears. The pairing join and the folded-want check read `trade_post` by sequential scan; the latter used `trade_post_lead_list_id_idx` before and a hash join now.
+    - **The market's `countedListings`.** Unchanged, still on `lists`: a bitmap scan through `lists_trade_feed_idx`, 166 sale lists.
+    - **`lists_trade_discoverable_idx`** appears in no plan, before or after.
+    - **For `trade-post-state-contract`.** After part B, `lists_trade_feed_idx` serves the market (its `discoverable` predicate) and no feed read; `lists_trade_discoverable_idx` serves neither. At 411 rows a sequential scan of `trade_post` is the plan, as decision 13 expected. Production's `EXPLAIN` (11.3) decides.
+- **10.4, the local write pass on part B (2026-11-20, approved by the owner; part B's code uncommitted, migration B applied locally).** The setup was as in 6.3: `DATABASE_URL` and `REDIS_URL` both on `localhost`; the dev server on port 3200, started and stopped by this pass; two isolated `browser-use` contexts, each signed in through `fetch('/api/auth/sign-in/email')`. The record taken before step 1 is byte-identical to 6.2's.
+  - **How each step ran.** Every write went through the `/rpc` procedure the composer, list form and Bump button call: no write used the composer UI. After each write the read side was loaded in the real UI and read from the page:
+    - Browse, as localtest1, with My posts expanded in the pass's own context;
+    - For you;
+    - localtest1's person page, as localtest1 and as localtest2.
+  - **The feed skips a post with no entries** (`assemblePost` returns null, `feed/posts.ts:166`), and most of these fixture lists are empty. So the post a step wrote shows in My posts (`trade.myPosts`, which part B switched to `sideOnTradeSql` and `postStateSql`) and in My posts' count, not in Browse's or the person page's rows. Those pages were checked for not changing, and for localtest2's bump.
+  - **The steps.** Drift read **0 on all six checks after every step**:
+    1. Swap pair (spares 2 + lt1 paired wants): row 1000302 both sides on. My posts went from "3 listed" to "4 listed", with "WTT WTB · Offering spares 2 · Looking for lt1 paired wants · Would also pay", "Bumped 1 minute ago" and "Next bump in 24 hours".
+    2. Sell with swaps, then Sell only:
+       - with swaps, "WTS WTT · lt1 sale off · Looking for lt1 sale wants · Also on Market", with no WTB since that want list is Swaps only (`match_sale` false on the row);
+       - Sell only, "WTS · lt1 sale off" alone, the row's `takes_swaps` false.
+    3. Buy, Buying only: new row 1000466, "WTB · Looking for lt1 off trade", with no WTT (`match_have` false).
+    4. The want list swapped for a new `tps want` (13406): "spares 2 · Looking for tps want", and lt1 paired wants left. Then the split into a Buy post (new row 1000467, "WTB · Looking for tps want", spares 2 off and gone from My posts). Then take off and re-pair: merged back into 1000302 and listed again.
+    5. Take off Trade: the post left My posts ("5 listed"), and its row kept its bumps and Open to. Posted again without "also pay": "WTT · spares 2 · Looking for tps want", with no WTB and no "Would also pay" (the row's `match_sale` false).
+    6. Lead on, want off: "WTT · spares 2" with no "Looking for", the want side's bump kept.
+    7. Bump:
+       - localtest1 was refused `trade_bump_too_soon`, as before;
+       - localtest2's bump set both sides of rows 1000303 and 1000304 to its lists' time;
+       - localtest1's Browse, which reads the bump from the rows' sides, changed localtest2's row from "Bumped 4 days ago" to "Bumped now".
+    8. Open to saved through `list.edit` on `tps want`, off Trade: the list's `match_sale` went true and the row's stayed false. My posts did not change ("WTT · spares 2", its want side off). Drift read 0, as check 6 skips off-Trade sides.
+    9. The takeover:
+       - an unbound `tps have` was created, paired with `tps want`, in row 1000468, with the lead off;
+       - a Swap post of `tps want` alone gave "want on, lead off", shown as "WTT WTB · Looking for tps want · Would also pay";
+       - deleting `tps have` let `tps want` take over row 1000468, which kept its id, with the post unchanged.
+  - **Make offer.** As localtest2 on localtest1's person page, Make offer opened the builder on "lt1 idntt wants". It preselected, under You give, DoHyung A26 222Z, SunJae A26 221Z, SunJae A26 222Z, SeongJun Sp26 211Z. That is slug order (`autumn26-dohyung-222z`, `autumn26-sunjae-221z`, `autumn26-sunjae-222z`, `spring26-seongjun-211z`), one list each, the same as `offer.suggest` returned.
+    - That side comes from `they_want`. The `they_have`-fed side (You get) cannot be opened in the UI here: localtest2 does not take messages, so localtest1 has no Make offer on its row.
+    - Through `offer.suggest`, localtest1 to localtest2, row and Mutual, You get was `autumn26-dohyung-222z`, then `autumn26-sunjae-221z`: slug order, as in the 10.1 baseline.
+  - **Restore.** Through the app: `tps want` deleted, the two pairs re-made and taken off, lt1 off trade taken off. Then the local SQL restore of the recorded state, `bumped_at` and `updated_at`, and row states; it deleted the leftover row 1000466.
+    - The re-read of lists and rows is byte-identical to the record, and so are the offer and hide references. Drift reads 0.
+    - The UI read after the restore matches the baseline: both person pages are identical, For you differs only by a presence dot, and My posts is back to "3 listed · Bumped 5 days ago".
+  - **No credential leaked.** No password, email or sign-in GET appears in the dev-server log, and none was submitted through a form.
+- **10.6.** `bun run check` passes (27 of 27 tasks; every suite 0 fail; `@repo/api` lint keeps one warning that was already there, in `serial-anchored.ts`), and so do `bun run build --filter=web` and `bunx oxfmt --check`.
+- **12.1, the agent docs (2026-11-20, approved by the owner).**
+  - `packages/db/AGENTS.md`, Trade posts, now says:
+    - each row holds its sides' Trade state and bumps and the post's Open to and `takes_swaps`, kept equal to its lists while a list is in at most one row, and read by the reads that build posts, with a pointer to `packages/api/docs/trade.md`;
+    - which two migrations did it;
+    - in bold, that no web or worker build older than `2f107ab3` may run once `trade_post_state_reconcile` has run.
+  - `apps/worker/AGENTS.md`, Want alerts: a partner list's state comes from `on_trade`, and the recipient's own lists read `lists`.
+  - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md`, checked against parts A (`2f107ab3`) and B: none of their conventions changed. Both parts keep to the existing ones:
+    - round trips: `bumpPerson`'s lock and the states `UPDATE … FROM unnest`;
+    - the worker import boundary;
+    - pure tests;
+    - no `/rpc` or cache-key change;
+    - no web code at all.
+
+    The api file's domain-docs table does not list `lib/trade-post-rows.ts` beside the other trade `lib/` files, a gap from before this change, left as it is.
+  - `bun run lint --filter=@repo/db` and `bunx oxfmt --check` pass.

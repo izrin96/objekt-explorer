@@ -42,3 +42,61 @@ export const postRowSql = (alias: string) =>
   sql<
     number | null
   >`coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = ${column(alias, "id")}), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = ${column(alias, "id")}))`;
+
+/**
+ * One row per list side on Trade, from the `trade_post` rows: Trade state and bump from the side,
+ * a want list's Open to and a sale list's `takes_swaps` from the row (a want list in a row is
+ * always its open list, and a sale list is only ever a lead), the rest from the list. The body of
+ * `postsCte`'s `on_trade`; `matchable` filters `l`, the list.
+ */
+export const onTradeRowsSql = (matchable: SQL) => sql`SELECT l.id, l.user_id, l.list_type,
+    CASE WHEN l.list_type = 'want' THEN tp.match_sale ELSE l.match_sale END AS match_sale,
+    CASE WHEN l.list_type = 'want' THEN tp.match_have ELSE l.match_have END AS match_have,
+    CASE WHEN l.list_type = 'sale' THEN tp.takes_swaps ELSE l.takes_swaps END AS takes_swaps,
+    side.bumped_at, l.updated_at, l.created_at
+  FROM trade_post tp
+  CROSS JOIN LATERAL (VALUES
+    (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at),
+    (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at)
+  ) side(list_id, on_trade, bumped_at)
+  JOIN lists l ON l.id = side.list_id
+  WHERE side.on_trade AND ${matchable}`;
+
+/** Whether the list `alias` has a side on Trade in some `trade_post` row. */
+export const sideOnTradeSql = (alias: string) =>
+  sql`EXISTS (SELECT 1 FROM trade_post side_row
+    WHERE (side_row.lead_list_id = ${column(alias, "id")} AND side_row.lead_on_trade)
+      OR (side_row.want_list_id = ${column(alias, "id")} AND side_row.want_on_trade))`;
+
+const POST_STATE = {
+  bumpedAt: { side: "bumped_at", own: "bumped_at", from: null },
+  matchHave: { side: null, own: "match_have", from: "want" },
+  matchSale: { side: null, own: "match_sale", from: "want" },
+  takesSwaps: { side: null, own: "takes_swaps", from: "sale" },
+} as const;
+
+/**
+ * A list's value from the side of the row {@link postRowSql} names: its bump whenever it is in a
+ * row; a want list's Open to and a sale list's `takes_swaps` from the row while that side is on
+ * Trade. Otherwise the list's own, so a list off Trade reads as it always did, even after an
+ * off-Trade `list.edit` the row has not caught up with. `onTradeSql`'s type rule, for `alias`.
+ */
+export function postStateSql(alias: string, field: "bumpedAt"): SQL<string | null>;
+export function postStateSql(
+  alias: string,
+  field: "matchHave" | "matchSale" | "takesSwaps",
+): SQL<boolean>;
+export function postStateSql(alias: string, field: keyof typeof POST_STATE) {
+  const rule = POST_STATE[field];
+  const own = column(alias, rule.own);
+  const side = (name: string) =>
+    sql.raw(
+      `CASE WHEN state_row.lead_list_id = ${alias}.id THEN state_row.lead_${name} ELSE state_row.want_${name} END`,
+    );
+  const value = rule.side
+    ? sql`CASE WHEN state_row.id IS NULL THEN ${own} ELSE ${side(rule.side)} END`
+    : sql`CASE WHEN ${column(alias, "list_type")} = '${sql.raw(rule.from)}' AND ${side("on_trade")}
+        THEN state_row.${sql.raw(rule.own)} ELSE ${own} END`;
+  return sql`(SELECT ${value} FROM (SELECT 1) state_one
+    LEFT JOIN trade_post state_row ON state_row.id = ${postRowSql(alias)})`;
+}

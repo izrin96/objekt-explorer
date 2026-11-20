@@ -6,20 +6,17 @@ import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
 import type { MatchIndex } from "../../../lib/trade-viewer";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { inHiddenPostSql, matchableListSql, postPairsSql } from "../lists";
+import { inHiddenPostSql, onTradeSql, postPairsSql } from "../lists";
 
 /**
- * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
- * its `trade_post` row pairs it with (a have list, or a sale list that takes swaps) when both are
- * on Trade. A post's bump and change times are the latest of its lists.
+ * Posts on Trade: each list side on Trade in a `trade_post` row, with a want list folded into the
+ * list offering swaps that its row pairs it with (a have list, or a sale list that takes swaps)
+ * when both are on Trade. Trade state, bumps and the post's Open to come from the rows' sides
+ * (`onTradeSql`); a post's bump is the latest of its sides', its change time the latest of its
+ * lists'.
  */
 export const postsCte = sql`
-  on_trade AS (
-    SELECT id, user_id, list_type, match_sale, match_have, takes_swaps, bumped_at, updated_at,
-      created_at
-    FROM lists
-    WHERE discoverable AND ${matchableListSql()}
-  ),
+  on_trade AS (${onTradeSql}),
   posts AS (
     SELECT
       a.id,

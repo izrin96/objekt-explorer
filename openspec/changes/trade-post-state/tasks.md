@@ -112,18 +112,18 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
 
 ## 7. Rollout A (the owner)
 
-- [ ] 7.1 The owner commits and pushes, and CI passes and moves `:latest`. The owner runs `docker compose run --build --rm migrate`, then brings up web. The worker is not rebuilt. Record the migration's applied time and the time web A serves.
-- [ ] 7.2 With a go-ahead, run the drift script read-only on production. Checks 1 to 4 read zero. Record the counts of checks 5 and 6 (people who have not written since the migration) in design.md.
+- [x] 7.1 The owner commits and pushes, and CI passes and moves `:latest`. The owner runs `docker compose run --build --rm migrate`, then brings up web. The worker is not rebuilt. Record the migration's applied time and the time web A serves.
+- [x] 7.2 With a go-ahead, run the drift script read-only on production. Checks 1 to 4 read zero. Record the counts of checks 5 and 6 (people who have not written since the migration) in design.md.
 
 ## 8. Part B: readers on the row
 
-- [ ] 8.1 `packages/api/src/services/trade/lists.ts`: add `onTradeSql` and `postStateSql(alias, field)` (design decision 7). In `lib/trade-sql.test.ts`, pin the text of both. Checks pass for `@repo/api`.
-- [ ] 8.2 `services/trade/feed/query.ts`: `postsCte`'s `on_trade` becomes `onTradeSql`, and nothing else in `postsCte` or `listedCte` changes. Update the comment above `postsCte`: Trade state and bumps come from the rows' sides. Checks pass for `@repo/api`.
-- [ ] 8.3 `services/trade/feed/entries.ts`: `feedListColumns`' `matchSale`, `matchHave`, `takesSwaps` and `bumpedAt` come from `postStateSql("lists", …)`. `services/trade/feed/mine.ts`: `fetchOwnTradeLists` filters on a side on Trade. Checks pass for `@repo/api`.
-- [ ] 8.4 `services/trade/matches/candidates.ts`: `partner_lists` reads `FROM on_trade l`. Its other conditions are unchanged, and `my_want` and `my_have` stay on `lists`. Checks pass for `@repo/api`.
-- [ ] 8.5 `apps/worker/src/job/want-alerts/pairs.ts`: `cand` joins `on_trade l` in place of `lists l … WHERE l.discoverable`. `wl` and `ol` stay on `lists`. Checks pass for the worker, including the import-boundary test.
-- [ ] 8.6 Grep for every reader in design decision 8's table and confirm each is unchanged. Grep `packages/api/src` and `apps/worker/src` for `discoverable`, `bumped_at`, `match_have`, `match_sale` and `takes_swaps`, and confirm that every remaining hit is in decision 8's table, a writer, or the drift script. Record the list in As built.
-- [ ] 8.7 `packages/api/docs/trade.md`:
+- [x] 8.1 `packages/api/src/services/trade/lists.ts`: add `onTradeSql` and `postStateSql(alias, field)` (design decision 7). In `lib/trade-sql.test.ts`, pin the text of both. Checks pass for `@repo/api`.
+- [x] 8.2 `services/trade/feed/query.ts`: `postsCte`'s `on_trade` becomes `onTradeSql`, and nothing else in `postsCte` or `listedCte` changes. Update the comment above `postsCte`: Trade state and bumps come from the rows' sides. Checks pass for `@repo/api`.
+- [x] 8.3 `services/trade/feed/entries.ts`: `feedListColumns`' `matchSale`, `matchHave`, `takesSwaps` and `bumpedAt` come from `postStateSql("lists", …)`. `services/trade/feed/mine.ts`: `fetchOwnTradeLists` filters on a side on Trade. Checks pass for `@repo/api`.
+- [x] 8.4 `services/trade/matches/candidates.ts`: `partner_lists` reads `FROM on_trade l`. Its other conditions are unchanged, and `my_want` and `my_have` stay on `lists`. Checks pass for `@repo/api`.
+- [x] 8.5 `apps/worker/src/job/want-alerts/pairs.ts`: `cand` joins `on_trade l` in place of `lists l … WHERE l.discoverable`. `wl` and `ol` stay on `lists`. Checks pass for the worker, including the import-boundary test.
+- [x] 8.6 Grep for every reader in design decision 8's table and confirm each is unchanged. Grep `packages/api/src` and `apps/worker/src` for `discoverable`, `bumped_at`, `match_have`, `match_sale` and `takes_swaps`, and confirm that every remaining hit is in decision 8's table, a writer, or the drift script. Record the list in As built.
+- [x] 8.7 `packages/api/docs/trade.md`:
   - Trade posts: the reads that build posts take Trade state, bumps and the post's Open to from the row (`onTradeSql`, `postStateSql`), and list-level and viewer-own reads stay on `lists`;
   - "Partner rules, hidden and idle posts": the idle rule reads the row's bump and the list's `updated_at`.
 
@@ -131,7 +131,7 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
 
 ## 9. Migration B
 
-- [ ] 9.1 From `packages/db`, run `bun run db:generate --custom --name trade_post_state_reconcile`. Write its SQL by hand (design decision 12):
+- [x] 9.1 From `packages/db`, run `bun run db:generate --custom --name trade_post_state_reconcile`. Write its SQL by hand (design decision 12):
   - the `lock_timeout` line;
   - `LOCK TABLE "lists" IN EXCLUSIVE MODE;`, with a comment saying that every `trade_post` writer starts with `lockTradeLists`, so this waits for them and freezes the values read, and that SHARE would deadlock against `deleteList`;
   - migration A's backfill, unchanged.
@@ -140,7 +140,7 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
 
 ## 10. Local proof of part B
 
-- [ ] 10.1 On part A's committed code (the commit deployed in 7.1), before group 8 is applied, write `apps/worker/.trade-post-state/reads.ts`. It writes one JSON file of, for `localtest1` and `localtest2` and signed out:
+- [x] 10.1 On part A's committed code (the commit deployed in 7.1), before group 8 is applied, write `apps/worker/.trade-post-state/reads.ts`. It writes one JSON file of, for `localtest1` and `localtest2` and signed out:
   - `trade.people` first pages for every type filter and for Mutual and Any;
   - `trade.myPosts`;
   - `fetchTradeCandidates` for each filter;
@@ -148,11 +148,11 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
   - the post counts of three collection slugs.
 
   Each is sorted, with fixed `now`s where the code takes one. Run it on part A's code as `reads-before.json`, outside the repo.
-- [ ] 10.2 With the owner's approval, apply migration B locally, and run the drift script: zero.
-- [ ] 10.3 Run `reads.ts` on part B's code as `reads-after.json`. `cmp` with `reads-before.json` must find them identical. Then delete the script and both files.
-- [ ] 10.4 With the owner's approval of the rows, repeat 6.3's browser pass on part B's code, with drift after each step, then restore.
-- [ ] 10.5 Run `EXPLAIN` for `postsCte`'s people read and the market's `countedListings`, read-only on the local database, before and after part B. Record whether `lists_trade_feed_idx` and `lists_trade_discoverable_idx` appear, and whether `onTradeSql` reads `trade_post` by sequential scan, for the contract change.
-- [ ] 10.6 Run `bun run check` and `bun run build --filter=web`; both pass.
+- [x] 10.2 With the owner's approval, apply migration B locally, and run the drift script: zero.
+- [x] 10.3 Run `reads.ts` on part B's code as `reads-after.json`. `cmp` with `reads-before.json` must find them identical. Then delete the script and both files.
+- [x] 10.4 With the owner's approval of the rows, repeat 6.3's browser pass on part B's code, with drift after each step, then restore.
+- [x] 10.5 Run `EXPLAIN` for `postsCte`'s people read and the market's `countedListings`, read-only on the local database, before and after part B. Record whether `lists_trade_feed_idx` and `lists_trade_discoverable_idx` appear, and whether `onTradeSql` reads `trade_post` by sequential scan, for the contract change.
+- [x] 10.6 Run `bun run check` and `bun run build --filter=web`; both pass.
 
 ## 11. Rollout B (the owner)
 
@@ -162,7 +162,7 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
 
 ## 12. Agent docs
 
-- [ ] 12.1 Using `writing-for-agents`:
+- [x] 12.1 Using `writing-for-agents`:
   - `packages/db/AGENTS.md`, Trade posts: each row holds its sides' Trade state, bump and the post's Open to, kept equal to its lists while a list is in at most one row. Note the two migrations, and that no build older than web A may run after `trade_post_state_reconcile`.
   - `apps/worker/AGENTS.md`, Want alerts: a partner list's state comes from `on_trade`, not from `lists`.
   - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md`: check them against the diff, and state in As built that none of their conventions changed, or update the one that did.

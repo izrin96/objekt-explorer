@@ -5,13 +5,7 @@ import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../../lib/tra
 import { offersSwapsSql } from "../../../lib/trade-sql";
 import type { TradeFilter } from "../../../schemas/trade";
 import { listedCte, postsCte } from "../feed/query";
-import {
-  inHiddenPostSql,
-  offerMatchesWantSql,
-  matchableListSql,
-  postPairsSql,
-  tradePartnerSql,
-} from "../lists";
+import { inHiddenPostSql, offerMatchesWantSql, postPairsSql, tradePartnerSql } from "../lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -84,12 +78,11 @@ export async function fetchTradeCandidates(
       WHERE e.list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND e.collection_slug IS NOT NULL
       GROUP BY e.collection_slug
     ),
+    -- through on_trade, so a partner's Open to and takes_swaps are its post's
     partner_lists AS (
       SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at
-      FROM lists l
-      WHERE l.discoverable
-        AND ${matchableListSql("l")}
-        AND l.user_id <> ${userId}
+      FROM on_trade l
+      WHERE l.user_id <> ${userId}
         -- an idle list does not count: a pair's lists share the pair's freshness
         AND l.id IN (SELECT id FROM listed)
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
@@ -132,11 +125,15 @@ export async function fetchTradeCandidates(
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have) AS b,
         count(DISTINCT collection_slug) FILTER (WHERE they_have AND trade) AS a_t,
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have AND trade) AS b_t,
+        -- ordered, as they_want's DISTINCT is, by slug then list: the offer picker prefills in this
+        -- order and cuts at its side limit, so it must not follow the query plan. Every field
+        -- emitted is a key, so rows that tie are identical
         coalesce(
           json_agg(json_build_object(
             'listId', list_id, 'slug', collection_slug, 'objektId', objekt_id,
             'swap', trade, 'sale', sale
-          )) FILTER (WHERE they_have),
+          ) ORDER BY collection_slug, list_id, objekt_id NULLS LAST, trade, sale)
+            FILTER (WHERE they_have),
           '[]'
         ) AS they_have,
         coalesce(

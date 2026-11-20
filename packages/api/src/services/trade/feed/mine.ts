@@ -13,6 +13,7 @@ import {
   nextBumpAt,
   pairPosts,
 } from "../../../lib/trade-posts";
+import { sideOnTradeSql } from "../../../lib/trade-sql";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
 import { lockTradeLists } from "../../list/shared";
@@ -25,7 +26,7 @@ async function fetchOwnTradeLists(userId: string) {
   return db
     .select(feedListColumns)
     .from(lists)
-    .where(and(eq(lists.userId, userId), eq(lists.discoverable, true), matchableList));
+    .where(and(eq(lists.userId, userId), sideOnTradeSql("lists"), matchableList));
 }
 
 export async function fetchMyPosts(userId: string) {

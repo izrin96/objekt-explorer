@@ -5,7 +5,15 @@ import { PgDialect } from "drizzle-orm/pg-core";
 
 import { offersSwaps, openToOf } from "../schemas/open-to";
 import { tagsOf } from "../schemas/trade-post";
-import { TAG_WHERE, byOpenToSql, offersSwapsSql, postRowSql } from "./trade-sql";
+import {
+  TAG_WHERE,
+  byOpenToSql,
+  offersSwapsSql,
+  onTradeRowsSql,
+  postRowSql,
+  postStateSql,
+  sideOnTradeSql,
+} from "./trade-sql";
 
 const render = (q: SQL) => new PgDialect().sqlToQuery(q);
 // Whitespace is formatting, not meaning: collapse it so the pinned text stays on one line.
@@ -116,6 +124,44 @@ describe("postRowOf and postRowSql", () => {
   test("the lowest row a list leads, else the lowest it is the want list of", () => {
     expect(flat(postRowSql("l"))).toBe(
       "coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = l.id), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = l.id))",
+    );
+  });
+});
+
+describe("onTradeRowsSql, sideOnTradeSql and postStateSql", () => {
+  test("one row per list side on Trade, the post's Open to by list type", () => {
+    expect(flat(onTradeRowsSql(sql`(matchable l)`))).toBe(
+      "SELECT l.id, l.user_id, l.list_type, CASE WHEN l.list_type = 'want' THEN tp.match_sale ELSE l.match_sale END AS match_sale, CASE WHEN l.list_type = 'want' THEN tp.match_have ELSE l.match_have END AS match_have, CASE WHEN l.list_type = 'sale' THEN tp.takes_swaps ELSE l.takes_swaps END AS takes_swaps, side.bumped_at, l.updated_at, l.created_at FROM trade_post tp CROSS JOIN LATERAL (VALUES (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at), (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at) ) side(list_id, on_trade, bumped_at) JOIN lists l ON l.id = side.list_id WHERE side.on_trade AND (matchable l)",
+    );
+  });
+
+  test("a list with a side on Trade", () => {
+    expect(flat(sideOnTradeSql("l"))).toBe(
+      "EXISTS (SELECT 1 FROM trade_post side_row WHERE (side_row.lead_list_id = l.id AND side_row.lead_on_trade) OR (side_row.want_list_id = l.id AND side_row.want_on_trade))",
+    );
+  });
+
+  // the row `postRowSql` names, rendered for `l`
+  const row =
+    "FROM (SELECT 1) state_one LEFT JOIN trade_post state_row ON state_row.id = coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = l.id), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = l.id)))";
+  const onSide =
+    "CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_on_trade ELSE state_row.want_on_trade END";
+
+  test("the bump from the list's side whenever it is in a row, else its own", () => {
+    expect(flat(postStateSql("l", "bumpedAt"))).toBe(
+      `(SELECT CASE WHEN state_row.id IS NULL THEN l.bumped_at ELSE CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_bumped_at ELSE state_row.want_bumped_at END END ${row}`,
+    );
+  });
+
+  test("a want list's Open to and a sale list's takes_swaps from the row only while on Trade", () => {
+    expect(flat(postStateSql("l", "matchHave"))).toBe(
+      `(SELECT CASE WHEN l.list_type = 'want' AND ${onSide} THEN state_row.match_have ELSE l.match_have END ${row}`,
+    );
+    expect(flat(postStateSql("l", "matchSale"))).toBe(
+      `(SELECT CASE WHEN l.list_type = 'want' AND ${onSide} THEN state_row.match_sale ELSE l.match_sale END ${row}`,
+    );
+    expect(flat(postStateSql("l", "takesSwaps"))).toBe(
+      `(SELECT CASE WHEN l.list_type = 'sale' AND ${onSide} THEN state_row.takes_swaps ELSE l.takes_swaps END ${row}`,
     );
   });
 });
