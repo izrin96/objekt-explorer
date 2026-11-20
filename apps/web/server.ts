@@ -105,6 +105,9 @@ async function initializeServer() {
   // Create Bun server
   const server = Bun.serve({
     port: SERVER_PORT,
+    // above Traefik's 90s backend keep-alive: with Bun's default 10s, Traefik reuses a socket Bun
+    // just closed and answers 502 "Bad Gateway", which the batched oRPC client fails to parse (WEB-2E)
+    idleTimeout: 120,
 
     async fetch(req) {
       const url = new URL(req.url);
