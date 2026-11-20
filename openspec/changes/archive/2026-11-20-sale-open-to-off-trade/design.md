@@ -58,5 +58,5 @@ Reused: `trade_line_sell_only`, `trade_line_sell_or_swap`, `list_open_to_label`,
 
 ## Open Questions
 
-- Should create and Copy as new list offer the choice (decision 5), or only edit? Either way the specs' edit and badge behaviour stands; dropping it removes the create input and the copy-draft change.
-- Should an unbound sale list show or take the choice (decision 1)? It can never take part in matching or go on Trade unless copied as a bound list.
+- Should create and Copy as new list offer the choice (decision 5), or only edit? Either way the specs' edit and badge behaviour stands; dropping it removes the create input and the copy-draft change. **Answered:** both offer it, shipped in 0be73c11 (group 6).
+- Should an unbound sale list show or take the choice (decision 1)? It can never take part in matching or go on Trade unless copied as a bound list. **Answered:** no; an unbound sale list shows and takes none, as shipped in 0be73c11.

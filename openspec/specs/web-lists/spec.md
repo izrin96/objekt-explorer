@@ -10,10 +10,11 @@ shares, including sale lists with prices.
 A signed-in user SHALL see their lists at `/list` and create, edit and delete them. A list
 has a name, a type (general, have, want, sale), a currency when it is a sale list, a
 description, and an optional Cosmo profile it is filed under with a flag deciding whether that
-profile's Lists tab shows it. A have, want or sale list's link and place on Trade, and a sale
-list's Open to, are set in the post composer (see `web-trade-browse`), and its edit form shows
-the Trade line instead (see Trade line in the list form); a want list's Open to is set there
-while the list is on Trade, and in its form while it is off (see Open to in the list form).
+profile's Lists tab shows it. A have, want or sale list's link and place on Trade are set in
+the post composer (see `web-trade-browse`), and its edit form shows the Trade line instead
+(see Trade line in the list form); a want list's Open to, and a bound sale list's, are set
+there while the list is on Trade, and in its form while it is off (see Open to in the list
+form and Sale list Open to in the list form).
 Every want list alerts its owner to new matches, whether or
 not it is on Trade (see `web-notifications`). A signed-out visitor SHALL be sent to
 `/login?redirect=/list`.
@@ -44,8 +45,8 @@ as new list).
 - **THEN** the name stays, and the form shows the Open to choice at Swaps or buying, and no linked list or Trade switch
 
 #### Scenario: Sale form has no Trade switch
-- **WHEN** the user picks the sale type in the create form
-- **THEN** the form shows currency and profile binding, and no Show on Market and Trade switch
+- **WHEN** the user with a linked Cosmo profile picks the sale type in the create form
+- **THEN** the form shows currency, profile binding and the Open to choice at Sell only, and no Show on Market and Trade switch
 
 #### Scenario: Type on edit
 - **WHEN** a user opens the edit dialog of a have list
@@ -102,7 +103,7 @@ The server SHALL answer a slug preview only for the caller's own list filed unde
 - **THEN** the server refuses with the rate-limit refusal, and the field says the URL will be made from the name on save
 
 ### Requirement: List rows
-Lists SHALL show as rows on `/list` and on a profile's Lists tab. A row SHALL show the list's latest artworks (five slots on wider screens, dashed where the list has fewer; up to three overlapping on a phone), its name linking to the list, and one line with the objekt count, the Bound badge, On Trade with its post's tags, to its owner a want list's Open to while it is off Trade (see Open to on a want list off Trade), a sale list's currency, and chips for the linked list and the Cosmo profile; the profile chip SHALL be left out on that profile's own tab. A row's menu SHALL offer Copy link to everyone, and Edit, Copy as new list and Delete to the owner.
+Lists SHALL show as rows on `/list` and on a profile's Lists tab. A row SHALL show the list's latest artworks (five slots on wider screens, dashed where the list has fewer; up to three overlapping on a phone), its name linking to the list, and one line with the objekt count, the Bound badge, On Trade with its post's tags, to its owner the Open to of a want list, or of a bound sale list, while it is off Trade (see Open to on a want list off Trade and Open to on a sale list off Trade), a sale list's currency, and chips for the linked list and the Cosmo profile; the profile chip SHALL be left out on that profile's own tab. A row's menu SHALL offer Copy link to everyone, and Edit, Copy as new list and Delete to the owner.
 
 `/list` SHALL group the rows into Want, Have, Sale and General sections in that order, each headed by its type in the type's colour and its number of lists, and leave out a type with no list.
 
@@ -179,10 +180,10 @@ A have, want or sale list SHALL be on Trade or not, off by default; it is what o
 - a have or want list SHALL be on the `/trade` feed (see `web-trade-browse`) and take part in matching (For you, want alerts and the offer picker);
 - a sale list SHALL additionally be on Market and in each objekt's Market tab.
 
-Off Trade the list SHALL be in none of these, except that a want list still alerts its owner to matches (see `web-notifications`).
+Off Trade the list SHALL be in none of these for anyone else. Its owner's own matches and alerts still read it: every want list, and a have or sale list while it is bound to a Cosmo profile (see `web-trade-for-you` Account-wide matches and `web-notifications`).
 - A have or sale list not filed under a Cosmo profile cannot be on Trade; its Trade line SHALL say why.
 - Putting a list on Trade SHALL count as a bump of that list, unless its owner bumped in the last 24 hours, in which case it takes that bump's time (see `web-trade-browse` Bump).
-- Saving a list from its form SHALL change neither its link, nor a sale list's Open to, nor a want list's Open to while the list is on Trade, nor whether the list is on Trade; those are the post's, set through the post composer. A want list off Trade takes its Open to from its form (see Open to in the list form). A save that still carries a sale list's Trade state, from a tab opened before this rule, SHALL keep the list's current state.
+- Saving a list from its form SHALL change neither its link, nor a want or sale list's Open to while the list is on Trade, nor whether the list is on Trade; those are the post's, set through the post composer. A want list off Trade, and a bound sale list off Trade, take their Open to from the form (see Open to in the list form and Sale list Open to in the list form). A save that still carries a sale list's Trade state, from a tab opened before this rule, SHALL keep the list's current state.
 
 #### Scenario: Turn on from the form
 - **WHEN** the owner edits a want list that is off Trade, activates Post it on its Trade line and posts it as a Buy post
@@ -217,7 +218,7 @@ Off Trade the list SHALL be in none of these, except that a want list still aler
 - **THEN** "binary sale" stays on Trade and on Market
 
 ### Requirement: On Trade mark in the list header
-A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to the page of the post the list is in (see `web-trade-person-pages` Post page), reached through the list's Cosmo profile, or its linked list's when the list has none; a list with neither SHALL link to `/trade`. The On Trade badge on the list's row SHALL link the same way. Neither link SHALL load the post page ahead of a click. After it, the header and the list's row on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags. A list on Trade SHALL NOT name its Open to in words, since its tags say it; a want list off Trade names it to its owner only (see Open to on a want list off Trade).
+A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to the page of the post the list is in (see `web-trade-person-pages` Post page), reached through the list's Cosmo profile, or its linked list's when the list has none; a list with neither SHALL link to `/trade`. The On Trade badge on the list's row SHALL link the same way. Neither link SHALL load the post page ahead of a click. After it, the header and the list's row on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags. A list on Trade SHALL NOT name its Open to in words, since its tags say it; a want list, or a bound sale list, off Trade names it to its owner only (see Open to on a want list off Trade and Open to on a sale list off Trade).
 
 #### Scenario: Visitor sees the mark
 - **WHEN** a signed-out visitor opens a have list that is on Trade
@@ -230,6 +231,10 @@ A list header SHALL mark a list that is on Trade with an On Trade badge, for eve
 #### Scenario: Off Trade
 - **WHEN** a want list set to Buying only is not on Trade
 - **THEN** its header and its row on `/list` show no tag, and only its owner sees Buying only
+
+#### Scenario: Sale list off Trade
+- **WHEN** a bound sale list set to Sell or swap is not on Trade
+- **THEN** its header and its row on `/list` show no tag, and only its owner sees Sell or swap
 
 #### Scenario: Badge opens the post
 - **WHEN** a visitor activates On Trade on have list "spares", bound to rin.trades's profile and in a Swap post with "binary hunt"
@@ -356,7 +361,7 @@ The list page header and the list's row SHALL name a want list's choice.
 ### Requirement: Copy as new list
 The owner's menu on a list row and in the list header SHALL offer Copy as new list. It SHALL open the create form filled in from the source list:
 - the name with a copy suffix;
-- description, profile, currency, Open to (from a want list only), columns and hide serial.
+- description, profile, currency, Open to (a want list's into a want copy, a sale list's into a sale copy), columns and hide serial.
 
 Type and profile binding SHALL be editable. The linked list SHALL start empty and the copy SHALL start off Trade. Saving SHALL create a new list, open it, and leave the source unchanged. A copy made from the post composer SHALL be picked there and not opened, its type fixed to the composer side's (see `web-trade-browse` Composer copy form). Other visitors SHALL not see the action.
 
@@ -618,7 +623,7 @@ Share text, export and the Discord format SHALL write each rule as one line in i
 - **THEN** the Want part starts with "any CC366 (prio YooYeon, NaKyoung)" and "any Cream02 FCO 3rd", then the objekts, and no line per rule objekt
 
 ### Requirement: Sale list Open to
-A sale list SHALL carry an **Open to** choice, set by its post, not by the list form: **Sell only**, the default for every new and existing sale list, or **Sell or swap**, which also matches want lists open to swaps, counting toward Can swap and alerts like a have list (see Want list match option). Prices and Market SHALL be unchanged. An update that leaves the choice out SHALL keep it. Have lists SHALL have no such choice.
+A sale list SHALL carry an **Open to** choice, set by its post while the list is on Trade, and by its list form while it is off Trade and bound to a Cosmo profile (see Sale list Open to in the list form): **Sell only**, the default for every new and existing sale list, or **Sell or swap**, which also matches want lists open to swaps, counting toward Can swap and alerts like a have list (see Want list match option). Prices and Market SHALL be unchanged. An update that leaves the choice out SHALL keep it. Have lists SHALL have no such choice.
 
 #### Scenario: Existing sale list
 - **WHEN** a sale list made before this change is opened
@@ -631,6 +636,10 @@ A sale list SHALL carry an **Open to** choice, set by its post, not by the list 
 #### Scenario: Have list
 - **WHEN** a user opens the post composer with a have list
 - **THEN** it offers no selling or Open to choice for it
+
+#### Scenario: Set off Trade
+- **WHEN** the owner sets off-Trade sale list "binary sale" to Sell or swap in its form, then posts it as a Sell post without touching "Also open to swaps"
+- **THEN** the post is tagged WTS and WTT, and "binary sale" stays Sell or swap
 
 ### Requirement: Sale list pairs
 Only a sale list open to swaps SHALL be linkable to a want list; the pair is one post (see `web-trade-browse`), and its want side SHALL be open to swaps: Swaps only, or Swaps or buying when the seller would also pay. The server SHALL refuse linking a want list to a sale list set to Sell only, and setting a linked sale list to Sell only.
@@ -825,3 +834,81 @@ The form of a want list that is not on Trade, and the form creating a want list,
 #### Scenario: Old tab
 - **WHEN** a tab opened before this rule saves want list "bulk buys"
 - **THEN** "bulk buys" keeps its Open to
+
+### Requirement: Open to on a sale list off Trade
+A sale list bound to a Cosmo profile and not on Trade SHALL name its Open to (Sell only or Sell or swap) to its owner, as a neutral badge in its list header and on its row on `/list` and on its own profile's Lists tab, since it still decides which want lists count against it in the owner's matches and alerts. Screen readers SHALL read it as "Open to" followed by the choice. No one else SHALL see it. A sale list on Trade, and one not bound to a profile, SHALL show no such badge.
+
+#### Scenario: Owner's header
+- **WHEN** the owner opens sale list "binary sale", bound to a Cosmo profile, set to Sell or swap and not on Trade
+- **THEN** its header shows the Sale badge and Sell or swap, and no On Trade badge or tag
+
+#### Scenario: Owner's row
+- **WHEN** the owner opens `/list` with that sale list
+- **THEN** its row shows Sell or swap beside the objekt count
+
+#### Scenario: Never posted
+- **WHEN** the owner opens a bound sale list that has never been on Trade
+- **THEN** its header and its row show Sell only
+
+#### Scenario: Visitor
+- **WHEN** a signed-out visitor opens "binary sale", or its owner's profile Lists tab
+- **THEN** neither its header nor its row names its Open to
+
+#### Scenario: Posted
+- **WHEN** the owner puts "binary sale" on Trade as a Sell post with "Also open to swaps"
+- **THEN** its header and its row show On Trade, WTS and WTT, and no Sell or swap
+
+#### Scenario: Unbound sale list
+- **WHEN** the owner opens a sale list not bound to a Cosmo profile
+- **THEN** its header and its row name no Open to
+
+### Requirement: Sale list Open to in the list form
+The form of a sale list bound to a Cosmo profile and not on Trade, and the form creating a bound sale list, SHALL offer its Open to as one choice of Sell only and Sell or swap, each saying which want lists it matches; a new sale list starts at Sell only. A sale list paired with a want list SHALL NOT be offered Sell only. A sale list on Trade, one not bound to a profile, and a form opened from the post composer SHALL show no choice.
+
+#### Scenario: Change it off Trade
+- **WHEN** the owner edits "binary sale", bound, off Trade, set to Sell only and holding SeoYeon 204Z, which rin.trades's want list on Trade, open to swaps only, asks for, picks Sell or swap and saves
+- **THEN** its header and its row show Sell or swap, it stays off Trade, and on the next load SeoYeon 204Z counts as one the user has that rin.trades wants on Browse and For you
+
+#### Scenario: Create with a choice
+- **WHEN** the user creates sale list "binary sale", bound to a Cosmo profile, and picks Sell or swap
+- **THEN** "binary sale" is saved off Trade and Sell or swap, and its header and its row show Sell or swap
+
+#### Scenario: Create unbound
+- **WHEN** the user creates a sale list and turns profile binding off
+- **THEN** the form shows no Open to choice, and the list is saved Sell only
+
+#### Scenario: Copy keeps and changes it
+- **WHEN** the owner copies "binary sale", set to Sell or swap, from its row as a sale list
+- **THEN** the form starts at Sell or swap, and the copy saves the choice the form holds
+
+#### Scenario: Copy as another type
+- **WHEN** the owner copies "binary sale", set to Sell or swap, and picks Have
+- **THEN** the form shows no sale Open to choice, and the copy is a have list
+
+#### Scenario: On Trade
+- **WHEN** the owner edits sale list "store stock", which is on Trade
+- **THEN** the form shows no Open to choice, and saving keeps the Open to its post set
+
+#### Scenario: Paired off Trade
+- **WHEN** the owner edits "binary sale", paired with want list "binary hunt" and off Trade
+- **THEN** Sell only is disabled and says a paired sale list takes swaps, and a request that saves it as Sell only is refused
+
+#### Scenario: Unsaved choice
+- **WHEN** the owner changes the choice and has not saved
+- **THEN** the Trade line asks to save first and Post it is disabled
+
+#### Scenario: Post it takes the choice
+- **WHEN** the owner has saved "binary sale", in no post and paired with nothing, as Sell or swap, and activates Post it on its Trade line
+- **THEN** the composer opens on Sell with "binary sale" picked and "Also open to swaps" ticked; saved as Sell only, it opens with it unticked
+
+#### Scenario: Posted while the form was open
+- **WHEN** the owner opens the form of off-Trade "binary sale", posts it from another tab, then saves the form with another choice
+- **THEN** the save keeps the post's Open to and saves the form's other fields
+
+#### Scenario: From the composer
+- **WHEN** the owner opens Edit list, New sale list… or Copy a list… in the post composer
+- **THEN** the form shows no Open to choice
+
+#### Scenario: Old tab
+- **WHEN** a tab opened before this rule saves "binary sale", or creates a sale list
+- **THEN** "binary sale" keeps its Open to, and the new list is Sell only

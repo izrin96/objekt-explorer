@@ -4,7 +4,7 @@ Each task ends with `bun run lint`, `bun run typecheck` and `bun run build` pass
 
 ## 1. Starting point
 
-- [ ] 1.1 `openspec validate sale-open-to-off-trade --strict` passes, and each MODIFIED requirement in `specs/web-lists/spec.md` differs from its block in `openspec/specs/web-lists/spec.md` only in the sentences this change sets. If another change has edited those requirements since, stop and ask the owner. Confirm the owner's answers to the two Open Questions in `design.md`; if create and copy are dropped, skip group 6 and remove the create and copy scenarios from the spec delta first.
+- [x] 1.1 `openspec validate sale-open-to-off-trade --strict` passes, and each MODIFIED requirement in `specs/web-lists/spec.md` differs from its block in `openspec/specs/web-lists/spec.md` only in the sentences this change sets. If another change has edited those requirements since, stop and ask the owner. Confirm the owner's answers to the two Open Questions in `design.md`; if create and copy are dropped, skip group 6 and remove the create and copy scenarios from the spec delta first. Checked on 2026-11-20: valid, no edits to `openspec/specs/web-lists/spec.md` since 0be73c11, each MODIFIED block differs only in this change's sentences; the Open Questions were answered by what shipped (see `design.md`).
 
 ## 2. Badge
 
@@ -25,7 +25,7 @@ Each task ends with `bun run lint`, `bun run typecheck` and `bun run build` pass
 - [x] 4.3 Add `SaleOpenToField` to `list-form-fields.tsx`, sharing the radio markup with `OpenToField`, and render it in `list-form.tsx` behind `showOpenTo` for a bound sale list, with Sell only disabled and its hint when paired.
 - [x] 4.4 In `edit-list-dialog.tsx`, compute `storedSaleOpenTo` with `offTradeSaleOpenTo` from the seed (null without the Trade line), pass it to `toEditInput`, and show the field when either stored value is non-null.
 - [x] 4.5 Browser pass (read only, nothing saved on production): the edit form of a bound off-Trade sale list shows Open to after the Trade line at its stored value; a paired one has Sell only disabled with its hint; a posted one, an unbound one and composer Edit list show none; changing it shows the Trade line's save-first note and disables Post it; the request `list.edit` would send carries `saleOpenTo` only after a change; at 375 px and in ko and ja the options wrap.
-- [ ] 4.6 With the owner's go-ahead, and on the local database only, save Sell or swap on a bound off-Trade sale list holding a collection that a local partner's want list, open to swaps only and on Trade, asks for: the badge updates, Browse and For you count the collection on the next load, and Post it opens the composer on Sell with "Also open to swaps" ticked. Skip and say so if no such local data exists. Done on the local database on 2026-11-16 except the Browse and For you count: no local partner has a want list on Trade open to swaps only that asks for a collection the test account can list.
+- [x] 4.6 With the owner's go-ahead, and on the local database only, save Sell or swap on a bound off-Trade sale list holding a collection that a local partner's want list, open to swaps only and on Trade, asks for: the badge updates, Browse and For you count the collection on the next load, and Post it opens the composer on Sell with "Also open to swaps" ticked. Skip and say so if no such local data exists. Done on the local database on 2026-11-16 except the Browse and For you count: no local partner has a want list on Trade open to swaps only that asks for a collection the test account can list. Closed on 2026-11-20 with that count skipped; `open-to.test.ts` and `list-open-to.test.ts` cover the rule.
 
 ## 5. Docs for the edit path
 
@@ -40,5 +40,5 @@ Each task ends with `bun run lint`, `bun run typecheck` and `bun run build` pass
 
 ## 7. Wrap-up
 
-- [ ] 7.1 `bun run check` passes from the root, and `openspec validate sale-open-to-off-trade --strict` still passes.
-- [ ] 7.2 No `AGENTS.md` changes: no convention, trap or workflow changes. Re-read the root, `apps/web` and `packages/api` `AGENTS.md` against the diff and confirm, or update the one that changed.
+- [x] 7.1 `bun run check` passes from the root, and `openspec validate sale-open-to-off-trade --strict` still passes. Both passed on 2026-11-20.
+- [x] 7.2 No `AGENTS.md` changes: no convention, trap or workflow changes. Re-read the root, `apps/web` and `packages/api` `AGENTS.md` against the diff and confirm, or update the one that changed. Confirmed on 2026-11-20: the change set no convention, trap or workflow; `packages/api/docs/trade.md` and `apps/web/docs/trade.md` carry its behaviour.
