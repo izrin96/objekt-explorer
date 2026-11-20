@@ -44,6 +44,13 @@ describe("setCollectionColorsInputSchema", () => {
     );
   });
 
+  test("a pin alone is a save", () => {
+    expect(
+      setCollectionColorsInputSchema.safeParse({ slug: "atom01-heejin-322z", textPinned: true })
+        .success,
+    ).toBe(true);
+  });
+
   test("a three-digit colour is refused", () => {
     expect(
       setCollectionColorsInputSchema.safeParse({ slug: "atom01-heejin-322z", textColor: "#fff" })

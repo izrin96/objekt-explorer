@@ -11,6 +11,8 @@ export const colourColumns = {
   backgroundColor: collections.backgroundColor,
   sourceTextColor: collections.sourceTextColor,
   sourceBackgroundColor: collections.sourceBackgroundColor,
+  textColorPinned: collections.textColorPinned,
+  backgroundColorPinned: collections.backgroundColorPinned,
 };
 
 /**
@@ -38,6 +40,8 @@ export async function writeColourSet(tx: IndexerTx, slug: string, set: ColourSet
       backgroundColor: set.backgroundColor,
       sourceTextColor: set.sourceTextColor,
       sourceBackgroundColor: set.sourceBackgroundColor,
+      textColorPinned: set.textColorPinned,
+      backgroundColorPinned: set.backgroundColorPinned,
     })
     .where(eq(collections.slug, slug));
 }

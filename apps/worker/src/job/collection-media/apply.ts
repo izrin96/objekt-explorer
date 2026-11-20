@@ -110,7 +110,7 @@ export async function applyPhase() {
 }
 
 /** After any write: the list reads as changed, and Spin's cached held list (it carries media) goes. */
-async function bumpCaches() {
+export async function bumpCaches() {
   try {
     const next = iso(nextModifiedAt(Date.now(), await redis.get(COLLECTION_MODIFIED_AT_KEY)));
     await redis.set(COLLECTION_MODIFIED_AT_KEY, next);

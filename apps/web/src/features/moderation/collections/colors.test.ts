@@ -32,9 +32,18 @@ describe("matchesSearch", () => {
 
 describe("rowColors", () => {
   test("with no override the list's colours are the source's", () => {
+    const plain = (current: string, pinByDefault: boolean) => ({
+      current,
+      source: current,
+      overridden: false,
+      pinned: false,
+      cosmo: null,
+      resetTo: current,
+      pinByDefault,
+    });
     expect(rowColors(seoyeon, undefined)).toEqual({
-      text: { current: "#07328d", source: "#07328d", overridden: false },
-      background: { current: "#f9f8f2", source: "#f9f8f2", overridden: false },
+      text: plain("#07328d", false),
+      background: plain("#f9f8f2", true),
     });
   });
 
@@ -44,36 +53,83 @@ describe("rowColors", () => {
       backgroundColor: null,
       source: { textColor: "#000000", backgroundColor: "#f9f8f2" },
     };
-    expect(rowColors(seoyeon, override)).toEqual({
-      text: { current: "#07328d", source: "#000000", overridden: true },
-      background: { current: "#f9f8f2", source: "#f9f8f2", overridden: false },
+    const { text } = rowColors(seoyeon, override);
+    expect(text).toMatchObject({ current: "#07328d", source: "#000000", overridden: true });
+    expect(text.cosmo).toBeNull();
+  });
+
+  test("an override shows its pin and Cosmo's colour when it is not the source's", () => {
+    const override = {
+      textColor: "#000000",
+      backgroundColor: null,
+      textPinned: true,
+      source: { textColor: "#ffffff", backgroundColor: "#f9f8f2" },
+      cosmo: { textColor: "#2d1f17", backgroundColor: "#f9f8f2" },
+    };
+    expect(rowColors(seoyeon, override).text).toMatchObject({
+      pinned: true,
+      cosmo: "#2d1f17",
+      resetTo: "#2d1f17",
+      pinByDefault: true,
     });
   });
 });
 
 describe("colorChange", () => {
-  const colors = {
-    text: { current: "#07328d", source: "#000000", overridden: true },
-    background: { current: "#f9f8f2", source: "#f9f8f2", overridden: false },
-  };
+  const colors = rowColors(seoyeon, {
+    textColor: "#07328d",
+    backgroundColor: null,
+    source: { textColor: "#000000", backgroundColor: "#f9f8f2" },
+    cosmo: { textColor: null, backgroundColor: "#f9f8f2" },
+  });
+  const pins = { textPinned: false, backgroundPinned: false };
 
   test("a field left as it was is not sent", () => {
-    expect(colorChange(colors, { text: "#07328D", background: "#F9F8F2" })).toEqual({});
+    expect(colorChange(colors, { text: "#07328D", background: "#F9F8F2", ...pins })).toEqual({});
   });
 
   test("a new colour is sent lowercase", () => {
-    expect(colorChange(colors, { text: "#07328d", background: "#B400FF" })).toEqual({
-      backgroundColor: "#b400ff",
-    });
+    expect(
+      colorChange(colors, {
+        text: "#07328d",
+        background: "#B400FF",
+        ...pins,
+        backgroundPinned: true,
+      }),
+    ).toEqual({ backgroundColor: "#b400ff", backgroundPinned: true });
   });
 
   test("typing an overridden colour back to the source resets it", () => {
-    expect(colorChange(colors, { text: "#000000", background: "#f9f8f2" })).toEqual({
+    expect(
+      colorChange(colors, { text: "#000000", background: "#f9f8f2", ...pins, textPinned: true }),
+    ).toEqual({
       textColor: null,
     });
   });
 
+  test("with Cosmo's colour known, typing the source keeps an override and typing Cosmo's resets", () => {
+    const jiwoo = rowColors(seoyeon, {
+      textColor: "#000000",
+      backgroundColor: null,
+      source: { textColor: "#ffffff", backgroundColor: "#f9f8f2" },
+      cosmo: { textColor: "#2d1f17", backgroundColor: "#f9f8f2" },
+    });
+    expect(colorChange(jiwoo, { text: "#ffffff", background: "#f9f8f2", ...pins })).toEqual({
+      textColor: "#ffffff",
+      textPinned: false,
+    });
+    expect(colorChange(jiwoo, { text: "#2D1F17", background: "#f9f8f2", ...pins })).toEqual({
+      textColor: null,
+    });
+  });
+
+  test("a pin changed on an override that stays is sent alone", () => {
+    expect(
+      colorChange(colors, { text: "#07328d", background: "#f9f8f2", ...pins, textPinned: true }),
+    ).toEqual({ textPinned: true });
+  });
+
   test("an invalid field gives no change at all", () => {
-    expect(colorChange(colors, { text: "#fff", background: "#b400ff" })).toBeNull();
+    expect(colorChange(colors, { text: "#fff", background: "#b400ff", ...pins })).toBeNull();
   });
 });

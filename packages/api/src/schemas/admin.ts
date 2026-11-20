@@ -43,14 +43,63 @@ export type RemoveBannerInput = z.infer<typeof removeBannerInputSchema>;
 
 export const collectionSlugSchema = z.object({ slug: z.string().min(1).max(255) });
 
-/** `null` resets a colour to the source's; an absent key keeps it. */
+const colourChange = {
+  textColor: hexColor.nullable().optional(),
+  backgroundColor: hexColor.nullable().optional(),
+  textPinned: z.boolean().optional(),
+  backgroundPinned: z.boolean().optional(),
+};
+
+const changesSomething = (input: {
+  textColor?: unknown;
+  backgroundColor?: unknown;
+  textPinned?: unknown;
+  backgroundPinned?: unknown;
+}) =>
+  input.textColor !== undefined ||
+  input.backgroundColor !== undefined ||
+  input.textPinned !== undefined ||
+  input.backgroundPinned !== undefined;
+
+const slugSchema = z.string().min(1).max(255);
+
+/**
+ * `null` resets a colour (to Cosmo's text colour when one is recorded, else the source's); an
+ * absent key keeps it. A pin applies to the colour's override after the save.
+ */
 export const setCollectionColorsInputSchema = z
-  .object({
-    slug: z.string().min(1).max(255),
-    textColor: hexColor.nullable().optional(),
-    backgroundColor: hexColor.nullable().optional(),
-  })
-  .refine((input) => input.textColor !== undefined || input.backgroundColor !== undefined, {
-    message: "no_color",
-  });
+  .object({ slug: slugSchema, ...colourChange })
+  .refine(changesSomething, { message: "no_color" });
 export type SetCollectionColorsInput = z.infer<typeof setCollectionColorsInputSchema>;
+
+export const COLLECTION_BATCH_LIMIT = 50;
+
+/** A row's overrides as the list showed them; a row that no longer matches is skipped. */
+const expectedOverridesSchema = z.object({
+  textColor: z.string().nullable(),
+  backgroundColor: z.string().nullable(),
+  textPinned: z.boolean(),
+  backgroundPinned: z.boolean(),
+});
+
+/**
+ * One group's Pin or Reset, or one applied suggestion: each entry is saved as `setCollectionColors`
+ * saves one slug. `from` names the read members a suggestion came from, and makes the entry apply
+ * only while its slug has no recorded text colour.
+ */
+export const setCollectionColorsManyInputSchema = z.object({
+  entries: z
+    .array(
+      z
+        .object({
+          slug: slugSchema,
+          ...colourChange,
+          expected: expectedOverridesSchema,
+          from: z.array(slugSchema).min(1).max(COLLECTION_BATCH_LIMIT).optional(),
+        })
+        .refine(changesSomething, { message: "no_color" }),
+    )
+    .min(1)
+    .max(COLLECTION_BATCH_LIMIT),
+});
+export type SetCollectionColorsManyInput = z.infer<typeof setCollectionColorsManyInputSchema>;

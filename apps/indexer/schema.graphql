@@ -28,6 +28,8 @@ type Collection @entity {
   imageSyncHash: String
   sourceTextColor: String
   sourceBackgroundColor: String
+  textColorPinned: Boolean
+  backgroundColorPinned: Boolean
   serialBatches: JSON
   serialAnchors: JSON
   gridFittedAt: DateTime

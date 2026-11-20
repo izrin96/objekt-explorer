@@ -108,6 +108,12 @@ export class Collection {
   @Column("text", { nullable: true })
   sourceBackgroundColor!: string | null;
 
+  @Column("bool", { nullable: true })
+  textColorPinned!: boolean | null;
+
+  @Column("bool", { nullable: true })
+  backgroundColorPinned!: boolean | null;
+
   @Column({ type: "jsonb", nullable: true })
   serialBatches!: { start: number; end: number }[] | null;
 

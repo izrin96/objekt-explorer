@@ -11,6 +11,7 @@ import { redis } from "@/lib/redis";
 import { applyPhase } from "./apply";
 import { keepAlivePhase, keepEndedSummary } from "./keep-alive";
 import { sendExpiryNotices } from "./notices";
+import { resolveStep } from "./resolve";
 import { iso, mediaBeat, mediaLog, type Run } from "./run";
 import { syncPhase } from "./sync";
 import { applyTransferableStep } from "./transferable";
@@ -90,6 +91,11 @@ async function runSyncOnce() {
 
   const retired = await deleteLongDead();
   const applied = await applyPhase();
+  // a failed resolve must not cost the run its transferable step and notices
+  const resolved = await resolveStep().catch((error: unknown) => {
+    mediaLog.warn(`Resolve failed: ${errorCode(error)}`);
+    return { rows: 0, text: 0, background: 0, failed: 0, lockTimeouts: 0 };
+  });
   await applyTransferableStep();
   await sendExpiryNotices();
 
@@ -119,6 +125,12 @@ async function runSyncOnce() {
     );
   }
 
+  if (resolved.failed > 0 || resolved.lockTimeouts > 0) {
+    mediaLog.warn(
+      `Resolve: ${resolved.failed} rows failed, ${resolved.lockTimeouts} skipped on a lock timeout`,
+    );
+  }
+
   mediaBeat.count("runs");
   mediaBeat.count("Cosmo requests", run.requests);
 
@@ -126,6 +138,7 @@ async function runSyncOnce() {
   const wrote = Object.entries(applied.columns).filter(([, n]) => n > 0);
   if (
     applied.rows > 0 ||
+    resolved.rows > 0 ||
     run.recorded > 0 ||
     run.objektsRecorded > 0 ||
     run.markedDead > 0 ||
@@ -134,7 +147,7 @@ async function runSyncOnce() {
     const columns = wrote.map(([name, n]) => `${name} ${n}`).join(", ") || "none";
     const ended = run.keepEnded.length > 0 ? `; ${keepEndedSummary(run.keepEnded)}` : "";
     mediaLog.info(
-      `${run.requests} Cosmo requests; recorded ${run.recorded} collections; objekts recorded ${run.objektsRecorded}; wrote ${applied.rows} collections (${columns}); ${run.markedDead} sessions marked dead${ended}; ${retired} dead sessions removed`,
+      `${run.requests} Cosmo requests; recorded ${run.recorded} collections; objekts recorded ${run.objektsRecorded}; wrote ${applied.rows} collections (${columns}); Cosmo resolved ${resolved.rows} staff colours (text ${resolved.text}, background ${resolved.background}); ${run.markedDead} sessions marked dead${ended}; ${retired} dead sessions removed`,
     );
   }
 }

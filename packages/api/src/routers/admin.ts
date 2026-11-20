@@ -4,6 +4,7 @@ import {
   collectionSlugSchema,
   removeBannerInputSchema,
   setCollectionColorsInputSchema,
+  setCollectionColorsManyInputSchema,
 } from "../schemas/admin";
 import { cosmoMediaSummarySchema } from "../schemas/cosmo-session";
 import {
@@ -19,8 +20,10 @@ import { bannerFeed, removeBanner } from "../services/admin/banners";
 import {
   collectionColors,
   collectionOverrides,
+  collectionSuggestions,
   refreshCollections,
   setCollectionColors,
+  setCollectionColorsMany,
 } from "../services/admin/collections";
 import { mediaSummary } from "../services/cosmo-session/summary";
 import { messageTotals } from "../services/moderation/message-totals";
@@ -49,6 +52,14 @@ export const adminRouter = {
   setCollectionColors: adminOnly
     .input(setCollectionColorsInputSchema)
     .handler(({ input, context }) => setCollectionColors(context.session.user.id, input)),
+
+  /** A group's Pin or Reset, or an applied suggestion; rows changed meanwhile come back skipped. */
+  setCollectionColorsMany: adminOnly
+    .input(setCollectionColorsManyInputSchema)
+    .handler(({ input, context }) => setCollectionColorsMany(context.session.user.id, input)),
+
+  /** Per collection number, Cosmo's agreed text colour for members with no read yet. */
+  collectionSuggestions: adminOnly.handler(() => collectionSuggestions()),
 
   refreshCollections: adminOnly.handler(({ context }) =>
     refreshCollections(context.session.user.id),

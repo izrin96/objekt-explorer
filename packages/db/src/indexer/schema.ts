@@ -59,11 +59,19 @@ export const collections = pgTable(
     // as the source gave it; Drizzle-owned, never in the indexer's TypeORM model
     sourceTextColor: text("source_text_color"),
     sourceBackgroundColor: text("source_background_color"),
+    // true when staff pinned that override so Cosmo's colour never replaces it; null and false
+    // both mean a fill. Nullable because the indexer's upsert writes NULL for a field it never sets
+    textColorPinned: boolean("text_color_pinned"),
+    backgroundColorPinned: boolean("background_color_pinned"),
   },
   (table) => [
     check(
       "collection_staff_colors",
       sql`(${table.sourceTextColor} IS NULL OR ${table.textColor} ~ '^#[0-9a-f]{6}$') AND (${table.sourceBackgroundColor} IS NULL OR ${table.backgroundColor} ~ '^#[0-9a-f]{6}$')`,
+    ),
+    check(
+      "collection_staff_pins",
+      sql`(${table.textColorPinned} IS NOT TRUE OR ${table.sourceTextColor} IS NOT NULL) AND (${table.backgroundColorPinned} IS NOT TRUE OR ${table.sourceBackgroundColor} IS NOT NULL)`,
     ),
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),
     index("IDX_6f89ec57ebbfd978e196751051").using("btree", table.artist.asc().nullsLast()),

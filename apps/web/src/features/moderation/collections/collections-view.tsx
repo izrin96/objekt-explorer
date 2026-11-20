@@ -1,8 +1,9 @@
 import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
-import type { SetCollectionColorsInput } from "@repo/api/schemas/admin";
+import type { Inputs } from "@repo/api";
+import { COLLECTION_BATCH_LIMIT, type SetCollectionColorsInput } from "@repo/api/schemas/admin";
 import type { IndexedObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue, useId, useState } from "react";
+import { useDeferredValue, useId, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -14,20 +15,25 @@ import { Toggle } from "@/components/ui/toggle";
 import { When } from "@/features/moderation/console/when";
 import { COLLECTIONS_KEY, collectionOptions } from "@/features/objekt/queries";
 import { formatCount } from "@/lib/number";
-import { orpc } from "@/lib/orpc";
+import { client, LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { matchesSearch, rowColors } from "./colors";
 import { CosmoMediaSummary } from "./cosmo-media-summary";
+import { differsCount } from "./differs";
+import { DiffersList } from "./differs-list";
 import { type Draft, EditRow } from "./edit-row";
 import { History } from "./history";
-import { collectionOverridesOptions } from "./queries";
+import { collectionOverridesOptions, collectionSuggestionsOptions } from "./queries";
+import { SuggestionsList } from "./suggestions-list";
 import { useRowFocus } from "./use-row-focus";
 import { type ColorField, ViewRow } from "./view-row";
 
 type Listed = IndexedObjekt;
+type ManyEntry = Inputs["admin"]["setCollectionColorsMany"]["entries"][number];
+type View = "all" | "overrides" | "differs" | "suggestions";
 
 const COLUMNS =
   "grid grid-cols-[--spacing(12)_minmax(--spacing(48),1fr)_--spacing(40)_--spacing(40)_--spacing(40)_--spacing(36)] items-center gap-x-3";
@@ -36,16 +42,22 @@ export function CollectionsView() {
   const queryClient = useQueryClient();
   const { data: collections } = useQuery(collectionOptions());
   const { data: admin } = useSuspenseQuery(collectionOverridesOptions());
+  const suggestions = useQuery(collectionSuggestionsOptions());
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [overridesOnly, setOverridesOnly] = useState(false);
+  const [view, setView] = useState<View>("all");
+  const overridesOnly = view === "overrides";
+  const toggleView = (next: View) => (pressed: boolean) => setView(pressed ? next : "all");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [unrefreshed, setUnrefreshed] = useState(false);
   const searchId = useId();
+  // the latest Edit wins: a slower Cosmo lookup for an earlier row must not replace its draft
+  const editRequest = useRef(0);
 
   const refetch = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: collectionOverridesOptions().queryKey }),
+      queryClient.invalidateQueries({ queryKey: collectionSuggestionsOptions().queryKey }),
       // every artist scope: the browser revalidates each against the bumped date
       queryClient.invalidateQueries({ queryKey: COLLECTIONS_KEY }),
     ]);
@@ -55,14 +67,19 @@ export function CollectionsView() {
       onSuccess: async ({ refreshed }, input) => {
         // the list carries the overrides and refetches slower than they do: without this a reset
         // row shows its old colour as the source's until the list lands
-        const source = overrideOf.get(input.slug)?.source;
+        const override = overrideOf.get(input.slug);
+        const source = override?.source;
         queryClient.setQueryData(collectionOptions().queryKey, (list) =>
           list?.map((collection) =>
             collection.slug === input.slug
               ? {
                   ...collection,
                   ...(input.textColor !== undefined && {
-                    textColor: input.textColor ?? source?.textColor ?? collection.textColor,
+                    textColor:
+                      input.textColor ??
+                      override?.cosmo.textColor ??
+                      source?.textColor ??
+                      collection.textColor,
                   }),
                   ...(input.backgroundColor !== undefined && {
                     backgroundColor:
@@ -89,6 +106,68 @@ export function CollectionsView() {
       },
     }),
   );
+
+  // a group or a suggestion can name more rows than one call takes
+  const saveMany = useMutation({
+    mutationFn: async (entries: ManyEntry[]) => {
+      const result = {
+        saved: [] as string[],
+        skipped: [] as string[],
+        failed: [] as string[],
+        refreshed: true,
+      };
+      for (let i = 0; i < entries.length; i += COLLECTION_BATCH_LIMIT) {
+        const slice = entries.slice(i, i + COLLECTION_BATCH_LIMIT);
+        const part = await client.admin
+          .setCollectionColorsMany({ entries: slice })
+          .catch(() => null);
+        if (part === null) {
+          // keep what earlier chunks saved; this chunk and the rest are reported as not saved
+          result.failed.push(...entries.slice(i).map((entry) => entry.slug));
+          break;
+        }
+        result.saved.push(...part.saved);
+        result.skipped.push(...part.skipped);
+        result.failed.push(...part.failed);
+        if (part.saved.length > 0) result.refreshed &&= part.refreshed;
+      }
+      return result;
+    },
+    onSuccess: async ({ saved, skipped, failed, refreshed }) => {
+      await refetch();
+      if (saved.length > 0) {
+        setUnrefreshed(!refreshed);
+        if (refreshed) {
+          toastManager.add({
+            type: "success",
+            title: m.mod_collections_group_saved({ count: formatCount(saved.length) }),
+          });
+        }
+      }
+      if (skipped.length > 0) {
+        toastManager.add({
+          type: "warning",
+          title: m.mod_collections_group_skipped({
+            count: formatCount(skipped.length),
+            slugs: skipped.join(", "),
+          }),
+        });
+      }
+      if (failed.length > 0) {
+        toastManager.add({
+          type: "error",
+          title: m.mod_collections_group_failed({
+            count: formatCount(failed.length),
+            slugs: failed.join(", "),
+          }),
+        });
+      }
+    },
+    onError: async (error) => {
+      await refetch();
+      toastManager.add({ type: "error", title: refusalText(error) });
+    },
+  });
 
   const refresh = useMutation(
     orpc.admin.refreshCollections.mutationOptions({
@@ -199,16 +278,49 @@ export function CollectionsView() {
           variant="outline"
           size="sm"
           pressed={overridesOnly}
-          onPressedChange={setOverridesOnly}
+          onPressedChange={toggleView("overrides")}
         >
           {m.mod_collections_overrides_only()}
         </Toggle>
-        <span className="text-muted-foreground text-xs" aria-live="polite">
-          {collections ? m.mod_collections_count({ count: formatCount(rows.length) }) : null}
-        </span>
+        <Toggle
+          variant="outline"
+          size="sm"
+          pressed={view === "differs"}
+          onPressedChange={toggleView("differs")}
+        >
+          {m.mod_collections_differs({ count: formatCount(differsCount(admin.overrides)) })}
+        </Toggle>
+        <Toggle
+          variant="outline"
+          size="sm"
+          pressed={view === "suggestions"}
+          onPressedChange={toggleView("suggestions")}
+        >
+          {m.mod_collections_suggestions({
+            count: suggestions.data ? formatCount(suggestions.data.length) : "…",
+          })}
+        </Toggle>
+        {view === "all" || view === "overrides" ? (
+          <span className="text-muted-foreground text-xs" aria-live="polite">
+            {collections ? m.mod_collections_count({ count: formatCount(rows.length) }) : null}
+          </span>
+        ) : null}
       </div>
 
-      {collections === undefined ? (
+      {view === "differs" ? (
+        <DiffersList
+          overrides={admin.overrides}
+          busy={saveMany.isPending}
+          onSave={(entries) => saveMany.mutate(entries)}
+        />
+      ) : view === "suggestions" ? (
+        <SuggestionsList
+          suggestions={suggestions.data}
+          failed={suggestions.isError}
+          busy={saveMany.isPending}
+          onSave={(entries) => saveMany.mutate(entries)}
+        />
+      ) : collections === undefined ? (
         <TableSkeleton />
       ) : rows.length === 0 ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
@@ -279,11 +391,29 @@ export function CollectionsView() {
                           colors={colors}
                           override={override}
                           busy={save.isPending}
-                          onEdit={() => {
+                          onEdit={async () => {
+                            const request = ++editRequest.current;
+                            // the list carries Cosmo's text colour only for overridden rows
+                            const cosmoText = override
+                              ? override.cosmo.textColor
+                              : await queryClient
+                                  .fetchQuery(
+                                    orpc.admin.collection.queryOptions({
+                                      input: { slug: collection.slug },
+                                      staleTime: LOADER_READ_STALE_MS,
+                                    }),
+                                  )
+                                  .then(
+                                    (one) => one.cosmo.textColor,
+                                    () => null,
+                                  );
+                            if (request !== editRequest.current) return;
                             setDraft({
                               slug: collection.slug,
                               text: colors.text.current,
                               background: colors.background.current,
+                              textPinned: override ? colors.text.pinByDefault : cosmoText !== null,
+                              backgroundPinned: colors.background.pinByDefault,
                             });
                             focusControl(collection.slug, "input");
                           }}

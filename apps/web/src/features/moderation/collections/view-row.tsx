@@ -1,3 +1,4 @@
+import { PushPinIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import type { IndexedObjekt } from "@repo/lib/types/objekt";
 
@@ -13,7 +14,7 @@ type OverrideRow = AdminData["overrides"][number];
 type Listed = IndexedObjekt;
 export type ColorField = "text" | "background";
 
-function Swatch({ color }: { color: string }) {
+export function Swatch({ color }: { color: string }) {
   return (
     <span
       aria-hidden
@@ -41,6 +42,12 @@ function ColorCell({
       <span className="flex items-center gap-1.5 font-mono text-xs">
         <Swatch color={state.current} />
         {state.current}
+        {state.pinned ? (
+          <span className="text-muted-foreground inline-flex items-center gap-0.5 font-sans">
+            <PushPinIcon aria-hidden weight="fill" className="size-3" />
+            {m.mod_collections_pinned()}
+          </span>
+        ) : null}
       </span>
       {state.overridden ? (
         <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
@@ -57,6 +64,12 @@ function ColorCell({
           >
             {m.mod_collections_reset()}
           </Button>
+        </span>
+      ) : null}
+      {state.cosmo ? (
+        <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
+          <Swatch color={state.cosmo} />
+          {m.mod_collections_cosmo_value({ color: state.cosmo })}
         </span>
       ) : null}
     </div>
@@ -105,7 +118,11 @@ export function ViewRow({
       <div role="cell" className="text-muted-foreground text-xs text-pretty">
         {override ? (
           <>
-            {override.updatedBy?.identity?.name ? `${override.updatedBy.identity.name} · ` : null}
+            {override.updatedByCosmo
+              ? `${m.mod_collections_by_cosmo()} · `
+              : override.updatedBy?.identity?.name
+                ? `${override.updatedBy.identity.name} · `
+                : null}
             {override.updatedAt ? <When iso={override.updatedAt} /> : null}
           </>
         ) : (

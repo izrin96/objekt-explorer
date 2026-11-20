@@ -3,6 +3,7 @@ import type { IndexedObjekt } from "@repo/lib/types/objekt";
 import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { m } from "@/paraglide/messages";
 
@@ -10,16 +11,28 @@ import { colorChange, type RowColors } from "./colors";
 import { CollectionCell, MiniCard } from "./row-cells";
 
 type Listed = IndexedObjekt;
-export type Draft = { slug: string; text: string; background: string };
+export type Draft = {
+  slug: string;
+  text: string;
+  background: string;
+  textPinned: boolean;
+  backgroundPinned: boolean;
+};
 
 function HexField({
   label,
+  pinLabel,
   value,
+  pinned,
   onChange,
+  onPin,
 }: {
   label: string;
+  pinLabel: string;
   value: string;
+  pinned: boolean;
   onChange: (value: string) => void;
+  onPin: (pinned: boolean) => void;
 }) {
   const errorId = useId();
   const valid = parseHexColor(value) !== null;
@@ -35,6 +48,14 @@ function HexField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+      <label className="flex items-center gap-1.5 text-xs">
+        <Checkbox
+          aria-label={pinLabel}
+          checked={pinned}
+          onCheckedChange={(checked) => onPin(checked === true)}
+        />
+        {m.mod_collections_pin()}
+      </label>
       {valid ? null : (
         <span id={errorId} className="text-destructive-foreground max-w-36 text-xs text-pretty">
           {m.mod_collections_hex_invalid()}
@@ -75,13 +96,19 @@ export function EditRow({
       <CollectionCell collection={collection} />
       <HexField
         label={m.mod_collections_text_field({ slug: collection.slug })}
+        pinLabel={m.mod_collections_pin_text({ slug: collection.slug })}
         value={draft.text}
+        pinned={draft.textPinned}
         onChange={(text) => onDraft({ ...draft, text })}
+        onPin={(textPinned) => onDraft({ ...draft, textPinned })}
       />
       <HexField
         label={m.mod_collections_background_field({ slug: collection.slug })}
+        pinLabel={m.mod_collections_pin_background({ slug: collection.slug })}
         value={draft.background}
+        pinned={draft.backgroundPinned}
         onChange={(background) => onDraft({ ...draft, background })}
+        onPin={(backgroundPinned) => onDraft({ ...draft, backgroundPinned })}
       />
       <div role="cell" />
       <div role="cell" className="flex justify-end gap-1">
