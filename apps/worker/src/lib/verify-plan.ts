@@ -4,6 +4,8 @@
  * indexer already settles without a probe.
  */
 
+import { V1_CUTOFF_MS } from "./serial-math";
+
 export type ProbeScope = "none" | "recent" | "all";
 
 export const PROBE_SCOPES: readonly ProbeScope[] = ["none", "recent", "all"];
@@ -24,6 +26,69 @@ export type BatchEdges = {
   afterOurs: number | null;
   beforeOurs: number | null;
 };
+
+type Batch = { start: number; end: number };
+
+/** The batches no anchor shields: none of `anchors` and no pre-cutoff objekt with a serial sits inside. */
+export function atRiskBatches<B extends Batch>(
+  batches: readonly B[],
+  anchors: readonly { tokenId: number }[],
+  rows: readonly { id: string; serial: number; mintedAt: string }[],
+): B[] {
+  const isAnchored = (b: Batch) =>
+    anchors.some((a) => a.tokenId >= b.start && a.tokenId <= b.end) ||
+    rows.some((o) => {
+      const tid = parseInt(o.id);
+      return (
+        o.serial > 0 && Date.parse(o.mintedAt) < V1_CUTOFF_MS && tid >= b.start && tid <= b.end
+      );
+    });
+  return batches.filter((b) => !isAnchored(b));
+}
+
+/**
+ * Each batch's edges: the stored edges plus the gap tokens next to our own mints. The stored
+ * edges can sit in a still-unminted stretch, so the token right next to our mints is the
+ * earliest place foreign drift becomes observable. The `frontier` batch (the collection's last)
+ * gets only its start side, since its end grows with every new mint.
+ */
+export function batchEdges(
+  batches: readonly Batch[],
+  frontier: Batch,
+  tokenIds: readonly number[],
+): BatchEdges[] {
+  return batches.map((b) => {
+    const isFrontier = b === frontier;
+    let firstOurs = Infinity;
+    let lastOurs = -Infinity;
+    for (const tid of tokenIds) {
+      if (tid < b.start || tid > b.end) continue;
+      if (tid < firstOurs) firstOurs = tid;
+      if (tid > lastOurs) lastOurs = tid;
+    }
+    return {
+      end: isFrontier ? null : b.end,
+      endNext: isFrontier ? null : b.end + 1,
+      start: b.start,
+      startPrev: b.start - 1,
+      afterOurs: !isFrontier && lastOurs >= b.start && lastOurs < b.end ? lastOurs + 1 : null,
+      beforeOurs: firstOurs <= b.end && firstOurs > b.start ? firstOurs - 1 : null,
+    };
+  });
+}
+
+/** Every edge token once, leaving out the absent ones and those below token 1. */
+export function edgeTokens(edges: readonly BatchEdges[]): number[] {
+  return [
+    ...new Set(
+      edges.flatMap((e) =>
+        [e.end, e.endNext, e.start, e.startPrev, e.afterOurs, e.beforeOurs].filter(
+          (tid): tid is number => tid !== null && tid >= 1,
+        ),
+      ),
+    ),
+  ];
+}
 
 export type EdgeJudgement = {
   /** drift the owners already prove */

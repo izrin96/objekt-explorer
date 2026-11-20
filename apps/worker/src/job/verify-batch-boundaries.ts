@@ -49,7 +49,9 @@ import { type MergeTally, mergeTally, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { discoveryBoundaries, V1_CUTOFF_MS } from "@/lib/serial-math";
 import {
-  type BatchEdges,
+  atRiskBatches,
+  batchEdges,
+  edgeTokens,
   isRecent,
   judgeEdges,
   PROBE_SCOPES,
@@ -174,17 +176,8 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
   const stored = withConfirmed(manual, confirmed, rows, batches);
   tally.record(t.id, stored);
   const anchors = stored.anchors;
-  const isAnchored = (b: Batch) =>
-    anchors.some((a) => a.tokenId >= b.start && a.tokenId <= b.end) ||
-    rows.some((o) => {
-      const tid = parseInt(o.id);
-      return (
-        o.serial > 0 && Date.parse(o.mintedAt) < V1_CUTOFF_MS && tid >= b.start && tid <= b.end
-      );
-    });
-
   // only un-anchored batches are at risk (anchored ones are shielded)
-  const atRisk = batches.filter((b) => !isAnchored(b));
+  const atRisk = atRiskBatches(batches, anchors, rows);
   if (atRisk.length === 0) return result;
 
   // a grid-fitted drop's foreign neighbours already confirm its slot edges, so
@@ -218,41 +211,12 @@ async function checkCollection(t: CheckTarget, ctx: CheckContext): Promise<Check
     .limit(1);
   if (foreignInside) reasons.push(`foreign token ${foreignInside.id} inside a stored range`);
 
-  // per batch: the stored edges plus the gap tokens next to our own mints. The
-  // stored edges can sit in a still-unminted stretch, so the token right next to
-  // our mints is the earliest place foreign drift becomes observable.
-  const edges: BatchEdges[] = toProbe.map((b) => {
-    const isFrontier = b === frontier;
-    let firstOurs = Infinity;
-    let lastOurs = -Infinity;
-    for (const tid of tokenIds) {
-      if (tid < b.start || tid > b.end) continue;
-      if (tid < firstOurs) firstOurs = tid;
-      if (tid > lastOurs) lastOurs = tid;
-    }
-    return {
-      end: isFrontier ? null : b.end,
-      endNext: isFrontier ? null : b.end + 1,
-      start: b.start,
-      startPrev: b.start - 1,
-      afterOurs: !isFrontier && lastOurs >= b.start && lastOurs < b.end ? lastOurs + 1 : null,
-      beforeOurs: firstOurs <= b.end && firstOurs > b.start ? firstOurs - 1 : null,
-    };
-  });
+  const edges = batchEdges(toProbe, frontier, tokenIds);
 
   // a token the indexer has minted has a fixed owner, which is what a probe would
   // return, so only the tokens it lacks go to the Cosmo API
   const owners = new Map<number, string>();
-  const edgeTokens = [
-    ...new Set(
-      edges.flatMap((e) =>
-        [e.end, e.endNext, e.start, e.startPrev, e.afterOurs, e.beforeOurs].filter(
-          (tid): tid is number => tid !== null && tid >= 1,
-        ),
-      ),
-    ),
-  ];
-  await chunk(edgeTokens, 1000, async (ids) => {
+  await chunk(edgeTokens(edges), 1000, async (ids) => {
     const found = await indexer
       .select({ id: objekts.id, collectionId: objekts.collectionId })
       .from(objekts)
