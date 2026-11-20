@@ -11,6 +11,7 @@ A signed-in user's account settings SHALL live on the `/account` page, one route
 - `/account` and `/account/general`: General;
 - `/account/email`: Email;
 - `/account/profiles`: linked Cosmo profiles (see `web-cosmo-link`);
+- `/account/collection-data`: Collection data, connecting a Cosmo account to share its collections' media (see `web-cosmo-session`);
 - `/account/notifications`: Notifications (see `web-notifications`);
 - `/account/messages`: Messages (see `web-chat`);
 - `/account/trade`: Trade, holding the offer rules;
@@ -41,6 +42,14 @@ From `md` up, a menu of the sections SHALL sit beside the open section and mark 
 #### Scenario: Trade section
 - **WHEN** a signed-in user opens `/account/trade`
 - **THEN** the Trade section shows the offer rules, and Trade is marked in the section menu between Messages and Blocked users
+
+#### Scenario: Collection data section
+- **WHEN** a signed-in user opens `/account/collection-data`
+- **THEN** the Collection data section shows, and Collection data is marked in the section menu between Cosmo profiles and Notifications
+
+#### Scenario: Collection data signed out
+- **WHEN** a signed-out visitor opens `/account/collection-data`
+- **THEN** the URL is `/login?redirect=/account/collection-data`
 
 ### Requirement: General settings
 The General section SHALL let the user change the display name, toggle whether linked social handles

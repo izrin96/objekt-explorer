@@ -125,6 +125,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `cosmoMediaSummarySchema`: `{ live, signedOut, recorded }` integers and `lastSyncedAt`, nothing else.
 
   Lint, typecheck and build pass for `@repo/api`.
+  - *Done 2026-11-20 on the local dev server, through `/rpc` with real Better Auth sessions minted for local users (deleted afterwards): signed out, all six `cosmoSession` procedures answer 401 UNAUTHORIZED; a user with no row lists `[]`; the two seeded rows (ids 1 and 3, two owners, dummy sealed values) list only to their own owner; `requestSync` and `disconnect` on the other's id answer 404 `cosmo_session_not_found`, and the rows hash the same before and after; `cosmoMediaSummary` answers 200 to an admin, 403 FORBIDDEN to a moderator and 404 NOT_FOUND to a user. Production, read-only: the 15 live `*:rl:ip:*` keys in Valkey all carry an IP, none `unknown`, so the web's requests carry `x-real-ip`.*
 - [x] 5.3 Create `packages/api/src/services/cosmo-session/`:
   - `ticket.ts`: the `cosmo-qr:<userId>` store, holding `{ticket, expireAt, last}`. It fails closed: an unreachable Redis returns `unavailable`.
   - `qr.ts`: `startQr`, `pollQr` and `certifyQr` (Decision 4).
@@ -138,7 +139,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - with `REDIS_URL` in `.env.local` pointed at an unreachable local port (never by stopping the production Valkey the root `.env` names), start refuses before any Cosmo call (log the request it would send).
 
   Lint, typecheck and build pass for `@repo/api`.
-- [ ] 5.4 Add the procedures:
+- [x] 5.4 Add the procedures:
   - `packages/api/src/routers/cosmo-session.ts`, every procedure on `authed`, each with the limits of Decisions 4 and 10: `list` (`.output` the list schema), `qrStart`, `qrPoll`, `qrCertify`, `requestSync` and `disconnect`. Mount it as `cosmoSession` in `router` only, never `openApiRouter`.
   - `cosmoMediaSummary` on `routers/admin.ts`, `adminOnly`, `.output(cosmoMediaSummarySchema)`.
 
@@ -177,7 +178,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - `expiryNotice(expiresAt, now)`: whole days left while fewer than `RENEW_NOTICE_DAYS` (14) remain, null outside that window or once past (Decision 7, Renew).
 
   `bun run test --filter=web` passes. Lint, typecheck and build pass for `web`.
-- [ ] 6.3 Build the connect dialog (load `vercel-react-best-practices` first):
+- [x] 6.3 Build the connect dialog (load `vercel-react-best-practices` first):
   - Add `qrcode.react` to the root catalog and `apps/web`.
   - Create `features/cosmo-session/connect-dialog.tsx`, using the vendored `Dialog`:
     - `QRCodeSVG` on a white tile with a quiet zone, the countdown in `tabular-nums`, and an `Open Cosmo` link;
@@ -191,6 +192,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
   - the `minting`, `unavailable` and `busy` states render.
 
   Suggest the user run `/state-machine` on the dialog. Lint, typecheck and build pass for `web`.
+  - *Done 2026-11-20 on the local dev server, with a throwaway `COSMO_SESSION_KEY` and an unreachable `COSMO_BROWSER_URL` (no browser container, so nothing reached Cosmo): Connect sent the start request (2 sent across the run); minting showed "Getting a code from Cosmo…" while the request was held 4 s in the page; the server's real refusal rendered the unavailable state with Try again; a `cosmo_session_busy` answer injected in the page rendered "Many people are connecting. Please try again in a minute."*
 - [x] 6.4 Build the list in `features/cosmo-session/sessions-view.tsx` (load `vercel-react-best-practices` first):
   - the consent text above it;
   - each row as `web-cosmo-session`'s Connected account list requirement says, with a line in en, ko and ja for each `last_error` code (`key_unreadable` says to reconnect);
@@ -293,7 +295,7 @@ These are built. Each stays open until the owner runs the check named here, sinc
 - [x] 8.7 **(owner)** On the VPS: set `COSMO_SESSION_KEY` (`openssl rand -base64 32`, never `COSMO_KEY`), `COSMO_BROWSER_TOKEN` and `COSMO_BROWSER_URL` for `web` and `worker`; start `browser`; apply the migration (4.2); deploy the web and the worker. Check: `/account/collection-data` shows the consent text and Connect (not "not set up"), and the worker logs neither the missing-key nor the missing-bucket `warn`.
 
   Done 2026-11-17, checked read-only: both tables on production (empty); `web` and `worker` carry `COSMO_SESSION_KEY`, `COSMO_BROWSER_URL`, `COSMO_PROXY` and `S3_PUBLIC_URL`; the web reaches the `browser` container with its token; `/account/collection-data` redirects a signed-out visitor to `/login`; the worker logs neither warning.
-- [ ] 8.8 **(owner)** After the deploy:
+- [x] 8.8 **(owner)** After the deploy:
   1. Connect a real Cosmo account on `/account/collection-data` (the first real scan, and the first real upload to the bucket).
   2. Press Sync now.
   3. Read the job's `info` summary.
@@ -303,7 +305,14 @@ These are built. Each stays open until the owner runs the check named here, sinc
   7. Session renewal (design.md, Non-Goals and Open questions). Record, never a value: the certify response's content type and body shape; and whether a call made with the stored cookie (`users/me` or a summaries page) answers with a `Set-Cookie: user-session` carrying a later `Expires` than the stored one (rolling renewal). If it does, open a follow-up that stores the new cookie; the 180-day cap stays.
   8. Objekt keys (for the transferability and serial follow-ups). From one summaries page, record the key names and value types of an `objekts[]` entry, never a value: whether it carries the token id, the serial (`objektNo` or similar), the mint time, and anything else per objekt. Record them in design.md, Open questions.
 
-  **Status 2026-11-18:** steps 1–2 done (4 sessions connected and syncing since 2026-11-17). Step 5 partly answered from production data and recorded in design.md, Open Questions, Settled: `frontMedia` on `resources.cosmo.fans` (~89 chars, no query params, not signed per account); all copies `video/mp4` (motion mean 15.4 MB, voice mean 31.4 MB); voice Doubles are video with sound, not audio-only; unfiltered listing works across all classes. Step 5 class-filter and `order=newest` parts not yet answered. Step 8 answered in `cosmo-objekt-ownership-data` design.md. Step 7 (rolling renewal) not yet checked. Steps 3, 4, 6 not yet confirmed by the owner.
+  **Status 2026-11-18:**
+  **Done 2026-11-20** (read-only except the owner-approved `users/me` and one summaries page with the owner's session):
+  - 3: the job's `info` summary reads `46 Cosmo requests; recorded 359 collections; objekts recorded 4553; wrote 76 collections (backImage 50, accentColor 76, textColor 14)…; 0 sessions marked dead`. The copy job's earlier upload lines went with the 2026-11-20 redeploy; `collection_media` holds 181 copies.
+  - 4: on objekt.top, the drawer of Motion `binary02-yeonji-503z` and voice `cream02-joobin-342z` plays from `media.objekt.top` under `collection-media/` (`readyState` 4), and the voice one shows Play sound. No idntt Special has a copy yet, so none was opened; the band image was not checked.
+  - 5: Motion comes back unfiltered, and `order=newest` sorts by acquisition (design.md, Settled).
+  - 6: `/mod/collections` reads "12 connected · 7 signed out · last sync 17 minutes ago · 10,126 collections with media", matching `cosmo_session` (12 live, 7 dead).
+  - 7: no rolling renewal (design.md, Settled).
+ steps 1–2 done (4 sessions connected and syncing since 2026-11-17). Step 5 partly answered from production data and recorded in design.md, Open Questions, Settled: `frontMedia` on `resources.cosmo.fans` (~89 chars, no query params, not signed per account); all copies `video/mp4` (motion mean 15.4 MB, voice mean 31.4 MB); voice Doubles are video with sound, not audio-only; unfiltered listing works across all classes. Step 5 class-filter and `order=newest` parts not yet answered. Step 8 answered in `cosmo-objekt-ownership-data` design.md. Step 7 (rolling renewal) not yet checked. Steps 3, 4, 6 not yet confirmed by the owner.
 
 ## 9. Web: media in the drawer
 

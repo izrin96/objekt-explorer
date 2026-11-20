@@ -601,12 +601,14 @@ Settled by production data after 4 sessions synced (2026-11-18). Values are coun
   - Copies in the bucket: 27 motion (416 MB) + 12 voice (377 MB) = 39 files, 793 MB total, all `video/mp4`.
   - Projected bucket at full Motion coverage: 268 × 15.4 MB ≈ 4.1 GB. Voice total unknown (12 seen = 377 MB; grows as more accounts connect).
 
+- **Rolling renewal (8.8 step 7, 2026-11-20).** None. A `users/me` call with the owner's stored cookie, 2.5 days after connect, answered 200 `application/json` with no `Set-Cookie` header at all. The stored cookie is the only one; the 180-day cap and Renew stand, and no follow-up to store a new cookie is needed.
+- **`order=newest` (2026-11-20).** Sorts by when the account last received an objekt of the collection, not by release. On one `tripleS` page of 30 for the owner's account, ordered by the latest `received_at` of the listed tokens: 0 inversions of 435 pairs; by collection `created_at`: 35. An early stop at an all-recorded page would therefore be safe; the sync still has none (Decision on paging).
+- **Motion without a class filter (2026-11-20).** 162 Motion collections are recorded in `collection_media` among 10,126, so the unfiltered listing returns Motion. A filtered pass is not needed.
+- **Refused-session body (2026-11-20).** Seven sessions were marked `session_dead`, and `errorKindOf` reads `dead` only from Cosmo's JSON error body, so a signed-out cookie gets that body as Decision 5 assumes.
+
 ### Still open
 
-- **Rolling renewal.** Whether Cosmo answers a call with `Set-Cookie` carrying a later `Expires`. Not yet observed; needs monitoring a session across calls.
-- **`order=newest`.** Does it sort by when the account received an objekt, or by release? Only the first would make an early stop safe.
 - **Special band images.** Does `class[]=Unit` also return Special collections? This matters only if a filtered pass is needed.
 - **Wrong codes.** What status and body does a wrong code get, and how many attempts are allowed before the ticket dies?
 - **Other statuses.** Does Cosmo ever return a status beyond the two seen (`certified`, a cancel or deny)? The design treats any unknown one as expired.
 - **Rate limits.** What are Cosmo's limits on `objekt-summaries` and the sign-in endpoints, per IP? The 1 s spacing and the 600-an-hour ceiling are guesses.
-- **Refused-session body.** What body does Cosmo send with the 401 or 403 for a signed-out cookie? The probe recorded only the status. Decision 5 assumes its JSON error shape; the first dead session confirms it.
