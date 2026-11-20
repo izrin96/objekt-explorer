@@ -1624,6 +1624,7 @@
   "mod_collections_suggestions_failed": "提案を読み込めませんでした。もう一度お試しください。",
   "mod_collections_suggestion_read": "Cosmoで読み取り済み：{members}",
   "mod_collections_suggestion_unread": "未読み取り：{members}",
+  "mod_collections_siblings_match": "同じ番号、Cosmoでこの色を読み取り済み：{members}",
   "mod_collections_apply": "適用",
   "mod_collections_apply_label": "{number}の未読み取りの{count}件のコレクションに{color}を適用",
   "mod_collections_history_text_pinned": "文字色を固定",

@@ -1624,6 +1624,7 @@
   "mod_collections_suggestions_failed": "Suggestions could not be loaded. Try again.",
   "mod_collections_suggestion_read": "Cosmo read: {members}",
   "mod_collections_suggestion_unread": "Not read yet: {members}",
+  "mod_collections_siblings_match": "Same number, Cosmo read this colour: {members}",
   "mod_collections_apply": "Apply",
   "mod_collections_apply_label": "Apply {color} to {count} unread collections of {number}",
   "mod_collections_history_text_pinned": "Text pinned",

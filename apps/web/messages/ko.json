@@ -1624,6 +1624,7 @@
   "mod_collections_suggestions_failed": "제안을 불러오지 못했습니다. 다시 시도해 주십시오.",
   "mod_collections_suggestion_read": "Cosmo에서 읽음: {members}",
   "mod_collections_suggestion_unread": "아직 읽지 않음: {members}",
+  "mod_collections_siblings_match": "같은 번호, Cosmo에서 이 색으로 읽음: {members}",
   "mod_collections_apply": "적용",
   "mod_collections_apply_label": "{number}의 읽지 않은 컬렉션 {count}개에 {color} 적용",
   "mod_collections_history_text_pinned": "글자 고정",

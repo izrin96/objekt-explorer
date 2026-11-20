@@ -7,6 +7,7 @@ import {
   planColourWrite,
   planCosmoResolve,
   planReplay,
+  agreedText,
   suggestSiblings,
 } from "./collection-colours";
 
@@ -234,6 +235,28 @@ describe("suggestSiblings", () => {
     ).toBeNull();
     expect(suggestSiblings([member("a", {}), member("b", {})])).toBeNull();
     expect(suggestSiblings([member("a", { recordedText: "#ffffff" }), member("b", {})])).toBeNull();
+  });
+});
+
+describe("agreedText", () => {
+  test("the colour every read member agrees on, ignoring case, with those members", () => {
+    expect(
+      agreedText([
+        { slug: "kimlip", recordedText: "#2D1F17" },
+        { slug: "haseul", recordedText: null },
+        { slug: "heejin", recordedText: "#2d1f17" },
+      ]),
+    ).toEqual({ colour: "#2d1f17", read: ["kimlip", "heejin"] });
+  });
+
+  test("none read or a disagreement gives nothing", () => {
+    expect(agreedText([{ slug: "a", recordedText: null }])).toBeNull();
+    expect(
+      agreedText([
+        { slug: "a", recordedText: "#000000" },
+        { slug: "b", recordedText: "#ffffff" },
+      ]),
+    ).toBeNull();
   });
 });
 

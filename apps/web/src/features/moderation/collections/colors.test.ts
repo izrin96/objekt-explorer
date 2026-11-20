@@ -40,6 +40,7 @@ describe("rowColors", () => {
       cosmo: null,
       resetTo: current,
       pinByDefault,
+      siblings: null,
     });
     expect(rowColors(seoyeon, undefined)).toEqual({
       text: plain("#07328d", false),
@@ -56,6 +57,18 @@ describe("rowColors", () => {
     const { text } = rowColors(seoyeon, override);
     expect(text).toMatchObject({ current: "#07328d", source: "#000000", overridden: true });
     expect(text.cosmo).toBeNull();
+  });
+
+  test("a text override names the read siblings whose colour it shows", () => {
+    const override = {
+      textColor: "#2d1f17",
+      backgroundColor: null,
+      source: { textColor: "#ffffff", backgroundColor: "#f9f8f2" },
+      textMatchesSiblings: [{ member: "Kimlip" }, { member: "HeeJin" }],
+    };
+    const { text, background } = rowColors(seoyeon, override);
+    expect(text.siblings).toEqual(["Kimlip", "HeeJin"]);
+    expect(background.siblings).toBeNull();
   });
 
   test("an override shows its pin and Cosmo's colour when it is not the source's", () => {

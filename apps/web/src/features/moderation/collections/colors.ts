@@ -17,6 +17,8 @@ type Override = {
   source: { textColor: string; backgroundColor: string } | null;
   /** Cosmo's colours, null where unknown */
   cosmo?: { textColor: string | null; backgroundColor: string | null };
+  /** read members of the same collection number whose agreed Cosmo text colour it shows */
+  textMatchesSiblings?: { member: string }[] | null;
 };
 
 export type ColorState = {
@@ -30,6 +32,8 @@ export type ColorState = {
   resetTo: string;
   /** whether Edit's Pin starts checked */
   pinByDefault: boolean;
+  /** members of the same number Cosmo read as this override's colour, while it has no read of its own */
+  siblings: string[] | null;
 };
 export type RowColors = { text: ColorState; background: ColorState };
 
@@ -50,6 +54,7 @@ function colorState(
   source: string | undefined,
   pinned: boolean,
   cosmo: string | null,
+  siblings: string[] | null = null,
 ): ColorState {
   const current = (override ?? listed).toLowerCase();
   if (override === null) {
@@ -61,6 +66,7 @@ function colorState(
       cosmo: null,
       resetTo: current,
       pinByDefault: cosmo !== null,
+      siblings: null,
     };
   }
   const kept = (source ?? listed).toLowerCase();
@@ -72,6 +78,7 @@ function colorState(
     cosmo: cosmo !== null && cosmo !== kept ? cosmo : null,
     resetTo: cosmo ?? kept,
     pinByDefault: pinned,
+    siblings,
   };
 }
 
@@ -88,6 +95,7 @@ export function rowColors(collection: Listed, override: Override | undefined): R
       override?.source?.textColor,
       override?.textPinned ?? false,
       override?.cosmo?.textColor ?? null,
+      override?.textMatchesSiblings?.map((sibling) => sibling.member) ?? null,
     ),
     background: colorState(
       collection.backgroundColor,

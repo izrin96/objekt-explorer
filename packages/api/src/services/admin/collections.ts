@@ -3,6 +3,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { collectionMedia, modAudit } from "@repo/db/schema";
 import {
+  agreedText,
   type ColourInput,
   type ColourRow,
   cosmoColours,
@@ -112,6 +113,46 @@ export async function collectionColors(slug: string) {
   };
 }
 
+type NumberRow = { slug: string; artist: string; season: string; collectionNo: string };
+
+/** Every member of the collection numbers whose overridden text colour may have read siblings. */
+async function textSiblings(rows: (NumberRow & { sourceTextColor: string | null })[]) {
+  const numbers = rows.filter((row) => row.sourceTextColor !== null);
+  if (numbers.length === 0) return [];
+  const keys = new Set(numbers.map(numberKey));
+  const candidates = await indexer
+    .select({
+      slug: collections.slug,
+      artist: collections.artist,
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      member: collections.member,
+    })
+    .from(collections)
+    .where(inArray(collections.collectionNo, [...new Set(numbers.map((row) => row.collectionNo))]));
+  return candidates.filter((row) => keys.has(numberKey(row)));
+}
+
+/**
+ * For one unread member, the read members of its collection number when they agree on Cosmo's
+ * text colour and it equals `shown`; null otherwise.
+ */
+function siblingProof(siblings: (NumberRow & { member: string })[], recorded: Map<string, string>) {
+  const byNumber = Map.groupBy(siblings, numberKey);
+  return (row: NumberRow, shown: string) => {
+    const group = byNumber.get(numberKey(row)) ?? [];
+    const agreed = agreedText(
+      group.map((member) => ({
+        slug: member.slug,
+        recordedText: recorded.get(member.slug) ?? null,
+      })),
+    );
+    if (!agreed || agreed.colour !== normaliseColour(shown)) return null;
+    const members = new Map(group.map((member) => [member.slug, member.member]));
+    return agreed.read.map((slug) => ({ slug, member: members.get(slug) ?? slug }));
+  };
+}
+
 /**
  * Every overridden collection, newest change first and those with no history last, each with its
  * source colours; the latest collection audit entries; and when the collection list last changed.
@@ -145,7 +186,11 @@ export async function collectionOverrides() {
     collectionListModifiedAt(),
   ]);
   const slugs = rows.map((row) => row.slug);
-  const [changes, recorded] = await Promise.all([lastChanges(slugs), recordedTexts(slugs)]);
+  const [changes, siblings] = await Promise.all([lastChanges(slugs), textSiblings(rows)]);
+  const recorded = await recordedTexts([
+    ...new Set([...slugs, ...siblings.map((sibling) => sibling.slug)]),
+  ]);
+  const proofOf = siblingProof(siblings, recorded);
   const people = await fetchPartners([
     ...new Set(
       [
@@ -167,6 +212,9 @@ export async function collectionOverrides() {
       cosmo: cosmoColours(row, text),
       /** which unpinned overrides differ from a known Cosmo colour */
       differs: differsFromCosmo(row, text),
+      /** read siblings whose agreed Cosmo text colour this unread member's staff text matches */
+      textMatchesSiblings:
+        text === null && row.sourceTextColor !== null ? proofOf(row, row.textColor) : null,
       updatedBy: personOf(change?.actorId ?? null),
       /** true when Cosmo made the latest change */
       updatedByCosmo: change?.byCosmo ?? false,

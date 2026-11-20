@@ -204,18 +204,28 @@ export type SiblingMember = {
 };
 
 /**
- * A suggestion for one collection number's unread members (no recorded text colour, no staff text
- * colour): the colour every read member agrees on, the read members, and the unread members that
- * show another colour. Null when none is read, the read members disagree, or no member would change.
+ * The text colour every member with a recorded one agrees on (ignoring case), and those members.
+ * Null when none is recorded or they disagree.
  */
-export function suggestSiblings(members: SiblingMember[]) {
+export function agreedText(members: Pick<SiblingMember, "slug" | "recordedText">[]) {
   const read = members.flatMap((member) => {
     const colour = normaliseColour(member.recordedText);
     return colour === null ? [] : [{ slug: member.slug, colour }];
   });
   const [first] = read;
   if (!first || read.some((member) => member.colour !== first.colour)) return null;
-  const { colour } = first;
+  return { colour: first.colour, read: read.map((member) => member.slug) };
+}
+
+/**
+ * A suggestion for one collection number's unread members (no recorded text colour, no staff text
+ * colour): the colour every read member agrees on, the read members, and the unread members that
+ * show another colour. Null when none is read, the read members disagree, or no member would change.
+ */
+export function suggestSiblings(members: SiblingMember[]) {
+  const agreed = agreedText(members);
+  if (!agreed) return null;
+  const { colour, read } = agreed;
   const unread = members.filter(
     (member) =>
       normaliseColour(member.recordedText) === null &&
@@ -223,11 +233,7 @@ export function suggestSiblings(members: SiblingMember[]) {
       normaliseColour(member.textColor) !== colour,
   );
   if (unread.length === 0) return null;
-  return {
-    colour,
-    read: read.map((member) => member.slug),
-    unread: unread.map((member) => member.slug),
-  };
+  return { colour, read, unread: unread.map((member) => member.slug) };
 }
 
 /** The columns that bring a row to an audit entry's `after`, or null when it already matches. */

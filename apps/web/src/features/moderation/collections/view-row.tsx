@@ -66,6 +66,11 @@ function ColorCell({
           </Button>
         </span>
       ) : null}
+      {state.siblings ? (
+        <span className="text-muted-foreground text-xs text-pretty">
+          {m.mod_collections_siblings_match({ members: state.siblings.join(", ") })}
+        </span>
+      ) : null}
       {state.cosmo ? (
         <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
           <Swatch color={state.cosmo} />
