@@ -1,16 +1,15 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 
 import { loadOnlineConfirmedSerials } from "@/job/confirmed-serials";
+import { writeSerialUpdates } from "@/job/serial-batches";
 import { onlineAnchors } from "@/lib/online-anchors";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOnlineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 // write to prod only when explicitly asked. default dry-run: print the plan.
 const APPLY = process.argv.includes("--apply");
-
-const DB_BATCH_SIZE = 500;
 
 type ObjektRow = { id: string; serial: number; mintedAt: string };
 
@@ -95,7 +94,7 @@ async function main() {
     if (updates.length > 20) console.log(`     … +${updates.length - 20} more`);
 
     if (APPLY) {
-      await applyUpdates(updates);
+      await writeSerialUpdates(updates);
       collectionsFixed++;
       totalUpdated += updates.length;
       console.log(`  ✅ applied ${updates.length} update(s)`);
@@ -115,26 +114,6 @@ async function main() {
   if (collectionsFlagged === 0) {
     console.log("\n✅ All online post-cutoff serials already match tokenId rank.");
   }
-}
-
-/**
- * Write serials in chunks using the same CASE-per-id transaction pattern as
- * job/serial-batches.ts. Atomic per collection.
- */
-async function applyUpdates(updates: { id: string; newSerial: number }[]) {
-  await indexer.transaction(async (tx) => {
-    for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
-      const batch = updates.slice(i, i + DB_BATCH_SIZE);
-      const ids = batch.map((u) => u.id);
-      const caseExpr = batch
-        .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
-        .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
-      await tx
-        .update(objekts)
-        .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
-        .where(inArray(objekts.id, ids));
-    }
-  });
 }
 
 await main();

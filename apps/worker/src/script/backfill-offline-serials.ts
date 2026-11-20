@@ -21,17 +21,16 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, or } from "drizzle-orm";
 
 import { loadConfirmedSerials } from "@/job/confirmed-serials";
-import { discoverBatches } from "@/job/serial-batches";
+import { discoverBatches, writeSerialUpdates } from "@/job/serial-batches";
 import type { Anchor } from "@/lib/cosmo-anchors";
 import { mergeTally, tallyDetails, tallyWarning, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
-const DB_BATCH_SIZE = 500;
 const DRY_RUN = process.env.DRY_RUN === "1";
 // resume by default: skip collections that already have serial_batches stored
 // (already processed by a prior run or the cron). FORCE=1 reprocesses all.
@@ -133,19 +132,7 @@ async function processOne(t: { id: string; slug: string; cid: string; anchors: A
 
   if (DRY_RUN) return;
 
-  await indexer.transaction(async (tx) => {
-    for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
-      const slice = updates.slice(i, i + DB_BATCH_SIZE);
-      const ids = slice.map((u) => u.id);
-      const caseExpr = slice
-        .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
-        .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
-      await tx
-        .update(objekts)
-        .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
-        .where(inArray(objekts.id, ids));
-    }
-  });
+  await writeSerialUpdates(updates);
 }
 
 await chunk(targets, CONCURRENCY, async (group) => {
