@@ -6,7 +6,7 @@ import {
 } from "@repo/lib/error-scrub";
 import type { ErrorInfo } from "react";
 
-import { isNetworkFailure } from "@/lib/network-failure";
+import { isNamedError, isNetworkFailure } from "@/lib/network-failure";
 import { isFromServer } from "@/lib/orpc-error";
 import type * as SentryClient from "@/lib/sentry-client";
 
@@ -42,7 +42,8 @@ const CHUNK_FAILURE = [
 
 function isChunkFailure(error: unknown): boolean {
   return (
-    error instanceof TypeError && CHUNK_FAILURE.some((prefix) => error.message.startsWith(prefix))
+    isNamedError(error, "TypeError") &&
+    CHUNK_FAILURE.some((prefix) => error.message.startsWith(prefix))
   );
 }
 

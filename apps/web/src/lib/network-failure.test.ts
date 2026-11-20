@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { runInNewContext } from "node:vm";
 
 import { isNetworkFailure } from "./network-failure";
 
@@ -19,6 +20,19 @@ describe("isNetworkFailure", () => {
     "Cannot read properties of undefined (reading 'x')",
   ])("a TypeError %p is not", (message) => {
     expect(isNetworkFailure(new TypeError(message))).toBe(false);
+  });
+
+  test("a TypeError from another realm is (WEB-35)", () => {
+    const foreign: unknown = runInNewContext(`new TypeError("Load failed")`);
+    expect(foreign instanceof TypeError).toBe(false);
+    expect(isNetworkFailure(foreign)).toBe(true);
+  });
+
+  test("a body cut off mid-read whose cause is from another realm is", () => {
+    const error = new Error("Cannot parse response body", {
+      cause: runInNewContext(`new TypeError("Failed to fetch")`),
+    });
+    expect(isNetworkFailure(error)).toBe(true);
   });
 
   test("a plain Error with the same message is not", () => {
