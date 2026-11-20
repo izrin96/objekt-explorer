@@ -1574,6 +1574,7 @@
   "mod_collections_search": "Search collections",
   "mod_collections_search_placeholder": "Member, number or slug",
   "mod_collections_overrides_only": "Overrides only",
+  "mod_collections_hide_proven": "Hide sibling matches · {count}",
   "mod_collections_count": "{count} collections",
   "mod_collections_column_card": "Card",
   "mod_collections_column_collection": "Collection",

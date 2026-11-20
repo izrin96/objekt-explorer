@@ -143,3 +143,13 @@ export function colorChange(
     ...(backgroundPinned !== undefined ? { backgroundPinned } : {}),
   };
 }
+
+/**
+ * Whether an override is only a text colour its read siblings prove: Overrides only can hide it.
+ * A background override keeps the row, since that colour has no such proof.
+ */
+export function provenBySiblings(
+  override: Pick<Override, "backgroundColor" | "textMatchesSiblings">,
+) {
+  return override.backgroundColor === null && (override.textMatchesSiblings?.length ?? 0) > 0;
+}

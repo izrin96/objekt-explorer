@@ -20,7 +20,7 @@ import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { matchesSearch, rowColors } from "./colors";
+import { matchesSearch, provenBySiblings, rowColors } from "./colors";
 import { CosmoMediaSummary } from "./cosmo-media-summary";
 import { differsCount } from "./differs";
 import { DiffersList } from "./differs-list";
@@ -47,6 +47,7 @@ export function CollectionsView() {
   const deferredSearch = useDeferredValue(search);
   const [view, setView] = useState<View>("all");
   const overridesOnly = view === "overrides";
+  const [hideProven, setHideProven] = useState(false);
   const toggleView = (next: View) => (pressed: boolean) => setView(pressed ? next : "all");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [unrefreshed, setUnrefreshed] = useState(false);
@@ -189,8 +190,11 @@ export function CollectionsView() {
   const overrideOf = new Map(admin.overrides.map((row) => [row.slug, row]));
   const listed = collections ?? [];
   const bySlug = new Map(listed.map((collection) => [collection.slug, collection]));
+  const proven = admin.overrides.filter(provenBySiblings).length;
   const scope = overridesOnly
-    ? admin.overrides.flatMap((row) => bySlug.get(row.slug) ?? [])
+    ? admin.overrides.flatMap((row) =>
+        hideProven && provenBySiblings(row) ? [] : (bySlug.get(row.slug) ?? []),
+      )
     : listed;
   const rows = scope.filter((collection) => matchesSearch(collection, deferredSearch));
 
@@ -282,6 +286,11 @@ export function CollectionsView() {
         >
           {m.mod_collections_overrides_only()}
         </Toggle>
+        {overridesOnly ? (
+          <Toggle variant="outline" size="sm" pressed={hideProven} onPressedChange={setHideProven}>
+            {m.mod_collections_hide_proven({ count: formatCount(proven) })}
+          </Toggle>
+        ) : null}
         <Toggle
           variant="outline"
           size="sm"

@@ -1574,6 +1574,7 @@
   "mod_collections_search": "コレクションを検索",
   "mod_collections_search_placeholder": "メンバー、番号、スラッグ",
   "mod_collections_overrides_only": "上書きのみ",
+  "mod_collections_hide_proven": "同じ番号と一致を非表示 · {count}",
   "mod_collections_count": "コレクション {count}件",
   "mod_collections_column_card": "カード",
   "mod_collections_column_collection": "コレクション",

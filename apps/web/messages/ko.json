@@ -1574,6 +1574,7 @@
   "mod_collections_search": "컬렉션 검색",
   "mod_collections_search_placeholder": "멤버, 번호 또는 슬러그",
   "mod_collections_overrides_only": "덮어쓴 것만",
+  "mod_collections_hide_proven": "같은 번호 일치 숨기기 · {count}",
   "mod_collections_count": "컬렉션 {count}개",
   "mod_collections_column_card": "카드",
   "mod_collections_column_collection": "컬렉션",

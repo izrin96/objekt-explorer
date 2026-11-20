@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { colorChange, matchesSearch, rowColors } from "./colors";
+import { colorChange, matchesSearch, provenBySiblings, rowColors } from "./colors";
 
 const seoyeon = {
   slug: "ever01-seoyeon-338z",
@@ -144,5 +144,21 @@ describe("colorChange", () => {
 
   test("an invalid field gives no change at all", () => {
     expect(colorChange(colors, { text: "#fff", background: "#b400ff", ...pins })).toBeNull();
+  });
+});
+
+describe("provenBySiblings", () => {
+  const siblings = [{ member: "Kimlip" }];
+
+  test("a text override its read siblings prove, with no background override", () => {
+    expect(provenBySiblings({ backgroundColor: null, textMatchesSiblings: siblings })).toBe(true);
+  });
+
+  test("a background override or no sibling proof keeps the row", () => {
+    expect(provenBySiblings({ backgroundColor: "#b400ff", textMatchesSiblings: siblings })).toBe(
+      false,
+    );
+    expect(provenBySiblings({ backgroundColor: null, textMatchesSiblings: null })).toBe(false);
+    expect(provenBySiblings({ backgroundColor: null, textMatchesSiblings: [] })).toBe(false);
   });
 });
