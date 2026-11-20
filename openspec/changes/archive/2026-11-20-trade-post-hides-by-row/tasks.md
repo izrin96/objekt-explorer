@@ -157,17 +157,17 @@
 
 ## 8. Rollout (the owner)
 
-- [ ] 8.1 With a go-ahead, read-only on production, from the working tree before the migration:
+- [x] 8.1 With a go-ahead, read-only on production, from the working tree before the migration:
   - the counts of task 1.2: orphans expected 2, shared `(user, row)` pairs 0, own-row hides 0;
   - `staged.ts` against the previous helpers' text: 0 posts and 0 lists on Trade newly hidden or no longer hidden;
   - the drift script: checks 1 to 6 at zero, since web B and worker B (`1568f6b1`) are live and the hide check and note are not there yet;
   - `EXPLAIN (ANALYZE)` of the For you hide filter for the heaviest hider, on the live build's helpers, as 8.4's baseline. The 2026-11-15 figure predates `trade-post-state` part B, which rebuilt `on_trade` from the rows.
 
   Any other number stops the rollout.
-- [ ] 8.2 The owner commits and pushes; CI passes and moves `:latest`.
-- [ ] 8.3 The owner runs `docker compose run --build --rm migrate`, then brings up web, then rebuilds and restarts the worker. The build live during the migrate is web B and worker B, `1568f6b1`; the trigger serves its hides. Check: the migration's `applied_at` and the time the new web serves are recorded in "As built". Drizzle's `created_at` holds the folder's timestamp, not the apply time (`trade-post-state`, As built), so record the time the migrate exits.
+- [x] 8.2 The owner commits and pushes; CI passes and moves `:latest`.
+- [x] 8.3 The owner runs `docker compose run --build --rm migrate`, then brings up web, then rebuilds and restarts the worker. The build live during the migrate is web B and worker B, `1568f6b1`; the trigger serves its hides. Check: the migration's `applied_at` and the time the new web serves are recorded in "As built". Drizzle's `created_at` holds the folder's timestamp, not the apply time (`trade-post-state`, As built), so record the time the migrate exits.
   - **Rollback:** web B and worker B, `1568f6b1`. Web goes no lower than web A, `2f107ab3`, which has the same hide code (`packages/db/AGENTS.md`, Trade posts).
-- [ ] 8.4 With a go-ahead, read-only on production:
+- [x] 8.4 With a go-ahead, read-only on production:
   - the drift script: all seven checks zero, the hide note printed;
   - the hide count, equal to 8.1's minus orphans and folds, plus any hides made since;
   - `EXPLAIN (ANALYZE)` of the For you hide filter for the heaviest hider, within 1.5 times 8.1's figure;

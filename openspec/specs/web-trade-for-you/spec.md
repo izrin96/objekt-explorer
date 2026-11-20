@@ -92,7 +92,14 @@ When the user has hidden anyone or any post, Browse's footer note SHALL say that
 - **THEN** rin.trades is not hidden, and their row is listed again
 
 ### Requirement: Hide a post
-A signed-in user SHALL be able to hide one of another person's posts through Hide post in that post's ⋯ menu on Browse and For you, without hiding the person. The post SHALL leave the feed at once, and a toast SHALL offer Undo. Their own posts SHALL offer no Hide post. A hide SHALL follow the post through pairing, unpairing and Take off Trade, and SHALL last until the user unhides it, the owner deletes the list it was hidden by, or it comes back (see A hidden post comes back).
+A signed-in user SHALL be able to hide one of another person's posts through Hide post in that post's ⋯ menu on Browse and For you, without hiding the person. The post SHALL leave the feed at once, and a toast SHALL offer Undo. Their own posts SHALL offer no Hide post. A hide SHALL follow the post through pairing, unpairing and Take off Trade:
+
+- when two posts become one, it SHALL hide the post they form;
+- when a pair is unpaired, it SHALL stay with the post of the have or sale list, and the want list SHALL be listed again once it is posted on its own;
+- when the post's have or sale list moves into another post, it SHALL go with that list;
+- when the post's have or sale list is deleted while its want list is on Trade, it SHALL stay with the want list's post.
+
+A hide SHALL last until the user unhides it, the post ends, or it comes back (see A hidden post comes back). A post ends when every list in it is deleted, or when its have or sale list is deleted while its want list is off Trade. A list posted again after its hidden post ended SHALL not be hidden.
 
 #### Scenario: Hide one post
 - **WHEN** rin.trades has two posts on Browse and the user activates Hide post on the first
@@ -114,13 +121,29 @@ A signed-in user SHALL be able to hide one of another person's posts through Hid
 - **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", and rin.trades then unpairs it
 - **THEN** the post "Binary dupes" stays hidden, and the Buy post "Looking for" is listed on Browse
 
+#### Scenario: Hidden Buy post is paired, then unpaired
+- **WHEN** the user hid rin.trades's Buy post "Looking for", rin.trades paired it with "Binary dupes", and later unpairs the two and posts "Looking for" as a Buy post again
+- **THEN** the post "Binary dupes" stays hidden, "Looking for" is listed on Browse, and `/account/hidden` names "Binary dupes"
+
+#### Scenario: Hidden post joins another post
+- **WHEN** the user hid rin.trades's post "Binary dupes", rin.trades takes it off Trade, and then edits their Buy post "Looking for" on Browse into a Swap post with "Binary dupes"
+- **THEN** the post "Binary dupes · Looking for" is hidden on Browse and For you, and `/account/hidden` lists it once
+
+#### Scenario: Have list of a hidden post moves to another post
+- **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", and rin.trades's later edits leave "Looking for" a post of its own on Trade and "Binary dupes" paired with their want list "Wishlist"
+- **THEN** the post "Binary dupes · Wishlist" is hidden, and "Looking for" is listed on Browse
+
 #### Scenario: One half of a hidden pair leaves Trade
 - **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", and later only "Looking for" is on Trade, still paired with "Binary dupes"
 - **THEN** "Looking for" stays hidden on Browse and For you
 
 #### Scenario: The hidden list is deleted
-- **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", which a hide makes by its have list "Binary dupes", and rin.trades deletes "Binary dupes"
-- **THEN** the hide ends, and "Looking for", while on Trade, is listed again on Browse
+- **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", "Looking for" is on Trade, and rin.trades deletes "Binary dupes"
+- **THEN** the Buy post "Looking for" stays hidden on Browse and For you, and `/account/hidden` names it "Looking for"
+
+#### Scenario: The have list is deleted with the want list off Trade
+- **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", "Looking for" is off Trade, rin.trades deletes "Binary dupes", and later posts "Looking for" as a Buy post
+- **THEN** the hide ends, it leaves `/account/hidden`, and "Looking for" is listed on Browse
 
 #### Scenario: The other list is deleted
 - **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", and rin.trades deletes "Looking for"

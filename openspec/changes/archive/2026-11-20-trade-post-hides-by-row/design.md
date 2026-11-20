@@ -494,6 +494,8 @@ Four refresh recommendations, also taken by the owner on 2026-11-20 and built to
   - `hiddenPosts` adds `postId`. Its `listId` (the lead) is ambiguous for a shared lead;
   - the web re-keys the Hidden list and the optimistic update by row.
 
+- **For later expand migrations: the count baseline.** Take it just before the migrate, or compare against the hides (or rows) older than the baseline. Normal writes, such as the want-alerts worker's unhides, move the count between a baseline read and the migration: here 5 hides went in the 18 minutes between 8.1's read and the migrate (As built, 8.4).
+
 ## Assumptions and unverified facts
 
 - **From earlier changes, not re-run here:** 327 hides by 5 people, 2 orphans and none doubled (2026-11-15/16). Task 8.1 re-reads them.
@@ -649,3 +651,45 @@ Applied on 2026-11-20 in the Orca worktree on `4b0e1614`, uncommitted, up to the
   - `packages/db/AGENTS.md`, Trade posts, already named `post_id`, the primary key and cascade, `list_id` without a key, the trigger, and that Drizzle's snapshot does not track it. It gains one sentence on the final lock order: `lists` ACCESS EXCLUSIVE first with a 1 s `lock_timeout`, then `trade_post` and `hidden_trade_post` `NOWAIT`, and why, for any later migration that touches those tables.
   - `apps/worker/AGENTS.md` (drift check 7 and the third note; `recordRun` deleting by the entry list's row) and `packages/api/docs/trade.md` (the row rule, `moves`, `writePosts` moving hides before deletes, the three ways a hide ends) describe the code as built. They are unchanged here.
   - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md`: no convention, trap or workflow changed (no web code, no `/rpc` or cache-key change, round trips and the import boundary kept), so they are unchanged.
+- **8.1, stopped at its first read (2026-11-20, approved by the owner; production, read-only).** On commit `1a062e41`, with production at web B and worker B (`1568f6b1`) and the hides migration not run, `counts.ts --prod` ran once (`default_transaction_read_only=on`, the root `.env` only, no Redis). It read:
+  - 2,440 hides by 11 people;
+  - **1 hide on a list in no row, where 2 were expected**;
+  - 0 shared `(user, row)` pairs after the backfill, as expected;
+  - 0 hides on the hider's own row, as expected.
+
+  The orphan count differs from the expectation, so per the task the run stopped there for the owner to decide. **The owner accepted 1 orphan in place of 2 on 2026-11-20.** The likely cause: since 2026-11-15, one of the two lists was posted to Trade again or deleted. The staged comparison, the drift script from `1568f6b1` and the `EXPLAIN` baseline did not run. 8.1 stays unticked. The hide total is also well above the design's 327 by 5 people (2026-11-15), which was not a stated expectation. No temp file is left in the repo.
+- **8.1, resumed and finished (2026-11-20, production, read-only).** Same rules: `default_transaction_read_only=on`, the root `.env` only, every script refusing unless `transaction_read_only` is on, no Redis, no connection string printed, each read once.
+  - **2, `staged.ts` with the previous helpers' text and with the new ones**, over the staged backfill, 11 hiders: 2,323 posts hidden and 3,574 lists covered both ways. **0 posts and 0 lists newly hidden, 0 no longer hidden**, as expected, and the per-list hides are identical for every hider.
+  - **3, the drift script from `1568f6b1`** (`git show` into `/private/tmp`). Bun resolves `@repo/db` from the script's own path, so the run from there failed at module resolution, before any connection. A temporary copy in `apps/worker/.hides-by-row/`, removed after, read 1,564 rows: **checks 1 to 6 all 0**, as expected. The offer note listed the same 9 offers with no post id (8634, 8660, 8665, 8726, 8753, 8797, 8889, 8934, 9523), "in step".
+  - **4, 8.4's baseline:** `EXPLAIN (ANALYZE, COSTS OFF, TIMING OFF)` of the For you hide filter for the heaviest hider, on the live build's helpers. That is `fetchBumpPeople`'s read for that viewer, with the live `coveredListsSql` text: all types, no match filter, limit 2001. **Planning 9.5 ms, execution 19.3 ms.**
+    - The hide filter is a hash right anti join of `posts` against the viewer's covered set.
+    - That set is three sequential scans of `hidden_trade_post` (1,315 rows each): the hides themselves, and two hash joins to `trade_post` (1,564 rows) on `lead_list_id` and on `want_list_id`.
+    - `on_trade` is a sequential scan of `trade_post` with the VALUES sides and `lists_pkey` per side (2,090 sides). The pairing, sanction, partner-hide, block and folded-want checks follow, ending in 23 people.
+  - **5, the distribution.** The heaviest hider has **1,315** hides. Hides per hider, sorted: 1,315, 1,073, 15, 15, 12, 3, 2, 2, 1, 1, 1, which is 2,440 in all.
+  - **6, the migration's backfill and fold, plain `EXPLAIN` only** (never ANALYZE). Both statements name `post_id`, which does not exist on production yet, so Postgres refused to plan either ("column … does not exist"). Their reads were explained instead, as `SELECT`s doing the same work:
+    - **Backfill:** a sequential scan of `hidden_trade_post` (estimated 2,431 rows; the actual count is 2,440), with two subplans per row: `trade_post_lead_list_id_idx` and `trade_post_want_list_id_idx`, each an index scan of 1 estimated row under an aggregate.
+    - **Fold:** the backfilled rows as a CTE (the scan above), then a merge join of the CTE with itself on `(user_id, post_id)`, each side sorted, filtered on `(created_at, list_id)`. The estimate is 4,763 rows, the planner's guess for a self-join on a computed key; read 1 counted 0 shared `(user, row)` pairs, so it should delete none.
+  - Read 1's orphan count (1, not 2) is above, with the owner's acceptance. The output files that held user ids and the `1568f6b1` copy were deleted; the scripts stay in `/private/tmp/claude-501/hides-by-row/` for 8.4.
+- **8.2.** The owner pushed `1568f6b1..1a062e41` (a fast-forward), and Docker CI/CD run 44728509142 succeeded.
+- **8.3.** The owner ran `docker compose run --build --rm migrate` while web B (`1568f6b1`) served, then brought up web and rebuilt and restarted the worker from `1a062e41`. The migration was applied at 11:37:55 UTC (from the migration record). At 11:39 UTC the coordinator ran the working tree's drift script read-only on production: 1,564 rows, **checks 1 to 7 all 0**, the 9-offer note unchanged, the hide note ("a hide that a build before `hidden_trade_post_by_row` reads differently") 0, "in step".
+- **8.4, run but not passed (2026-11-20, production, read-only).** The same rules as 8.1: the root `.env` only, scripts refusing unless `transaction_read_only` is on, no Redis, each read once.
+  - **The migration's result.** Every hide has a `post_id` (`count(post_id)` = count), and none points at a missing row. The primary key is `(user_id, post_id)`. `hidden_trade_post_post_id_idx` exists beside the kept `list_id` index. The foreign key is `FOREIGN KEY (post_id) REFERENCES trade_post(id) ON DELETE CASCADE`, `list_id` is nullable, and the trigger is `hidden_trade_post_fill_post_id` (`BEFORE INSERT … WHEN (new.post_id IS NULL)`). All as built.
+  - **The hide count: 2,434, where 2,439 was expected** (8.1's 2,440, less the 1 orphan, with no fold). It is 5 fewer.
+    - Hides per hider, sorted: 1,311, 1,071, 15, 15, 12, 3, 2, 2, 1, 1, 1. Against 8.1, the two heaviest hiders have 4 and 2 fewer; the rest are unchanged.
+    - The newest hide was made at 10:47:53 UTC, before the rollout, and 21 hides date from after 10:00 UTC.
+    - Not explained here; the owner decides.
+  - **The For you hide filter for the heaviest hider (now 1,311 hides), on the new helpers:** `EXPLAIN (ANALYZE, COSTS OFF, TIMING OFF)` of `fetchBumpPeople`'s read for that viewer. **Planning 5.4 ms, execution 20.6 ms**, against the gate of 29 ms (1.5 × 8.1's 19.3 ms): it passes.
+    - The covered set is two hash joins of the viewer's 1,311 hides to `trade_post` by its id, one for the lead and one for the want list.
+    - The filter is a hash right anti join of the posts against it, leaving 27 people.
+  - **The `pairs.ts` lookup** (`hiddenPostAtSql` over `lists pl`, for the same viewer, 3,805 lists): one probe per list.
+    - Each probe is a bitmap OR of `trade_post_lead_list_id_idx` and `trade_post_want_list_id_idx`, then `hidden_trade_post_pkey` on `(user_id, post_id)` per row found.
+    - About 0.005 ms a probe, within the 1 ms bound. The whole query took 55.9 ms (planning 0.9 ms).
+  - **The hidden set, read from the migrated table (`staged.ts --live`):** 11 hiders, **2,318 posts hidden and 3,566 lists covered, where 8.1's 2,323 and 3,574 were expected**: 5 posts and 8 lists fewer, in step with the 5 fewer hides.
+  - **Verdict: normal** (a read-only investigation on production, by an Opus agent, 2026-11-20):
+    - **All 5 hides went before the migration, on the old schema.** `hidden_trade_post` shows `n_tup_upd` = 2,435, and only the backfill ever updates a hide, so the table held 2,435 when the migration ran at 11:37:55 UTC. 2,435 less the 1 orphan is 2,434, the 8.4 count: no fold, and nothing lost after.
+    - **Likely cause: the want-alerts worker's unhides.** It ran every 5 minutes, and owners added entries matching the two hiders' lists before the 11:21, 11:26 and 11:31 runs. Not provable per hide: both hiders have alerts off, and an unhide writes no notification.
+    - **A sixth hide**, of row 1001789, went at the 11:41 run through the new code: a normal want-alert unhide.
+    - **No bug:** no `trade_post` row was deleted after the migration, so no move was owed; drift's hide note reads 0; no hide names a deleted list.
+    - **No migration-window gap** (decision 8): web B wrote no rows after the migration.
+    - **Corrected times:** 8.1's per-hider read ran after 11:19:34 UTC, the migration at 11:37:55, and 8.4's reads from about 11:39:34 to 11:41:07.
+  - 8.4 is ticked on that verdict. The scripts in `/private/tmp/claude-501/hides-by-row/` were deleted.
