@@ -12,7 +12,7 @@ import {
   latest,
   nextBumpAt,
   pairPosts,
-} from "../../../lib/trade-feed";
+} from "../../../lib/trade-posts";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
 import { notTradeSanctioned } from "../../moderation/safety";

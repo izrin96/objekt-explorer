@@ -4,7 +4,6 @@ import { iso } from "../../../lib/time";
 import {
   buildPeopleOrder,
   EXTRA_PEOPLE_READS,
-  matchIndexOf,
   ORDER_LIMIT,
   orderReader,
   ordersFingerprint,
@@ -12,8 +11,9 @@ import {
   readBatches,
   readBudget,
   resumeAt,
-} from "../../../lib/trade-feed";
+} from "../../../lib/trade-people-order";
 import { type toPartnerIdentity } from "../../../lib/trade-rank";
+import { matchIndexOf } from "../../../lib/trade-viewer";
 import { unique } from "../../../lib/unique";
 import { type BrowseMatchMode, PEOPLE_PAGE_SIZE, type PeopleInput } from "../../../schemas/trade";
 import { fetchCollectionsBySlug } from "../../list/collections";

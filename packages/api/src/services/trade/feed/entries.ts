@@ -3,7 +3,8 @@ import { indexer } from "@repo/db/indexer";
 import { listEntries, listRule, lists } from "@repo/db/schema";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
-import { type FeedEntry, tradeableEntries, untradeableKey } from "../../../lib/trade-feed";
+import { tradeableEntries, untradeableKey } from "../../../lib/trade-feed";
+import type { FeedEntry } from "../../../lib/trade-posts";
 import { postRowSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import type { ListType } from "../../../schemas/list";

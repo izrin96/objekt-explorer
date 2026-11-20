@@ -4,7 +4,8 @@ import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { listOnTrade } from "../../../lib/report-post";
-import { pairPosts, type PostTag, previewSide } from "../../../lib/trade-feed";
+import { previewSide } from "../../../lib/trade-feed";
+import { pairPosts, type PostTag } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import type { PostCardView } from "../../../schemas/chat";

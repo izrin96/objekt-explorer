@@ -1,9 +1,9 @@
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
-import { type MatchIndex } from "../../../lib/trade-feed";
 import { IDLE_DAYS } from "../../../lib/trade-rank";
 import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
+import type { MatchIndex } from "../../../lib/trade-viewer";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
 import { inHiddenPostSql, matchableListSql, postPairsSql } from "../lists";

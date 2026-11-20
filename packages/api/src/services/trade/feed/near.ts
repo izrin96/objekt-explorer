@@ -1,5 +1,5 @@
-import { narrowViewer, nearOf, pickerTags } from "../../../lib/trade-feed";
 import { addressesByUser } from "../../../lib/trade-rank";
+import { narrowViewer, nearOf, pickerTags } from "../../../lib/trade-viewer";
 import { type Sides } from "../matches";
 import { fetchAddresses } from "../matches/holdings";
 import { fetchPostEntries } from "./entries";

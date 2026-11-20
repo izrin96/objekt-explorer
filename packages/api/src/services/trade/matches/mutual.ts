@@ -1,5 +1,5 @@
-import { matchIndexOf, narrowViewer } from "../../../lib/trade-feed";
 import { FEED_CANDIDATE_LIMIT, mutualPeople, toRanked } from "../../../lib/trade-rank";
+import { matchIndexOf, narrowViewer } from "../../../lib/trade-viewer";
 import { getCache } from "../../redis";
 import { countFeedOwners } from "../feed/query";
 import { fetchViewer } from "../feed/viewer";

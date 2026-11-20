@@ -7,15 +7,10 @@ import { and, inArray } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../../lib/chat-rules";
 import { iso } from "../../../lib/time";
-import {
-  assemblePost,
-  browseMode,
-  matchesViewer,
-  narrowViewer,
-  pairPosts,
-  type Viewer,
-} from "../../../lib/trade-feed";
+import { assemblePost } from "../../../lib/trade-feed";
+import { pairPosts } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
+import { browseMode, matchesViewer, narrowViewer, type Viewer } from "../../../lib/trade-viewer";
 import { unique } from "../../../lib/unique";
 import type { CollectionFilters } from "../../../schemas/common/filters";
 import { normalizeUserText } from "../../../schemas/common/user-text";

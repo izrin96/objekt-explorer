@@ -3,7 +3,7 @@ import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
-import { isPostIdle, pairPosts } from "../../../lib/trade-feed";
+import { isPostIdle, pairPosts } from "../../../lib/trade-posts";
 import { addressesByUser } from "../../../lib/trade-rank";
 import type { ListType } from "../../../schemas/list";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";

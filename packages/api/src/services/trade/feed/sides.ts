@@ -3,13 +3,8 @@ import { listEntries } from "@repo/db/schema";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { inArray } from "drizzle-orm";
 
-import {
-  type EntryAsk,
-  fullSide,
-  listMatchesOf,
-  narrowViewer,
-  stackAsk,
-} from "../../../lib/trade-feed";
+import { type EntryAsk, fullSide, listMatchesOf, stackAsk } from "../../../lib/trade-feed";
+import { narrowViewer } from "../../../lib/trade-viewer";
 import { type SideItemsInput } from "../../../schemas/trade";
 import { fetchCollectionsBySlug } from "../../list/collections";
 import { resolveCompareSides } from "../matches";

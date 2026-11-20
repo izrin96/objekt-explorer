@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 
-import { pairPosts, type TradeList } from "./trade-feed";
 import {
   type PostId,
   type PostRow,
@@ -13,6 +12,7 @@ import {
   planPostWrite,
   postRowOf,
 } from "./trade-post-rows";
+import { pairPosts, type TradeList } from "./trade-posts";
 
 const row = (id: number, leadListId: number, wantListId: number | null = null): PostRow => ({
   id: id as PostId,

@@ -3,7 +3,6 @@ import { lists, tradePost } from "@repo/db/schema";
 import { touchListWith } from "@repo/lib/server/list-touch";
 import { type SQL, and, eq, inArray, sql } from "drizzle-orm";
 
-import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-feed";
 import {
   partnersOf,
   type PostId,
@@ -12,6 +11,7 @@ import {
   planPostWrite,
   type TradeListState,
 } from "../../lib/trade-post-rows";
+import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-posts";
 import type { ListType } from "../../schemas/list";
 import type { PlanList } from "../../schemas/trade-post";
 import { versionCounter } from "../moderation/safety-cache";

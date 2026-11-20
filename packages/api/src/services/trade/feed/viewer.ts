@@ -3,13 +3,13 @@ import { listEntries, lists } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import { and, eq, isNotNull } from "drizzle-orm";
 
-import { narrowIndex, type RuleWant, ruleOnlyWant, type Viewer } from "../../../lib/trade-feed";
 import {
   addressesByUser,
   collectionVerdict,
   copyPairsOf,
   groupBySlug,
 } from "../../../lib/trade-rank";
+import { narrowIndex, type RuleWant, ruleOnlyWant, type Viewer } from "../../../lib/trade-viewer";
 import { unique } from "../../../lib/unique";
 import { getCache, redis, redisFailOpen } from "../../redis";
 import { boundOfferList, matchableList } from "../lists";

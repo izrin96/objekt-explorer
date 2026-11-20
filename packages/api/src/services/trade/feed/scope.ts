@@ -1,4 +1,4 @@
-import type { PeopleOrder } from "../../../lib/trade-feed";
+import type { PeopleOrder } from "../../../lib/trade-people-order";
 import { redis, redisFailOpen } from "../../redis";
 
 const ORDER_TTL_SECONDS = 3600;
