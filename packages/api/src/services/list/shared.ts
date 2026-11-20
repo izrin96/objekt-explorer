@@ -7,6 +7,7 @@ import {
   partnersOf,
   type PostId,
   type PostRow,
+  type PostState,
   type PostWrite,
   planPostWrite,
   type TradeListState,
@@ -60,7 +61,8 @@ export type LockedList = Omit<PlanList, "linkedListId">;
  * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
  * put one list in two posts. Every writer of a pairing, of `discoverable` or of a `trade_post`
  * row takes it first, through `lockPosts`: list create and copy, `list.delete`, `trade.savePost`
- * and `takeDownPost`. `anonymizeUser` and `list.edit`'s Buying only save take it alone.
+ * and `takeDownPost`. `anonymizeUser`, `bumpPerson` and `list.edit`'s Buying only save take it
+ * alone.
  */
 export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList[]> {
   return tx
@@ -97,24 +99,33 @@ export async function lockPosts(tx: Tx, userId: string): Promise<LockedPosts> {
   const locked = await lockTradeLists(tx, userId);
   const found = await tx
     .select({
-      id: lists.id,
-      listType: lists.listType,
-      discoverable: lists.discoverable,
-      rowId: tradePost.id,
-      wantListId: tradePost.wantListId,
+      list: tradeState,
+      row: {
+        id: tradePost.id,
+        wantListId: tradePost.wantListId,
+        leadOnTrade: tradePost.leadOnTrade,
+        leadBumpedAt: tradePost.leadBumpedAt,
+        wantOnTrade: tradePost.wantOnTrade,
+        wantBumpedAt: tradePost.wantBumpedAt,
+        matchHave: tradePost.matchHave,
+        matchSale: tradePost.matchSale,
+        takesSwaps: tradePost.takesSwaps,
+      },
     })
     .from(lists)
     .leftJoin(tradePost, eq(tradePost.leadListId, lists.id))
     .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
     .orderBy(lists.id);
 
-  const rows: PostRow[] = found.flatMap((row) =>
-    row.rowId === null
-      ? []
-      : [{ id: row.rowId as PostId, leadListId: row.id, wantListId: row.wantListId }],
-  );
+  const rows: PostRow[] = found.flatMap(({ list, row }) => {
+    if (row === null) return [];
+    const { id, wantListId, ...state } = row;
+    return [{ id: id as PostId, leadListId: list.id, wantListId, state }];
+  });
   // one entry per list: a list leading two rows comes back twice
-  const current = [...new Map(found.map((row) => [row.id, row])).values()].flatMap(tradeStates);
+  const current = [...new Map(found.map(({ list }) => [list.id, list])).values()].flatMap(
+    tradeStates,
+  );
   const partners = partnersOf(rows);
   return {
     lists: locked.map((list) =>
@@ -129,19 +140,53 @@ export const tradeState = {
   id: lists.id,
   listType: lists.listType,
   discoverable: lists.discoverable,
+  bumpedAt: lists.bumpedAt,
+  matchHave: lists.matchHave,
+  matchSale: lists.matchSale,
+  takesSwaps: lists.takesSwaps,
 };
 
-type WrittenList = { id: number; listType: ListType; discoverable: boolean };
+type WrittenList = Omit<TradeListState, "listType"> & { listType: ListType };
 
-const tradeStates = ({ id, listType, discoverable }: WrittenList): TradeListState[] =>
-  listType === "general" ? [] : [{ id, listType, discoverable }];
+const tradeStates = ({ listType, ...list }: WrittenList): TradeListState[] =>
+  listType === "general" ? [] : [{ ...list, listType }];
+
+/** One `UPDATE … FROM unnest(…)` for every row whose state the plan changed. */
+async function writeStates(tx: Tx, states: { id: PostId; state: PostState }[]) {
+  if (states.length === 0) return;
+  const column = <K extends keyof PostState>(key: K) =>
+    sql.param(states.map(({ state }) => state[key]));
+  await tx.execute(sql`
+    UPDATE ${tradePost} SET
+      lead_on_trade = s.lead_on_trade,
+      lead_bumped_at = s.lead_bumped_at,
+      want_on_trade = s.want_on_trade,
+      want_bumped_at = s.want_bumped_at,
+      match_have = s.match_have,
+      match_sale = s.match_sale,
+      takes_swaps = s.takes_swaps
+    FROM unnest(
+      ${sql.param(states.map(({ id }) => id))}::int[],
+      ${column("leadOnTrade")}::boolean[],
+      ${column("leadBumpedAt")}::timestamptz[],
+      ${column("wantOnTrade")}::boolean[],
+      ${column("wantBumpedAt")}::timestamptz[],
+      ${column("matchHave")}::boolean[],
+      ${column("matchSale")}::boolean[],
+      ${column("takesSwaps")}::boolean[]
+    ) AS s(id, lead_on_trade, lead_bumped_at, want_on_trade, want_bumped_at, match_have, match_sale, takes_swaps)
+    WHERE ${tradePost.id} = s.id
+  `);
+}
 
 /**
  * Plans the write over the rows `lockPosts` read (`planPostWrite`) and writes the row
- * operations. Call it after the list writes, and before a list delete (`removed`), so a row is
- * re-led while its lists are still there. Returns the lists whose partner changed, for
- * `touchList`. A new writer of a pairing, of `discoverable`, or one that deletes a have, sale
- * or want list goes through it: the rows are the only place a pairing is stored.
+ * operations, keeping each row's Trade state, bumps and Open to equal to its lists'
+ * (`postStateOf`). Call it after the list writes, and before a list delete (`removed`), so a row
+ * is re-led while its lists are still there. Returns the lists whose partner changed, for
+ * `touchList`. A new writer of a pairing, of `discoverable`, `bumped_at`, Open to or
+ * `takes_swaps` on Trade, or one that deletes a have, sale or want list goes through it: the rows
+ * are the only place a pairing is stored.
  */
 export async function writePosts(
   tx: Tx,
@@ -161,11 +206,14 @@ export async function writePosts(
       .set(leadListId === undefined ? { wantListId } : { leadListId, wantListId })
       .where(eq(tradePost.id, id));
   }
+  await writeStates(tx, ops.states);
   if (ops.inserts.length > 0) {
     await tx
       .insert(tradePost)
       .values(
-        ops.inserts.map(({ leadListId, wantListId }) => ({ userId, leadListId, wantListId })),
+        ops.inserts.map(({ leadListId, wantListId, state }) =>
+          Object.assign({ userId, leadListId, wantListId }, state),
+        ),
       );
   }
   return relinked;

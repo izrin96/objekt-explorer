@@ -15,6 +15,7 @@ import {
 } from "../../../lib/trade-posts";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
+import { lockTradeLists } from "../../list/shared";
 import { notTradeSanctioned } from "../../moderation/safety";
 import { matchableList, matchableListSql } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
@@ -85,24 +86,43 @@ async function lastBumpOf(userId: string) {
 }
 
 /**
- * One statement: every post on Trade is bumped together, or none. The row-level cooldown check is
- * what EvalPlanQual re-reads under a concurrent bump; the NOT EXISTS covers the person's other
- * lists, Trade or not, bumped more recently.
+ * Every post on Trade is bumped together, or none: one statement bumps the lists and the sides of
+ * the person's `trade_post` rows that hold them. The NOT EXISTS covers the person's other lists,
+ * Trade or not, bumped more recently.
  */
 export async function bumpPerson(userId: string) {
-  const result = await db.execute<{ bumped_at: string }>(sql`
-    UPDATE lists SET bumped_at = now()
-    WHERE user_id = ${userId}
-      AND discoverable
-      AND ${matchableListSql()}
-      AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
-      AND NOT EXISTS (
-        SELECT 1 FROM lists x
-        WHERE x.user_id = ${userId}
-          AND x.bumped_at > now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})
+  const result = await db.transaction(async (tx) => {
+    // the row half reads the snapshot the statement started with, so a post writer that inserted
+    // a row while the list half waited would keep its side's old bump; under the lock the
+    // statement starts after any such writer committed
+    await lockTradeLists(tx, userId);
+    return tx.execute<{ bumped_at: string }>(sql`
+      WITH bumped AS (
+        UPDATE lists SET bumped_at = now()
+        WHERE user_id = ${userId}
+          AND discoverable
+          AND ${matchableListSql()}
+          AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
+          AND NOT EXISTS (
+            SELECT 1 FROM lists x
+            WHERE x.user_id = ${userId}
+              AND x.bumped_at > now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})
+          )
+        RETURNING id, bumped_at
+      ), posts AS (
+        UPDATE trade_post tp SET
+          lead_bumped_at = coalesce(lead.bumped_at, tp.lead_bumped_at),
+          want_bumped_at = coalesce(want.bumped_at, tp.want_bumped_at)
+        FROM trade_post r
+        LEFT JOIN bumped lead ON lead.id = r.lead_list_id
+        LEFT JOIN bumped want ON want.id = r.want_list_id
+        WHERE tp.id = r.id
+          AND r.user_id = ${userId}
+          AND (lead.id IS NOT NULL OR want.id IS NOT NULL)
       )
-    RETURNING bumped_at::text
-  `);
+      SELECT bumped_at::text FROM bumped
+    `);
+  });
 
   const now = new Date();
   const bumped = latest(...result.rows.map((row) => row.bumped_at));

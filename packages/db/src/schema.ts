@@ -258,7 +258,9 @@ export const hiddenTradePost = pgTable(
  * A Trade post: its lead list (a have or sale list, or a Buy post's want list) and at most one
  * want list. The only place a post's pairing is stored: `writePosts`
  * (`packages/api/src/services/list/shared.ts`) writes it. No unique index on either list: one
- * list may sit in more than one post later.
+ * list may sit in more than one post later. It also holds each side's Trade state and bump, and
+ * the post's Open to, which `writePosts` keeps equal to its lists while a list is in at most one
+ * row (`packages/api/docs/trade.md`, Trade posts).
  */
 export const tradePost = pgTable(
   "trade_post",
@@ -275,6 +277,16 @@ export const tradePost = pgTable(
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
+    leadOnTrade: boolean("lead_on_trade").notNull().default(false),
+    wantOnTrade: boolean("want_on_trade").notNull().default(false),
+    leadBumpedAt: timestamp("lead_bumped_at", { mode: "string", withTimezone: true }),
+    wantBumpedAt: timestamp("want_bumped_at", { mode: "string", withTimezone: true }),
+    /** the post's want side (its want list, or a want lead) swaps */
+    matchHave: boolean("match_have").notNull().default(true),
+    /** the post's want side (its want list, or a want lead) buys */
+    matchSale: boolean("match_sale").notNull().default(true),
+    /** the post's sale lead also takes swaps; false for any other lead */
+    takesSwaps: boolean("takes_swaps").notNull().default(false),
   },
   (t) => [
     index("trade_post_user_id_idx").on(t.userId),
@@ -283,6 +295,7 @@ export const tradePost = pgTable(
       .on(t.wantListId)
       .where(sql`want_list_id IS NOT NULL`),
     check("trade_post_want_not_lead", sql`${t.wantListId} <> ${t.leadListId}`),
+    check("trade_post_open_to_something", sql`${t.matchHave} OR ${t.matchSale}`),
   ],
 );
 

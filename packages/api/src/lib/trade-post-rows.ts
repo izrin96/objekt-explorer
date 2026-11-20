@@ -1,7 +1,23 @@
 /** A `trade_post.id`. Branded so a list id is never passed where a post is meant. */
 export type PostId = number & { readonly __brand: "PostId" };
 
-export type PostRow = { id: PostId; leadListId: number; wantListId: number | null };
+export type PostRow = {
+  id: PostId;
+  leadListId: number;
+  wantListId: number | null;
+  state: PostState;
+};
+
+/** A post's own Trade state, per side; `trade_post`'s state columns. */
+export type PostState = {
+  leadOnTrade: boolean;
+  leadBumpedAt: string | null;
+  wantOnTrade: boolean;
+  wantBumpedAt: string | null;
+  matchHave: boolean;
+  matchSale: boolean;
+  takesSwaps: boolean;
+};
 
 /** One of a person's have, sale or want lists, as it stands after a write. */
 export type RowList = {
@@ -175,24 +191,72 @@ export function applyPairing(
 }
 
 /** A have, sale or want list as a write leaves it, as a statement read or returned it. */
-export type TradeListState = { id: number; listType: RowList["listType"]; discoverable: boolean };
+export type TradeListState = {
+  id: number;
+  listType: RowList["listType"];
+  discoverable: boolean;
+  bumpedAt: string | null;
+  matchHave: boolean;
+  matchSale: boolean;
+  takesSwaps: boolean;
+};
+
+/**
+ * The state equation (design decision 3), with off-Trade Open to taken from the list too. The
+ * open list is the post's want side: its want list, or its lead when the lead is a want list.
+ */
+export function postStateOf(lead: TradeListState, want: TradeListState | null): PostState {
+  const open = want ?? (lead.listType === "want" ? lead : null);
+  return {
+    leadOnTrade: lead.discoverable,
+    leadBumpedAt: lead.bumpedAt,
+    wantOnTrade: want?.discoverable ?? false,
+    wantBumpedAt: want?.bumpedAt ?? null,
+    matchHave: open?.matchHave ?? true,
+    matchSale: open?.matchSale ?? true,
+    takesSwaps: lead.listType === "sale" && lead.takesSwaps,
+  };
+}
+
+const STATE_KEYS = [
+  "leadOnTrade",
+  "leadBumpedAt",
+  "wantOnTrade",
+  "wantBumpedAt",
+  "matchHave",
+  "matchSale",
+  "takesSwaps",
+] as const satisfies readonly (keyof PostState)[];
+
+function sameState(a: PostState, b: PostState) {
+  return STATE_KEYS.every((key) => a[key] === b[key]);
+}
 
 export type PostWrite = PairChange & {
-  /** lists the write inserted, or whose `discoverable` it set, as its statements returned them */
+  /** lists the write inserted, or whose Trade state or Open to it set, as its statements returned them */
   written?: readonly TradeListState[];
   /** lists the write is about to delete; the plan takes them out of the rows itself */
   removed?: readonly number[];
 };
 
+/** `PostRowOps` with each row's state: an insert carries its own, `states` updates the rest. */
+export type PostWriteOps = Omit<PostRowOps, "inserts"> & {
+  inserts: { leadListId: number; wantListId: number | null; state: PostState }[];
+  /** surviving rows whose state differs from the stored one, rows the plan updates included */
+  states: { id: PostId; state: PostState }[];
+};
+
 export type PostWritePlan = {
-  ops: PostRowOps;
+  ops: PostWriteOps;
   /** lists still there whose partner the write changed: the ones to `touchList` */
   relinked: number[];
 };
 
 /**
  * One write to a person's posts, planned in memory: the pairing the write asks for applied to
- * the partners the rows hold, then the rows those lists call for (`planPostRows`).
+ * the partners the rows hold, then the rows those lists call for (`planPostRows`), then each
+ * row's state from the lists in it after the write (`postStateOf`), so a list carries its own
+ * state into whatever row it lands in.
  */
 export function planPostWrite(
   before: { lists: readonly TradeListState[]; rows: readonly PostRow[] },
@@ -230,8 +294,30 @@ export function planPostWrite(
   const live = new Set(before.lists.flatMap((list) => (list.discoverable ? [list.id] : [])));
   const ops = planPostRows(before.rows, lists, live);
 
+  const stateOf = (leadListId: number, wantListId: number | null) =>
+    postStateOf(state.get(leadListId)!, wantListId === null ? null : state.get(wantListId)!);
+  const gone = new Set<number>(ops.deletes);
+  const updates = new Map(ops.updates.map((update) => [update.id as number, update]));
+  const states = before.rows.flatMap((row) => {
+    if (gone.has(row.id)) return [];
+    const update = updates.get(row.id);
+    const next = stateOf(
+      update?.leadListId ?? row.leadListId,
+      update ? update.wantListId : row.wantListId,
+    );
+    return sameState(next, row.state) ? [] : [{ id: row.id, state: next }];
+  });
+
   return {
-    ops,
+    ops: {
+      ...ops,
+      inserts: ops.inserts.map(({ leadListId, wantListId }) => ({
+        leadListId,
+        wantListId,
+        state: stateOf(leadListId, wantListId),
+      })),
+      states,
+    },
     relinked: lists.flatMap((list) => (was.get(list.id) === after.get(list.id) ? [] : [list.id])),
   };
 }

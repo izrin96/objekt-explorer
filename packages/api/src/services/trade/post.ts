@@ -49,10 +49,12 @@ export async function savePost(userId: string, choice: PostChoice) {
     }
 
     if (plan.saleSwaps) {
-      await tx
+      const rows = await tx
         .update(lists)
         .set({ takesSwaps: plan.saleSwaps.takesSwaps })
-        .where(eq(lists.id, plan.saleSwaps.id));
+        .where(eq(lists.id, plan.saleSwaps.id))
+        .returning(tradeState);
+      written.push(...rows);
       touched.add(plan.saleSwaps.id);
     }
 

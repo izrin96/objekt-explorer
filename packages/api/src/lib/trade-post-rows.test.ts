@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   type PostId,
   type PostRow,
+  type PostState,
   type PostWrite,
   type RowList,
   type TradeListState,
@@ -11,14 +12,26 @@ import {
   planPostRows,
   planPostWrite,
   postRowOf,
+  postStateOf,
 } from "./trade-post-rows";
 import { pairPosts, type TradeList } from "./trade-posts";
 
-const row = (id: number, leadListId: number, wantListId: number | null = null): PostRow => ({
-  id: id as PostId,
-  leadListId,
-  wantListId,
-});
+// the state the row columns default to; tests of the pairing alone never read it
+const DEFAULT_STATE: PostState = {
+  leadOnTrade: false,
+  leadBumpedAt: null,
+  wantOnTrade: false,
+  wantBumpedAt: null,
+  matchHave: true,
+  matchSale: true,
+  takesSwaps: false,
+};
+const row = (
+  id: number,
+  leadListId: number,
+  wantListId: number | null = null,
+  state: PostState = DEFAULT_STATE,
+): PostRow => ({ id: id as PostId, leadListId, wantListId, state });
 const list = (
   id: number,
   listType: RowList["listType"],
@@ -265,17 +278,103 @@ describe("applyPairing", () => {
   });
 });
 
+const state = (
+  id: number,
+  listType: TradeListState["listType"],
+  discoverable = true,
+  more: Partial<TradeListState> = {},
+): TradeListState => ({
+  id,
+  listType,
+  discoverable,
+  bumpedAt: discoverable ? `t${id}` : null,
+  matchHave: true,
+  matchSale: true,
+  takesSwaps: false,
+  ...more,
+});
+
+describe("postStateOf", () => {
+  test("a have lead alone: its own side, no want side, default Open to", () => {
+    expect(postStateOf(state(1, "have"), null)).toEqual({
+      leadOnTrade: true,
+      leadBumpedAt: "t1",
+      wantOnTrade: false,
+      wantBumpedAt: null,
+      matchHave: true,
+      matchSale: true,
+      takesSwaps: false,
+    });
+  });
+
+  // the want list's flag differs from the lead's, which is true on both, so a rule reading that
+  // flag from the lead fails here; each case keeps the row open to something, as the database requires
+  test("a pair buying only: Open to from the want list", () => {
+    const want = state(2, "want", true, { matchHave: false, matchSale: true, bumpedAt: "w" });
+    expect(postStateOf(state(1, "have"), want)).toEqual({
+      leadOnTrade: true,
+      leadBumpedAt: "t1",
+      wantOnTrade: true,
+      wantBumpedAt: "w",
+      matchHave: false,
+      matchSale: true,
+      takesSwaps: false,
+    });
+  });
+
+  test("a pair swapping only: Open to from the want list", () => {
+    const want = state(2, "want", true, { matchHave: true, matchSale: false, bumpedAt: "w" });
+    expect(postStateOf(state(1, "have"), want)).toEqual({
+      leadOnTrade: true,
+      leadBumpedAt: "t1",
+      wantOnTrade: true,
+      wantBumpedAt: "w",
+      matchHave: true,
+      matchSale: false,
+      takesSwaps: false,
+    });
+  });
+
+  test("a Buy post: Open to from its want lead", () => {
+    const lead = state(2, "want", true, { matchHave: false });
+    expect(postStateOf(lead, null)).toMatchObject({
+      leadOnTrade: true,
+      wantOnTrade: false,
+      matchHave: false,
+      matchSale: true,
+    });
+  });
+
+  test("a sale lead takes swaps only when it does", () => {
+    expect(postStateOf(state(1, "sale", true, { takesSwaps: true }), null).takesSwaps).toBe(true);
+    expect(postStateOf(state(1, "sale"), null).takesSwaps).toBe(false);
+  });
+
+  test("a want side off Trade keeps its bump and Open to, off", () => {
+    const want = state(2, "want", false, { bumpedAt: "old", matchSale: false });
+    expect(postStateOf(state(1, "have"), want)).toMatchObject({
+      leadOnTrade: true,
+      wantOnTrade: false,
+      wantBumpedAt: "old",
+      matchSale: false,
+    });
+  });
+});
+
 describe("planPostWrite", () => {
-  const state = (
-    id: number,
-    listType: TradeListState["listType"],
-    discoverable = true,
-  ): TradeListState => ({ id, listType, discoverable });
   const lists = [state(1, "have"), state(2, "want"), state(3, "have"), state(4, "want")];
   const rows = [row(10, 1, 2), row(11, 3, 4)];
+  // the pairing alone; `planPostWrite states` checks the state
   const write = (change: PostWrite, before = { lists, rows }) => {
     const { ops, relinked } = planPostWrite(before, change);
-    return { ops: ops as PlainOps, relinked };
+    const { states: _, ...rest } = ops;
+    return {
+      ops: {
+        ...rest,
+        inserts: rest.inserts.map(({ leadListId, wantListId }) => ({ leadListId, wantListId })),
+      } as PlainOps,
+      relinked,
+    };
   };
 
   test("no change: nothing to write", () => {
@@ -379,6 +478,131 @@ describe("planPostWrite", () => {
       ops: { ...NONE, inserts: [{ leadListId: 5, wantListId: null }] },
       relinked: [],
     });
+  });
+});
+
+describe("planPostWrite states", () => {
+  // rows stored in step with their lists, as every write leaves them
+  const stored = (
+    lists: TradeListState[],
+    id: number,
+    lead: number,
+    want: number | null = null,
+  ) => {
+    const byId = new Map(lists.map((list) => [list.id, list]));
+    return row(
+      id,
+      lead,
+      want,
+      postStateOf(byId.get(lead)!, want === null ? null : byId.get(want)!),
+    );
+  };
+  const plan = (lists: TradeListState[], rows: PostRow[], change: PostWrite) => {
+    const { ops } = planPostWrite({ lists, rows }, change);
+    return { inserts: ops.inserts, states: ops.states as { id: number; state: PostState }[] };
+  };
+  const have = state(1, "have", true, { bumpedAt: "h" });
+  const want = state(2, "want", true, { bumpedAt: "w", matchSale: false });
+
+  test("no change: no state to write", () => {
+    const lists = [have, want];
+    expect(plan(lists, [stored(lists, 10, 1, 2)], {})).toEqual({ inserts: [], states: [] });
+  });
+
+  test("a list put on Trade with no row: the insert carries its state", () => {
+    const on = state(1, "have", true, { bumpedAt: "now" });
+    expect(plan([state(1, "have", false)], [], { written: [on] }).inserts).toEqual([
+      { leadListId: 1, wantListId: null, state: postStateOf(on, null) },
+    ]);
+  });
+
+  test("a pair made: the new row holds both lists' state", () => {
+    const lists = [want];
+    const created = state(5, "have", true, { bumpedAt: "c" });
+    const { inserts, states } = plan(lists, [stored(lists, 11, 2)], {
+      pair: [5, 2],
+      written: [created],
+    });
+    expect(inserts).toEqual([]);
+    // the want list's row takes the new have list as its lead and keeps its id
+    expect(states).toEqual([{ id: 11, state: postStateOf(created, want) }]);
+  });
+
+  test("a split: the lead's row loses the want side, the freed want list gets a row", () => {
+    const lists = [have, want];
+    const { inserts, states } = plan(lists, [stored(lists, 10, 1, 2)], { unpair: [1, 2] });
+    expect(states).toEqual([{ id: 10, state: postStateOf(have, null) }]);
+    expect(inserts).toEqual([{ leadListId: 2, wantListId: null, state: postStateOf(want, null) }]);
+  });
+
+  test("a deleted lead: its want list on Trade takes over the row with its own state", () => {
+    const lists = [have, want];
+    expect(plan(lists, [stored(lists, 10, 1, 2)], { removed: [1] }).states).toEqual([
+      { id: 10, state: postStateOf(want, null) },
+    ]);
+  });
+
+  test("a merge keeping the want list's row: the have list's state as lead", () => {
+    const off = state(1, "have", false);
+    const lists = [off, want];
+    const on = state(1, "have", true, { bumpedAt: "on" });
+    const { inserts, states } = plan(lists, [stored(lists, 10, 1), stored(lists, 11, 2)], {
+      pair: [1, 2],
+      written: [on],
+    });
+    expect(inserts).toEqual([]);
+    expect(states).toEqual([{ id: 11, state: postStateOf(on, want) }]);
+  });
+
+  test("a merge keeping the lead's row: the joining want list's state", () => {
+    const lists = [have, want];
+    const { states } = plan(lists, [stored(lists, 10, 1), stored(lists, 11, 2)], {
+      pair: [1, 2],
+    });
+    expect(states).toEqual([{ id: 10, state: postStateOf(have, want) }]);
+  });
+
+  test("a want list swapped: the new want list's state", () => {
+    const other = state(3, "want", false, { matchHave: false });
+    const lists = [have, want, other];
+    const { states } = plan(lists, [stored(lists, 10, 1, 2)], { pair: [1, 3] });
+    expect(states).toEqual([{ id: 10, state: postStateOf(have, other) }]);
+  });
+
+  test("a deleted row has no state to write", () => {
+    const lists = [state(1, "have")];
+    expect(plan(lists, [stored(lists, 10, 1)], { removed: [1] })).toEqual({
+      inserts: [],
+      states: [],
+    });
+  });
+
+  test("Take off Trade: both sides off, bumps and Open to unchanged", () => {
+    const lists = [have, want];
+    const offHave = { ...have, discoverable: false };
+    const offWant = { ...want, discoverable: false };
+    const { states } = plan(lists, [stored(lists, 10, 1, 2)], { written: [offHave, offWant] });
+    expect(states).toEqual([
+      {
+        id: 10,
+        state: {
+          leadOnTrade: false,
+          leadBumpedAt: "h",
+          wantOnTrade: false,
+          wantBumpedAt: "w",
+          matchHave: true,
+          matchSale: false,
+          takesSwaps: false,
+        },
+      },
+    ]);
+  });
+
+  test("a stale row is repaired by any write of the person", () => {
+    const lists = [have, want];
+    expect(plan(lists, [row(10, 1, 2)], {}).states).toEqual([
+      { id: 10, state: postStateOf(have, want) },
+    ]);
   });
 });
 

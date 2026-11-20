@@ -1,0 +1,281 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "58ab5999-9973-49a9-b830-d27f742d780a",
+  "prevIds": [
+    "ac21fde5-7da4-468c-a3f2-687d2903b742"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "lead_on_trade"
+      ],
+      "writes": [
+        "s|col|public.trade_post.lead_on_trade",
+        "n|col|public.trade_post.lead_on_trade",
+        "e|col|public.trade_post.lead_on_trade"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "want_on_trade"
+      ],
+      "writes": [
+        "s|col|public.trade_post.want_on_trade",
+        "n|col|public.trade_post.want_on_trade",
+        "e|col|public.trade_post.want_on_trade"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "lead_bumped_at"
+      ],
+      "writes": [
+        "s|col|public.trade_post.lead_bumped_at",
+        "n|col|public.trade_post.lead_bumped_at",
+        "e|col|public.trade_post.lead_bumped_at"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "want_bumped_at"
+      ],
+      "writes": [
+        "s|col|public.trade_post.want_bumped_at",
+        "n|col|public.trade_post.want_bumped_at",
+        "e|col|public.trade_post.want_bumped_at"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "match_have"
+      ],
+      "writes": [
+        "s|col|public.trade_post.match_have",
+        "n|col|public.trade_post.match_have",
+        "e|col|public.trade_post.match_have"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "match_sale"
+      ],
+      "writes": [
+        "s|col|public.trade_post.match_sale",
+        "n|col|public.trade_post.match_sale",
+        "e|col|public.trade_post.match_sale"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "takes_swaps"
+      ],
+      "writes": [
+        "s|col|public.trade_post.takes_swaps",
+        "n|col|public.trade_post.takes_swaps",
+        "e|col|public.trade_post.takes_swaps"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "trade_post"
+      ],
+      "writes": [
+        "s|ck|public.trade_post.trade_post_open_to_something",
+        "n|ck|public.trade_post.trade_post_open_to_something",
+        "e|ck|public.trade_post.trade_post_open_to_something",
+        "n|con|public.trade_post.trade_post_open_to_something"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public",
+        "n|col|public.trade_post.match_have",
+        "n|col|public.trade_post.match_sale"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "lead_on_trade",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "want_on_trade",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "lead_bumped_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "want_bumped_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "match_have",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "match_sale",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "takes_swaps",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "trade_post_open_to_something",
+        "value": "\"match_have\" OR \"match_sale\"",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

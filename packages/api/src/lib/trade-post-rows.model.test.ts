@@ -17,6 +17,8 @@ import {
   type PostId,
   type PostRow,
   type PostRowOps,
+  type PostState,
+  type PostWriteOps,
   planPostRows,
   planPostWrite,
   type TradeListState,
@@ -30,6 +32,9 @@ import {
 // the rows give. After every write both must hold the same lists, rows and touched lists: the
 // link writes stay the reference for what pair and unpair mean. Neither side runs SQL: the
 // statements themselves are proven by running them.
+//
+// The rows world also keeps each row's state, and after every write every row must equal its
+// lists by the state equation, written out below apart from `postStateOf` so a broken rule fails.
 //
 // The healing run corrupts the rows before each write and checks that one plan repairs them.
 
@@ -45,8 +50,12 @@ type ModelList = {
   matchSale: boolean;
   matchHave: boolean;
   takesSwaps: boolean;
+  bumpedAt: string | null;
 };
-type ModelRow = PostRow & { userId: string };
+// the legacy world keeps no state
+type ModelRow = Omit<PostRow, "state"> & { userId: string; state?: PostState };
+// for the pairing alone, which reads no state
+const slots = (rows: ModelRow[]) => rows as PostRow[];
 type World = { lists: ModelList[]; rows: ModelRow[]; nextRow: number };
 
 type Write =
@@ -63,7 +72,8 @@ type Write =
       linkedListId: number | null;
     }
   | { kind: "delete"; userId: string; id: number }
-  | { kind: "account"; userId: string };
+  | { kind: "account"; userId: string }
+  | { kind: "bump"; userId: string };
 
 /** What a write answers: its refusal, or the lists it hands to `touchList`. */
 type Outcome = { refusal: string | null; touched: number[] };
@@ -85,11 +95,32 @@ const KINDS = ["swap", "sell", "buy"] as const;
 const ownOf = (world: World, userId: string) =>
   world.lists.filter((list) => list.userId === userId).toSorted((a, b) => a.id - b.id);
 const rowsOf = (world: World, userId: string) => world.rows.filter((row) => row.userId === userId);
-const stateOf = ({ id, listType, discoverable }: ModelList): TradeListState => ({
+const stateOf = ({
   id,
   listType,
   discoverable,
+  bumpedAt,
+  matchHave,
+  matchSale,
+  takesSwaps,
+}: ModelList): TradeListState => ({
+  id,
+  listType,
+  discoverable,
+  bumpedAt,
+  matchHave,
+  matchSale,
+  takesSwaps,
 });
+
+/** The time a write runs at: the step, so both worlds stamp the same bump. */
+let clock = "";
+
+/** `tradeColumns(true)`: turning a list on from off counts as a bump. */
+function turnOn(list: ModelList) {
+  if (!list.discoverable) list.bumpedAt = clock;
+  list.discoverable = true;
+}
 const done = (touched: Iterable<number>): Outcome => ({
   refusal: null,
   touched: [...new Set(touched)].toSorted((a, b) => a - b),
@@ -98,7 +129,7 @@ const refused = (refusal: string): Outcome => ({ refusal, touched: [] });
 
 let releads = 0;
 
-function applyOps(world: World, userId: string, ops: PostRowOps) {
+function applyOps(world: World, userId: string, ops: PostRowOps | PostWriteOps) {
   const gone = new Set<number>(ops.deletes);
   // a post keeps its id: no plan deletes a row and inserts one that holds one of its lists
   for (const row of world.rows.filter((entry) => gone.has(entry.id))) {
@@ -122,6 +153,12 @@ function applyOps(world: World, userId: string, ops: PostRowOps) {
   }
   for (const insert of ops.inserts) {
     world.rows.push({ id: world.nextRow++ as PostId, userId, ...insert });
+  }
+  if (!("states" in ops)) return;
+  const states = new Map(ops.states.map((entry) => [entry.id as number, entry.state]));
+  for (const row of world.rows) {
+    const state = states.get(row.id);
+    if (state) row.state = state;
   }
 }
 
@@ -149,7 +186,9 @@ function insertList(world: World, write: Write & { kind: "create" }, linkedListI
     linkedListId,
     ...resolveOpenTo(write.listType, write.openTo),
     takesSwaps: false,
+    bumpedAt: null,
   };
+  if (created.discoverable) created.bumpedAt = clock;
   world.lists.push(created);
   return created;
 }
@@ -169,23 +208,36 @@ function linkRefusal(own: PlanList[], write: Write & { kind: "create" }) {
 /** The on, `saleSwaps` and off writes of `savePost`, which neither build changes. */
 function tradeWrites(world: World, plan: Extract<ReturnType<typeof planPost>, { ok: true }>) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
-  for (const { id, flags } of plan.on) Object.assign(byId.get(id)!, { discoverable: true }, flags);
-  if (plan.saleSwaps) byId.get(plan.saleSwaps.id)!.takesSwaps = plan.saleSwaps.takesSwaps;
-  for (const id of plan.off) byId.get(id)!.discoverable = false;
+  const written: TradeListState[] = [];
+  for (const { id, flags } of plan.on) {
+    const list = byId.get(id)!;
+    turnOn(list);
+    Object.assign(list, flags);
+    written.push(stateOf(list));
+  }
+  if (plan.saleSwaps) {
+    const list = byId.get(plan.saleSwaps.id)!;
+    list.takesSwaps = plan.saleSwaps.takesSwaps;
+    written.push(stateOf(list));
+  }
+  for (const id of plan.off) {
+    byId.get(id)!.discoverable = false;
+    written.push(stateOf(byId.get(id)!));
+  }
   return {
     touched: [
       ...plan.on.map((on) => on.id),
       ...(plan.saleSwaps ? [plan.saleSwaps.id] : []),
       ...plan.off,
     ],
-    written: [...plan.on.map((on) => on.id), ...plan.off].map((id) => stateOf(byId.get(id)!)),
+    written,
   };
 }
 
 // ---- legacy: the link is written first, and the rows are derived from it
 
 function legacySync(world: World, userId: string) {
-  applyOps(world, userId, planPostRows(rowsOf(world, userId), ownOf(world, userId)));
+  applyOps(world, userId, planPostRows(slots(rowsOf(world, userId)), ownOf(world, userId)));
 }
 
 function legacy(world: World, write: Write): Outcome {
@@ -251,7 +303,7 @@ function legacy(world: World, write: Write): Outcome {
       target.linkedListId = created.id;
       changed.push(target.id);
       if (created.discoverable && canBeOnTrade(target.listType, target.isProfileBind)) {
-        target.discoverable = true;
+        turnOn(target);
       }
     }
     legacySync(world, userId);
@@ -266,8 +318,24 @@ function legacy(world: World, write: Write): Outcome {
     return done(partners.map((list) => list.id));
   }
 
+  if (write.kind === "bump") {
+    bumpLists(world, userId);
+    return done([]);
+  }
+
   deleteLists(world, new Set(own.map((list) => list.id)));
   return done([]);
+}
+
+/** `bumpPerson`'s list half: every list of the person on Trade, all at once. */
+function bumpLists(world: World, userId: string) {
+  const bumped = new Set<number>();
+  for (const list of world.lists) {
+    if (list.userId !== userId || !list.discoverable) continue;
+    list.bumpedAt = clock;
+    bumped.add(list.id);
+  }
+  return bumped;
 }
 
 // ---- rows: the write is planned over the rows, and a list's partner is read from them
@@ -286,14 +354,14 @@ function partnerByRows(rows: ModelRow[], id: number) {
 function locked(world: World, userId: string) {
   // a copy, as the read is: the writes that follow must not reach back into it
   const rows = structuredClone(rowsOf(world, userId));
-  const partners = partnersOf(rows);
+  const partners = partnersOf(slots(rows));
   const lists: PlanList[] = [];
   for (const list of ownOf(world, userId)) {
     lists.push(Object.assign({}, list, { linkedListId: partners.get(list.id) ?? null }));
   }
   return {
     lists,
-    current: { lists: ownOf(world, userId).map(stateOf), rows },
+    current: { lists: ownOf(world, userId).map(stateOf), rows: slots(rows) },
   };
 }
 
@@ -348,7 +416,7 @@ function byRows(world: World, write: Write): Outcome {
     if (write.linkedListId !== null) {
       const target = world.lists.find((list) => list.id === write.linkedListId)!;
       if (created.discoverable && canBeOnTrade(target.listType, target.isProfileBind)) {
-        target.discoverable = true;
+        turnOn(target);
         written.push(stateOf(target));
       }
     }
@@ -368,6 +436,16 @@ function byRows(world: World, write: Write): Outcome {
     return done(relinked);
   }
 
+  if (write.kind === "bump") {
+    // its row half: each side holding a bumped list takes the list's new bump
+    const bumped = bumpLists(world, userId);
+    for (const row of rowsOf(world, userId)) {
+      if (bumped.has(row.leadListId)) row.state!.leadBumpedAt = clock;
+      if (row.wantListId !== null && bumped.has(row.wantListId)) row.state!.wantBumpedAt = clock;
+    }
+    return done([]);
+  }
+
   deleteLists(world, new Set(own.map((list) => list.id)));
   return done([]);
 }
@@ -385,7 +463,8 @@ type Counts = Record<
   | "createOnTrade"
   | "createLinked"
   | "createLinkedToPaired"
-  | "account",
+  | "account"
+  | "bump",
   number
 >;
 
@@ -422,6 +501,7 @@ function pickWrite(world: World, rand: () => number, nextList: () => number): Wr
   if (roll < 0.32) return { kind: "down", userId, slug: pick(own).slug };
   if (roll < 0.46) return { kind: "delete", userId, id: pick(own).id };
   if (roll < 0.47) return { kind: "account", userId };
+  if (roll < 0.5) return { kind: "bump", userId };
 
   // a Swap post of a have list with a want list it is not paired with: a new pair, or a pair's
   // want list swapped. Rare by chance, since a list in another post is refused, so asked for
@@ -500,6 +580,8 @@ function count(counts: Counts, before: ModelList[], write: Write) {
     const list = byId.get(write.id)!;
     if (list.linkedListId !== null)
       counts[list.listType === "want" ? "deleteWant" : "deleteLead"]++;
+  } else if (write.kind === "bump") {
+    if (before.some((list) => list.userId === write.userId && list.discoverable)) counts.bump++;
   } else counts.account++;
 }
 
@@ -543,6 +625,25 @@ function check(world: World, at: string) {
   }
 }
 
+/** Equation E in full: each side from its list, Open to from the open list, `takes_swaps` from a sale lead. */
+function checkStates(world: World, at: string) {
+  const byId = new Map(world.lists.map((list) => [list.id, list]));
+  for (const row of world.rows) {
+    const lead = byId.get(row.leadListId)!;
+    const want = row.wantListId === null ? undefined : byId.get(row.wantListId)!;
+    const open = want ?? (lead.listType === "want" ? lead : undefined);
+    expect(row.state, `${at}: row ${row.id} state`).toEqual({
+      leadOnTrade: lead.discoverable,
+      leadBumpedAt: lead.bumpedAt,
+      wantOnTrade: want ? want.discoverable : false,
+      wantBumpedAt: want ? want.bumpedAt : null,
+      matchHave: open ? open.matchHave : true,
+      matchSale: open ? open.matchSale : true,
+      takesSwaps: lead.listType === "sale" ? lead.takesSwaps : false,
+    });
+  }
+}
+
 // rows without their ids: the row world keeps an id where the link world, whose delete lets the
 // cascade take the row, makes a new one
 const sorted = (world: World) => ({
@@ -559,6 +660,7 @@ function differential(seed: number, counts: Counts) {
   let lastList = 0;
   for (let i = 0; i < 40; i++) {
     const at = `seed ${seed} step ${i}`;
+    clock = `${seed}:${i}`;
     const before = structuredClone(link.lists);
     const write = pickWrite(link, rand, () => ++lastList);
     const was = legacy(link, write);
@@ -568,6 +670,7 @@ function differential(seed: number, counts: Counts) {
 
     expect(sorted(rows), at).toEqual(sorted(link));
     check(rows, at);
+    checkStates(rows, at);
   }
 }
 
@@ -590,6 +693,7 @@ test(
       createLinked: 0,
       createLinkedToPaired: 0,
       account: 0,
+      bump: 0,
     };
     for (let seed = 1; seed <= 1000; seed++) differential(seed, counts);
     if (process.env.COUNTS) console.log(counts);
@@ -633,6 +737,7 @@ test(
       const world: World = { lists: [], rows: [], nextRow: 1_000_000 };
       let lastList = 0;
       for (let i = 0; i < 30; i++) {
+        clock = `${seed}:${i}`;
         corrupt(world, rand);
         legacy(
           world,
