@@ -7,6 +7,7 @@ import {
   notWanted,
   onePostVerdict,
   oneListOf,
+  placeAsks,
   rowPost,
   givesRuleOf,
   unwantedGives,
@@ -338,5 +339,139 @@ describe("oneListOf", () => {
   test("no candidate holding a match gives null", () => {
     expect(oneListOf([on(9)], candidates, undefined)).toBeNull();
     expect(oneListOf([on(1)], [], undefined)).toBeNull();
+  });
+});
+
+describe("placeAsks", () => {
+  const entry = (listId: number, collectionSlug: string, objektId: string | null = null) => ({
+    listId,
+    listSlug: `list-${listId}`,
+    collectionSlug,
+    objektId,
+    hideSerial: false,
+  });
+  const base = { kept: null, hasLists: true, allowCollectionAsks: false, post: null };
+
+  test("an ask on none of the lists is refused by its objekt", () => {
+    const placed = placeAsks({
+      ...base,
+      asks: [
+        { collectionSlug: "a", objektId: "1" },
+        { collectionSlug: "b", objektId: "2" },
+      ],
+      entries: [entry(1, "a", "1")],
+    });
+    expect(placed).toEqual({ ok: false, reason: "not_listed", detail: { objektIds: ["2"] } });
+  });
+
+  test("a kept objekt on no list passes and stays off every list", () => {
+    const placed = placeAsks({
+      ...base,
+      asks: [{ collectionSlug: "b", objektId: "2" }],
+      entries: [entry(1, "a", "1")],
+      kept: { objekts: new Map([["2", "b"]]) },
+    });
+    expect(placed).toMatchObject({
+      ok: true,
+      rows: [{ listId: null, kept: true, byCollection: false }],
+      chosen: null,
+      newAsk: false,
+    });
+  });
+
+  test("a closed collection refuses every ask but a kept one", () => {
+    const placed = placeAsks({
+      ...base,
+      hasLists: false,
+      asks: [{ collectionSlug: "a", objektId: "1" }, { collectionSlug: "b" }],
+      entries: [],
+    });
+    expect(placed).toEqual({
+      ok: false,
+      reason: "not_listed",
+      detail: { objektIds: ["1"], collectionSlugs: ["b"] },
+    });
+  });
+
+  test("an open collection takes asks with no list and chooses none", () => {
+    const placed = placeAsks({
+      ...base,
+      hasLists: false,
+      allowCollectionAsks: true,
+      asks: [{ collectionSlug: "a", objektId: "1" }],
+      entries: [],
+    });
+    expect(placed).toMatchObject({ ok: true, chosen: null, onPost: null, newAsk: true });
+  });
+
+  test("asks no one list carries are refused as another post", () => {
+    const placed = placeAsks({
+      ...base,
+      asks: [
+        { collectionSlug: "a", objektId: "1" },
+        { collectionSlug: "b", objektId: "2" },
+      ],
+      entries: [entry(1, "a", "1"), entry(2, "b", "2")],
+    });
+    expect(placed).toEqual({
+      ok: false,
+      reason: "other_post",
+      detail: { objektIds: ["2"], collectionSlugs: [] },
+    });
+  });
+
+  test("an ask moves onto the offer's post, and reads as by collection only there", () => {
+    const placed = placeAsks({
+      ...base,
+      post: 2,
+      asks: [{ collectionSlug: "a", objektId: "1" }],
+      entries: [entry(1, "a", "1"), entry(2, "a")],
+    });
+    expect(placed).toMatchObject({
+      ok: true,
+      rows: [{ listId: 2, byCollection: true }],
+      chosen: 2,
+      onPost: 2,
+    });
+  });
+
+  test("the chosen list becomes the post when the offer named none", () => {
+    const placed = placeAsks({
+      ...base,
+      asks: [{ collectionSlug: "a", objektId: "1" }],
+      entries: [entry(3, "a", "1")],
+    });
+    expect(placed).toMatchObject({ ok: true, chosen: 3, onPost: 3 });
+  });
+
+  test("an any-copy ask that names its list goes through that list", () => {
+    const placed = placeAsks({
+      ...base,
+      asks: [{ collectionSlug: "a", listSlug: "list-2" }],
+      entries: [entry(1, "a"), entry(2, "a")],
+    });
+    expect(placed).toMatchObject({ ok: true, rows: [{ listId: 2 }], chosen: 2, onPost: 2 });
+  });
+
+  test("a kept objekt that is also listed stays on its own list", () => {
+    const placed = placeAsks({
+      ...base,
+      post: 2,
+      asks: [
+        { collectionSlug: "a", objektId: "1" },
+        { collectionSlug: "b", objektId: "2" },
+      ],
+      entries: [entry(1, "a", "1"), entry(2, "b", "2")],
+      kept: { objekts: new Map([["1", "a"]]) },
+    });
+    expect(placed).toMatchObject({
+      ok: true,
+      rows: [
+        { listId: 1, kept: false },
+        { listId: 2, kept: false },
+      ],
+      chosen: 2,
+      newAsk: true,
+    });
   });
 });

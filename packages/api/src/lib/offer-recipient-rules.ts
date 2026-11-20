@@ -4,6 +4,10 @@
  * and `suggestOffer` have already read.
  */
 
+import type { GetItemInput } from "../schemas/offer";
+import { entriesFitting, type ListEntryRef, matchEntry } from "./offer-rules";
+import { unique } from "./unique";
+
 type Item = { collectionSlug: string; objektId?: string | null };
 
 /** What the recipient asked for in the offer being countered: objekts by id, any copy by slug. */
@@ -98,6 +102,127 @@ export function closedCollectionAsks<T>(
 ): T[] {
   if (rules.hasLists || rules.allowCollectionAsks) return [];
   return asks.filter((ask) => !ask.kept).map((ask) => ask.item);
+}
+
+type PlacedEntry = ListEntryRef & { listId: number };
+
+/** A get item and the recipient's list it comes through; null for a kept objekt or an unlisted ask. */
+export type PlacedAsk = {
+  item: GetItemInput;
+  listId: number | null;
+  kept: boolean;
+  /** a token reached only through a collection entry */
+  byCollection: boolean;
+};
+
+export type PlacedAsks =
+  | { ok: true; rows: PlacedAsk[]; chosen: number | null; onPost: number | null; newAsk: boolean }
+  | {
+      ok: false;
+      reason: "not_listed" | "other_post";
+      detail: { objektIds?: string[]; collectionSlugs?: string[] };
+    };
+
+/**
+ * `createOffer`'s get side placed on the recipient's lists, with the first refusal in the order it
+ * checks them: an ask on no list, a closed collection, then one post per offer. `chosen` is the
+ * list every ask comes through, `onPost` the post the offer is on, `kept` the offer being
+ * countered's gives by objekt id.
+ */
+export function placeAsks(i: {
+  asks: readonly GetItemInput[];
+  entries: PlacedEntry[];
+  kept: { objekts: ReadonlyMap<string, string> } | null;
+  hasLists: boolean;
+  allowCollectionAsks: boolean;
+  post: number | null;
+}): PlacedAsks {
+  const { entries, kept, hasLists } = i;
+  // a listed objekt the partner offered still counts as kept, so key it by id, not by a list
+  const keptObjekt = (item: { objektId?: string; collectionSlug: string }) =>
+    item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
+  const getRows: PlacedAsk[] = [];
+  for (const item of i.asks) {
+    const entry = matchEntry(item, entries);
+    if (entry) {
+      // a token reached only through a collection entry: the picker names it only where serials show
+      const byCollection = item.objektId !== undefined && entry.objektId === null;
+      getRows.push({ item, listId: entry.listId, kept: false, byCollection });
+      continue;
+    }
+    const keeps = keptObjekt(item);
+    if (!keeps && hasLists) {
+      return {
+        ok: false,
+        reason: "not_listed",
+        detail: item.objektId ? { objektIds: [item.objektId] } : {},
+      };
+    }
+    getRows.push({ item, listId: null, kept: keeps, byCollection: false });
+  }
+  const closed = closedCollectionAsks(
+    getRows.map((row) => ({ item: row.item, kept: row.kept })),
+    { hasLists, allowCollectionAsks: i.allowCollectionAsks },
+  );
+  if (closed.length > 0) {
+    return {
+      ok: false,
+      reason: "not_listed",
+      detail: {
+        objektIds: closed.flatMap((item) => (item.objektId ? [item.objektId] : [])),
+        collectionSlugs: closed.flatMap((item) =>
+          item.objektId === undefined ? [item.collectionSlug] : [],
+        ),
+      },
+    };
+  }
+  // one post per offer, for a recipient with a list on Trade (web-trade-offers)
+  let onPost = i.post;
+  // the list every ask comes through, once one post per offer has chosen it
+  let chosen: number | null = null;
+  if (hasLists) {
+    const listIdOf = new Map(entries.map((entry) => [entry.listSlug, entry.listId]));
+    const asks = getRows.map((row) => {
+      const preferred =
+        row.item.listSlug === undefined ? undefined : listIdOf.get(row.item.listSlug);
+      const fitting = unique(entriesFitting(row.item, entries).map((entry) => entry.listId));
+      return {
+        item: row,
+        kept: keptObjekt(row.item),
+        candidates: askCandidates(row.item, fitting, preferred),
+        preferred,
+      };
+    });
+    const verdict = onePostVerdict(asks, i.post);
+    if (!verdict.ok) {
+      return {
+        ok: false,
+        reason: "other_post",
+        detail: {
+          objektIds: verdict.refused.flatMap((row) =>
+            row.item.objektId ? [row.item.objektId] : [],
+          ),
+          collectionSlugs: verdict.refused.flatMap((row) =>
+            row.item.objektId === undefined ? [row.item.collectionSlug] : [],
+          ),
+        },
+      };
+    }
+    chosen = verdict.listId;
+    const onChosen = entries.filter((entry) => entry.listId === chosen);
+    for (const row of getRows) {
+      // a kept objekt stays on its own list: the recipient offered it, wherever it sits
+      if (chosen !== null && row.listId !== null && !keptObjekt(row.item)) {
+        row.listId = chosen;
+        // reached the way the chosen post offers it, not the first list that fits
+        row.byCollection =
+          row.item.objektId !== undefined && matchEntry(row.item, onChosen)?.objektId === null;
+      }
+    }
+    onPost ??= chosen;
+  }
+  const newAsk = getRows.some((row) => !keptObjekt(row.item));
+  return { ok: true, rows: getRows, chosen, onPost, newAsk };
 }
 
 /** The recipient-only "Not on your wants" label on one item of an offer sent to them. */

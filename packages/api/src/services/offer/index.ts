@@ -3,25 +3,16 @@ import { listEntries, lists, offer, offerItem, tradePost, userSanction } from "@
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
-import {
-  askCandidates,
-  closedCollectionAsks,
-  givesRuleOf,
-  onePostVerdict,
-  unwantedGives,
-} from "../../lib/offer-recipient-rules";
+import { givesRuleOf, placeAsks, unwantedGives } from "../../lib/offer-recipient-rules";
 import {
   type ActorLimits,
   anyCopyScope,
   createEffect,
   effectiveStatus,
-  entriesFitting,
-  matchEntry,
   openOffersOf,
   validateShape,
 } from "../../lib/offer-rules";
 import { scanMessage } from "../../lib/scam-patterns";
-import { unique } from "../../lib/unique";
 import { publishNotify } from "../../realtime";
 import { type FlagCategory } from "../../schemas/chat";
 import { type CreateOfferInput, type OfferRefusal, OPEN_OFFER_LIMIT } from "../../schemas/offer";
@@ -160,76 +151,19 @@ export async function createOffer(
       await staleCounterReason(db, input.counters, addressed.conversationId, me, kept !== null),
     );
   }
-  // a listed objekt the partner offered still counts as kept, so key it by id, not by a list
-  const keptObjekt = (item: { objektId?: string; collectionSlug: string }) =>
-    item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
-  const getRows = input.get.map((item) => {
-    const entry = matchEntry(item, entries);
-    if (entry) {
-      // a token reached only through a collection entry: the picker names it only where serials show
-      const byCollection = item.objektId !== undefined && entry.objektId === null;
-      return { item, listId: entry.listId, kept: false, byCollection };
-    }
-    const keeps = keptObjekt(item);
-    if (!keeps && hasLists) {
-      refuseOffer("not_listed", item.objektId ? { objektIds: [item.objektId] } : {});
-    }
-    return { item, listId: null, kept: keeps, byCollection: false };
-  });
   // every recipient rule refuses before `checkMessageRate`, which spends a send slot
-  const closed = closedCollectionAsks(
-    getRows.map((row) => ({ item: row.item, kept: row.kept })),
-    { hasLists, allowCollectionAsks: rules.allowCollectionAsks },
-  );
-  if (closed.length > 0) {
-    refuseOffer("not_listed", {
-      objektIds: closed.flatMap((item) => (item.objektId ? [item.objektId] : [])),
-      collectionSlugs: closed.flatMap((item) =>
-        item.objektId === undefined ? [item.collectionSlug] : [],
-      ),
-    });
-  }
-  // one post per offer, for a recipient with a list on Trade (web-trade-offers)
-  let onPost = postListId;
-  // the list every ask comes through, once one post per offer has chosen it
-  let chosen: number | null = null;
-  if (hasLists) {
-    const listIdOf = new Map(entries.map((entry) => [entry.listSlug, entry.listId]));
-    const asks = getRows.map((row) => {
-      const preferred =
-        row.item.listSlug === undefined ? undefined : listIdOf.get(row.item.listSlug);
-      const fitting = unique(entriesFitting(row.item, entries).map((entry) => entry.listId));
-      return {
-        item: row,
-        kept: keptObjekt(row.item),
-        candidates: askCandidates(row.item, fitting, preferred),
-        preferred,
-      };
-    });
-    const verdict = onePostVerdict(asks, postListId);
-    if (!verdict.ok) {
-      refuseOffer("other_post", {
-        objektIds: verdict.refused.flatMap((row) => (row.item.objektId ? [row.item.objektId] : [])),
-        collectionSlugs: verdict.refused.flatMap((row) =>
-          row.item.objektId === undefined ? [row.item.collectionSlug] : [],
-        ),
-      });
-    }
-    chosen = verdict.listId;
-    const onChosen = entries.filter((entry) => entry.listId === chosen);
-    for (const row of getRows) {
-      // a kept objekt stays on its own list: the recipient offered it, wherever it sits
-      if (chosen !== null && row.listId !== null && !keptObjekt(row.item)) {
-        row.listId = chosen;
-        // reached the way the chosen post offers it, not the first list that fits
-        row.byCollection =
-          row.item.objektId !== undefined && matchEntry(row.item, onChosen)?.objektId === null;
-      }
-    }
-    onPost ??= chosen;
-  }
+  const placed = placeAsks({
+    asks: input.get,
+    entries,
+    kept,
+    hasLists,
+    allowCollectionAsks: rules.allowCollectionAsks,
+    post: postListId,
+  });
+  if (!placed.ok) refuseOffer(placed.reason, placed.detail);
+  const { rows: getRows, chosen, onPost } = placed;
   const { check, stored } = givesRuleOf({
-    newAsk: getRows.some((row) => !keptObjekt(row.item)),
+    newAsk: placed.newAsk,
     counter: input.counters !== undefined,
     onPost,
     wantList: wantListId,
