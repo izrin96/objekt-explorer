@@ -147,7 +147,7 @@ export async function keepAlivePhase(run: Run, sessionKey: string, backingOff: b
         decision = streak.record("dead");
         if (decision === "dead_streak") {
           mediaLog.warn(
-            `Keep-alive stopped after ${KEEPALIVE_DEAD_STREAK} sessions signed out in a row`,
+            `Keep-alive stopped after ${KEEPALIVE_DEAD_STREAK} sessions signed out with no other session answered`,
           );
           break;
         }

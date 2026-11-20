@@ -206,25 +206,25 @@ export const KEEPALIVE_DEAD_STREAK = 5;
 export const KEEPALIVE_FAILURE_STREAK = 3;
 
 /**
- * Decides after each touch answer whether the phase goes on. Without a 2xx in the run, a streak of
- * dead answers or (outside a backoff) of refused or unexpected ones means the problem is not the
+ * Decides after each touch answer whether the phase goes on. Without a 2xx in the run, 5 dead
+ * answers in all (a busy or refused answer between them does not reset the count, so marks stay at
+ * 5 a run) or, outside a backoff, a streak of refused or unexpected ones mean the problem is not the
  * sessions, so it stops before marking or sending more. `stop` is a backoff meeting busy or
  * unavailable.
  */
 export function createKeepAliveGuard(backingOff: boolean) {
   let sawOk = false;
-  let deadStreak = 0;
+  let deadCount = 0;
   let failureStreak = 0;
   return {
     record(kind: "ok" | "dead" | "busy" | "unavailable" | "refused" | "unexpected") {
-      const dead = kind === "dead";
       const failure = kind === "refused" || kind === "unexpected";
-      deadStreak = dead ? deadStreak + 1 : 0;
+      if (kind === "dead") deadCount++;
       failureStreak = failure ? failureStreak + 1 : 0;
       if (kind === "ok") sawOk = true;
       if (backingOff && (kind === "busy" || kind === "unavailable")) return "stop" as const;
       if (sawOk) return "continue" as const;
-      if (deadStreak >= KEEPALIVE_DEAD_STREAK) return "dead_streak" as const;
+      if (deadCount >= KEEPALIVE_DEAD_STREAK) return "dead_streak" as const;
       if (!backingOff && failureStreak >= KEEPALIVE_FAILURE_STREAK) return "failures" as const;
       return "continue" as const;
     },

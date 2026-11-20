@@ -390,17 +390,18 @@ describe("keep-alive", () => {
 });
 
 describe("keep-alive guard", () => {
-  test("5 dead answers in a row with no 2xx stop the phase", () => {
+  test("5 dead answers with no 2xx stop the phase", () => {
     const g = createKeepAliveGuard(false);
     for (let i = 0; i < 4; i++) expect(g.record("dead")).toBe("continue");
     expect(g.record("dead")).toBe("dead_streak");
   });
 
-  test("a non-dead answer breaks the dead streak", () => {
+  test("other failures between dead answers do not reset the count", () => {
     const g = createKeepAliveGuard(false);
     for (let i = 0; i < 4; i++) g.record("dead");
-    g.record("busy");
-    for (let i = 0; i < 4; i++) expect(g.record("dead")).toBe("continue");
+    expect(g.record("busy")).toBe("continue");
+    expect(g.record("refused")).toBe("continue");
+    expect(g.record("dead")).toBe("dead_streak");
   });
 
   test("a 2xx anywhere in the run disables both stops", () => {
