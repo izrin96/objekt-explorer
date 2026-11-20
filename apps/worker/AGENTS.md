@@ -18,7 +18,7 @@ Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed somethin
 
 ## Offline serials
 
-Serial batches, anchors, the drop grid and drift checks keep their rules in `docs/offline-serials.md`. Read it before changing `job/serial-batches.ts`, `job/populate-serial.ts`, `job/verify-batch-boundaries.ts`, `lib/drop-grid.ts`, `lib/drift-candidates.ts`, `lib/serial-*.ts`, or the serial scripts under `script/`.
+Serial batches, anchors, the drop grid and drift checks keep their rules in `docs/offline-serials.md`. Read it before changing `job/serial-batches.ts`, `job/serial-discovery.ts`, `job/serial-grids.ts`, `job/populate-serial.ts`, `job/verify-batch-boundaries.ts`, `lib/drop-grid.ts`, `lib/drift-candidates.ts`, `lib/serial-*.ts`, or the serial scripts under `script/`.
 
 ## Banner backfill
 

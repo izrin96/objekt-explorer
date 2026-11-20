@@ -35,16 +35,15 @@ import { preBlockSeasons } from "@repo/lib/serial";
 import { and, eq, inArray, like, notInArray } from "drizzle-orm";
 
 import { loadConfirmedSerials } from "@/job/confirmed-serials";
+import { applyGridWrites, planGridWrites } from "@/job/serial-batches";
 import {
-  applyGridWrites,
   type DropKey,
   type DropMember,
   fitDrop,
   dropSpanMemo,
   loadMemberRuns,
   type MemberKey,
-  planGridWrites,
-} from "@/job/serial-batches";
+} from "@/job/serial-grids";
 import { type DropGrid, fitMemberRun } from "@/lib/drop-grid";
 import { mergeTally, tallyDetails, tallyWarning } from "@/lib/merge-tally";
 import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";

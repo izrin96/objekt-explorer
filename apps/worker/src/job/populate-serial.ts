@@ -39,16 +39,14 @@ import {
 } from "./confirmed-serials";
 import {
   applyGridWrites,
-  discoverBatches,
-  type DropKey,
-  findBoundaryTokenId,
-  fitDrop,
   fitRanges,
   planGridWrites,
   rewriteSerials,
   storeRanges,
   writeSerialUpdates,
 } from "./serial-batches";
+import { discoverBatches, findBoundaryTokenId } from "./serial-discovery";
+import { type DropKey, fitDrop } from "./serial-grids";
 
 const COLLECTION_CONCURRENCY = 5;
 

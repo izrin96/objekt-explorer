@@ -24,7 +24,8 @@ import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, lte, or } from "drizzle-orm";
 
 import { loadConfirmedSerials } from "@/job/confirmed-serials";
-import { discoverBatches, writeSerialUpdates } from "@/job/serial-batches";
+import { writeSerialUpdates } from "@/job/serial-batches";
+import { discoverBatches } from "@/job/serial-discovery";
 import type { Anchor } from "@/lib/cosmo-anchors";
 import { mergeTally, tallyDetails, tallyWarning, withConfirmed } from "@/lib/merge-tally";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
