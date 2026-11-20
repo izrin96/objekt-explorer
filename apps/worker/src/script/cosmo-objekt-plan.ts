@@ -30,6 +30,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { cosmoObjekt, cosmoTransferable } from "@repo/db/schema";
 import { and, asc, count, eq, gt, inArray, sql } from "drizzle-orm";
 
+import { chunks } from "@/lib/array";
 import { mergeAnchors } from "@/lib/cosmo-anchors";
 import { serialEligible } from "@/lib/cosmo-objekts";
 import {
@@ -55,9 +56,6 @@ const SLUG = process.env.SLUG;
 const PAGE = 5000;
 const CHUNK = 500;
 const SAMPLE = 10;
-function* chunk<T>(items: T[], size: number) {
-  for (let i = 0; i < items.length; i += size) yield items.slice(i, i + size);
-}
 
 const MODE = { untransferable: true, transferable: true };
 
@@ -111,7 +109,7 @@ async function serialPlan(app: Tx) {
     .groupBy(cosmoObjekt.slug)
     .orderBy(asc(cosmoObjekt.slug));
   const onlineSlugs = new Set<string>();
-  for (const part of chunk(
+  for (const part of chunks(
     bySlug.map((b) => b.slug),
     CHUNK,
   )) {
@@ -368,7 +366,7 @@ async function serialDifferences(app: Tx) {
       .limit(PAGE);
     if (page.length === 0) break;
     after = page.at(-1)!.tokenId;
-    for (const part of chunk(page, CHUNK)) {
+    for (const part of chunks(page, CHUNK)) {
       const found = await indexer
         .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
         .from(objekts)
@@ -446,7 +444,7 @@ async function transferablePlan(app: Tx) {
     if (page.length === 0) break;
     after = page.at(-1)!.tokenId;
     total += page.length;
-    for (const part of chunk(page, CHUNK)) {
+    for (const part of chunks(page, CHUNK)) {
       const { rows } = await indexer.$client.query<JudgeRow>(
         `select o.id, o.transferable, o.owner, o.received_at, c.slug, c.class,
                 exists (select 1 from transferability_update u
@@ -562,7 +560,7 @@ async function recordSplit(app: Tx) {
       .limit(PAGE);
     if (page.length === 0) break;
     after = page.at(-1)!.tokenId;
-    for (const part of chunk(page, CHUNK)) {
+    for (const part of chunks(page, CHUNK)) {
       const { rows } = await indexer.$client.query<{ token_id: string; newest: number }>(
         `select token_id, max(block_number) as newest from transferability_update
          where token_id = any($1::text[]) group by token_id`,
