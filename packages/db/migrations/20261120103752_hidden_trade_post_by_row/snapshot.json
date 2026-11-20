@@ -1,0 +1,213 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "7a59ceac-44b6-4967-97b4-26752fabb2db",
+  "prevIds": [
+    "011614da-2c69-4ca2-82d4-95bbb73a6a42"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "hidden_trade_post"
+      ],
+      "writes": [
+        "s|fk|public.hidden_trade_post.hidden_trade_post_list_id_lists_id_fkey",
+        "n|fk|public.hidden_trade_post.hidden_trade_post_list_id_lists_id_fkey",
+        "e|fk|public.hidden_trade_post.hidden_trade_post_list_id_lists_id_fkey",
+        "n|con|public.hidden_trade_post.hidden_trade_post_list_id_lists_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "e|col|public.hidden_trade_post.list_id"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "hidden_trade_post",
+        "post_id"
+      ],
+      "writes": [
+        "s|col|public.hidden_trade_post.post_id",
+        "n|col|public.hidden_trade_post.post_id",
+        "e|col|public.hidden_trade_post.post_id"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "alter_pk",
+      "statementTarget": [
+        "table",
+        "public",
+        "hidden_trade_post"
+      ],
+      "writes": [
+        "s|pk|public.hidden_trade_post"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "n|col|public.hidden_trade_post.user_id",
+        "n|col|public.hidden_trade_post.post_id"
+      ],
+      "sharedWrites": [
+        "e|uniqueness|public.hidden_trade_post.list_id.user_id"
+      ],
+      "sqlHash": "ce74421c62b506a1"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "hidden_trade_post",
+        "list_id"
+      ],
+      "writes": [
+        "s|colprop|public.hidden_trade_post.list_id.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "n|col|public.hidden_trade_post.list_id"
+      ],
+      "sqlHash": "b1953680a8db35fc"
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "hidden_trade_post",
+        "hidden_trade_post_post_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.hidden_trade_post_post_id_idx",
+        "n|idx|public.hidden_trade_post_post_id_idx",
+        "e|idx|public.hidden_trade_post_post_id_idx",
+        "n|rel|public.hidden_trade_post_post_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "n|col|public.hidden_trade_post.post_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "hidden_trade_post"
+      ],
+      "writes": [
+        "s|fk|public.hidden_trade_post.hidden_trade_post_post_id_trade_post_id_fkey",
+        "n|fk|public.hidden_trade_post.hidden_trade_post_post_id_trade_post_id_fkey",
+        "e|fk|public.hidden_trade_post.hidden_trade_post_post_id_trade_post_id_fkey",
+        "n|con|public.hidden_trade_post.hidden_trade_post_post_id_trade_post_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "n|tbl|public.trade_post",
+        "n|sch|public",
+        "n|col|public.hidden_trade_post.post_id",
+        "n|col|public.trade_post.id",
+        "e|uniqueness|public.trade_post.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "hidden_trade_post",
+        "name": "post_id",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "hidden_trade_post",
+        "name": "hidden_trade_post_post_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "post_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "hidden_trade_post",
+        "name": "hidden_trade_post_post_id_trade_post_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "post_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "trade_post",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"hidden_trade_post\",\"hidden_trade_post_list_id_lists_id_fkey\"]"
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"hidden_trade_post\",\"list_id\"]",
+      "set": {
+        "notNull": false
+      }
+    },
+    {
+      "op": "alter",
+      "key": "pks\u0000[\"public\",\"hidden_trade_post\",\"hidden_trade_post_pkey\"]",
+      "set": {
+        "columns": [
+          "user_id",
+          "post_id"
+        ]
+      }
+    }
+  ]
+}

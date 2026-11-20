@@ -33,7 +33,11 @@ export type PostRowOps = {
   /** `leadListId` is set only when the row changes its lead and keeps its id */
   updates: { id: PostId; leadListId?: number; wantListId: number | null }[];
   inserts: { leadListId: number; wantListId: number | null }[];
+  /** hides to move, from a row that lost its lead or goes to the surviving row now holding that lead */
+  moves: { from: PostId; to: PostId }[];
 };
+
+type RowWrites = Omit<PostRowOps, "moves">;
 
 /**
  * The writes that turn one person's `trade_post` rows into the rows their lists call for:
@@ -54,6 +58,9 @@ export type PostRowOps = {
  * stays, unless `live` says the want list was on Trade before the write and the lead was not:
  * then the want list's row stays, so the post a person was editing keeps its id over a row
  * left behind by a list taken off Trade.
+ *
+ * A hide follows its row's lead: a row that is deleted, or handed to another list, passes its
+ * hides to the surviving row that now holds its old lead (`moves`), and keeps them otherwise.
  */
 export function planPostRows(
   rows: readonly PostRow[],
@@ -61,7 +68,7 @@ export function planPostRows(
   live?: ReadonlySet<number>,
 ): PostRowOps {
   const byId = new Map(lists.map((list) => [list.id, list]));
-  const ops: PostRowOps = { deletes: [], updates: [], inserts: [] };
+  const ops: RowWrites = { deletes: [], updates: [], inserts: [] };
 
   const kept = new Map<number, PostRow>();
   for (const row of rows.toSorted((a, b) => a.id - b.id)) {
@@ -104,15 +111,16 @@ export function planPostRows(
 
   // what is left leads nothing: its list is gone, or a have or sale list took it as its want list
   for (const row of kept.values()) ops.deletes.push(row.id);
-  return relead(rows, ops);
+  const written = relead(rows, ops);
+  return { ...written, moves: movesOf(rows, written) };
 }
 
 /** Turns each insert that shares a list with a row the plan deletes into an update of that row. */
-function relead(rows: readonly PostRow[], ops: PostRowOps): PostRowOps {
+function relead(rows: readonly PostRow[], ops: RowWrites): RowWrites {
   if (ops.inserts.length === 0 || ops.deletes.length === 0) return ops;
   const doomed = new Set<number>(ops.deletes);
   const candidates = rows.filter((row) => doomed.has(row.id)).toSorted((a, b) => a.id - b.id);
-  const inserts: PostRowOps["inserts"] = [];
+  const inserts: RowWrites["inserts"] = [];
   const updates = [...ops.updates];
   for (const insert of ops.inserts) {
     const holds = (id: number | null) =>
@@ -128,6 +136,42 @@ function relead(rows: readonly PostRow[], ops: PostRowOps): PostRowOps {
     updates.push({ id: row.id, leadListId: insert.leadListId, wantListId: insert.wantListId });
   }
   return { deletes: ops.deletes.filter((id) => doomed.has(id)), updates, inserts };
+}
+
+/**
+ * Where each hide goes: from a row that was deleted or lost its lead, to the surviving row now
+ * holding that lead. Inserts have no id yet, and a list that lands only in one is a post of its
+ * own, which the hide does not follow.
+ */
+function movesOf(rows: readonly PostRow[], ops: RowWrites): PostRowOps["moves"] {
+  const deleted = new Set<number>(ops.deletes);
+  const after = new Map(
+    rows.flatMap((row) =>
+      deleted.has(row.id)
+        ? []
+        : [
+            [
+              row.id,
+              { id: row.id, leadListId: row.leadListId, wantListId: row.wantListId },
+            ] as const,
+          ],
+    ),
+  );
+  for (const update of ops.updates) {
+    const row = after.get(update.id)!;
+    after.set(update.id, {
+      id: row.id,
+      leadListId: update.leadListId ?? row.leadListId,
+      wantListId: update.wantListId,
+    });
+  }
+  const holder = (listId: number) =>
+    [...after.values()].find((row) => row.leadListId === listId || row.wantListId === listId);
+  return rows.flatMap((row) => {
+    if (after.get(row.id)?.leadListId === row.leadListId) return [];
+    const to = holder(row.leadListId);
+    return to && to.id !== row.id ? [{ from: row.id, to: to.id }] : [];
+  });
 }
 
 /** The row of the post a list is in: the lowest row it leads, else the lowest row it is the want list of. */

@@ -232,8 +232,10 @@ export const hiddenTradePartner = pgTable(
 );
 
 /**
- * A Trade post the viewer hid. It names the list the post was hidden by, its anchor then (see
- * `postsCte`), and covers the post that list is in now (`hidesOfSql`).
+ * A Trade post the viewer hid. It names the post's `trade_post` row and covers that row's lists
+ * (`coveredListsSql`); `writePosts` moves it when a write ends or re-leads the row. `list_id` is
+ * the anchor the hide was made on, read only by builds before `hidden_trade_post_by_row`, so it
+ * keeps no key. The migration's `BEFORE INSERT` trigger fills `post_id` for those builds' hides.
  */
 export const hiddenTradePost = pgTable(
   "hidden_trade_post",
@@ -241,15 +243,17 @@ export const hiddenTradePost = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    listId: integer("list_id")
+    listId: integer("list_id"),
+    postId: integer("post_id")
       .notNull()
-      .references(() => lists.id, { onDelete: "cascade" }),
+      .references(() => tradePost.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (t) => [
-    primaryKey({ columns: [t.userId, t.listId] }),
+    primaryKey({ columns: [t.userId, t.postId] }),
+    index("hidden_trade_post_post_id_idx").on(t.postId),
     index("hidden_trade_post_list_id_idx").on(t.listId),
   ],
 );

@@ -44,11 +44,12 @@ type PlainOps = {
   deletes: number[];
   updates: { id: number; leadListId?: number; wantListId: number | null }[];
   inserts: { leadListId: number; wantListId: number | null }[];
+  moves: { from: number; to: number }[];
 };
 const plan = (rows: PostRow[], lists: RowList[], live?: number[]): PlainOps =>
   planPostRows(rows, lists, live && new Set(live));
 
-const NONE = { deletes: [], updates: [], inserts: [] };
+const NONE = { deletes: [], updates: [], inserts: [], moves: [] };
 // have 1 and want 2 are a pair, on Trade
 const pair = [list(1, "have", true, 2), list(2, "want", true, 1)];
 
@@ -86,6 +87,7 @@ describe("planPostRows", () => {
       deletes: [11],
       updates: [{ id: 10, wantListId: 2 }],
       inserts: [],
+      moves: [{ from: 11, to: 10 }],
     });
   });
 
@@ -96,6 +98,7 @@ describe("planPostRows", () => {
       deletes: [10],
       updates: [{ id: 11, leadListId: 1, wantListId: 2 }],
       inserts: [],
+      moves: [{ from: 10, to: 11 }],
     });
     // both live, the have list alone, or neither: the lead's stays
     for (const live of [[1, 2], [1], []]) {
@@ -103,6 +106,7 @@ describe("planPostRows", () => {
         deletes: [11],
         updates: [{ id: 10, wantListId: 2 }],
         inserts: [],
+        moves: [{ from: 11, to: 10 }],
       });
     }
   });
@@ -117,6 +121,8 @@ describe("planPostRows", () => {
         { id: 10, leadListId: 3, wantListId: null },
       ],
       inserts: [],
+      // 1 now leads row 11, so a hide on its old row follows it there
+      moves: [{ from: 10, to: 11 }],
     });
   });
 
@@ -142,6 +148,7 @@ describe("planPostRows", () => {
       deletes: [],
       updates: [{ id: 10, wantListId: null }],
       inserts: [{ leadListId: 2, wantListId: null }],
+      moves: [],
     });
   });
 
@@ -156,6 +163,7 @@ describe("planPostRows", () => {
       deletes: [12],
       updates: [{ id: 10, wantListId: 3 }],
       inserts: [{ leadListId: 2, wantListId: null }],
+      moves: [{ from: 12, to: 10 }],
     });
   });
 
@@ -200,8 +208,12 @@ describe("planPostRows", () => {
     ]);
   });
 
-  test("two rows led by one list collapse onto the lowest id", () => {
-    expect(plan([row(12, 1), row(10, 1, 2)], pair)).toEqual({ ...NONE, deletes: [12] });
+  test("D1: two rows led by one list collapse onto the lowest id, and the hide moves there", () => {
+    expect(plan([row(12, 1), row(10, 1, 2)], pair)).toEqual({
+      ...NONE,
+      deletes: [12],
+      moves: [{ from: 12, to: 10 }],
+    });
   });
 
   test("a link read from the want side alone is no pair", () => {
@@ -361,6 +373,49 @@ describe("postStateOf", () => {
   });
 });
 
+describe("planPostRows moves a hide with its lead", () => {
+  test("D3, the default merge: the Buy post's row goes, its hide moves to the have list's row", () => {
+    // have 1 (row 10) takes Buy post 2 (row 11)
+    expect(plan([row(10, 1), row(11, 2)], pair)).toEqual({
+      deletes: [11],
+      updates: [{ id: 10, wantListId: 2 }],
+      inserts: [],
+      moves: [{ from: 11, to: 10 }],
+    });
+  });
+
+  test("D2, the live merge: the have list's row goes, its hide moves to the re-led Buy post's row", () => {
+    expect(plan([row(10, 1), row(11, 2)], pair, [2])).toEqual({
+      deletes: [10],
+      updates: [{ id: 11, leadListId: 1, wantListId: 2 }],
+      inserts: [],
+      moves: [{ from: 10, to: 11 }],
+    });
+  });
+
+  test("relead: a new have list joins a Buy post, whose hide stays", () => {
+    expect(plan([row(11, 2)], pair).moves).toEqual([]);
+  });
+
+  test("unpair: the hide stays on the lead's row, the want list's new row is not hidden", () => {
+    const unpaired = [list(1, "have", true), list(2, "want", true)];
+    expect(plan([row(10, 1, 2)], unpaired)).toEqual({
+      ...NONE,
+      updates: [{ id: 10, wantListId: null }],
+      inserts: [{ leadListId: 2, wantListId: null }],
+    });
+  });
+
+  test("Edit post swapping the have list: the old have list keeps its row and the hide", () => {
+    const swapped = [list(1, "have", true), list(2, "want", true, 3), list(3, "have", true, 2)];
+    expect(plan([row(10, 1, 2)], swapped)).toEqual({
+      ...NONE,
+      updates: [{ id: 10, wantListId: null }],
+      inserts: [{ leadListId: 3, wantListId: 2 }],
+    });
+  });
+});
+
 describe("planPostWrite", () => {
   const lists = [state(1, "have"), state(2, "want"), state(3, "have"), state(4, "want")];
   const rows = [row(10, 1, 2), row(11, 3, 4)];
@@ -392,6 +447,7 @@ describe("planPostWrite", () => {
           { id: 11, wantListId: null },
         ],
         inserts: [{ leadListId: 2, wantListId: null }],
+        moves: [],
       },
       relinked: [1, 2, 3, 4],
     });
@@ -407,6 +463,7 @@ describe("planPostWrite", () => {
         deletes: [],
         updates: [{ id: 10, wantListId: null }],
         inserts: [{ leadListId: 2, wantListId: null }],
+        moves: [],
       },
       relinked: [1, 2],
     });
@@ -418,6 +475,7 @@ describe("planPostWrite", () => {
         deletes: [],
         updates: [{ id: 10, wantListId: null }],
         inserts: [{ leadListId: 5, wantListId: 2 }],
+        moves: [],
       },
       relinked: [1, 2, 5],
     });
@@ -429,8 +487,39 @@ describe("planPostWrite", () => {
       rows: [row(10, 1), row(11, 2)],
     };
     expect(write({ pair: [1, 2], written: [state(1, "have")] }, before)).toEqual({
-      ops: { deletes: [10], updates: [{ id: 11, leadListId: 1, wantListId: 2 }], inserts: [] },
+      ops: {
+        deletes: [10],
+        updates: [{ id: 11, leadListId: 1, wantListId: 2 }],
+        inserts: [],
+        moves: [{ from: 10, to: 11 }],
+      },
       relinked: [1, 2],
+    });
+  });
+
+  test("a deleted lead whose want list is on Trade: the re-led row keeps its hide", () => {
+    expect(write({ removed: [1] }).ops.moves).toEqual([]);
+  });
+
+  test("a deleted lead whose want list is off Trade: the row ends, and its hide with it", () => {
+    const before = { lists: [state(1, "have"), state(2, "want", false)], rows: [row(10, 1, 2)] };
+    expect(write({ removed: [1] }, before).ops).toEqual({ ...NONE, deletes: [10] });
+  });
+
+  test("takeover: the have list's row is handed to its old want list, the hide follows the have list", () => {
+    // have 1 off Trade with its want list 2 (row 10) pairs with live Buy post 3 (row 11)
+    const before = {
+      lists: [state(1, "have", false), state(2, "want"), state(3, "want")],
+      rows: [row(10, 1, 2), row(11, 3)],
+    };
+    expect(write({ pair: [1, 3] }, before).ops).toEqual({
+      deletes: [],
+      updates: [
+        { id: 11, leadListId: 1, wantListId: 3 },
+        { id: 10, leadListId: 2, wantListId: null },
+      ],
+      inserts: [],
+      moves: [{ from: 10, to: 11 }],
     });
   });
 

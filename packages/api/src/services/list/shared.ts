@@ -62,7 +62,8 @@ export type LockedList = Omit<PlanList, "linkedListId">;
  * put one list in two posts. Every writer of a pairing, of `discoverable` or of a `trade_post`
  * row takes it first, through `lockPosts`: list create and copy, `list.delete`, `trade.savePost`
  * and `takeDownPost`. `anonymizeUser`, `bumpPerson` and `list.edit`'s Buying only save take it
- * alone.
+ * alone. A writer then takes `trade_post` rows, then `hidden_trade_post` rows (`writePosts`'
+ * moves), in that order.
  */
 export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList[]> {
   return tx
@@ -180,13 +181,36 @@ async function writeStates(tx: Tx, states: { id: PostId; state: PostState }[]) {
 }
 
 /**
+ * Moves the hides of each `from` row to its `to` row: copied, so a person who already hides the
+ * target, or hides two rows that merge into it, keeps one hide at the later time, then deleted
+ * from the source, which a takeover keeps.
+ */
+async function writeMoves(tx: Tx, moves: { from: PostId; to: PostId }[]) {
+  if (moves.length === 0) return;
+  const from = sql.param(moves.map((move) => move.from));
+  await tx.execute(sql`
+    INSERT INTO hidden_trade_post (user_id, post_id, list_id, created_at)
+    SELECT hp.user_id, m.to_id, (array_agg(hp.list_id ORDER BY hp.created_at DESC))[1],
+      max(hp.created_at)
+    FROM hidden_trade_post hp
+    JOIN unnest(${from}::int[], ${sql.param(moves.map((move) => move.to))}::int[])
+      AS m(from_id, to_id) ON hp.post_id = m.from_id
+    GROUP BY hp.user_id, m.to_id
+    ON CONFLICT (user_id, post_id) DO UPDATE
+      SET created_at = greatest(hidden_trade_post.created_at, excluded.created_at)
+  `);
+  await tx.execute(sql`DELETE FROM hidden_trade_post WHERE post_id = ANY(${from}::int[])`);
+}
+
+/**
  * Plans the write over the rows `lockPosts` read (`planPostWrite`) and writes the row
  * operations, keeping each row's Trade state, bumps and Open to equal to its lists'
  * (`postStateOf`). Call it after the list writes, and before a list delete (`removed`), so a row
  * is re-led while its lists are still there. Returns the lists whose partner changed, for
  * `touchList`. A new writer of a pairing, of `discoverable`, `bumped_at`, Open to or
  * `takes_swaps` on Trade, or one that deletes a have, sale or want list goes through it: the rows
- * are the only place a pairing is stored.
+ * are the only place a pairing is stored. It moves hides as the planner says (`moves`), in the
+ * same transaction.
  */
 export async function writePosts(
   tx: Tx,
@@ -199,6 +223,8 @@ export async function writePosts(
     written: write.written?.flatMap(tradeStates),
   });
 
+  // before the deletes, or the post_id cascade takes the hides first
+  await writeMoves(tx, ops.moves);
   if (ops.deletes.length > 0) await tx.delete(tradePost).where(inArray(tradePost.id, ops.deletes));
   for (const { id, leadListId, wantListId } of ops.updates) {
     await tx

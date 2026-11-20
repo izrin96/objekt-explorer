@@ -128,6 +128,63 @@ const done = (touched: Iterable<number>): Outcome => ({
 const refused = (refusal: string): Outcome => ({ refusal, touched: [] });
 
 let releads = 0;
+const moveKinds = { D1: 0, D2: 0, D3: 0, takeover: 0 };
+
+type Slots = { id: number; leadListId: number; wantListId: number | null };
+
+/**
+ * One simulated hide on every row before the write, moved by the plan, its sources deleted, then
+ * cascaded with the deleted rows: each hide must end on the surviving row that holds its row's old
+ * lead, stay on a row that keeps its lead or was re-led because its lead is gone, and end only
+ * when its lead is in no surviving row.
+ */
+function checkMoves(before: Slots[], after: Slots[], ops: PostWriteOps, at: string) {
+  const old = new Map(before.map((row) => [row.id, row]));
+  const now = new Map(after.map((row) => [row.id, row]));
+  const deleted = new Set<number>(ops.deletes);
+  const froms = ops.moves.map((move) => move.from as number);
+  const tos = new Set(ops.moves.map((move) => move.to as number));
+  expect(new Set(froms).size, `${at}: a from twice`).toBe(froms.length);
+  for (const move of ops.moves) {
+    const from = old.get(move.from)!;
+    const to = now.get(move.to);
+    expect(to && old.has(move.to), `${at}: move to ${move.to} that does not survive`).toBe(true);
+    expect(tos.has(move.from), `${at}: ${move.from} is both a from and a to`).toBe(false);
+    expect(
+      [to!.leadListId, to!.wantListId],
+      `${at}: ${move.to} lacks ${move.from}'s lead`,
+    ).toContain(from.leadListId);
+    const target = old.get(move.to)!;
+    if (!deleted.has(move.from)) moveKinds.takeover++;
+    else if (target.leadListId !== to!.leadListId) moveKinds.D2++;
+    else if (target.leadListId === from.leadListId) moveKinds.D1++;
+    else moveKinds.D3++;
+  }
+
+  // each row's hide, by the row it started on: the move statement copies, then deletes the source
+  const hides = new Map(before.map((row) => [row.id, new Set([row.id])]));
+  for (const move of ops.moves) {
+    const moved = hides.get(move.from) ?? new Set<number>();
+    hides.set(move.to, new Set([...(hides.get(move.to) ?? []), ...moved]));
+  }
+  for (const move of ops.moves) hides.delete(move.from);
+  for (const id of hides.keys()) if (!now.has(id)) hides.delete(id);
+  const on = (id: number) => [...hides].find(([, origins]) => origins.has(id))?.[0];
+
+  const survivors = after.filter((row) => old.has(row.id));
+  for (const row of before) {
+    const holder = survivors.find(
+      (entry) => entry.leadListId === row.leadListId || entry.wantListId === row.leadListId,
+    );
+    if (holder) {
+      expect(on(row.id), `${at}: row ${row.id}'s hide is not with its lead`).toBe(holder.id);
+    } else if (now.has(row.id)) {
+      expect(on(row.id), `${at}: re-led row ${row.id} lost its hide`).toBe(row.id);
+    } else {
+      expect(on(row.id), `${at}: row ${row.id} ended but its hide lives on`).toBeUndefined();
+    }
+  }
+}
 
 function applyOps(world: World, userId: string, ops: PostRowOps | PostWriteOps) {
   const gone = new Set<number>(ops.deletes);
@@ -373,7 +430,11 @@ function writePosts(
   write: Parameters<typeof planPostWrite>[1],
 ) {
   const plan = planPostWrite(current, write);
+  const slots = (rows: ModelRow[]) =>
+    rows.map(({ id, leadListId, wantListId }) => ({ id: id as number, leadListId, wantListId }));
+  const before = slots(rowsOf(world, userId));
   applyOps(world, userId, plan.ops);
+  checkMoves(before, slots(rowsOf(world, userId)), plan.ops, `${userId} ${JSON.stringify(write)}`);
   // what a read gives: the partner is the rows', and no write keeps a link
   for (const list of world.lists.filter((entry) => entry.userId === userId)) {
     list.linkedListId = partnerByRows(world.rows, list.id);
@@ -700,8 +761,15 @@ test(
     for (const [transition, n] of Object.entries(counts)) {
       expect(n, `${transition} ran ${n} times`).toBeGreaterThanOrEqual(100);
     }
-    if (process.env.COUNTS) console.log({ releads });
+    if (process.env.COUNTS) console.log({ releads, moveKinds });
     expect(releads, "rows that changed their lead and kept their id").toBeGreaterThanOrEqual(100);
+    // the random writes make 96 D2, 41 D3 and 2 takeover moves over these runs; 100 of each
+    // would take tens of thousands of runs, so each floor sits below its count, at least once.
+    // No random write makes a second row of one lead, so D1 is the unit test's alone
+    expect(moveKinds.D2, "D2 moves").toBeGreaterThanOrEqual(50);
+    expect(moveKinds.D3, "D3 moves").toBeGreaterThanOrEqual(20);
+    expect(moveKinds.takeover, "takeover moves").toBeGreaterThanOrEqual(1);
+    expect(moveKinds.D1, "D1 moves").toBe(0);
   },
   CI_TIMEOUT,
 );

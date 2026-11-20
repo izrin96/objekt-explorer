@@ -12,6 +12,11 @@
  * `trade_post_state`; until `trade_post_state_reconcile` runs, they also count the rows of people
  * who have not written since the first.
  *
+ * Check 7 holds whatever the pairing: a hide names a row (`hidden_trade_post.post_id`), and a
+ * person never hides their own post, so no hide sits on its hider's own row. It needs migration
+ * `hidden_trade_post_by_row`. The third note counts the hides a build before that migration,
+ * which reads `list_id`, reads differently: what a rollback to it would lose.
+ *
  * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
  * row to another list, and an offer made by the old build after the migration has no post id, so
  * neither is wrong data.
@@ -90,6 +95,12 @@ const CHECKS: [label: string, query: SQL][] = [
           OR (o.list_type = 'sale' AND o.discoverable AND tp.takes_swaps <> o.takes_swaps)
           OR (o.list_type <> 'sale' AND tp.takes_swaps)`,
   ],
+  [
+    "a hide on its hider's own row (row ids)",
+    sql`SELECT hp.post_id AS id FROM hidden_trade_post hp
+        JOIN trade_post tp ON tp.id = hp.post_id
+        WHERE tp.user_id = hp.user_id`,
+  ],
 ];
 
 /** Counted and printed like the checks, but information: they never count as drift. */
@@ -104,6 +115,13 @@ const NOTES: [label: string, query: SQL][] = [
     sql`SELECT o.id FROM offer o
         WHERE o.post_id IS NULL AND o.post_list_id IS NOT NULL AND EXISTS (
           SELECT 1 FROM trade_post tp WHERE tp.lead_list_id = o.post_list_id)`,
+  ],
+  [
+    "a hide that a build before hidden_trade_post_by_row reads differently (row ids)",
+    sql`SELECT hp.post_id AS id FROM hidden_trade_post hp
+        JOIN trade_post tp ON tp.id = hp.post_id
+        WHERE hp.list_id IS NULL OR (hp.list_id IS DISTINCT FROM tp.lead_list_id
+          AND hp.list_id IS DISTINCT FROM tp.want_list_id)`,
   ],
 ];
 
