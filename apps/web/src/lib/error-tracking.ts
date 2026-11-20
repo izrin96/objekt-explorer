@@ -4,6 +4,7 @@ import {
   scrubBreadcrumb,
   scrubEvent,
 } from "@repo/lib/error-scrub";
+import { CancelledError } from "@tanstack/react-query";
 import type { ErrorInfo } from "react";
 
 import { isNamedError, isNetworkFailure } from "@/lib/network-failure";
@@ -58,6 +59,9 @@ function shouldReport(error: unknown) {
   if (isNetworkFailure(error) || isChunkFailure(error)) return false;
   // a request we cancelled, as React Query does when the last component reading a query unmounts
   if (error instanceof Error && error.name === "AbortError") return false;
+  // React Query cancelling a fetch it dropped, as forgetSession does to the last account's
+  // in-flight reads on sign-in; a loader awaiting one rejects with it (WEB-31)
+  if (error instanceof CancelledError) return false;
   const { status, code } = (error ?? {}) as { status?: unknown; code?: unknown };
   return !(typeof status === "number" && typeof code === "string");
 }
