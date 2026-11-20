@@ -217,7 +217,8 @@
   - Record the decision on `transferable` in design.md, Open questions.
   - *Done 2026-11-17: `COSMO_OBJEKT_WRITES=anchors,untransferable,transferable` on worker and both web replicas, verified in the containers. The owner trusts Cosmo's transferable over the chain read, including where it contradicts the indexer's deliberate false rule; the guards and the breaker still apply. No re-arm needed: no `report_*` rows existed.*
 - [ ] 9.5 **(owner)** A week after 9.3, run `script/anchor-gaps.ts` read-only. For each new whole-block gap after anchorless batches, decide whether to run `script/refine-serial-batches.ts` (dry first, then `APPLY=1`), with the worker's `COSMO_OBJEKT_WRITES` value in its env.
-- [ ] 9.6 **(owner)** Record in design.md, Open questions, from the first syncs and the plan: the `partial` count (is `objekts[]` complete?), any `inventory.status` other than `minted`, and every `non_transferable_reason` value seen. For a frequent new reason, open a follow-up for its label.
+- [x] 9.6 **(owner)** Record in design.md, Open questions, from the first syncs and the plan: the `partial` count (is `objekts[]` complete?), any `inventory.status` other than `minted`, and every `non_transferable_reason` value seen. For a frequent new reason, open a follow-up for its label.
+  - *Done 2026-11-20, read-only on production: recorded in design.md, Open questions. Worker logs before the 2026-11-20 01:16 redeploy were gone, so the counts come from the first sync after it (4,553 objekts) and the next hourly heartbeat. No new reason, so no label follow-up.*
 
 ## 10. Docs
 

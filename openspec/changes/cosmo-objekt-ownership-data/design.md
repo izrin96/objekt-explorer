@@ -376,7 +376,7 @@ Objekt Tracker has its own, unrelated lock feature (`locked_objekts`). This feat
 
 ## Open Questions
 
-- **`count` against `objekts.length`.** Does `objekts[]` list every copy the account holds, or a capped preview? The 182-objekt probe suggests every copy. The `partial` count answers it; a cap would leave some tokens unread, but changes nothing here.
-- **Other `inventory.status` values.** Are there any (pending, burned)? They are skipped and counted.
-- **Other `nonTransferableReason` values.** The plan script lists them. A frequent one earns its own label.
+- **`count` against `objekts.length`.** Does `objekts[]` list every copy the account holds, or a capped preview? The 182-objekt probe suggests every copy. The `partial` count answers it; a cap would leave some tokens unread, but changes nothing here. **Answered 2026-11-20:** a sync recording 4,553 objekts and the following hour logged no `objekts partial`, so `objekts[]` lists every copy.
+- **Other `inventory.status` values.** Are there any (pending, burned)? They are skipped and counted. **Answered 2026-11-20:** none in that window (no `objekts not_minted`).
+- **Other `nonTransferableReason` values.** The plan script lists them. A frequent one earns its own label. **Answered 2026-11-20:** across 28,338 recorded tokens, none 19,523, `challenge-reward` 8,665, `welcome-objekt` 150; no other value, so no new label.
 - **The `transferable` direction.** Decided 2026-11-17: enabled. The owner trusts Cosmo's `transferable` over the chain read, the indexer's deliberate false rule included, since Cosmo decides what its app lets the holder send; every guard and the breaker still apply (task 9.4).

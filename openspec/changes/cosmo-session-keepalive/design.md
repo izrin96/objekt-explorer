@@ -122,7 +122,7 @@ That is still under the 45 minutes known to be survived, by about 7.  Deploy dow
 
 **Stops.** `createKeepAliveGuard` (pure, `lib/media-sync.ts`) judges each answer. While no touch in the run has had a 2xx:
 
-- **5 dead answers in a row** stop the phase for the run, without marking further sessions, with one `warn` carrying the count. A Cosmo-wide change that answers every web session `dead` would otherwise erase every cookie within the hour; this caps one run at 5. The later 2xx rule means a run where sessions are genuinely alive is never stopped.
+- **5 dead answers** (in all, until a 2xx; a busy or refused answer between them does not reset the count) stop the phase for the run, without marking further sessions, with one `warn` carrying the count. A Cosmo-wide change that answers every web session `dead` would otherwise erase every cookie within the hour; this caps one run at 5. The later 2xx rule means a run where sessions are genuinely alive is never stopped.
 - **3 refused or unexpected answers in a row**, outside a backoff, stop the phase with one `warn` (count only): the touches are not working, and more requests would only add load.
 - A 2xx anywhere in the run lifts both. A dead or ok answer breaks the failure streak.
 
@@ -222,7 +222,7 @@ The consent requirement in the `web-cosmo-session` deltas of the two earlier cha
 - **`info`.** Touches alone do not make a run log, since a run that only kept sessions alive changed nothing a person needs to see. The summary gains the lifetime clause (Decision 8) only when a touch marked a session dead.
 - **`warn`, one line per run with a count:**
   - sessions the slice left past their age (Decision 3), not during a backoff (the heartbeat still counts them);
-  - a stop of the touches (Decision 4): 5 dead answers in a row, or 3 refused or unexpected in a row, each with its count only;
+  - a stop of the touches (Decision 4): 5 dead answers with no 2xx, or 3 refused or unexpected in a row, each with its count only;
   - more than 5 sessions marked dead by touches in one run (Risks);
   - the unknown switch value, once per start.
 - **Per-session lines** go to `debug` with the session id and error kind only, as the sync's do.
@@ -250,6 +250,15 @@ The consent requirement in the `web-cosmo-session` deltas of the two earlier cha
 - **A mid-run outage parks sessions.** Touches now answer first in most runs, so a sync page that then fails busy or unavailable is that session's own failure: it is parked for 6 hours and gets no backoff. → That is today's rule for any failure after an answer. A Cosmo outage beginning at the run's first request still backs off.
 - **Not done: a cap on sessions per person.** One person can connect up to 3 per site account and may hold several site accounts, each costing touches. A cap across accounts needs an expensive cross-account lookup, and the abuse limits itself: it spends the sessions' own slice and the owner's connections. The capped `warn` flags it.
 - **A duplicate request.** A session past its age and due for its sync is touched and then synced in one run. → At most one extra request per session per 72 hours.
+
+### Review findings (task 6.1, 2026-11-20)
+
+- **The 5-dead stop could be bypassed (medium, fixed 2026-11-20: the count no longer resets on a non-dead answer, so a run with no 2xx marks at most 5).** `createKeepAliveGuard` (`apps/worker/src/lib/media-sync.ts`) resets the dead streak on any non-dead answer, including `refused`, `unexpected` and a `busy` after an answer. A run of 4 dead, 1 busy, 4 dead, … with no 2xx marks up to 16 sessions dead, not the "at most 5" above. Possible fix: reset the streak only on a 2xx, or cap dead marks per run with no 2xx at 5 in total. The `>5 signed out` warn still fires.
+- **The sync marks dead without the cap (low).** After a dead-streak stop the sync still runs and marks due sessions dead with no limit; it reaches only sessions due for a sync.
+- **`keepalive capped` undercounts (low).** It is set only when the loop leaves at the slice limit, not at the budget, a streak or a backoff stop.
+- **Decision 5's wording (note).** The code picks sessions by tier (still savable first), not "the 5 longest-unused"; the tiered order is the better one.
+- **The 45-minute kept rule (note).** A session ended for idleness at 38 to 44 minutes idle counts as kept; read early `ended_kept` values with that in mind.
+- **Security (low).** A touch can land after Disconnect if Cosmo's logout fails, keeping the session up to an hour; at most one request, nothing written. `fetchSessionUser`, `logoutSession` and `fetchObjektSummaries` follow redirects with the cookie, unlike the touch; `redirect: "manual"` on them would close that.
 
 ## Migration Plan
 

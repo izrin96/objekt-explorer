@@ -89,7 +89,7 @@
 
 ## 6. Review and rollout
 
-- [ ] 6.1 Before the deploy, run `/code-review` and the `security-auditor` agent on the branch, against:
+- [x] 6.1 Before the deploy, run `/code-review` and the `security-auditor` agent on the branch, against:
   - Decision 1 (one job, one budget, no second lock);
   - Decision 2 (last use only after an answer; the age never above 25 minutes);
   - Decision 3 (the slice inside the run budget; syncs keep 30);
@@ -99,21 +99,25 @@
   - wording (`grep -rniwE 'lock|unlock|locked'` over the diff finds only the job lock).
 
   Fix what they find, or record why not in design.md, Risks. Lint, typecheck and build pass for every package the fixes touch.
-- [ ] 6.2 **(owner)** Deploy the worker and web with `COSMO_SESSION_KEEPALIVE` unset (Migration Plan 1). Then:
+  - *Run 2026-11-20, after the deploy (the code was already live), on the code as split by a4652e1a: every decision holds. Security audit: no high or medium finding. Code review: one medium finding, fixed the same day (the dead count no longer resets on a non-dead answer; the guard's test now covers a busy and a refused answer between dead ones). The low findings and notes are recorded in design.md, Risks, Review findings. Worker lint, typecheck, test and build pass.*
+- [x] 6.2 **(owner)** Deploy the worker and web with `COSMO_SESSION_KEEPALIVE` unset (Migration Plan 1). Then:
   - set `COSMO_SESSION_KEEPALIVE=on` in the root `.env` and restart the worker;
   - reconnect the owner's Cosmo account.
 
   Check:
   - the worker logs no unknown-value `warn`;
   - within 10 minutes, the reconnected session's first sync succeeds: `last_synced_at` is set, and `last_used_at` lies between the reconnect and `last_synced_at`.
+  - *Done by 2026-11-20: the worker runs with `COSMO_SESSION_KEEPALIVE=on`, and the first keep-alive deaths logged from 2026-11-19 06:25. The owner's session was not reconnected after the deploy; it predates it (connected 2026-11-17 20:29) and keep-alive has kept it alive since.*
 - [ ] 6.3 **(owner)** After 24 hours, check read-only (`PGOPTIONS='-c default_transaction_read_only=on'`) on the owner's own `cosmo_session` row (filter by the owner's user id): `dead_at is null`, `last_error is null`, and `now() - last_used_at` under 36 minutes (Decision 2's worst case).
   - In the worker logs (`collection-media` heartbeat lines), the `keepalive touched` counts for the 24 hours sum to about 58 per live session, `keepalive idle_max_min` stays at or below 38, and no `keepalive capped` appears.
   - After the first scheduled sync (72 to 78 hours after the reconnect), `last_synced_at` has moved past the connect and the row is still live.
   - Record the result in design.md, Open Questions (the `users/me` question).
+  - *Interim 2026-11-20 02:20 UTC, read-only: the owner's row is live, `last_error` null, last use 20 min ago, 53.7 h after connect. Heartbeat for 64 min: `keepalive touched 28` across 12 live sessions (about 2.2 an hour each, about 52 a day), `idle_max_min 30`, no `keepalive capped`. Still to check: the first scheduled sync, due 72 to 78 hours after connect (2026-11-20 20:29 to 2026-11-21 02:29 UTC).*
 - [ ] 6.4 **(owner)** A week after 6.2, read the `info` lines with `keep-alive ended:` and run Decision 8's query read-only. Record in design.md, Open Questions:
   - the `kept` lifetimes, and whether they cluster at one value (the absolute lifetime);
   - the `idle` count;
   - whether keep-alive stays on.
+  - *Interim 2026-11-20, Decision 8's query from 2026-11-18: seven `session_dead` rows, all ended while kept (25 to 30 min idle), lived 0.5, 2.7, 18.9, 20.1, 23.5, 36.8 and 40.6 h. Scattered so far, so no single absolute lifetime yet; no idle deaths. Due 2026-11-25.*
 
 ## 7. Docs
 
