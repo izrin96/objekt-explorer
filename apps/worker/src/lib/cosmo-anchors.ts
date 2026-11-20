@@ -20,7 +20,7 @@ export type AnchorRefusal = { tokenId: number; objektNo: number; reason: string 
  * no regard to gaps or foreign tokens inside the range, so they agree exactly when every one has
  * the same `objektNo - tokenId`.
  */
-export function consistentInBatch(confirmed: { tokenId: number; objektNo: number }[]) {
+function consistentInBatch(confirmed: { tokenId: number; objektNo: number }[]) {
   return new Set(confirmed.map((c) => c.objektNo - c.tokenId)).size <= 1;
 }
 

@@ -34,7 +34,7 @@ const DUE_WINDOW_MS = 30 * DAY_MS;
 const RECHECK_MS = 6 * 60 * 60 * 1000;
 
 /** Whether this process's `COSMO_OBJEKT_WRITES` lets confirmed serials anchor. */
-export function confirmedAnchorsOn() {
+function confirmedAnchorsOn() {
   return objektWriteModes(process.env.COSMO_OBJEKT_WRITES).anchors;
 }
 

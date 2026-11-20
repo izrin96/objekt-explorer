@@ -6,7 +6,7 @@ import { V1_CUTOFF_MS } from "@repo/lib/serial";
 
 import type { AnchorConflict, AnchorRefusal, ConfirmedSerial } from "./cosmo-anchors";
 
-export type OnlineAnchor = { tokenId: string; serial: number };
+type OnlineAnchor = { tokenId: string; serial: number };
 
 /**
  * `rows` are every objekt of the collection, `headSkip` as `computeOnlineSerials` takes it. A

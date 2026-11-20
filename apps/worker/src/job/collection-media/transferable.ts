@@ -59,7 +59,7 @@ const isPlanned = (j: Judged) =>
  * it trips, nothing is written and the planned reads stay due. A chunk whose write waits out the
  * lock timeout is left due for the next run.
  */
-export async function applyCosmoTransferable(mode: TransferableMode) {
+async function applyCosmoTransferable(mode: TransferableMode) {
   const due = await db
     .select({
       tokenId: cosmoObjekt.tokenId,
