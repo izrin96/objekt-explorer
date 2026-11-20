@@ -2,7 +2,7 @@ import * as z from "zod";
 
 import { collectionFiltersSchema } from "./common/filters";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
-import { queryBoolean, queryCursor, queryJson } from "./common/query";
+import { numberCursorDescription, queryBoolean, queryCursor, queryJson } from "./common/query";
 import { listTypeSchema } from "./list";
 import { ruleDefSchema } from "./list-rule";
 import { publicUserSchema } from "./profile";
@@ -83,11 +83,21 @@ export const BROWSE_MATCH_MODES = ["off", "any", "mutual"] as const;
 export type BrowseMatchMode = (typeof BROWSE_MATCH_MODES)[number];
 
 const browseFiltersSchema = collectionFiltersSchema.extend({
-  type: z.enum(POST_TYPES).default("all"),
-  slug: z.string().optional(),
-  match: z.enum(BROWSE_MATCH_MODES).optional(),
-  /** Compare with: a list slug, read while matching is on */
-  list: z.string().min(1).optional(),
+  type: z.enum(POST_TYPES).default("all").meta({
+    description: "Which posts: `wtt` want to trade, `wtb` want to buy, `wts` want to sell, or all",
+  }),
+  slug: z
+    .string()
+    .optional()
+    .meta({ description: "Only posts holding this collection, by its slug" }),
+  match: z.enum(BROWSE_MATCH_MODES).optional().meta({
+    description:
+      "Signed in only: `any` keeps people whose posts match your lists, `mutual` those you can swap with both ways. None is `off`",
+  }),
+  list: z.string().min(1).optional().meta({
+    description:
+      "Signed in only: the slug of one of your lists to match against, while matching is on. None is all your lists",
+  }),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
 
@@ -114,7 +124,11 @@ export type PeopleCursor = z.infer<typeof peopleCursorSchema>;
 
 /** `person` is a user id whose row leads the first page. */
 export const peopleInputSchema = browseFiltersSchema.extend({
-  person: z.string().min(1).optional(),
+  person: z
+    .string()
+    .min(1)
+    .optional()
+    .meta({ description: "A user id whose row leads the first page" }),
   /** `/api/v1` sends the previous page's `nextCursor` as JSON */
   cursor: queryJson(peopleCursorSchema).optional(),
 });
@@ -125,10 +139,17 @@ export const PEOPLE_PAGE_SIZE = 12;
 
 /** A page of one post side's objekts, for the strip's "+N" sheet; `list` and `mutual` narrow the rings as For you's Compare with does. */
 export const sideItemsInputSchema = z.object({
-  listId: z.coerce.number<number>().int().positive(),
-  list: z.string().min(1).optional(),
-  mutual: queryBoolean.optional(),
-  cursor: queryCursor,
+  listId: z.coerce.number<number>().int().positive().meta({
+    description: "The side's list id: a post's `id` or a side's `list.id` from `/trade/people`",
+  }),
+  list: z.string().min(1).optional().meta({
+    description:
+      "Signed in only: the slug of one of your lists to match against. None is all your lists",
+  }),
+  mutual: queryBoolean
+    .optional()
+    .meta({ description: "With `list`: match that list both ways, as `match=mutual` does" }),
+  cursor: queryCursor.meta({ description: numberCursorDescription }),
 });
 export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
 
@@ -309,7 +330,9 @@ export const takeDownPostInputSchema = z.object({ slug: z.string().min(1) });
 /** One of the viewer's own lists, for the entries Trade leaves out of its post. */
 export const unshownEntriesInputSchema = z.object({ slug: z.string().min(1) });
 
-export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
+export const collectionPostCountsInputSchema = z.object({
+  slug: z.string().meta({ description: "The collection's slug" }),
+});
 export const collectionPostCountsOutputSchema = z.object({
   have: z.number().int(),
   want: z.number().int(),

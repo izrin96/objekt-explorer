@@ -1,6 +1,6 @@
 import { pub } from "../orpc";
 import { activityFeedInputSchema, activityFeedOutputSchema } from "../schemas/activity";
-import { documented, errorResponses } from "../schemas/common/documented";
+import { documented, errorResponses, paramDescriptions } from "../schemas/common/documented";
 import { fetchActivityPage } from "../services/activity/feed";
 
 export const activityRouter = {
@@ -10,7 +10,7 @@ export const activityRouter = {
       path: "/activity",
       tags: ["Activity"],
       summary: "Recent transfers",
-      spec: errorResponses(400),
+      spec: (operation) => paramDescriptions(errorResponses(400)(operation)),
     })
     .input(activityFeedInputSchema)
     .output(documented(activityFeedOutputSchema))

@@ -1,9 +1,13 @@
 import { isAddress } from "@repo/lib";
 import * as z from "zod";
 
+export const addressDescription = "A Cosmo wallet address, `0x` and 40 hex digits";
+
 export const addressSchema = z.string().refine((val) => isAddress(val));
 
-export const addressInputSchema = z.object({ address: addressSchema });
+export const addressInputSchema = z.object({
+  address: addressSchema.meta({ description: addressDescription }),
+});
 
 /** `{ address }`, and also the bare address that `/rpc` clients built before it send. */
 export const addressOrBareInputSchema = z.preprocess(

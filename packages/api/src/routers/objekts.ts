@@ -1,6 +1,6 @@
 import { refuse } from "../lib/refuse";
 import { pub } from "../orpc";
-import { documented, errorResponses } from "../schemas/common/documented";
+import { documented, errorResponses, paramDescriptions } from "../schemas/common/documented";
 import {
   heldByInputSchema,
   ownedByInputSchema,
@@ -22,7 +22,7 @@ export const objektsRouter = {
       path: "/objekts/owned-by/{address}",
       tags: ["Objekts"],
       summary: "Objekts an address owns, newest received first",
-      spec: errorResponses(400),
+      spec: (operation) => paramDescriptions(errorResponses(400)(operation)),
     })
     .input(ownedByInputSchema)
     .output(documented(ownedByOutputSchema))
@@ -45,7 +45,7 @@ export const objektsRouter = {
       summary: "An address's copies without their collection fields, newest received first",
       description:
         "The pages of owned-by with each copy's own fields only; join them to /collections by slug.",
-      spec: errorResponses(400),
+      spec: (operation) => paramDescriptions(errorResponses(400)(operation)),
     })
     .input(ownedByInputSchema)
     .output(documented(ownedCopiesOutputSchema))

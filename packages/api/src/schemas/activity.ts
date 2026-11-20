@@ -1,7 +1,7 @@
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
-import { timestampCursorSchema } from "./common/cursor";
+import { pageCursorDescription, timestampCursorSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { ownedObjektSchema } from "./common/objekt";
 import { spinFields, transferNicknamesSchema, transferRowSchema } from "./common/transfer";
@@ -34,9 +34,13 @@ export const activityTypeSchema = z.enum(["all", "mint", "transfer", "spin"]);
 export type ActivityType = z.infer<typeof activityTypeSchema>;
 
 export const activityFeedInputSchema = z.object({
-  type: activityTypeSchema.default("all"),
+  type: activityTypeSchema
+    .default("all")
+    .meta({ description: "Which transfers: mints, transfers, spins or all" }),
   ...collectionFiltersSchema.shape,
-  cursor: timestampCursorSchema.optional(),
+  cursor: timestampCursorSchema
+    .optional()
+    .meta({ description: pageCursorDescription(["timestamp", "id"]) }),
 });
 export type ActivityFeedInput = z.infer<typeof activityFeedInputSchema>;
 /** what the client sends; the cursor is added per page */

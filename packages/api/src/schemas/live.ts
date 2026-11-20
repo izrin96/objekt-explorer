@@ -3,7 +3,11 @@ import * as z from "zod";
 
 import { artistSchema } from "./common/artist";
 
-export const liveSessionsInputSchema = z.object({ artistId: artistSchema });
+export const liveSessionsInputSchema = z.object({
+  artistId: artistSchema.meta({
+    description: "An artist id, such as `artms` or `tripleS`, any case",
+  }),
+});
 
 export const liveSessionsOutputSchema = z.array(
   z.object({

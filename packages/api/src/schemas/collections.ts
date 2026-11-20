@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { artistsArraySchema } from "./common/artist";
+import { artistDescription, artistsArraySchema } from "./common/artist";
 import { checkpointSchema } from "./common/checkpoint";
 import { collectionSlugInputSchema } from "./common/collection";
 import { indexedObjektSchema } from "./common/objekt";
@@ -62,9 +62,20 @@ export const serialsOutputSchema = z.object({
 export type SerialsOutput = z.infer<typeof serialsOutputSchema>;
 
 export const holdersInputSchema = z.object({
-  collectionSlug: z.string(),
-  offset: z.coerce.number<number>().int().min(0).default(0),
-  limit: z.coerce.number<number>().int().min(1).max(50).default(10),
+  ...collectionSlugInputSchema.shape,
+  offset: z.coerce
+    .number<number>()
+    .int()
+    .min(0)
+    .default(0)
+    .meta({ description: "How many holders to skip, in rank order" }),
+  limit: z.coerce
+    .number<number>()
+    .int()
+    .min(1)
+    .max(50)
+    .default(10)
+    .meta({ description: "How many holders to return" }),
 });
 
 const holderBucketKeySchema = z.enum(["1", "2-4", "5-9", "10+"]);
@@ -100,8 +111,10 @@ export const holdersOutputSchema = z.object({
 export type HoldersOutput = z.infer<typeof holdersOutputSchema>;
 
 export const collectionListInputSchema = z.object({
-  artist: artistsArraySchema.default([]),
-  at: checkpointSchema.optional(),
+  artist: artistsArraySchema.default([]).meta({ description: artistDescription }),
+  at: checkpointSchema.optional().meta({
+    description: "Only collections created on or before this time, as ISO 8601",
+  }),
   // the web sends false: the two Cosmo URLs are 43% of the gzipped list and only the drawer
   // shows them, read from the collection's metadata instead
   originals: queryBoolean
@@ -116,5 +129,5 @@ export const collectionListInputSchema = z.object({
 export type CollectionListInput = z.infer<typeof collectionListInputSchema>;
 
 export const serialTransfersInputSchema = collectionSlugInputSchema.extend({
-  serial: z.coerce.number().pipe(z.int32()),
+  serial: z.coerce.number().pipe(z.int32()).meta({ description: "The copy's serial number" }),
 });

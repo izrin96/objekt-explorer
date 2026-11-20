@@ -40,8 +40,8 @@ document.
 
 #### Scenario: Document lists every operation
 - **WHEN** a client fetches `/api/v1/spec.json`
-- **THEN** it lists the thirty-three public operations with their path and query
-  parameters, each with a documented 200 response schema
+- **THEN** it lists every operation named in Public operations, and no other, with their
+  path and query parameters, each with a documented 200 response schema
 
 ### Requirement: Documented response bodies
 Every public operation in the document SHALL describe its success response body with a
@@ -64,6 +64,19 @@ request.
 - **WHEN** a client reads the `GET /collections` operation in the document
 - **THEN** it documents a 200 response carrying the collections and a 304 response with no
   body
+
+### Requirement: Documented parameters
+Every path and query parameter of a public operation SHALL carry a description in the
+document saying what it selects and, where it has one, its format or what its absence means.
+
+#### Scenario: Transfers parameters are described
+- **WHEN** a client reads the `GET /transfers/{address}` operation in the document
+- **THEN** `address`, `type`, `at`, `order`, `cursor` and each collection filter carry a
+  description
+
+#### Scenario: A paging cursor names its keys
+- **WHEN** a client reads the `cursor` parameter of `GET /activity`
+- **THEN** its description names the `cursor[timestamp]` and `cursor[id]` keys it is sent as
 
 ### Requirement: List parameters in the query string
 A list-valued query parameter SHALL accept one value (`?artist=artms`) and a repeated key

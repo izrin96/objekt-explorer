@@ -41,7 +41,14 @@ export type CurrentUserOutput = z.infer<typeof currentUserOutputSchema>;
 /** longer than any nickname or address; the server refuses past it */
 export const MAX_USER_SEARCH_LENGTH = 50;
 
-export const userSearchInputSchema = z.object({ query: z.string().default("") });
+export const userSearchInputSchema = z.object({
+  query: z
+    .string()
+    .default("")
+    .meta({
+      description: `A Cosmo nickname or the start of one, at most ${MAX_USER_SEARCH_LENGTH} characters`,
+    }),
+});
 
 /** The recipient's offer rules; each absent field keeps the stored value. */
 export const offerRulesInputSchema = z.object({

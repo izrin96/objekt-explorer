@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import { collectionSlugInputSchema } from "./common/collection";
 import { PRICE_HISTORY_RANGES } from "./price-history";
 
 const sortBySchema = z.enum(["price", "createdAt"]);
@@ -88,18 +89,34 @@ export const viewerMarketListingsOutputSchema = marketListingsOutputSchema.exten
 export type ViewerMarketListingsOutput = z.infer<typeof viewerMarketListingsOutputSchema>;
 
 export const marketListingsInputSchema = z.object({
-  collectionSlug: z.string(),
-  sortBy: sortBySchema.default("createdAt"),
-  sortDir: sortDirSchema.default("desc"),
-  offset: z.coerce.number<number>().int().min(0).default(0),
-  limit: z.coerce.number<number>().int().min(1).max(100).default(20),
+  ...collectionSlugInputSchema.shape,
+  sortBy: sortBySchema
+    .default("createdAt")
+    .meta({ description: "Sort by price in USD or by when the copy was listed" }),
+  sortDir: sortDirSchema.default("desc").meta({ description: "`asc` or `desc`" }),
+  offset: z.coerce
+    .number<number>()
+    .int()
+    .min(0)
+    .default(0)
+    .meta({ description: "How many listings to skip" }),
+  limit: z.coerce
+    .number<number>()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .meta({ description: "How many listings to return" }),
 });
 
 export type MarketListingsInput = z.output<typeof marketListingsInputSchema>;
 
 export const priceHistoryInputSchema = z.object({
-  collectionSlug: z.string().max(255),
-  range: z.enum(PRICE_HISTORY_RANGES).default("30d"),
+  collectionSlug: collectionSlugInputSchema.shape.collectionSlug.max(255),
+  range: z
+    .enum(PRICE_HISTORY_RANGES)
+    .default("30d")
+    .meta({ description: "How far back: 7, 30 or 90 days, or all days" }),
 });
 
 export const priceHistoryOutputSchema = z.object({

@@ -30,3 +30,8 @@ export const receivedAtCursorSchema = z.object({
   receivedAt: timestampTextSchema,
   id: z.string(),
 });
+
+export const pageCursorDescription = (fields: string[]) =>
+  `The previous page's \`nextCursor\`, one query key per field: ${fields
+    .map((field) => `\`cursor[${field}]=…\``)
+    .join(" and ")}. None is the first page`;

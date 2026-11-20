@@ -60,7 +60,15 @@ export const router = {
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */
 export const openApiRouter = {
   activity: activityRouter,
-  collections: collectionsRouter,
+  // `lead` is the home page's own read
+  collections: {
+    rarity: collectionsRouter.rarity,
+    holders: collectionsRouter.holders,
+    list: collectionsRouter.list,
+    metadata: collectionsRouter.metadata,
+    serials: collectionsRouter.serials,
+    serialTransfers: collectionsRouter.serialTransfers,
+  },
   objekts: objektsRouter,
   transfers: transfersRouter,
   user: { search: userRouter.search },

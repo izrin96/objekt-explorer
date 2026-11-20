@@ -91,7 +91,7 @@ export const listRulesRouter = {
       tags: ["Lists"],
       summary:
         "The collections one rule covers, a page at a time, with whether the owner holds each and the rule wants it",
-      spec: errorResponses(400, 404),
+      spec: errorResponses(400, 404, 429),
     })
     .input(ruleObjektsInputSchema)
     .output(documented(ruleObjektsOutputSchema))

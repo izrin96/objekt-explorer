@@ -49,7 +49,14 @@ const id = z.string().min(1).max(64);
 
 /** One of the two: a handle as typed in a URL, or a user id from an older `person` link. */
 export const tradePersonInputSchema = z
-  .object({ handle: id.optional(), userId: id.optional() })
+  .object({
+    handle: id
+      .optional()
+      .meta({ description: "The handle in a Trade person page's URL; pass this or `userId`" }),
+    userId: id
+      .optional()
+      .meta({ description: "A user id, as in an older `person` link; pass this or `handle`" }),
+  })
   .refine((input) => (input.handle === undefined) !== (input.userId === undefined), {
     message: "Pass a handle or a user id",
   });

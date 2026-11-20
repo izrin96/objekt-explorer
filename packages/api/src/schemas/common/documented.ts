@@ -37,6 +37,22 @@ const errorDescriptions = {
   429: "Too many requests",
 } as const;
 
+/**
+ * Copies each parameter's schema description onto the parameter: the reference page shows
+ * the schema's own description for a plain parameter, but not for an object one (a
+ * `cursor[field]` cursor), and oRPC writes it only on the schema.
+ */
+export function paramDescriptions(current: OperationObject): OperationObject {
+  return {
+    ...current,
+    parameters: current.parameters?.map((param) =>
+      "schema" in param && param.schema && "description" in param.schema
+        ? { ...param, description: param.description ?? param.schema.description }
+        : param,
+    ),
+  };
+}
+
 /** The body oRPC sends for an error it raises without a declared `.errors()` entry. */
 const errorBodySchema = {
   type: "object",

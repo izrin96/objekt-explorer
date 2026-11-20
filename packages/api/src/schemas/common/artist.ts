@@ -18,3 +18,6 @@ export const artistsArraySchema = queryArray(z.string())
   .pipe(z.array(z.string()).max(10))
   .transform((arr) => arr.map(toCanonicalArtist))
   .pipe(z.array(artistIdSchema));
+
+export const artistDescription =
+  "Artist ids, such as `artms` or `tripleS`, any case; repeat the key for more. None means every artist";

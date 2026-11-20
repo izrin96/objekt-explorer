@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { indexedObjektSchema } from "./common/objekt";
-import { queryCursor } from "./common/query";
+import { numberCursorDescription, queryCursor } from "./common/query";
 import { tradeRatioSchema } from "./trade-ratio";
 
 export const RULE_MAX_PER_LIST = 20;
@@ -222,9 +222,13 @@ export function ruleLine(rule: ListRuleDef) {
   return parts.prio.length > 0 ? `${head} (prio ${parts.prio.join(", ")})` : head;
 }
 
-const slug = z.string().min(1).max(32);
+const slug = z.string().min(1).max(32).meta({ description: "The list's slug, as in its URL" });
 // coerced: `/api/v1` reads it from the path as a string
-const ruleId = z.coerce.number<number>().int().positive();
+const ruleId = z.coerce
+  .number<number>()
+  .int()
+  .positive()
+  .meta({ description: "The rule's id, from `/lists/{slug}/rules`" });
 
 export const previewRuleInputSchema = z.object({ rule: listRuleInputSchema });
 export const listRulesInputSchema = z.object({ slug });
@@ -243,7 +247,9 @@ export const updateRuleInputSchema = z.object({
 });
 export const ruleIdInputSchema = z.object({ slug, ruleId });
 /** No `cursor` is the first page, as a tab from before paging sends it. */
-export const ruleObjektsInputSchema = ruleIdInputSchema.extend({ cursor: queryCursor });
+export const ruleObjektsInputSchema = ruleIdInputSchema.extend({
+  cursor: queryCursor.meta({ description: numberCursorDescription }),
+});
 
 export const ruleDefSchema = z.object({
   kind: z.enum(["collection", "set"]),

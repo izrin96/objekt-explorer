@@ -1,7 +1,8 @@
 import * as z from "zod";
 
+import { addressDescription } from "./common/address";
 import { checkpointSchema } from "./common/checkpoint";
-import { timestampCursorSchema } from "./common/cursor";
+import { pageCursorDescription, timestampCursorSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { ownedObjektSchema } from "./common/objekt";
 import { spinFields, transferNicknamesSchema, transferRowSchema } from "./common/transfer";
@@ -25,11 +26,20 @@ export const transferTypeSchema = z.enum(["all", "mint", "received", "sent", "sp
 export type TransferType = z.infer<typeof transferTypeSchema>;
 
 export const addressTransfersFiltersSchema = z.object({
-  type: transferTypeSchema.default("all"),
+  type: transferTypeSchema
+    .default("all")
+    .meta({ description: "Which transfers: mints, received, sent, spins or all" }),
   ...collectionFiltersSchema.shape,
-  at: checkpointSchema.optional(),
-  order: z.enum(["desc", "asc"]).default("desc"),
-  cursor: timestampCursorSchema.optional(),
+  at: checkpointSchema
+    .optional()
+    .meta({ description: "Only transfers on or before this time, as ISO 8601" }),
+  order: z
+    .enum(["desc", "asc"])
+    .default("desc")
+    .meta({ description: "`desc` lists newest first, `asc` oldest first" }),
+  cursor: timestampCursorSchema
+    .optional()
+    .meta({ description: pageCursorDescription(["timestamp", "id"]) }),
 });
 export type AddressTransfersFilters = z.infer<typeof addressTransfersFiltersSchema>;
 /** what the client sends: an omitted facet reads as empty, and the cursor is added per page */
@@ -38,5 +48,5 @@ export type TransfersParams = Partial<
 >;
 
 export const addressTransfersInputSchema = addressTransfersFiltersSchema.extend({
-  address: z.string(),
+  address: z.string().meta({ description: addressDescription }),
 });

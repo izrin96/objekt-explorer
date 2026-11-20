@@ -2,7 +2,7 @@ import type { ListObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { addressInputSchema, addressSchema } from "./common/address";
-import { artistsArraySchema } from "./common/artist";
+import { artistDescription, artistsArraySchema } from "./common/artist";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import { queryArray } from "./common/query";
 import { normalizeUserText } from "./common/user-text";
@@ -158,10 +158,12 @@ const tradePartnerSchema = z.object({
 });
 export type TradePartner = z.infer<typeof tradePartnerSchema>;
 
-export const listSlugInputSchema = z.object({ slug: z.string() });
+export const listSlugInputSchema = z.object({
+  slug: z.string().meta({ description: "The list's slug, as in its URL" }),
+});
 
 export const listExportInputSchema = listSlugInputSchema.extend({
-  artist: artistsArraySchema.default([]),
+  artist: artistsArraySchema.default([]).meta({ description: artistDescription }),
 });
 
 export const listEntriesInputSchema = listExportInputSchema.extend({
@@ -241,7 +243,9 @@ export const slugPreviewInputSchema = z.object({
 export const slugPreviewOutputSchema = z.object({ profileSlug: z.string() });
 
 export const listPreviewsInputSchema = z.object({
-  slugs: queryArray(z.string()).pipe(z.array(z.string()).max(500)),
+  slugs: queryArray(z.string())
+    .pipe(z.array(z.string()).max(500))
+    .meta({ description: "List slugs, up to 500; repeat the key for each" }),
 });
 
 export const listPreviewsOutputSchema = z.array(
