@@ -7,7 +7,7 @@ A recorded text colour of 6 hex digits SHALL replace a collection's text colour 
 - **WHEN** a Unit collection's text colour is the class default #ffffff and a sync records #000000
 - **THEN** its cards show #000000 text
 
-#### Scenario: Pinned override
+#### Scenario: Staff override
 - **WHEN** ever01-seoyeon-338z has the pinned staff text colour #07328d over the source #7328D, and a sync records #1a1a1a
 - **THEN** its cards still show #07328d with #7328D struck through beside it in the collections table
 

@@ -100,21 +100,26 @@ An independent review then found, and this change fixes: Apply skipped every unr
 
 ## 6. Rollout (owner)
 
-- [ ] 6.1 **(owner)** Archive `cosmo-qr-collection-media`. Done when `openspec validate staff-colour-pins --strict` no longer reports that archive would refuse the `worker-collection-media` delta.
-- [ ] 6.2 **(owner)** Redeploy the indexer first: it applies `indexer-migrations` on start. Only then deploy web and worker, since their Drizzle schema names the pin columns (the worker's held-transfer replay inserts into `collection`, and `/mod/collections` reads them).
+- [x] 6.1 **(owner)** Archive `cosmo-qr-collection-media`. Done when `openspec validate staff-colour-pins --strict` no longer reports that archive would refuse the `worker-collection-media` delta.
+  - *Done 2026-11-20: `cosmo-qr-collection-media` archived. Strict validate then asked to keep the main spec's `Staff override` scenario, which this delta had rewritten as `Pinned override` (the same example, now pinned); the rewritten scenario keeps the old name.*
+- [x] 6.2 **(owner)** Redeploy the indexer first: it applies `indexer-migrations` on start. Only then deploy web and worker, since their Drizzle schema names the pin columns (the worker's held-transfer replay inserts into `collection`, and `/mod/collections` reads them).
   - The first worker run drops about 159 overrides on production by itself (task 4.2's count); deploying approves that.
   - After the run, check that the history lists the Cosmo drops, and that Differs from Cosmo holds:
     - the 11 old hardcoded backgrounds;
     - the 30 Cream02 372–374Z text shades;
     - the 3 Cream02 338–340Z pinks.
-- [ ] 6.3 **(owner)** Pin the 16 colours from the old hardcoded map. This change does not pin them itself. Done when each shows its pin mark in `/mod/collections`.
+  - *Done 2026-11-20: indexer, web and worker deployed; the worker's first run logged `Cosmo resolved 159 staff colours (text 129, background 30)`, task 4.2's count. The history and Differs from Cosmo were checked by the owner.*
+- [x] 6.3 **(owner)** Pin the 16 colours from the old hardcoded map. This change does not pin them itself. Done when each shows its pin mark in `/mod/collections`.
   - Text, pinned from Edit, since no read lists them: atom01-heejin-322z, 323z, 324z and 325z, and ever01-seoyeon-338z.
   - Background, pinned from Differs from Cosmo:
     - divine01-seoyeon-117z, 118z, 119z, 120z and 317z;
     - binary01-choerry-201z and 202z;
     - atom01-yubin-302z, atom01-nakyoung-302z, atom01-yooyeon-302z and atom01-hyerin-302z.
-- [ ] 6.4 **(owner)** Decide each Cream02 shade on Differs from Cosmo, one group per number: pin it or reset it to Cosmo's colour. Done when the filter no longer lists Cream02.
-- [ ] 6.5 **(owner)** Go through Suggestions: apply or leave each. Done when every entry was looked at once.
+  - *Done 2026-11-20, read-only on production: all 16 carry their pin (5 text, 11 background); those are the only pins (5 text, 11 background).*
+- [x] 6.4 **(owner)** Decide each Cream02 shade on Differs from Cosmo, one group per number: pin it or reset it to Cosmo's colour. Done when the filter no longer lists Cream02.
+  - *Done 2026-11-20, read-only on production: no Cream02 row is pinned, the 372–374Z and 338–340Z overrides are gone, and the 44 Cream02 text overrides left (347Z, 348A, 351A, 352A, 504Z) have no Cosmo read, so none differs from Cosmo.*
+- [x] 6.5 **(owner)** Go through Suggestions: apply or leave each. Done when every entry was looked at once.
+  - *Done 2026-11-20 on the owner's word: applied some, left the rest on purpose.*
 
 ## 7. Docs
 
