@@ -76,14 +76,14 @@
   - **`sidePage`** (`picker/index.ts`): the whole theirs list (no `offset`) passes no view.
 
   Verify with `typecheck`, and with `bun test packages/api` green.
-- [ ] 1.7 **Read-only plan check.** Only with the owner's go-ahead for a production read. Run `EXPLAIN (ANALYZE, BUFFERS)` on the indexer with `PGOPTIONS='-c default_transaction_read_only=on'` for the largest holder's grouped page, three times:
+- [x] 1.7 **Read-only plan check.** Only with the owner's go-ahead for a production read. Run `EXPLAIN (ANALYZE, BUFFERS)` on the indexer with `PGOPTIONS='-c default_transaction_read_only=on'` for the largest holder's grouped page, three times:
   - default;
   - `collectionNo`;
   - `collectionNo` with `transferableOnly`.
 
   Record in this task the times, and confirm that `g` still uses the owner index and that no plan gains a sequential scan of `objekt`. Without a go-ahead, write "skipped: no approval" here. Design 3 then stands on reasoning alone.
 
-  skipped: no approval
+  *Done 2026-11-20 with the owner's go-ahead, read-only on the production indexer: the real `ownedGroupPage` for the largest holder by `pg_stats` (the spin address left out; 0.39% of `objekt`, 11,870 groups), its statement run under `EXPLAIN (ANALYZE, BUFFERS)`. Warm execution: default 239 ms (197 rows; 1,439 ms cold on the first run), `collectionNo` 202 ms (195 rows), `collectionNo` with `transferableOnly` 209 ms (195 rows). In all three, `g` reads `objekt` through a bitmap scan of `idx_objekt_owner_collection_id` (the owner index), the page join uses `IDX_objekt_collection_owner`, and no plan scans `objekt` sequentially; the only sequential scan is of `collection` (16,879 rows). Design 3 holds.*
 - [x] 1.8 **API docs.** In `packages/api/docs/offers.md` (Offer get sources, the picker-paging sentence), add:
   - the picker's `sort` and `transferableOnly`, and that only the three grid reads honour them;
   - the Collection No. key and its tie-break, with `lib/picker-sort.ts`;
@@ -121,7 +121,7 @@ Load `vercel-react-best-practices` before editing any `.tsx`, as the hook requir
 
   Verify with `typecheck`, `lint` (the React Compiler rules included) and `bun run build --filter=web`.
 - [x] 2.5 **Messages.** Add the four keys of design 8 to `apps/web/messages/en.json`, `ko.json` and `ja.json`, beside the other `offer_picker_*` keys, with the exact text of the table. Verify with `bun run paraglide:compile` from `apps/web`, followed by `typecheck`.
-- [ ] 2.6 **Browser check.** Use the `browser-testing-with-devtools` skill and the `browser-use` CLI. The brief for this run carries the browser rules:
+- [x] 2.6 **Browser check.** Use the `browser-testing-with-devtools` skill and the `browser-use` CLI. The brief for this run carries the browser rules:
   - drive the automation Chrome on `BU_CDP_URL=http://127.0.0.1:9333` (start it as `~/.claude/CLAUDE.md` says if `curl -s http://127.0.0.1:9333/json/version` fails), never the everyday one;
   - open a tab of your own and drive it by target id;
   - for a signed-out pass, use an isolated context;
@@ -135,6 +135,12 @@ Load `vercel-react-best-practices` before editing any `.tsx`, as the hook requir
   - **Remembered.** The choice holds after closing the sheet, opening the other side and reloading.
   - **Reset.** It leaves both controls.
   - **Reload with remembered values.** With both controls off their defaults, reload the offer page: the console shows no hydration warning, and the pickers open with the remembered values.
+  - *Done 2026-11-20 on the local dev server (local database, production indexer read-only), signed in as the owner's local account through a minted session (deleted afterwards), on `/trade/@wangsss/offer`; nothing was sent:*
+    - *Defaults: You give reads "Sort by · Newest received", You get "Sort by · List order"; no `offer/candidates` body carried `sort` or `transferableOnly`.*
+    - *Collection No.: You get reordered by number, then roster (HyeRin, NaKyoung, Kaede, DaHyun, Nien, Xinyu, Mayu in C304Z), and requests carried `sort: "collectionNo"`. In You give (All your objekts) the next page was requested with a Collection No. cursor (`342Z`) and continued the order (357Z, 359Z), with no tile out of order.*
+    - *The switch: requests carried `transferableOnly: true`, and the 5 "Not transferable" flags and the "can't be offered" counts went. No local copy is reserved, so the "In a trade in progress" flag was not seen.*
+    - *Remembered: Collection No. and the switch held after closing the sheet, in the other side's picker, and after a reload. Reset left both.*
+    - *Reload with both off their defaults: no hydration warning or error in the console, and both pickers opened with the remembered values.*
   - **Phone.** At 390 px, the badge counts the switch and not Sort.
   - **Empty.** The empty line and Turn off work when the switch empties a list.
   - **Blocked storage.** With `localStorage.setItem` stubbed to throw, the controls still work.
