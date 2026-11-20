@@ -156,9 +156,9 @@ Part A (groups 1 to 7) ships as deploy A. Part B (groups 8 to 11) is written aft
 
 ## 11. Rollout B (the owner)
 
-- [ ] 11.1 The owner commits and pushes, and CI passes. The owner runs `docker compose run --build --rm migrate`. The live build is web A, which writes both, so nothing waits on a deploy.
-- [ ] 11.2 With a go-ahead, run the drift script read-only on production. **All six checks must read zero, or stop.** This is the gate before any reader moves to the rows.
-- [ ] 11.3 The owner brings up web B, and rebuilds and brings up the worker from the same commit on the VPS. With a further go-ahead, run the drift script read-only again, plus the `EXPLAIN` of task 10.5 on production, read-only. Record all of it, the times, and the rollback floor (web A from migration B on) in design.md's As built.
+- [x] 11.1 The owner commits and pushes, and CI passes. The owner runs `docker compose run --build --rm migrate`. The live build is web A, which writes both, so nothing waits on a deploy.
+- [x] 11.2 With a go-ahead, run the drift script read-only on production. **All six checks must read zero, or stop.** This is the gate before any reader moves to the rows.
+- [x] 11.3 The owner brings up web B, and rebuilds and brings up the worker from the same commit on the VPS. With a further go-ahead, run the drift script read-only again, plus the `EXPLAIN` of task 10.5 on production, read-only. Record all of it, the times, and the rollback floor (web A from migration B on) in design.md's As built.
 
 ## 12. Agent docs
 
