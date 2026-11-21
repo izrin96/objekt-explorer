@@ -66,7 +66,7 @@ export async function hasTradeList(userId: string) {
 export async function fetchViewer(userId: string): Promise<Viewer> {
   const version =
     (await redisFailOpen("trade version", () => redis.get(tradeVersionKey(userId)))) ?? "0";
-  // each list's Open to and takes_swaps is the union of its posts on Trade, else its own
+  // each list's Open to and takes_swaps by its posts: those on Trade, else all, else the default
   const [haveIndex, saleLists, wantLists, wantRows] = await Promise.all([
     getCache(`trade:have-lists:${userId}:${version}`, HAVE_TTL_SECONDS, () =>
       computeHaveIndex(userId),

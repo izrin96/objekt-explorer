@@ -8,7 +8,7 @@ import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { canReport } from "../../lib/offer-rules";
 import { namedListVerdict, postSnapshot, type SnapshotList } from "../../lib/report-post";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../../lib/sanctions";
-import { sideStateOf } from "../../lib/trade-post-state";
+import { DEFAULT_OPEN_TO, sideStateOf } from "../../lib/trade-post-state";
 import type { ReportInput } from "../../schemas/moderation";
 import { lockUsersForWrite } from "../account/cosmo-link";
 import { afterBlockChange, findMembership, parseCard } from "../chat";
@@ -71,9 +71,6 @@ const snapshotColumns = {
   id: lists.id,
   userId: lists.userId,
   listType: lists.listType,
-  takesSwaps: lists.takesSwaps,
-  matchSale: lists.matchSale,
-  matchHave: lists.matchHave,
   name: lists.name,
   slug: lists.slug,
   description: lists.description,
@@ -97,7 +94,7 @@ async function reportedPost(targetUserId: string, listId: number) {
   if (verdict === "refuse") throw new ORPCError("NOT_FOUND");
   if (!named) return null;
   const row = rowOf(listId);
-  if (!row) return postSnapshot([{ ...named, linkedListId: null }], named.id);
+  if (!row) return postSnapshot([{ ...named, ...DEFAULT_OPEN_TO, linkedListId: null }], named.id);
   const snapshotOf = (id: number | null, partner: number | null): SnapshotList[] => {
     const list = id === null ? undefined : listById.get(id);
     if (!list) return [];

@@ -13,6 +13,7 @@ import {
   planPostChange,
   type TradeListState,
 } from "../../lib/trade-post-rows";
+import { listStateOf, type PostOpenTo } from "../../lib/trade-post-state";
 import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-posts";
 import { personBumpSql } from "../../lib/trade-sql";
 import type { ListType } from "../../schemas/list";
@@ -37,15 +38,14 @@ export function touchList(listIds: number[]) {
   return touchListWith(versionCounter, listIds);
 }
 
-/** A list as `lockTradeLists` returns it: what `PlanList` holds but the partner. */
-export type LockedList = Omit<PlanList, "linkedListId">;
+/** A list as `lockTradeLists` returns it: what `PlanList` holds but the partner and Open to. */
+export type LockedList = Omit<PlanList, "linkedListId" | keyof PostOpenTo>;
 
 /**
  * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
  * put one list in two posts. Every writer of a pairing, of `discoverable` or of a `trade_post`
  * row takes it first, through `lockPosts`: list create and copy, `list.delete`, `trade.savePost`
- * and `takeDownPost`. `anonymizeUser`, `bumpPerson` and `list.edit`'s Buying only save take it
- * alone. A writer then takes `trade_post` rows, then `hidden_trade_post` rows (`writePosts`'
+ * and `takeDownPost`. `anonymizeUser` and `bumpPerson` take it alone. A writer then takes `trade_post` rows, then `hidden_trade_post` rows (`writePosts`'
  * moves), in that order.
  */
 export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList[]> {
@@ -57,9 +57,6 @@ export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList
       listType: lists.listType,
       discoverable: lists.discoverable,
       isProfileBind: lists.isProfileBind,
-      matchSale: lists.matchSale,
-      matchHave: lists.matchHave,
-      takesSwaps: lists.takesSwaps,
     })
     .from(lists)
     .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
@@ -68,7 +65,10 @@ export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList
 }
 
 export type LockedPosts = {
-  /** the locked lists, each with its partner by the rows: what `planPost` and the refusals read */
+  /**
+   * the locked lists, each with its partner by the rows and its Open to by `listStateOf` over
+   * them: what `planPost` and the refusals read
+   */
   lists: PlanList[];
   /**
    * the person's have, sale and want lists and their rows, read after the lock: what the plan
@@ -116,9 +116,11 @@ export async function lockPosts(tx: Tx, userId: string): Promise<LockedPosts> {
     tradeStates,
   );
   const partners = partnersOf(rows);
+  // every row of the person: a want list's other rows are led by the person's own lists too
+  const flat = rows.map(({ state, ...row }) => ({ ...row, ...state }));
   return {
     lists: locked.map((list) =>
-      Object.assign(list, { linkedListId: partners.get(list.id) ?? null }),
+      Object.assign(list, listStateOf(flat, list), { linkedListId: partners.get(list.id) ?? null }),
     ),
     current: { lists: current, rows, bumpAt: found[0]?.bumpAt ?? null },
   };
@@ -129,9 +131,6 @@ export const tradeState = {
   id: lists.id,
   listType: lists.listType,
   discoverable: lists.discoverable,
-  matchHave: lists.matchHave,
-  matchSale: lists.matchSale,
-  takesSwaps: lists.takesSwaps,
 };
 
 type WrittenList = Omit<TradeListState, "listType"> & { listType: ListType };

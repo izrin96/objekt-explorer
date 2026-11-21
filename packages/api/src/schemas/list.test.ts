@@ -32,11 +32,17 @@ describe("createListInputSchema", () => {
     expect(createListInputSchema.parse(base).listType).toBe("general");
   });
 
-  test("a want list that leaves Open to out is open to swaps and buying", () => {
-    expect(createListInputSchema.parse({ ...base, listType: "want" })).toMatchObject({
-      matchSale: true,
-      matchHave: true,
-    });
+  test("an old tab's Open to keys are stripped, on create, copy and edit", () => {
+    const old = { matchSale: false, matchHave: true, takesSwaps: true };
+    for (const parsed of [
+      createListInputSchema.parse({ ...base, listType: "want", ...old }),
+      copyListInputSchema.parse({ ...base, listType: "sale", sourceSlug: "abc", ...old }),
+    ]) {
+      expect(parsed).not.toContainAnyKeys(["matchSale", "matchHave", "takesSwaps"]);
+    }
+    const edited = editListInputSchema.parse({ ...editBase, openTo: "buying", saleOpenTo: "sell" });
+    expect(edited).not.toContainAnyKeys(["openTo", "saleOpenTo"]);
+    expect(edited).toMatchObject({ slug: "abc", name: "x", hideSerial: false });
   });
 });
 

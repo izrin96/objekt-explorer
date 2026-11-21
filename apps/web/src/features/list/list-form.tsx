@@ -10,13 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { m } from "@/paraglide/messages";
 
 import { bindNote, isBindable, type ListDraft, type ListUrl, listTypePatch } from "./list-draft";
-import {
-  ListTypeField,
-  ListUrlField,
-  OpenToField,
-  ProfileField,
-  SaleOpenToField,
-} from "./list-form-fields";
+import { ListTypeField, ListUrlField, ProfileField } from "./list-form-fields";
 import { RatioPicker } from "./ratio-picker";
 
 type ListFormProps = {
@@ -33,8 +27,6 @@ type ListFormProps = {
   tradeLine?: ReactNode;
   /** create only: the type is fixed, as the post composer needs it, and a have or sale list is bound with no None */
   lockBind?: boolean;
-  /** a want or bound sale list's Open to choice, off where a post sets it: on Trade, and in forms opened from the composer */
-  showOpenTo?: boolean;
 };
 
 export function ListForm({
@@ -46,7 +38,6 @@ export function ListForm({
   notice,
   tradeLine,
   lockBind = false,
-  showOpenTo = false,
 }: ListFormProps) {
   const prefix = useId();
   const id = (field: string) => `${prefix}-${field}`;
@@ -154,19 +145,6 @@ export function ListForm({
       {notice}
 
       {isPaired || isSale ? tradeLine : null}
-
-      {showOpenTo && value.listType === "want" ? (
-        <OpenToField id={id} value={value} paired={value.linkedListId !== null} onChange={set} />
-      ) : null}
-
-      {showOpenTo && isSale && value.isProfileBind ? (
-        <SaleOpenToField
-          id={id}
-          value={value.takesSwaps ? "both" : "sell"}
-          paired={value.linkedListId !== null}
-          onChange={(next) => set({ takesSwaps: next === "both" })}
-        />
-      ) : null}
 
       {/* `list.create` takes no ratio: a list starts at 1:1 */}
       {isEdit && isPaired ? (

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { type PostRow, sideStateOf } from "./trade-post-state";
+import { listStateOf, type PostRow, sideStateOf } from "./trade-post-state";
 import {
   comparePosts,
   isPostIdle,
@@ -145,8 +145,8 @@ const posted = (over: Partial<TradeList> & Pick<TradeList, "id" | "listType">) =
 });
 
 describe("sideStateOf", () => {
-  test("an on side reads the row's state, an off side the list's own Open to", () => {
-    const want = posted({ id: 2, listType: "want", matchHave: false, matchSale: true });
+  test("a want list reads the row's Open to, on Trade or off", () => {
+    const want = posted({ id: 2, listType: "want" });
     const on = row({ id: 10, leadListId: 1, wantListId: 2 });
     expect(sideStateOf(on, want)).toEqual({
       onTrade: true,
@@ -155,20 +155,92 @@ describe("sideStateOf", () => {
       matchSale: false,
       takesSwaps: false,
     });
-    expect(sideStateOf({ ...on, wantOnTrade: false }, want)).toMatchObject({
+    expect(sideStateOf({ ...on, wantOnTrade: false }, want)).toEqual({
       onTrade: false,
-      matchHave: false,
-      matchSale: true,
+      bumpedAt: daysAgo(3),
+      matchHave: true,
+      matchSale: false,
+      takesSwaps: false,
     });
   });
 
-  test("a sale lead takes the row's takes_swaps; a have list keeps its own flags", () => {
-    const sale = posted({ id: 1, listType: "sale", takesSwaps: false });
-    const have = posted({ id: 3, listType: "have", matchHave: true, matchSale: true });
+  test("a sale lead takes the row's takes_swaps, on or off; a have list reads the defaults", () => {
+    const sale = posted({ id: 1, listType: "sale" });
+    const have = posted({ id: 3, listType: "have" });
     expect(sideStateOf(row({ id: 10, leadListId: 1 }), sale).takesSwaps).toBe(true);
-    expect(sideStateOf(row({ id: 11, leadListId: 3, matchSale: false }), have)).toMatchObject({
+    expect(sideStateOf(row({ id: 10, leadListId: 1, leadOnTrade: false }), sale)).toMatchObject({
+      onTrade: false,
+      takesSwaps: true,
+      matchHave: true,
       matchSale: true,
+    });
+    expect(
+      sideStateOf(row({ id: 11, leadListId: 3, matchHave: false, matchSale: true }), have),
+    ).toEqual({
+      onTrade: true,
       bumpedAt: daysAgo(2),
+      matchHave: true,
+      matchSale: true,
+      takesSwaps: false,
+    });
+  });
+});
+
+describe("listStateOf", () => {
+  const want = { id: 2, listType: "want" as const };
+  const sale = { id: 1, listType: "sale" as const };
+  const have = { id: 3, listType: "have" as const };
+
+  test("a want list on Trade takes its on sides' union", () => {
+    const rows = [
+      row({ id: 10, leadListId: 1, wantListId: 2, matchHave: true, matchSale: false }),
+      row({ id: 11, leadListId: 3, wantListId: 2, wantOnTrade: false, matchSale: true }),
+    ];
+    expect(listStateOf(rows, want)).toEqual({
+      matchHave: true,
+      matchSale: false,
+      takesSwaps: false,
+    });
+  });
+
+  test("a want list off Trade takes every row's union", () => {
+    const rows = [
+      row({ id: 10, leadListId: 2, leadOnTrade: false, matchHave: false, matchSale: true }),
+      row({
+        id: 11,
+        leadListId: 3,
+        wantListId: 2,
+        wantOnTrade: false,
+        matchHave: true,
+        matchSale: false,
+      }),
+    ];
+    expect(listStateOf(rows, want)).toEqual({
+      matchHave: true,
+      matchSale: true,
+      takesSwaps: false,
+    });
+    expect(listStateOf(rows.slice(0, 1), want)).toEqual({
+      matchHave: false,
+      matchSale: true,
+      takesSwaps: false,
+    });
+  });
+
+  test("a sale lead takes takes_swaps, on or off; a have list and a list in no row the defaults", () => {
+    const off = row({ id: 10, leadListId: 1, leadOnTrade: false, takesSwaps: true });
+    expect(listStateOf([off], sale)).toEqual({
+      matchHave: true,
+      matchSale: true,
+      takesSwaps: true,
+    });
+    expect(
+      listStateOf([row({ id: 12, leadListId: 3, matchHave: false, matchSale: true })], have),
+    ).toEqual({ matchHave: true, matchSale: true, takesSwaps: false });
+    expect(listStateOf([off], want)).toEqual({
+      matchHave: true,
+      matchSale: true,
+      takesSwaps: false,
     });
   });
 });
@@ -217,10 +289,17 @@ describe("postFromRow", () => {
     ]);
   });
 
-  test("an off side takes the list's own Open to", () => {
-    const want = posted({ id: 2, listType: "want", matchHave: false, matchSale: true });
+  test("an off side takes its row's Open to", () => {
+    const want = posted({ id: 2, listType: "want", matchHave: true, matchSale: false });
     const [post] = postFromRow(
-      row({ id: 10, leadListId: 1, wantListId: 2, wantOnTrade: false }),
+      row({
+        id: 10,
+        leadListId: 1,
+        wantListId: 2,
+        wantOnTrade: false,
+        matchHave: false,
+        matchSale: true,
+      }),
       null,
       want,
     );

@@ -1,50 +1,16 @@
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import type { EditListInput } from "../../schemas/list";
-import {
-  type OpenToFlags,
-  openToEdit,
-  pairRefusesOpenTo,
-  saleOpenToEdit,
-} from "../../schemas/open-to";
 import { takesRatio } from "../../schemas/trade-ratio";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { assertProfileOwned } from "../profile";
-import { postPartnerSql } from "../trade/lists";
-import { generateProfileSlug, PAIR_MESSAGES } from "./create";
+import { generateProfileSlug } from "./create";
 import { findOwnedList } from "./read";
-import { lockPosts, lockTradeLists, touchList, writePosts } from "./shared";
-
-/**
- * A want list's Open to as `list.edit` writes it. The UPDATE reads the row again: a list put on
- * Trade since it was read keeps its post's flags, and one paired since (by its `trade_post` row)
- * keeps its own rather than become a Buying only pair. Both columns share one condition, so
- * `lists_open_to_something` holds.
- */
-function openToColumns(flags: OpenToFlags) {
-  const keep = pairRefusesOpenTo(flags)
-    ? sql`(${lists.discoverable} OR ${postPartnerSql("lists")} IS NOT NULL)`
-    : sql`${lists.discoverable}`;
-  return {
-    matchSale: sql<boolean>`CASE WHEN ${keep} THEN ${lists.matchSale} ELSE ${flags.matchSale}::boolean END`,
-    matchHave: sql<boolean>`CASE WHEN ${keep} THEN ${lists.matchHave} ELSE ${flags.matchHave}::boolean END`,
-  };
-}
-
-/**
- * A sale list's Open to as `list.edit` writes it. Read again like `openToColumns`: a list put on
- * Trade since keeps its post's value, and a Sell only write also leaves a list paired since.
- */
-function takesSwapsColumn(takesSwaps: boolean) {
-  const keep = takesSwaps
-    ? sql`${lists.discoverable}`
-    : sql`(${lists.discoverable} OR ${postPartnerSql("lists")} IS NOT NULL)`;
-  return sql<boolean>`CASE WHEN ${keep} THEN ${lists.takesSwaps} ELSE ${takesSwaps}::boolean END`;
-}
+import { lockPosts, touchList, writePosts } from "./shared";
 
 export async function editList(userId: string, input: EditListInput) {
   // the profile check counts only for an unbound list, so its refusal waits for the list
@@ -62,15 +28,6 @@ export async function editList(userId: string, input: EditListInput) {
   if (input.ratio != null && !takesRatio(list.listType)) {
     refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
   }
-  const openTo = openToEdit(list, input.openTo);
-  if (openTo.action === "refuse") {
-    refuse("BAD_REQUEST", "list_pair_buying_only", PAIR_MESSAGES.list_pair_buying_only);
-  }
-  const saleOpenTo = saleOpenToEdit(list, input.saleOpenTo);
-  if (saleOpenTo.action === "refuse") {
-    refuse("BAD_REQUEST", "list_sale_links_sell_only", PAIR_MESSAGES.list_sale_links_sell_only);
-  }
-
   // address changes are ignored on a bound list, so only an unbound one is checked
   if (!list.isProfileBind && profileCheck.status === "rejected") throw profileCheck.reason;
 
@@ -92,45 +49,27 @@ export async function editList(userId: string, input: EditListInput) {
       : await generateProfileSlug(input.name, list.slug, address, list.id);
   }
 
-  // no pairing or Trade state, which are the post's (`trade.savePost`); Open to only off Trade
-  const save = (run: Pick<typeof db, "update">) =>
-    run
-      .update(lists)
-      .set({
-        name: input.name,
-        gridColumns: input.gridColumns,
-        profileAddress: list.isProfileBind
-          ? undefined
-          : input.profileAddress
-            ? input.profileAddress.toLowerCase()
-            : null,
-        description: input.description,
-        currency:
-          list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
-        profileSlug,
-        hideSerial:
-          ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
-        ratio: takesRatio(list.listType) ? input.ratio : undefined,
-        removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
-        ...(openTo.action === "write" && openToColumns(openTo.flags)),
-        ...(saleOpenTo.action === "write" && {
-          takesSwaps: takesSwapsColumn(saleOpenTo.takesSwaps),
-        }),
-      })
-      .where(eq(lists.id, list.id));
-  const guardsPair =
-    (openTo.action === "write" && pairRefusesOpenTo(openTo.flags)) ||
-    (saleOpenTo.action === "write" && !saleOpenTo.takesSwaps);
-  if (guardsPair) {
-    // the guard reads the pair from `trade_post`, which a statement that waited on a pairing
-    // writer would read from before the wait; under the lock it starts after that writer
-    await db.transaction(async (tx) => {
-      await lockTradeLists(tx, userId);
-      await save(tx);
-    });
-  } else {
-    await save(db);
-  }
+  // no pairing, Trade state or Open to, which are the post's (`trade.savePost`)
+  await db
+    .update(lists)
+    .set({
+      name: input.name,
+      gridColumns: input.gridColumns,
+      profileAddress: list.isProfileBind
+        ? undefined
+        : input.profileAddress
+          ? input.profileAddress.toLowerCase()
+          : null,
+      description: input.description,
+      currency:
+        list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
+      profileSlug,
+      hideSerial:
+        ["sale", "have"].includes(list.listType) && list.isProfileBind ? input.hideSerial : false,
+      ratio: takesRatio(list.listType) ? input.ratio : undefined,
+      removeOnReceive: list.listType === "want" ? input.removeOnReceive : undefined,
+    })
+    .where(eq(lists.id, list.id));
   await touchList([list.id]);
 }
 

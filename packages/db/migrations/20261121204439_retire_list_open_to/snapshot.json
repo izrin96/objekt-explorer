@@ -1,0 +1,127 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ae78b14c-55e0-46a9-85ab-fbcd59f3b282",
+  "prevIds": [
+    "99a92110-b6c0-45f2-9a97-d0583991bdfb"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "lists"
+      ],
+      "writes": [
+        "s|ck|public.lists.lists_open_to_something",
+        "n|ck|public.lists.lists_open_to_something",
+        "e|ck|public.lists.lists_open_to_something",
+        "n|con|public.lists.lists_open_to_something"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "e|col|public.lists.match_sale",
+        "e|col|public.lists.match_have"
+      ]
+    },
+    {
+      "statementType": "drop_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "lists"
+      ],
+      "writes": [
+        "s|ck|public.lists.lists_takes_swaps_sale_only",
+        "n|ck|public.lists.lists_takes_swaps_sale_only",
+        "e|ck|public.lists.lists_takes_swaps_sale_only",
+        "n|con|public.lists.lists_takes_swaps_sale_only"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "e|col|public.lists.takes_swaps",
+        "e|col|public.lists.list_type"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "match_sale"
+      ],
+      "writes": [
+        "s|col|public.lists.match_sale",
+        "n|col|public.lists.match_sale",
+        "e|col|public.lists.match_sale"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "match_have"
+      ],
+      "writes": [
+        "s|col|public.lists.match_have",
+        "n|col|public.lists.match_have",
+        "e|col|public.lists.match_have"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "takes_swaps"
+      ],
+      "writes": [
+        "s|col|public.lists.takes_swaps",
+        "n|col|public.lists.takes_swaps",
+        "e|col|public.lists.takes_swaps"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"lists\",\"match_sale\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"lists\",\"match_have\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"lists\",\"takes_swaps\"]"
+    },
+    {
+      "op": "drop",
+      "key": "checks\u0000[\"public\",\"lists\",\"lists_open_to_something\"]"
+    },
+    {
+      "op": "drop",
+      "key": "checks\u0000[\"public\",\"lists\",\"lists_takes_swaps_sale_only\"]"
+    }
+  ]
+}

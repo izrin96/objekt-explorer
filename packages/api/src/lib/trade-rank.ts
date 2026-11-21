@@ -56,7 +56,7 @@ export function matchSides(myLists: MyList[], listId: number | null, filter: Tra
  * no key; a list in two has two.
  */
 export function viewerPostOf(
-  myLists: (MyList & OpenToFlags & { takesSwaps: boolean })[],
+  myLists: MyList[],
   rows: PostRow[],
 ): { postOf: PostOf; postLeads: PostLeads } {
   const byId = new Map(myLists.map((list) => [list.id, list]));

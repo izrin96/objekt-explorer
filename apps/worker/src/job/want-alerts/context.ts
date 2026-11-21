@@ -23,7 +23,7 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       slug: lists.slug,
       name: lists.name,
       listType: lists.listType,
-      // the recipient's list as a list: the union of its posts on Trade, else its own
+      // the recipient's list as a list: the union of its posts on Trade, else of all, else the default
       takesSwaps: listTradeStateSql("lists", "takesSwaps"),
       matchHave: listTradeStateSql("lists", "matchHave"),
       profileAddress: lists.profileAddress,

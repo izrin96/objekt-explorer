@@ -293,8 +293,16 @@ describe("applyPairing", () => {
   });
 });
 
-/** A list with the bump its side holds: the planner reads no bump from a list, equation E does. */
-type SideList = TradeListState & { bumpedAt: string | null };
+/**
+ * A list with the bump and Open to its side holds: the planner reads neither from a list, equation
+ * E does, to build rows in step with it.
+ */
+type SideList = TradeListState & {
+  bumpedAt: string | null;
+  matchHave: boolean;
+  matchSale: boolean;
+  takesSwaps: boolean;
+};
 
 const state = (
   id: number,
@@ -612,11 +620,13 @@ describe("planPostChange states", () => {
     expect(states).toEqual([{ id: 10, state: equation(have, want) }]);
   });
 
-  test("a want list swapped: the new want list's state", () => {
+  test("a want list swapped: the new want list's state, the defaults with no row of its own", () => {
     const other = state(3, "want", false, { matchHave: false });
     const lists = [have, want, other];
     const { states } = plan(lists, [stored(lists, 10, 1, 2)], { pair: [1, 3] });
-    expect(states).toEqual([{ id: 10, state: equation(have, other) }]);
+    expect(states).toEqual([
+      { id: 10, state: equation(have, { ...other, matchHave: true, matchSale: true }) },
+    ]);
   });
 
   test("a deleted row has no state to write", () => {
@@ -910,20 +920,11 @@ describe("planPostRows keeps an edited post's row (decision 3)", () => {
 });
 
 describe("rowStateOf", () => {
-  // stored list values differ from every side's, so a rule that reads the wrong one fails
   const stored = (
     id: number,
     listType: TradeListState["listType"],
     patch: Partial<TradeListState> = {},
-  ): TradeListState => ({
-    id,
-    listType,
-    discoverable: false,
-    matchHave: true,
-    matchSale: false,
-    takesSwaps: true,
-    ...patch,
-  });
+  ): TradeListState => ({ id, listType, discoverable: false, ...patch });
   const ctx = (
     lists: TradeListState[],
     before: PostRow[],
@@ -946,7 +947,7 @@ describe("rowStateOf", () => {
     ).toEqual(sideState({ leadOnTrade: true, leadBumpedAt: "now" }));
   });
 
-  test("a want side turned on with no Open to, over a lagging row: the list's own wins", () => {
+  test("a want side turned on with no Open to, over an old row: the row's Open to", () => {
     const before = [
       row(10, 1, 2, sideState({ matchHave: false, matchSale: true, wantBumpedAt: "side" })),
     ];
@@ -954,8 +955,18 @@ describe("rowStateOf", () => {
     expect(
       rowStateOf({ leadListId: 1, wantListId: 2 }, ctx(lists, before, [{ listId: 2, on: true }])),
     ).toEqual(
-      sideState({ wantOnTrade: true, wantBumpedAt: "now", matchHave: true, matchSale: false }),
+      sideState({ wantOnTrade: true, wantBumpedAt: "now", matchHave: false, matchSale: true }),
     );
+  });
+
+  test("a turn-on with no Open to and no row: the defaults", () => {
+    const lists = [stored(3, "want"), stored(4, "sale")];
+    expect(
+      rowStateOf({ leadListId: 3, wantListId: null }, ctx(lists, [], [{ listId: 3, on: true }])),
+    ).toEqual(sideState({ leadOnTrade: true, leadBumpedAt: "now" }));
+    expect(
+      rowStateOf({ leadListId: 4, wantListId: null }, ctx(lists, [], [{ listId: 4, on: true }])),
+    ).toEqual(sideState({ leadOnTrade: true, leadBumpedAt: "now", takesSwaps: false }));
   });
 
   test("an intent on a side already on keeps its bump", () => {
@@ -1028,10 +1039,10 @@ describe("rowStateOf", () => {
     );
   });
 
-  test("a created list with no intent is off, with the list's own values", () => {
-    const created = stored(3, "want", { matchHave: false, matchSale: true });
+  test("a created list with no intent is off, with the defaults", () => {
+    const created = stored(3, "want");
     expect(rowStateOf({ leadListId: 3, wantListId: null }, ctx([created], []))).toEqual(
-      sideState({ matchHave: false, matchSale: true }),
+      sideState({}),
     );
   });
 
@@ -1039,7 +1050,7 @@ describe("rowStateOf", () => {
     const lists = [stored(1, "have", { discoverable: true }), stored(2, "want")];
     expect(
       rowStateOf({ leadListId: 1, wantListId: 2 }, ctx(lists, [], [{ listId: 2, on: false }])),
-    ).toEqual(sideState({ matchSale: false }));
+    ).toEqual(sideState({}));
   });
 
   test("a row with no want list, and a have-led row with no open list", () => {
@@ -1062,14 +1073,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
     id: number,
     listType: TradeListState["listType"],
     discoverable: boolean,
-  ): TradeListState => ({
-    id,
-    listType,
-    discoverable,
-    matchHave: true,
-    matchSale: true,
-    takesSwaps: false,
-  });
+  ): TradeListState => ({ id, listType, discoverable });
   const sides = (lead: [boolean, string | null], want?: [boolean, string | null]): PostState => ({
     ...DEFAULT_STATE,
     leadOnTrade: lead[0],

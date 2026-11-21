@@ -1,4 +1,4 @@
-import { hiddenRowAtSql } from "@repo/api/lib/trade-sql";
+import { hiddenRowAtSql, listSideFlagsSql } from "@repo/api/lib/trade-sql";
 import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
 import { listedPostsCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
@@ -59,15 +59,13 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),
-    -- each list's flags as a list reads them, listTradeStateSql's union of its sides on Trade;
-    -- a recipient list on no post reads its own. A set, so the planner hashes it once rather
-    -- than running a subquery per pair, which hid the row count from the anti join below
-    list_flags AS (
-      SELECT id, bool_or(match_have) AS match_have, bool_or(match_sale) AS match_sale,
-        bool_or(takes_swaps) AS takes_swaps
-      FROM on_trade
-      GROUP BY id
-    ),
+    -- each list's flags as a list reads them, listTradeStateSql's rule: the union of its sides on
+    -- Trade, else of every side. From trade_post itself, since a recipient's list off Trade is in
+    -- no on_trade row; a list in no row takes the default below. A set, so the planner hashes it
+    -- once rather than running a subquery per pair, which hid the row count from the anti join
+    -- below. No list join: wl is a want list, and ol reads only takes_swaps, false on any row a
+    -- sale list does not lead
+    list_flags AS (${listSideFlagsSql(sql`true`)}),
     pairs AS (
       SELECT c.id AS entry_id, c.list_id, c.post_id, 'forward' AS direction,
         c.list_id AS offer_list_id, w.list_id AS want_list_id, c.slug, c.objekt_id,
@@ -80,10 +78,10 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
       LEFT JOIN list_flags wlf ON wlf.id = wl.id
-      -- the recipient's want list counts with what any of its posts on Trade allows
+      -- the recipient's want list counts with what any of its posts allows
       CROSS JOIN LATERAL (
-        SELECT coalesce(wlf.match_have, wl.match_have) AS match_have,
-          coalesce(wlf.match_sale, wl.match_sale) AS match_sale
+        SELECT coalesce(wlf.match_have, true) AS match_have,
+          coalesce(wlf.match_sale, true) AS match_sale
       ) wf
       WHERE c.list_type IN ('have', 'sale')
         AND wl.list_type = 'want' AND wl.user_id <> c.user_id
@@ -97,9 +95,9 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
       LEFT JOIN list_flags olfl ON olfl.id = ol.id
-      -- the recipient's sale list takes swaps when any of its posts on Trade does
+      -- the recipient's sale list takes swaps when any of its posts does
       CROSS JOIN LATERAL (
-        SELECT ol.list_type, coalesce(olfl.takes_swaps, ol.takes_swaps) AS takes_swaps
+        SELECT ol.list_type, coalesce(olfl.takes_swaps, false) AS takes_swaps
       ) olf
       WHERE c.list_type = 'want'
         AND ${boundOfferListSql("ol")}

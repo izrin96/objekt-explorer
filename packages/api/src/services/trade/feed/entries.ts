@@ -25,9 +25,6 @@ export const feedListColumns = {
   name: lists.name,
   description: lists.description,
   listType: lists.listType,
-  matchSale: lists.matchSale,
-  matchHave: lists.matchHave,
-  takesSwaps: lists.takesSwaps,
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
@@ -37,7 +34,7 @@ export const feedListColumns = {
 
 /**
  * {@link feedListColumns} for a read that names only a list: its Open to, `takes_swaps` and bump
- * are the union of its sides on Trade (`listTradeStateSql`), else its own.
+ * by `listTradeStateSql`, the union of its sides on Trade, else of every side, else the default.
  */
 export const feedListByListColumns = {
   ...feedListColumns,
@@ -54,9 +51,6 @@ export type FeedListRow = {
   name: string;
   description: string | null;
   listType: ListType;
-  matchSale: boolean;
-  matchHave: boolean;
-  takesSwaps: boolean;
   currency: string | null;
   isProfileBind: boolean;
   profileAddress: string | null;

@@ -7,7 +7,7 @@ import {
   keyMatchedLists,
   type TheyWant,
 } from "../../../lib/trade-rank";
-import { hiddenRowsSql, offersSwapsSql } from "../../../lib/trade-sql";
+import { hiddenRowsSql, listSideFlagsSql, offersSwapsSql } from "../../../lib/trade-sql";
 import type { TradeFilter } from "../../../schemas/trade";
 import { listedPost, postsCte } from "../feed/query";
 import { offerMatchesWantSql, tradePartnerSql } from "../lists";
@@ -70,22 +70,15 @@ export async function fetchTradeCandidates(
     -- planned on its own, as the feed's posts are: inlined into partner_posts below, the filters
     -- there shrank its estimate and its anti join became a nested loop over on_trade per post
     all_posts AS MATERIALIZED (SELECT * FROM posts),
-    -- the union of my lists' sides on Trade, by list, as listTradeStateSql reads them. Joined LEFT
-    -- below, so my_want and my_have keep the row estimates of their real tables: a join to a CTE
-    -- there collapsed them to one row and the planner crossed my_want with partner_lists
-    my_side_flags AS (
-      SELECT side.id, bool_or(tp.match_have) AS match_have, bool_or(tp.match_sale) AS match_sale,
-        bool_or(tp.takes_swaps) AS takes_swaps
-      FROM trade_post tp
-      CROSS JOIN LATERAL (VALUES (tp.lead_list_id, tp.lead_on_trade), (tp.want_list_id, tp.want_on_trade))
-        AS side(id, on_trade)
-      WHERE tp.user_id = ${userId} AND side.on_trade
-      GROUP BY side.id
-    ),
+    -- my lists' flags by their rows, as listTradeStateSql reads them: the union of their sides on
+    -- Trade, else of every side; a list in no row takes the default below. Joined LEFT, so my_want
+    -- and my_have keep the row estimates of their real tables: a join to a CTE there collapsed
+    -- them to one row and the planner crossed my_want with partner_lists
+    my_side_flags AS (${listSideFlagsSql(sql`tp.user_id = ${userId}`)}),
     my_want AS (
       SELECT e.collection_slug,
-        bool_or(coalesce(f.match_sale, l.match_sale)) AS match_sale,
-        bool_or(coalesce(f.match_have, l.match_have)) AS match_have
+        bool_or(coalesce(f.match_sale, true)) AS match_sale,
+        bool_or(coalesce(f.match_have, true)) AS match_have
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       LEFT JOIN my_side_flags f ON f.id = l.id
@@ -94,7 +87,7 @@ export async function fetchTradeCandidates(
     ),
     my_have AS (
       SELECT e.collection_slug,
-        bool_or(l.list_type = 'have' OR (l.list_type = 'sale' AND coalesce(f.takes_swaps, l.takes_swaps)))
+        bool_or(l.list_type = 'have' OR (l.list_type = 'sale' AND coalesce(f.takes_swaps, false)))
           AS on_have,
         bool_or(l.list_type = 'sale') AS on_sale
       FROM list_entries e

@@ -9,8 +9,9 @@ import type * as z from "zod";
 import { pairRefusal, type PairRefusal } from "../../lib/list-pair";
 import { profileSlugBase } from "../../lib/profile-slug";
 import { refuse } from "../../lib/refuse";
+import { DEFAULT_OPEN_TO } from "../../lib/trade-post-state";
+import { listTradeStateSql } from "../../lib/trade-sql";
 import { canBeOnTrade, type createListInputSchema, type ListType } from "../../schemas/list";
-import { type OpenToFlags, resolveOpenTo } from "../../schemas/open-to";
 import { assertProfileOwned } from "../profile";
 import { lockPosts, tradeState, writePosts } from "./shared";
 
@@ -32,36 +33,27 @@ export const PAIR_MESSAGES: Record<PairRefusal, string> = {
 
 /**
  * The other list of a pair, checked for owner and type. A want list pairs with a have list, or
- * with a sale list that takes swaps (`takesSwaps` is the sale list's own when it is the one
- * linking). A pair can't be Buying only, so the want side's Open to is checked too: `openTo` is
- * what a want list is about to save, and a have or sale list reads its partner's.
+ * with a sale list that takes swaps. A pair can't be Buying only, so the want side's Open to is
+ * checked too. The partner's Open to and `takes_swaps` are its posts' (`listTradeStateSql`); the
+ * new list's own are the defaults, since only a post sets them.
  */
-export async function checkLinkedList(
-  type: ListType,
-  linkedListId: number,
-  userId: string,
-  openTo: OpenToFlags,
-  takesSwaps = false,
-) {
-  const linkedList = await db.query.lists.findFirst({
-    columns: {
-      listType: true,
-      isProfileBind: true,
-      matchSale: true,
-      matchHave: true,
-      takesSwaps: true,
-    },
-    where: {
-      id: linkedListId,
-      userId: userId,
-    },
-  });
+export async function checkLinkedList(type: ListType, linkedListId: number, userId: string) {
+  const [linkedList] = await db
+    .select({
+      listType: lists.listType,
+      isProfileBind: lists.isProfileBind,
+      matchSale: listTradeStateSql("lists", "matchSale"),
+      matchHave: listTradeStateSql("lists", "matchHave"),
+      takesSwaps: listTradeStateSql("lists", "takesSwaps"),
+    })
+    .from(lists)
+    .where(and(eq(lists.id, linkedListId), eq(lists.userId, userId)));
 
   if (!linkedList) {
     refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
   }
 
-  const reason = pairRefusal(type, { openTo, takesSwaps }, linkedList);
+  const reason = pairRefusal(type, { openTo: DEFAULT_OPEN_TO, takesSwaps: false }, linkedList);
   if (reason) refuse("BAD_REQUEST", reason, PAIR_MESSAGES[reason]);
   return linkedList;
 }
@@ -127,9 +119,7 @@ export async function prepareList(input: NewList, userId: string) {
   // allSettled keeps the profile error taking precedence over the linked one.
   const [profileCheck, linkedCheck] = await Promise.allSettled([
     input.profileAddress ? assertProfileOwned(input.profileAddress, userId) : undefined,
-    linkedListId !== null
-      ? checkLinkedList(input.listType, linkedListId, userId, resolveOpenTo(input.listType, input))
-      : undefined,
+    linkedListId !== null ? checkLinkedList(input.listType, linkedListId, userId) : undefined,
   ]);
 
   if (profileCheck.status === "rejected") throw profileCheck.reason;
@@ -162,7 +152,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
     if (!target) refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
     const reason = pairRefusal(
       input.listType,
-      { openTo: resolveOpenTo(input.listType, input), takesSwaps: false },
+      { openTo: DEFAULT_OPEN_TO, takesSwaps: false },
       target,
     );
     if (reason) refuse("BAD_REQUEST", reason, PAIR_MESSAGES[reason]);
@@ -191,8 +181,6 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
       currency:
         input.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
       discoverable,
-      ...resolveOpenTo(input.listType, input),
-      takesSwaps: input.listType === "sale" && isProfileBind && input.takesSwaps,
       removeOnReceive: input.listType === "want" && input.removeOnReceive,
     })
     .returning({ ...tradeState, createdAt: lists.createdAt });

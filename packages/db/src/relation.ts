@@ -30,14 +30,14 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.lists.profileAddress,
       to: r.userAddress.address,
     }),
-    // the `trade_post` row a list leads, and the row whose want list it is: the reverse of
+    // the `trade_post` rows a list leads, and the rows whose want list it is: the reverse of
     // `tradePost.leadList` and `wantList`
-    postLed: r.one.tradePost({
+    postLed: r.many.tradePost({
       from: r.lists.id,
       to: r.tradePost.leadListId,
       alias: "trade_post_lead",
     }),
-    postWanted: r.one.tradePost({
+    postWanted: r.many.tradePost({
       from: r.lists.id,
       to: r.tradePost.wantListId,
       alias: "trade_post_want",

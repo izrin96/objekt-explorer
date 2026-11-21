@@ -1,3 +1,5 @@
+import { DEFAULT_OPEN_TO } from "./trade-post-state";
+
 /** A `trade_post.id`. Branded so a list id is never passed where a post is meant. */
 export type PostId = number & { readonly __brand: "PostId" };
 
@@ -268,9 +270,6 @@ export type TradeListState = {
   id: number;
   listType: RowList["listType"];
   discoverable: boolean;
-  matchHave: boolean;
-  matchSale: boolean;
-  takesSwaps: boolean;
 };
 
 const STATE_KEYS = [
@@ -398,9 +397,9 @@ export type StateContext = {
  * stays when its side was on, else a turn-on takes `bumpAt`. Any other list brings the side it had
  * in the component, or comes in off. A list entering the rows off has no bump: no read takes an
  * off side's, and a later turn-on takes `bumpAt`. Open to and `takes_swaps` come from the intent,
- * else from the list when the intent turns its side on from off, else from the row the list was
- * the open list or sale lead of, else from the list: a list moving between rows keeps its post's
- * values.
+ * else from the row the list was the open list or sale lead of, else the defaults (Swaps or
+ * buying, Sell only): a list moving between rows keeps its post's values, and the rows are the
+ * only copy.
  */
 export function rowStateOf(
   row: { leadListId: number; wantListId: number | null },
@@ -433,29 +432,20 @@ export function rowStateOf(
   const want = row.wantListId === null ? null : side(row.wantListId);
 
   const open = openOf(row);
-  let matchHave = true;
-  let matchSale = true;
+  let { matchHave, matchSale } = DEFAULT_OPEN_TO;
   if (open !== null) {
     const intent = ctx.intents.get(open);
     const old = sideBefore(open);
-    const list = ctx.lists.get(open)!;
-    const fallback =
-      intent?.on && !old?.on ? list : old && openOf(old.row) === open ? old.row.state : list;
+    const fallback = old && openOf(old.row) === open ? old.row.state : DEFAULT_OPEN_TO;
     matchHave = intent?.matchHave ?? fallback.matchHave;
     matchSale = intent?.matchSale ?? fallback.matchSale;
   }
 
-  let takesSwaps = false;
+  let { takesSwaps } = DEFAULT_OPEN_TO;
   if (typeOf(row.leadListId) === "sale") {
     const intent = ctx.intents.get(row.leadListId);
     const old = sideBefore(row.leadListId);
-    const list = ctx.lists.get(row.leadListId)!;
-    const fallback =
-      intent?.on && !old?.on
-        ? list
-        : old && old.row.leadListId === row.leadListId
-          ? old.row.state
-          : list;
+    const fallback = old && old.row.leadListId === row.leadListId ? old.row.state : DEFAULT_OPEN_TO;
     takesSwaps = intent?.takesSwaps ?? fallback.takesSwaps;
   }
 

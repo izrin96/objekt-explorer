@@ -1109,14 +1109,7 @@ describe("viewerPostOf", () => {
     takesSwaps: false,
     ...over,
   });
-  const list = (id: number, listType: MyList["listType"], takesSwaps = false) => ({
-    id,
-    listType,
-    linkedListId: null,
-    takesSwaps,
-    matchHave: true,
-    matchSale: true,
-  });
+  const list = (id: number, listType: MyList["listType"]) => ({ id, listType, linkedListId: null });
 
   test("keys both halves of a pair row to the row, on Trade or off", () => {
     const lists = [
@@ -1140,37 +1133,28 @@ describe("viewerPostOf", () => {
       }),
       row({ id: 103, leadListId: 7 }),
     ];
-    // off Trade, the sale list's own takes_swaps decides; it is false here
+    // off Trade too, the sale lead swaps by its row's takes_swaps
     expect(viewerPostOf(lists, rows)).toEqual({
-      postOf: { 1: [100], 3: [100] },
-      postLeads: { 100: 1 },
-    });
-    expect(
-      viewerPostOf([...lists.slice(0, 3), list(5, "sale", true), list(6, "want")], rows),
-    ).toEqual({
       postOf: { 1: [100], 3: [100], 5: [102], 6: [102] },
       postLeads: { 100: 1, 102: 5 },
     });
+    const sellOnly = [rows[0]!, rows[1]!, { ...rows[2]!, takesSwaps: false }, rows[3]!];
+    expect(viewerPostOf(lists, sellOnly)).toEqual({
+      postOf: { 1: [100], 3: [100] },
+      postLeads: { 100: 1 },
+    });
   });
 
-  test("a sale list on Trade swaps by its row, whatever the list's own", () => {
+  test("a sale list swaps by its row, on Trade or off", () => {
     const rows = [row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: true })];
-    expect(viewerPostOf([list(5, "sale", false), list(6, "want")], rows).postOf).toEqual({
+    expect(viewerPostOf([list(5, "sale"), list(6, "want")], rows).postOf).toEqual({
       5: [102],
       6: [102],
     });
-    const sellOnly = [row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: false })];
-    expect(viewerPostOf([list(5, "sale", true), list(6, "want")], sellOnly).postOf).toEqual({});
-  });
-
-  test("an off pair whose row's takes_swaps lags the list follows the list", () => {
-    const rows = [
+    const sellOnly = [
       row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: false, leadOnTrade: false }),
     ];
-    expect(viewerPostOf([list(5, "sale", true), list(6, "want")], rows).postOf).toEqual({
-      5: [102],
-      6: [102],
-    });
+    expect(viewerPostOf([list(5, "sale"), list(6, "want")], sellOnly).postOf).toEqual({});
   });
 
   test("a list in two pair rows keys to both", () => {

@@ -74,6 +74,11 @@ const baseListSchema = z.object({
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
+  /**
+   * `matchSale`, `matchHave` and `takesSwaps` say what the list's Trade posts are open to: the
+   * union of its posts on Trade, else of every post it is in, else true, true and false, which
+   * every list but a want list's two and a sale list's `takesSwaps` carries too
+   */
   matchSale: z.boolean().nullish(),
   matchHave: z.boolean().nullish(),
   /** a sale list open to swaps (Sell or swap) */
@@ -188,12 +193,8 @@ export const createListInputSchema = z.object({
   description: listDescriptionSchema,
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
-  matchSale: z.boolean().default(true),
-  matchHave: z.boolean().default(true),
   /** want lists only; a tab from before it sends none, and gets a list with it off */
   removeOnReceive: z.boolean().default(false),
-  /** a bound sale list's Sell or swap; a tab from before it sends none, and gets Sell only */
-  takesSwaps: z.boolean().default(false),
 });
 
 export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
@@ -228,10 +229,6 @@ export const editListInputSchema = z.object({
   ratio: tradeRatioSchema.nullable().optional(),
   /** want lists only; omitted keeps the stored one, as a tab from before it sends it */
   removeOnReceive: z.boolean().optional(),
-  /** a want list's, taken only while it is off Trade; omitted keeps the stored one, as a tab from before it sends it */
-  openTo: z.enum(["swaps", "both", "buying"]).optional(),
-  /** a bound sale list's, taken only while it is off Trade; omitted keeps the stored one, as a tab from before it sends it */
-  saleOpenTo: z.enum(["sell", "both"]).optional(),
 });
 export type EditListInput = z.infer<typeof editListInputSchema>;
 

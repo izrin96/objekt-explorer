@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 
 import { canBeOnTrade } from "../schemas/list";
-import { type OpenToFlags, resolveOpenTo } from "../schemas/open-to";
 import {
   groupPosts,
   membersOf,
@@ -26,6 +25,7 @@ import {
   type RowList,
   type TradeListState,
 } from "./trade-post-rows";
+import { DEFAULT_OPEN_TO, listStateOf, type PostOpenTo } from "./trade-post-state";
 
 // Two proofs over random runs of the writes a person can make.
 //
@@ -54,16 +54,22 @@ type ModelList = {
   isProfileBind: boolean;
   discoverable: boolean;
   linkedListId: number | null;
-  matchSale: boolean;
-  matchHave: boolean;
-  takesSwaps: boolean;
   bumpedAt: string | null;
 };
+/** The legacy world's lists keep their own Open to, as the build before wrote it. */
+type LegacyList = ModelList & PostOpenTo;
 // the legacy world keeps no state
 type ModelRow = Omit<PostRow, "state"> & { userId: string; state?: PostState };
 // for the pairing alone, which reads no state
 const slots = (rows: ModelRow[]) => rows as PostRow[];
-type World = { lists: ModelList[]; rows: ModelRow[]; nextRow: number };
+type World<L extends ModelList = ModelList> = { lists: L[]; rows: ModelRow[]; nextRow: number };
+
+/**
+ * The lists whose Open to the rows world no longer holds: in no row after a write, so they come
+ * back with the defaults (design decision 6), until a post sets one again. The legacy world reads
+ * them the same way.
+ */
+let defaulted = new Set<number>();
 
 type Write =
   | { kind: "post"; userId: string; choice: PostChoice }
@@ -75,7 +81,6 @@ type Write =
       listType: ModelList["listType"];
       isProfileBind: boolean;
       discoverable: boolean;
-      openTo: OpenToFlags;
       linkedListId: number | null;
     }
   | { kind: "delete"; userId: string; id: number }
@@ -99,24 +104,31 @@ const USERS = ["a", "b"];
 const TYPES = ["have", "sale", "want"] as const;
 const KINDS = ["swap", "sell", "buy"] as const;
 
-const ownOf = (world: World, userId: string) =>
+const ownOf = <L extends ModelList>(world: World<L>, userId: string) =>
   world.lists.filter((list) => list.userId === userId).toSorted((a, b) => a.id - b.id);
 const rowsOf = (world: World, userId: string) => world.rows.filter((row) => row.userId === userId);
-const stateOf = ({
+const stateOf = ({ id, listType, discoverable }: ModelList): TradeListState => ({
   id,
   listType,
   discoverable,
-  matchHave,
-  matchSale,
-  takesSwaps,
-}: ModelList): TradeListState => ({
-  id,
-  listType,
-  discoverable,
-  matchHave,
-  matchSale,
-  takesSwaps,
 });
+
+/** The rows as `lockPosts` reads them for `listStateOf`: one flat row each. */
+const flatRows = (rows: readonly ModelRow[]) =>
+  rows.map(({ id, leadListId, wantListId, state }) => ({
+    id,
+    leadListId,
+    wantListId,
+    ...state!,
+  }));
+
+/** Each list with the Open to its rows give it, as `lockPosts` and the readers read it. */
+const readLists = (world: World) =>
+  world.lists.map((list) => Object.assign({}, list, listStateOf(flatRows(world.rows), list)));
+
+/** A legacy list as the rows world reads it: the defaults once it has left the rows. */
+const asRead = (list: LegacyList): LegacyList =>
+  defaulted.has(list.id) ? { ...list, ...DEFAULT_OPEN_TO } : list;
 
 /** The time a write runs at: the step, so both worlds stamp the same bump. */
 let clock = "";
@@ -261,8 +273,6 @@ function insertList(world: World, write: Write & { kind: "create" }, linkedListI
     isProfileBind: write.isProfileBind,
     discoverable: write.discoverable && canBeOnTrade(write.listType, write.isProfileBind),
     linkedListId,
-    ...resolveOpenTo(write.listType, write.openTo),
-    takesSwaps: false,
     bumpedAt: null,
   };
   if (created.discoverable) created.bumpedAt = clock;
@@ -270,34 +280,35 @@ function insertList(world: World, write: Write & { kind: "create" }, linkedListI
   return created;
 }
 
-/** `writeList`'s check of the link target under the lock. */
+/** `writeList`'s check of the link target under the lock; the new list's own Open to is the default. */
 function linkRefusal(own: PlanList[], write: Write & { kind: "create" }) {
   if (write.linkedListId === null) return null;
   const target = own.find((list) => list.id === write.linkedListId);
   if (!target) return "list_linked_not_found";
-  return pairRefusal(
-    write.listType,
-    { openTo: resolveOpenTo(write.listType, write.openTo), takesSwaps: false },
-    target,
-  );
+  return pairRefusal(write.listType, { openTo: DEFAULT_OPEN_TO, takesSwaps: false }, target);
 }
 
 type SavePlan = Extract<ReturnType<typeof planPost>, { ok: true }>;
 
 /**
- * The list writes of `savePost`: the build before writes the on, `saleSwaps` and off writes; this
- * one writes only a want list's Open to and the sale list's `takes_swaps`, and states the rest as
- * intents.
+ * The list writes of `savePost`: the build before writes the on, `saleSwaps` and off writes and
+ * a want list's Open to and the sale list's `takes_swaps`; this one writes no list, and states
+ * the rest as intents. A post that sets a list's Open to gives the rows world its value again.
  */
-function tradeWrites(world: World, plan: SavePlan, rowsWorld = false) {
+function tradeWrites(world: World<LegacyList>, plan: SavePlan) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
   for (const { id, flags } of plan.on) {
     const list = byId.get(id)!;
-    if (!rowsWorld) turnOn(list);
+    turnOn(list);
     Object.assign(list, flags);
   }
   if (plan.saleSwaps) byId.get(plan.saleSwaps.id)!.takesSwaps = plan.saleSwaps.takesSwaps;
-  if (!rowsWorld) for (const id of plan.off) byId.get(id)!.discoverable = false;
+  for (const id of plan.off) byId.get(id)!.discoverable = false;
+  return touchedBy(plan);
+}
+
+/** The lists `savePost` touches for its own writes. */
+function touchedBy(plan: SavePlan) {
   return [
     ...plan.on.map((on) => on.id),
     ...(plan.saleSwaps ? [plan.saleSwaps.id] : []),
@@ -436,17 +447,17 @@ function frozenMovesOf(rows: readonly PostRow[], ops: RowWrites): PostRowOps["mo
 
 // ---- legacy: the link is written first, and the rows are derived from it
 
-function legacySync(world: World, userId: string) {
+function legacySync(world: World<LegacyList>, userId: string) {
   applyOps(world, userId, frozenPlanPostRows(slots(rowsOf(world, userId)), ownOf(world, userId)));
 }
 
-function legacy(world: World, write: Write): Outcome {
+function legacy(world: World<LegacyList>, write: Write): Outcome {
   const { userId } = write;
   const own = ownOf(world, userId);
   const mine = (list: ModelList) => list.userId === userId;
 
   if (write.kind === "post") {
-    const plan = planPost(own, write.choice);
+    const plan = planPost(own.map(asRead), write.choice);
     if (!plan.ok) return refused(`${plan.reason}:${plan.slug ?? ""}:${plan.partner ?? ""}`);
     const touched: number[] = [];
     // UPDATE lists SET linked_list_id = NULL WHERE mine AND (id IN unlink OR linked_list_id IN unlink)
@@ -487,9 +498,9 @@ function legacy(world: World, write: Write): Outcome {
   }
 
   if (write.kind === "create") {
-    const refusal = linkRefusal(own, write);
+    const refusal = linkRefusal(own.map(asRead), write);
     if (refusal) return refused(refusal);
-    const created = insertList(world, write, write.linkedListId);
+    const created = Object.assign(insertList(world, write, write.linkedListId), DEFAULT_OPEN_TO);
     const changed = [created.id];
     if (write.linkedListId !== null) {
       // … SET linked_list_id = NULL WHERE linked_list_id = L AND id <> N
@@ -528,7 +539,7 @@ function legacy(world: World, write: Write): Outcome {
 }
 
 /** `bumpPerson`'s list half: every list of the person on Trade, all at once. */
-function bumpLists(world: World, userId: string) {
+function bumpLists(world: World<LegacyList>, userId: string) {
   const bumped = new Set<number>();
   for (const list of world.lists) {
     if (list.userId !== userId || !list.discoverable) continue;
@@ -557,7 +568,11 @@ function locked(world: World, userId: string) {
   const partners = partnersOf(slots(rows));
   const lists: PlanList[] = [];
   for (const list of ownOf(world, userId)) {
-    lists.push(Object.assign({}, list, { linkedListId: partners.get(list.id) ?? null }));
+    lists.push(
+      Object.assign({}, list, listStateOf(flatRows(rows), list), {
+        linkedListId: partners.get(list.id) ?? null,
+      }),
+    );
   }
   return {
     lists,
@@ -586,6 +601,9 @@ function writePosts(
   // what a read gives: the partner is the rows', and no write keeps a link
   for (const list of world.lists.filter((entry) => entry.userId === userId)) {
     list.linkedListId = partnerByRows(world.rows, list.id);
+    if (!world.rows.some((row) => row.leadListId === list.id || row.wantListId === list.id)) {
+      defaulted.add(list.id);
+    }
   }
   return plan.relinked;
 }
@@ -597,7 +615,9 @@ function byRows(world: World, write: Write): Outcome {
   if (write.kind === "post") {
     const plan = planPost(own, write.choice);
     if (!plan.ok) return refused(`${plan.reason}:${plan.slug ?? ""}:${plan.partner ?? ""}`);
-    const touched = tradeWrites(world, plan, true);
+    for (const { id, flags } of plan.on) if (flags) defaulted.delete(id);
+    if (plan.saleSwaps) defaulted.delete(plan.saleSwaps.id);
+    const touched = touchedBy(plan);
     const row = plan.replaced === null ? null : postRowOf(current.rows, plan.replaced);
     const post = row === null ? null : { row, lead: plan.lead };
     const relinked = writePosts(world, userId, current, {
@@ -713,11 +733,6 @@ function pickWrite(world: World, rand: () => number, nextList: () => number): Wr
       listType,
       isProfileBind: listType !== "want" && rand() < 0.85,
       discoverable: rand() < 0.3,
-      openTo: pick([
-        { matchSale: true, matchHave: true },
-        { matchSale: false, matchHave: true },
-        { matchSale: true, matchHave: false },
-      ]),
       linkedListId: target?.id ?? null,
     };
   }
@@ -775,11 +790,11 @@ function pickWrite(world: World, rand: () => number, nextList: () => number): Wr
 }
 
 /** Which transitions a write that went through made, read from the lists before it. */
-function count(counts: Counts, before: ModelList[], write: Write) {
+function count(counts: Counts, before: LegacyList[], write: Write) {
   const byId = new Map(before.map((list) => [list.id, list]));
   if (write.kind === "post") {
     const plan = planPost(
-      before.filter((list) => list.userId === write.userId),
+      before.filter((list) => list.userId === write.userId).map(asRead),
       write.choice,
     );
     if (!plan.ok) return;
@@ -814,7 +829,7 @@ const key = (anchor: number, want: number | null) => `${anchor}+${want ?? "-"}`;
 
 /** Posts on Trade as the link gives them. */
 function linkPosts(world: World) {
-  return groupPosts(world.lists.filter((list) => list.discoverable))
+  return groupPosts(readLists(world).filter((list) => list.discoverable))
     .map((post) =>
       key(post.anchor.id, post.want && post.want !== post.anchor ? post.want.id : null),
     )
@@ -852,10 +867,14 @@ function check(world: World, at: string) {
  * Equation E: each side from its list, Open to from the open list, `takes_swaps` from a sale lead.
  * A side on Trade holds the bump of the legacy world's list of the same id; an off side holds it
  * too, or none, since a want list that left the rows off comes back with none (design decision 2).
+ * Open to and `takes_swaps` are the legacy world's list's, which a post's intent or the row it
+ * came from carried, except for a list that left the rows and came back: the defaults
+ * (`defaulted`, design decision 10).
  */
-function checkStates(world: World, legacyWorld: World, at: string) {
+function checkStates(world: World, legacyWorld: World<LegacyList>, at: string) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
   const legacyBump = new Map(legacyWorld.lists.map((list) => [list.id, list.bumpedAt]));
+  const legacyOf = new Map(legacyWorld.lists.map((list) => [list.id, asRead(list)]));
   for (const row of world.rows) {
     const lead = byId.get(row.leadListId)!;
     const want = row.wantListId === null ? undefined : byId.get(row.wantListId)!;
@@ -867,9 +886,9 @@ function checkStates(world: World, legacyWorld: World, at: string) {
       leadBumpedAt: bumpOf(lead, row.state!.leadBumpedAt),
       wantOnTrade: want ? want.discoverable : false,
       wantBumpedAt: want ? bumpOf(want, row.state!.wantBumpedAt) : null,
-      matchHave: open ? open.matchHave : true,
-      matchSale: open ? open.matchSale : true,
-      takesSwaps: lead.listType === "sale" ? lead.takesSwaps : false,
+      matchHave: open ? legacyOf.get(open.id)!.matchHave : true,
+      matchSale: open ? legacyOf.get(open.id)!.matchSale : true,
+      takesSwaps: lead.listType === "sale" ? legacyOf.get(lead.id)!.takesSwaps : false,
     });
   }
 }
@@ -877,7 +896,18 @@ function checkStates(world: World, legacyWorld: World, at: string) {
 // rows without their ids: the row world keeps an id where the link world, whose delete lets the
 // cascade take the row, makes a new one
 const sorted = (world: World) => ({
-  lists: world.lists.map(({ bumpedAt: _, ...list }) => list).toSorted((a, b) => a.id - b.id),
+  lists: world.lists
+    .map((list) => ({
+      id: list.id,
+      userId: list.userId,
+      slug: list.slug,
+      name: list.name,
+      listType: list.listType,
+      isProfileBind: list.isProfileBind,
+      discoverable: list.discoverable,
+      linkedListId: list.linkedListId,
+    }))
+    .toSorted((a, b) => a.id - b.id),
   rows: world.rows
     .map(({ userId, leadListId, wantListId }) => ({ userId, leadListId, wantListId }))
     .toSorted((a, b) => a.leadListId - b.leadListId),
@@ -885,8 +915,9 @@ const sorted = (world: World) => ({
 
 function differential(seed: number, counts: Counts) {
   const rand = mulberry32(seed);
-  const link: World = { lists: [], rows: [], nextRow: 1_000_000 };
+  const link: World<LegacyList> = { lists: [], rows: [], nextRow: 1_000_000 };
   const rows: World = { lists: [], rows: [], nextRow: 1_000_000 };
+  defaulted = new Set();
   let lastList = 0;
   for (let i = 0; i < 40; i++) {
     const at = `seed ${seed} step ${i}`;

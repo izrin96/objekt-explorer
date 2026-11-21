@@ -13,35 +13,28 @@ export type CopySource = Pick<
   | "currency"
   | "profileAddress"
   | "isProfileBind"
-  | "matchSale"
-  | "matchHave"
   | "gridColumns"
   | "hideSerial"
   | "removeOnReceive"
-  | "takesSwaps"
 >;
 
 /**
- * The source's own choices, but never its partner or its place on Trade. With `fixedType` the
- * copy takes that type, and keeps only what still fits it.
+ * The source's own choices, but never its partner, its place on Trade or its Open to, which are
+ * its post's. With `fixedType` the copy takes that type, and keeps only what still fits it.
  */
 export function toCopyDraft(
   list: CopySource,
   { fixedType, profiles }: { fixedType?: ListType; profiles: readonly { address: string }[] },
 ): ListDraft {
   const listType = fixedType ?? list.listType;
-  const keepsOpenTo = list.listType === "want" && listType === "want";
+  const keepsWant = list.listType === "want" && listType === "want";
   const common = {
     name: m.list_copy_name({ name: list.name }),
     description: list.description ?? "",
     linkedListId: null,
-    matchSale: keepsOpenTo ? list.matchSale : EMPTY_DRAFT.matchSale,
-    matchHave: keepsOpenTo ? list.matchHave : EMPTY_DRAFT.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
-    removeOnReceive: keepsOpenTo ? list.removeOnReceive : EMPTY_DRAFT.removeOnReceive,
-    // a sale copy of a sale source; any other type has no sale choice
-    takesSwaps: list.listType === "sale" && listType === "sale" && (list.takesSwaps ?? false),
+    removeOnReceive: keepsWant ? list.removeOnReceive : EMPTY_DRAFT.removeOnReceive,
     regenerateSlug: false,
     // the server carries the list's ratio when the copy keeps its type
     ratio: null,
