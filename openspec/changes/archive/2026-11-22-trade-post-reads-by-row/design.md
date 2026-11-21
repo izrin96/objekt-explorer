@@ -350,3 +350,8 @@ Known findings for later, not fixed here: the web keys feed posts by `post.id`, 
 
   - The broken build (`345273b6`) ran plan-only so nothing executed. It estimates `partner_lists` at 1 row in each of its rescanned spots, the nested-loop shape that blew up.
   - In the fixed plan, `partner_lists` is still estimated at 1 row (actual about 850 to 1,160). It is now scanned once (loops=1), as the outer side of an index lookup into `list_entries` by `list_id`. That is the old build's shape, so the estimate no longer multiplies into rescans. The largest repeat in the plan is about 2,600 memoized `lists_pkey` probes. This remains a watch item for `shared-lists`.
+- **Redeploy of the fix** (`0129b5c4`, web and worker, about 16:55 UTC on 2026-11-21; CI green). G1 again: drift 0 on checks 1 to 7 over 1634 rows, and the set equality matched 1465 posts. Watch afterwards, read-only:
+  - no `partner_sides` query in `pg_stat_activity` over several samples;
+  - load average about 5 to 6, as on `8b05487c`;
+  - main Postgres in bursts that track Traefik (the holders scraper); one 24 s market count and one 14 s feed read just after the restart, with cold caches;
+  - Sentry: no issue in 30 minutes.

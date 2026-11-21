@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list, and a sale list open to swaps, count against a want list open to swaps, and every sale list counts against a want list open to buying: a want list open to swaps only never matches a sale list set to Sell only, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Every list that takes part counts toward the one-way counts, but Can swap counts only inside one linked pair of the user's and one of the person's (see `web-trade-browse` Matches to the signed-in viewer). Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
+Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list, and a sale list open to swaps, count against a want list open to swaps, and every sale list counts against a want list open to buying: a want list open to swaps only never matches a sale list set to Sell only, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. A list in more than one post SHALL count toward its owner through each of its listed posts the user has not hidden, with what any of those posts' Open to allows. The user's own list SHALL count with what any of its posts on Trade allows, or with its own Open to while it is on none. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Every list that takes part counts toward the one-way counts, but Can swap counts only inside one linked pair of the user's and one of the person's (see `web-trade-browse` Matches to the signed-in viewer). Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a person's discoverable lists overlap two of them
@@ -55,6 +55,10 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 #### Scenario: Can swap stays inside one post
 - **WHEN** a person's have list holds a collection on the user's want list "doubles hunt", linked to have list "jiwoo spares", and the person wants a collection on the user's have list "yooyeon spares", linked to a different want list
 - **THEN** the person's row counts both directions, and the person is listed under One way, not Can swap
+
+#### Scenario: A list in two posts
+- **WHEN** rin.trades's want list "Looking for" is the want side of two Swap posts, one set to Swaps only and one to Swaps or buying, and the user's bound sale list, set to Sell only, holds a collection on it
+- **THEN** rin.trades's row counts that collection as one the user has that rin.trades wants
 
 ### Requirement: Current ownership
 An entry on a have or sale list SHALL count toward a match only while its owner can trade it:
@@ -167,7 +171,7 @@ A hide SHALL last until the user unhides it, the post ends, or it comes back (se
 - **THEN** "Binary dupes" stays hidden
 
 ### Requirement: Hidden posts leave matching
-A post the user hid SHALL take no part in the user's Trade. Its lists SHALL not count toward the header sentences, list counts, Any, Mutual or Mutual N, and SHALL not be shown on Browse or For you. Browse and For you SHALL leave out exactly the posts whose lists matching leaves out. When every post of a person is hidden, the person's row SHALL leave both feeds. Hiding a post SHALL not hide its owner's other posts, unless the owner pairs one with it, and unhiding the owner SHALL not unhide the post.
+A post the user hid SHALL take no part in the user's Trade. Its lists SHALL not count toward the header sentences, list counts, Any, Mutual or Mutual N, and SHALL not be shown on Browse or For you. Browse and For you SHALL leave out exactly the posts whose lists matching leaves out. When every post of a person is hidden, the person's row SHALL leave both feeds. Hiding a post SHALL not hide its owner's other posts, unless the owner pairs one with it, and unhiding the owner SHALL not unhide the post. A list that is also in a post the user did not hide SHALL keep counting, and SHALL keep showing, through that post.
 
 #### Scenario: Only the hidden post stops counting
 - **WHEN** rin.trades's two posts each match the user's want list, and the user hides one
@@ -188,6 +192,10 @@ A post the user hid SHALL take no part in the user's Trade. Its lists SHALL not 
 #### Scenario: Feed and matching agree with one half on Trade
 - **WHEN** the user hid rin.trades's post "Binary dupes · Looking for", and only "Looking for" is on Trade again, still paired with "Binary dupes"
 - **THEN** "Looking for" is neither shown on Browse nor counted in matching, and its ⋯ menu on rin.trades's person page offers Unhide post
+
+#### Scenario: A list also in a post the user did not hide
+- **WHEN** rin.trades's have list "Binary dupes" is in two posts, its entries match the user's want list, and the user hides the first post
+- **THEN** the second post still shows on Browse and For you, and "Binary dupes" still counts toward rin.trades's row through it
 
 ### Requirement: Hidden posts list
 The Hidden dialog and Account's Hidden on Trade page SHALL list the posts the user hid, newest hide first, once each however many of a post's lists the user hid. Each SHALL name the lists paired in the post now, on Trade or off, and its owner as a partner card names them (see Partner identity), link to the post page, and offer Unhide. Unhide SHALL bring the post back to Browse and For you. With no hidden post, the list SHALL say so and say that Hide post is in a post's ⋯ menu.
