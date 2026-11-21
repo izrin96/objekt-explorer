@@ -415,7 +415,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **THEN** jinsoul.blue's row reads "You can swap 2", the sale list reads "3 you want", and jinsoul.blue is listed under Mutual
 
 ### Requirement: Bump
-A person with posts on Trade SHALL be able to bump once every 24 hours. A bump SHALL bump every one of their posts on Trade at once: it moves their row to the top of Browse and brings back every idle post. A bump within 24 hours of the person's last bump, counting a list turned on as a bump (see Order and idle posts) and lists since taken off Trade, SHALL be refused, and the control SHALL show when the next bump is allowed. Only the signed-in person SHALL be able to bump their own posts.
+A person with posts on Trade SHALL be able to bump once every 24 hours. A bump SHALL bump every one of their posts on Trade at once: it moves their row to the top of Browse and brings back every idle post. A bump within 24 hours of the person's last bump SHALL be refused, and the control SHALL show when the next bump is allowed. The last bump SHALL count a list turned on as a bump (see Order and idle posts), and a post since taken off Trade while it is still a post. It SHALL not count a want list that has since left every post, because it was unpaired while off Trade or the have or sale list it was paired with was deleted while it was off Trade. Only the signed-in person SHALL be able to bump their own posts.
 
 #### Scenario: Bump moves the row up
 - **WHEN** the owner, last bumped 26 hours ago, bumps
@@ -436,6 +436,10 @@ A person with posts on Trade SHALL be able to bump once every 24 hours. A bump S
 #### Scenario: New list within a day of a bump
 - **WHEN** the owner bumped 3 hours ago and turns Show on Trade on for want list "binary hunt"
 - **THEN** the list takes the bump time from 3 hours ago, and the owner's row keeps its place
+
+#### Scenario: A bump whose post has ended
+- **WHEN** the owner bumped 3 hours ago with one post, have list "spares" with want list "wants", then took it off Trade and deleted "spares", and now posts want list "binary hunt"
+- **THEN** "binary hunt" takes the time it was posted as its bump, and the next bump is allowed 24 hours after that
 
 ### Requirement: Your posts and Post a list
 A signed-in viewer's posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, a Copy link control, a New post control that opens the post composer, and a control that shows or hides the posts. The row SHALL show on Browse; For you and a signed-out visitor SHALL keep a New post control above the feed in its place. Shown, each entry SHALL be one post and show:

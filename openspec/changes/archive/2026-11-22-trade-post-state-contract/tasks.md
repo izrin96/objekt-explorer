@@ -192,8 +192,8 @@
   5. Record in `packages/db/AGENTS.md`, Trade posts: the drop of both columns, the trigger and its function, and that no web or worker build older than step 1's commit can run.
 
   Checks pass for `@repo/db`.
-- [ ] 8.2 The owner commits and pushes 8.1, then confirms that the web and worker images both run step 1's commit or later.
-- [ ] 8.3 **G3**, read-only, with a go-ahead: the new drift script at 0. Then the owner runs migrate alone. **G4**: the new drift script at 0. Record the new rollback floor in As built.
+- [x] 8.2 The owner commits and pushes 8.1, then confirms that the web and worker images both run step 1's commit or later.
+- [x] 8.3 **G3**, read-only, with a go-ahead: the new drift script at 0. Then the owner runs migrate alone. **G4**: the new drift script at 0. Record the new rollback floor in As built.
 
 ## 9. Agent docs
 

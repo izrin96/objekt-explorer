@@ -489,3 +489,11 @@ Groups 1 to 5 and task 6.1, on 2026-11-21, over `38f516a1`. Nothing ran against 
 
     Both match the code.
   - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md` mention neither column, the trigger nor these bump readers, so they need no change.
+- **8.2.** The owner had web and the worker on `0129b5c4` (later than step 1) before step 2. `f4b7e047` was pushed on 2026-11-22.
+- **8.3, G3** (production, read-only, before migrate). Drift checks 1 to 7 read 0 each over 1635 rows (note 1 at 5, note 2 at 9). `lists.bumped_at`, `hidden_trade_post.list_id` and the fill trigger were still present in the `main` database. The owner then ran migrate alone through Dokploy; the migrate app's clone shows `f4b7e04`.
+- **8.3, G4** (production, read-only, after migrate):
+  - drift checks 1 to 7 read 0 each over 1635 rows, with the notes unchanged;
+  - both columns, `hidden_trade_post_list_id_idx`, the trigger and its function are gone;
+  - Sentry: no issue in the 30 minutes around the migrate;
+  - no hide was written in that window, so a production hide after the drop is not yet observed.
+  - New rollback floor: web and worker `8b05487c` or later. Going lower needs a migration that re-adds both columns, then the reconcile.
