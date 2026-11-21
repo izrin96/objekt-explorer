@@ -228,8 +228,8 @@ export const hiddenTradePartner = pgTable(
 );
 
 /**
- * A Trade post the viewer hid. It names the post's `trade_post` row and covers that row's lists
- * (`coveredListsSql`); `writePosts` moves it when a write ends or re-leads the row.
+ * A Trade post the viewer hid. It names the post's `trade_post` row and hides that row's posts
+ * (`hiddenRowsSql`); `writePosts` moves it when a write ends or re-leads the row.
  */
 export const hiddenTradePost = pgTable(
   "hidden_trade_post",

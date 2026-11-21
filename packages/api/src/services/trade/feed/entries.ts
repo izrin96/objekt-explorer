@@ -1,21 +1,23 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { listEntries, listRule, lists } from "@repo/db/schema";
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { listEntries, listRule, lists, tradePost } from "@repo/db/schema";
+import { type SQL, and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { tradeableEntries, untradeableKey } from "../../../lib/trade-feed";
-import type { FeedEntry } from "../../../lib/trade-posts";
-import { postRowSql, postStateSql } from "../../../lib/trade-sql";
+import { type PostRow } from "../../../lib/trade-post-state";
+import { type FeedEntry, type PostFields, postFromRow } from "../../../lib/trade-posts";
+import { listTradeStateSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import type { ListType } from "../../../schemas/list";
 import { redis, redisFailOpen } from "../../redis";
-import { postPartnerSql } from "../lists";
+import { postRowColumns } from "../lists";
 
 const POST_FRESH_SECONDS = 60;
 /** how long a copy stays stored after its last refresh, to be served stale */
 const POST_KEEP_SECONDS = 900;
 const POST_REFRESH_CLAIM_SECONDS = 60;
 
+/** A list's own columns; a post reader adds its row's state ({@link postOfFeedRow}). */
 export const feedListColumns = {
   id: lists.id,
   userId: lists.userId,
@@ -23,30 +25,35 @@ export const feedListColumns = {
   name: lists.name,
   description: lists.description,
   listType: lists.listType,
-  // the other half of the list's pair, from its `trade_post` row
-  linkedListId: postPartnerSql("lists"),
-  postId: postRowSql("lists"),
-  // the post's, from the side of its row, while on Trade (`postStateSql`)
-  matchSale: postStateSql("lists", "matchSale"),
-  matchHave: postStateSql("lists", "matchHave"),
-  takesSwaps: postStateSql("lists", "takesSwaps"),
+  matchSale: lists.matchSale,
+  matchHave: lists.matchHave,
+  takesSwaps: lists.takesSwaps,
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
   profileSlug: lists.profileSlug,
-  bumpedAt: postStateSql("lists", "bumpedAt"),
   updatedAt: lists.updatedAt,
 };
 
-export type FeedList = {
+/**
+ * {@link feedListColumns} for a read that names only a list: its Open to, `takes_swaps` and bump
+ * are the union of its sides on Trade (`listTradeStateSql`), else its own.
+ */
+export const feedListByListColumns = {
+  ...feedListColumns,
+  matchSale: listTradeStateSql("lists", "matchSale"),
+  matchHave: listTradeStateSql("lists", "matchHave"),
+  takesSwaps: listTradeStateSql("lists", "takesSwaps"),
+  bumpedAt: listTradeStateSql("lists", "bumpedAt"),
+};
+
+export type FeedListRow = {
   id: number;
   userId: string;
   slug: string;
   name: string;
   description: string | null;
   listType: ListType;
-  linkedListId: number | null;
-  postId: number | null;
   matchSale: boolean;
   matchHave: boolean;
   takesSwaps: boolean;
@@ -54,9 +61,37 @@ export type FeedList = {
   isProfileBind: boolean;
   profileAddress: string | null;
   profileSlug: string | null;
-  bumpedAt: string | null;
   updatedAt: string;
 };
+
+/** A list as a post holds it, with its side's state from the post's row. */
+export type FeedList = FeedListRow & PostFields;
+
+/** The `trade_post` rows `where` names, by id: what a post reader builds each post's state from. */
+export async function fetchPostRows(where: SQL): Promise<Map<number, PostRow>> {
+  const rows = await db.select(postRowColumns).from(tradePost).where(where);
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+/**
+ * The post a `postsCte` row names (its anchor `id`, its `partner_id` and its row), built from its
+ * row's state; undefined when a list or the row is gone.
+ */
+export function postOfFeedRow<L extends FeedListRow>(
+  feedRow: { id: number; partner_id: number | null; post_id: number },
+  rowById: ReadonlyMap<number, PostRow>,
+  listById: ReadonlyMap<number, L>,
+) {
+  const row = rowById.get(feedRow.post_id);
+  if (!row) return undefined;
+  const member = (id: number | null) =>
+    id !== null && (id === feedRow.id || id === feedRow.partner_id)
+      ? (listById.get(id) ?? null)
+      : null;
+  return postFromRow(row, member(row.leadListId), member(row.wantListId)).find(
+    (post) => post.anchor.id === feedRow.id,
+  );
+}
 
 export type OwnedRef = { userId: string; objektId: string | null; slug: string };
 type FailureRow = { u: number; key: string; token: boolean };

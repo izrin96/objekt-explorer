@@ -1,6 +1,6 @@
 import { pickByOpenTo } from "../schemas/open-to";
 import type { BrowseMatchMode, NearVerb, PickerTag } from "../schemas/trade";
-import type { FeedEntry, TradeList } from "./trade-posts";
+import type { FeedEntry, ListState } from "./trade-posts";
 
 /** A collection slug to the viewer's lists that have it on. */
 export type SlugIndex = ReadonlyMap<string, readonly number[]>;
@@ -200,7 +200,7 @@ function nearIndexes(viewer: Viewer): NearIndexes {
  */
 export function nearFor(
   role: "have" | "want" | "sale",
-  list: TradeList,
+  list: ListState,
   viewer: Viewer,
 ): { verb: NearVerb; index: SlugIndex } | null {
   const near = nearIndexes(viewer);
@@ -216,7 +216,7 @@ export function nearFor(
 /** A side's near collections, a rule's entries left out, and the viewer's lists they are on. */
 export function nearOf(
   role: "have" | "want" | "sale",
-  list: TradeList,
+  list: ListState,
   entries: FeedEntry[],
   viewer: Viewer,
 ) {
@@ -235,7 +235,7 @@ export function nearOf(
  */
 export function pickerTags(
   slugs: readonly string[],
-  sides: readonly { role: "have" | "want" | "sale"; list: TradeList; entries: FeedEntry[] }[],
+  sides: readonly { role: "have" | "want" | "sale"; list: ListState; entries: FeedEntry[] }[],
   viewer: Viewer,
   direction: "give" | "get",
 ) {
@@ -257,7 +257,7 @@ export function pickerTags(
 }
 
 /** What a post's side is matched and ringed against: the viewer's lists it can match. */
-export function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
+export function indexFor(role: "have" | "want" | "sale", list: ListState, viewer: Viewer) {
   if (role === "have") return viewer.tradeWant;
   // a Sell or swap list answers my want lists open to swaps and those open to buying: all of them
   if (role === "sale") return list.takesSwaps ? viewer.want : viewer.saleWant;

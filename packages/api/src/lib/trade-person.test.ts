@@ -1,7 +1,23 @@
 import { describe, expect, test } from "bun:test";
 
 import { type MatchCounts, countsFit, mutualOf } from "../schemas/trade";
-import { matchCounts, type PostOf, swapScore, viewerListIds } from "./trade-person";
+import {
+  type MatchPosts,
+  matchCounts,
+  type PostOf,
+  swapScore,
+  viewerListIds,
+} from "./trade-person";
+
+/** Posts keyed as before rows: each list's one post key is its row, and that row's lead is itself. */
+const keyed = (mine: Record<number, number>, theirs: Record<number, number>): MatchPosts => {
+  const wrap = (keys: Record<number, number>): PostOf =>
+    Object.fromEntries(Object.entries(keys).map(([id, key]) => [id, [key]]));
+  const leads = Object.fromEntries(
+    [...Object.values(mine), ...Object.values(theirs)].map((key) => [key, key]),
+  );
+  return { mine: wrap(mine), theirs: wrap(theirs), leads };
+};
 
 const match = (slug: string, trade: boolean, myListIds: number[] = []) => ({
   slug,
@@ -11,7 +27,7 @@ const match = (slug: string, trade: boolean, myListIds: number[] = []) => ({
   swapPartnerListIds: trade ? [10] : [],
 });
 
-const ONE_POST = { mine: { 1: 1, 2: 1 }, theirs: { 10: 10 } };
+const ONE_POST = keyed({ 1: 1, 2: 1 }, { 10: 10 });
 
 const counts = (over: Partial<MatchCounts>): MatchCounts => ({
   theyHave: 0,
@@ -73,7 +89,7 @@ describe("swapScore", () => {
   const score = (
     theyHave: [string, number][],
     youHave: [string, number][],
-    posts: { mine: PostOf; theirs: PostOf } = { mine, theirs },
+    posts: MatchPosts = keyed(mine, theirs),
   ) =>
     swapScore({
       theyHaveIWant: theyHave.map(([slug, myList]) => swapMatch(slug, myList, 10)),
@@ -140,13 +156,13 @@ describe("swapScore", () => {
     const result = swapScore({
       theyHaveIWant: [swapMatch("a", 2, 10)],
       iHaveTheyWant: [swapMatch("x", 1, 21)],
-      posts: { mine, theirs: { 10: 10, 11: 10, 20: 20, 21: 20 } },
+      posts: keyed(mine, { 10: 10, 11: 10, 20: 20, 21: 20 }),
     });
     expect(result).toEqual({ swap: 0, swapTheyHave: 0, swapPair: null });
   });
 
   test("the person's unlinked lists are no swap", () => {
-    expect(score([["a", 2]], [["x", 1]], { mine, theirs: {} })).toEqual({
+    expect(score([["a", 2]], [["x", 1]], keyed(mine, {}))).toEqual({
       swap: 0,
       swapTheyHave: 0,
       swapPair: null,
@@ -162,7 +178,7 @@ describe("swapScore", () => {
     const result = swapScore({
       theyHaveIWant: [{ ...swapMatch("a", 2, 10), swapPartnerListIds: [10, 20] }],
       iHaveTheyWant: [swapMatch("x", 1, 21)],
-      posts: { mine, theirs: { 10: 10, 11: 10, 20: 20, 21: 20 } },
+      posts: keyed(mine, { 10: 10, 11: 10, 20: 20, 21: 20 }),
     });
     expect(result).toEqual({
       swap: 1,
@@ -175,7 +191,7 @@ describe("swapScore", () => {
     // P2 swaps 1 for 1 with the person's post 10 and with their post 20
     const theyHave = [swapMatch("a", 4, 20), swapMatch("b", 4, 10)];
     const youHave = [swapMatch("x", 3, 21), swapMatch("y", 3, 11)];
-    const posts = { mine, theirs: { 10: 10, 11: 10, 20: 20, 21: 20 } };
+    const posts = keyed(mine, { 10: 10, 11: 10, 20: 20, 21: 20 });
     for (const order of [(m: typeof theyHave) => m, (m: typeof theyHave) => m.toReversed()]) {
       expect(
         swapScore({ theyHaveIWant: order(theyHave), iHaveTheyWant: order(youHave), posts }),
@@ -205,5 +221,59 @@ describe("mutual", () => {
     expect(countsFit("they_have", sale)).toBe(true);
     expect(countsFit("they_want", sale)).toBe(false);
     expect(countsFit("all", sale)).toBe(true);
+  });
+});
+
+describe("swapScore over rows", () => {
+  const swap = (slug: string, myList: number, theirList: number) => ({
+    slug,
+    trade: true,
+    myListIds: [myList],
+    swapMyListIds: [myList],
+    swapPartnerListIds: [theirList],
+  });
+  // the viewer's post: row 3 holds have list 3 and want list 4
+  const mine: PostOf = { 3: [3], 4: [3] };
+
+  test("a partner have list in two pair rows swaps through the row whose want list matches", () => {
+    // have list 10 leads row 100 with want list 11 and row 101 with want list 12
+    const posts: MatchPosts = {
+      mine,
+      theirs: { 10: [100, 101], 11: [100], 12: [101] },
+      leads: { 3: 3, 100: 10, 101: 10 },
+    };
+    const result = swapScore({
+      theyHaveIWant: [swap("hyerin-302z", 4, 10)],
+      iHaveTheyWant: [swap("yooyeon-205z", 3, 12)],
+      posts,
+    });
+    expect(result).toEqual({
+      swap: 1,
+      swapTheyHave: 1,
+      swapPair: { myListIds: [3, 4], theirPostId: 10 },
+    });
+    // through the other want list, the same lead names the other row's pairing
+    expect(
+      swapScore({
+        theyHaveIWant: [swap("hyerin-302z", 4, 10)],
+        iHaveTheyWant: [swap("yooyeon-205z", 3, 11)],
+        posts,
+      }).swap,
+    ).toBe(1);
+  });
+
+  test("a tie names the pairing the lead ids name, whatever the row ids", () => {
+    // row 100 is led by list 20, row 101 by list 10: as before rows, the lower lead wins
+    const posts: MatchPosts = {
+      mine,
+      theirs: { 20: [100], 21: [100], 10: [101], 11: [101] },
+      leads: { 3: 3, 100: 20, 101: 10 },
+    };
+    const result = swapScore({
+      theyHaveIWant: [swap("a", 4, 20), swap("b", 4, 10)],
+      iHaveTheyWant: [swap("x", 3, 21), swap("y", 3, 11)],
+      posts,
+    });
+    expect(result.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 10 });
   });
 });

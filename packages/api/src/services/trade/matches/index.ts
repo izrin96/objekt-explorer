@@ -30,7 +30,7 @@ export async function personMatch(userId: string, personId: string) {
   const sides = await resolveCompareSides(userId, undefined, false);
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:person:10:${userId}:${scope}:${personId}`,
+    `trade:person:11:${userId}:${scope}:${personId}`,
     PERSON_TTL_SECONDS,
     async () => {
       if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return null;

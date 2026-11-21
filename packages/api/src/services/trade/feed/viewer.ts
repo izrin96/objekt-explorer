@@ -9,6 +9,7 @@ import {
   copyPairsOf,
   groupBySlug,
 } from "../../../lib/trade-rank";
+import { listTradeStateSql } from "../../../lib/trade-sql";
 import { narrowIndex, type RuleWant, ruleOnlyWant, type Viewer } from "../../../lib/trade-viewer";
 import { unique } from "../../../lib/unique";
 import { getCache, redis, redisFailOpen } from "../../redis";
@@ -65,20 +66,27 @@ export async function hasTradeList(userId: string) {
 export async function fetchViewer(userId: string): Promise<Viewer> {
   const version =
     (await redisFailOpen("trade version", () => redis.get(tradeVersionKey(userId)))) ?? "0";
-  const [haveIndex, saleLists, wantRows] = await Promise.all([
+  // each list's Open to and takes_swaps is the union of its posts on Trade, else its own
+  const [haveIndex, saleLists, wantLists, wantRows] = await Promise.all([
     getCache(`trade:have-lists:${userId}:${version}`, HAVE_TTL_SECONDS, () =>
       computeHaveIndex(userId),
     ),
     db
-      .select({ id: lists.id, takesSwaps: lists.takesSwaps })
+      .select({ id: lists.id, takesSwaps: listTradeStateSql("lists", "takesSwaps") })
       .from(lists)
       .where(and(eq(lists.userId, userId), eq(lists.listType, "sale"))),
+    db
+      .select({
+        id: lists.id,
+        matchSale: listTradeStateSql("lists", "matchSale"),
+        matchHave: listTradeStateSql("lists", "matchHave"),
+      })
+      .from(lists)
+      .where(and(eq(lists.userId, userId), eq(lists.listType, "want"))),
     db
       .selectDistinct({
         listId: listEntries.listId,
         slug: listEntries.collectionSlug,
-        matchSale: lists.matchSale,
-        matchHave: lists.matchHave,
         ruleId: listEntries.ruleId,
       })
       .from(listEntries)
@@ -115,8 +123,8 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
   const saleIds = new Set(saleLists.map((list) => list.id));
   // a sale list that takes swaps answers want lists open to swaps too
   const swapSaleIds = new Set(saleLists.flatMap((list) => (list.takesSwaps ? [list.id] : [])));
-  const noSaleIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
-  const noHaveIds = new Set(wantRows.flatMap((row) => (row.matchHave ? [] : [row.listId])));
+  const noSaleIds = new Set(wantLists.flatMap((list) => (list.matchSale ? [] : [list.id])));
+  const noHaveIds = new Set(wantLists.flatMap((list) => (list.matchHave ? [] : [list.id])));
   return {
     have,
     want,

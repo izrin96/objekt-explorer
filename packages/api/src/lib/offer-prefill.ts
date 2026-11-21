@@ -2,7 +2,7 @@ import type { ListType } from "../schemas/list";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "../schemas/offer";
 import type { MatchCounts, NearVerb } from "../schemas/trade";
 import { entryObjektId, type ListEntryRef, matchEntry } from "./offer-rules";
-import type { PostOf } from "./trade-person";
+import { bestPairing, type MatchPosts } from "./trade-person";
 import type { Match } from "./trade-rank";
 
 /** A match as an offer reads it: which lists it runs through, not which posts. */
@@ -102,18 +102,20 @@ export function fillMatches<M extends FillMatch>(
   matched: {
     theyHaveIWant: readonly M[];
     iHaveTheyWant: readonly M[];
-    posts: { theirs: PostOf };
+    posts: MatchPosts;
   },
   swapPair: MatchCounts["swapPair"],
   post?: { offerIds: ReadonlySet<number>; wantIds: ReadonlySet<number> },
 ): { get: M[]; give: M[] } {
-  if (swapPair && (!post || post.offerIds.has(swapPair.theirPostId))) {
+  // the pairing's own row, since a list in two of their posts names the same lead in both
+  const best = swapPair ? bestPairing(matched) : null;
+  if (swapPair && best && (!post || post.offerIds.has(swapPair.theirPostId))) {
     const mine = new Set(swapPair.myListIds);
     const inPair = (matches: readonly M[]) =>
       matches.flatMap((match) => {
         const myListIds = match.swapMyListIds.filter((id) => mine.has(id));
-        const partnerListIds = match.swapPartnerListIds.filter(
-          (id) => matched.posts.theirs[id] === swapPair.theirPostId,
+        const partnerListIds = match.swapPartnerListIds.filter((id) =>
+          matched.posts.theirs[id]?.includes(best.theirPost),
         );
         return myListIds.length > 0 && partnerListIds.length > 0
           ? [{ ...match, myListIds, partnerListIds }]

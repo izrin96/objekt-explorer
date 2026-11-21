@@ -12,7 +12,8 @@ import {
 } from "../schemas/trade";
 import { type AddressRef, defaultProfile, type LinkedProfile } from "../schemas/trade-person";
 import { DAY_MS } from "./time";
-import { matchCounts, type PostOf } from "./trade-person";
+import { type MatchPosts, matchCounts, type PostLeads, type PostOf } from "./trade-person";
+import { type PostRow, sideStateOf } from "./trade-post-state";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
@@ -48,19 +49,31 @@ export function matchSides(myLists: MyList[], listId: number | null, filter: Tra
 }
 
 /**
- * The user's posts as Can swap reads them: each list paired by {@link pickedSides} keys to its
- * pair's have or sale list, when that list offers swaps, as `partner_post` keys the partner's. A
- * list with no such pair has no key.
+ * The user's posts as Can swap reads them: each of the user's pair rows whose two lists are among
+ * `myLists` on opposite sides ({@link pickedSides}' rule), keyed by the row on both halves when its
+ * have or sale half offers swaps by its side in the row ({@link sideStateOf}), as `partner_post`
+ * keys the partner's. On Trade or off, as `pickedSides` pairs them. A list with no such row has
+ * no key; a list in two has two.
  */
-export function viewerPostOf(myLists: MyList[]): PostOf {
-  const postOf: Partial<Record<number, number>> = {};
-  for (const list of myLists) {
-    const { paired } = pickedSides(list, myLists);
-    if (!paired) continue;
-    const offering = tradeSideOf(list.listType) === "have" ? list : paired;
-    if (offersSwaps(offering)) postOf[list.id] = offering.id;
+export function viewerPostOf(
+  myLists: (MyList & OpenToFlags & { takesSwaps: boolean })[],
+  rows: PostRow[],
+): { postOf: PostOf; postLeads: PostLeads } {
+  const byId = new Map(myLists.map((list) => [list.id, list]));
+  const postOf: Partial<Record<number, number[]>> = {};
+  const postLeads: Partial<Record<number, number>> = {};
+  for (const row of rows) {
+    const lead = byId.get(row.leadListId);
+    const want = row.wantListId === null ? undefined : byId.get(row.wantListId);
+    if (!lead || !want) continue;
+    if (tradeSideOf(lead.listType) !== "have" || tradeSideOf(want.listType) !== "want") continue;
+    if (!offersSwaps({ listType: lead.listType, takesSwaps: sideStateOf(row, lead).takesSwaps })) {
+      continue;
+    }
+    for (const list of [lead, want]) (postOf[list.id] ??= []).push(row.id);
+    postLeads[row.id] = lead.id;
   }
-  return postOf;
+  return { postOf, postLeads };
 }
 
 type Verdict = "ok" | "not_owned" | "not_transferable";
@@ -186,7 +199,9 @@ export type Candidate = {
   /** their want entries on collections I have, with what the want list is open to */
   theyWant: TheyWant[];
   /** their matched lists that sit in a post that can swap, keyed as {@link PostOf} */
-  postOf: Record<string, number>;
+  postOf: Record<string, number[]>;
+  /** each of those posts' lead, by row, as {@link PostLeads} */
+  postLeads: Record<string, number>;
 };
 
 type Recounted = {
@@ -195,7 +210,7 @@ type Recounted = {
   theyHaveIWant: Match[];
   iHaveTheyWant: Match[];
   dropped: Dropped[];
-  posts: { mine: PostOf; theirs: PostOf };
+  posts: MatchPosts;
 };
 
 /** One of my want lists holding a collection, and whether it is open to buying and to swaps. */
@@ -223,7 +238,7 @@ export function recount(
   holdings: Holdings,
   myWants: ReadonlyMap<string, MyWant[]>,
   myHaves: MyHaves,
-  myPostOf: PostOf,
+  myPosts: { postOf: PostOf; postLeads: PostLeads },
 ): Recounted {
   const theyHaveIWant: Match[] = [];
   const iHaveTheyWant: Match[] = [];
@@ -317,7 +332,11 @@ export function recount(
     theyHaveIWant,
     iHaveTheyWant,
     dropped,
-    posts: { mine: myPostOf, theirs: candidate.postOf },
+    posts: {
+      mine: myPosts.postOf,
+      theirs: candidate.postOf,
+      leads: { ...myPosts.postLeads, ...candidate.postLeads },
+    },
   };
 }
 

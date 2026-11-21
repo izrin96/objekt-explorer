@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { PostOf } from "./trade-person";
+import type { PostRow } from "./trade-post-state";
 import {
   type Candidate,
   copyKey,
@@ -34,7 +34,18 @@ const slugs = (prefix: string, n: number) => Array.from({ length: n }, (_, i) =>
 // every swap runs through one post on each side, so Can swap is the smaller swap count
 const MY_POST = 1;
 const THEIR_POST = 2;
-const ONE_POST = { mine: { [MY_POST]: MY_POST }, theirs: { [THEIR_POST]: THEIR_POST } };
+const ONE_POST = {
+  mine: { [MY_POST]: [MY_POST] },
+  theirs: { [THEIR_POST]: [THEIR_POST] },
+  leads: { [MY_POST]: MY_POST, [THEIR_POST]: THEIR_POST },
+};
+
+/** Post keys as before rows: list id → its post's lead, which is also the post's row here. */
+type Keys = Record<number, number>;
+const asRows = (keys: Keys): Record<string, number[]> =>
+  Object.fromEntries(Object.entries(keys).map(([id, key]) => [id, [key]]));
+const leadsOf = (keys: Keys) => Object.fromEntries(Object.values(keys).map((key) => [key, key]));
+type KeyedCandidate = Omit<Candidate, "postOf" | "postLeads"> & { postOf?: Keys };
 
 const matches = (prefix: string, n: number, trade = true) =>
   slugs(prefix, n).map((slug) => ({
@@ -56,14 +67,21 @@ const partner = (userId: string, a: number, b: number, updatedAt = RECENT, trade
 
 /** {@link recountWith} with no posts unless a test names them: these tests aren't about Can swap. */
 const recount = (
-  candidate: Omit<Candidate, "postOf"> & { postOf?: Candidate["postOf"] },
+  { postOf = {}, ...candidate }: KeyedCandidate,
   partnerAddresses: Parameters<typeof recountWith>[1],
   holdings: Holdings,
   myWants: Parameters<typeof recountWith>[3],
   myHaves: MyHaves,
-  myPostOf: PostOf = {},
+  mine: Keys | Parameters<typeof recountWith>[5] = {},
 ) =>
-  recountWith({ postOf: {}, ...candidate }, partnerAddresses, holdings, myWants, myHaves, myPostOf);
+  recountWith(
+    { ...candidate, postOf: asRows(postOf), postLeads: leadsOf(postOf) },
+    partnerAddresses,
+    holdings,
+    myWants,
+    myHaves,
+    "postOf" in mine ? mine : { postOf: asRows(mine as Keys), postLeads: leadsOf(mine as Keys) },
+  );
 
 const order = (partners: { userId: string }[]) => partners.map((p) => p.userId);
 
@@ -197,14 +215,14 @@ describe("ownership", () => {
       myHaves.set(slug, { verdict: "ok", listIds: [20] });
     }
 
-    const a: Candidate = {
+    const a: KeyedCandidate = {
       userId: "A",
       listUpdatedAt: { 1: RECENT, 2: RECENT },
       theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}`, sale: false })),
       theyWant: aWant.map((slug) => ({ listId: 2, slug, matchSale: true, matchHave: true })),
       postOf: { 1: 1, 2: 1 },
     };
-    const b: Candidate = {
+    const b: KeyedCandidate = {
       userId: "B",
       listUpdatedAt: { 3: RECENT, 4: RECENT },
       theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null, sale: false })),
@@ -229,7 +247,7 @@ describe("ownership", () => {
 
   test("my own sold have entry drops the match it made", () => {
     const judged = new Map([["mine", { verdict: "not_owned" as const, listIds: [] }]]);
-    const candidate: Candidate = {
+    const candidate: KeyedCandidate = {
       userId: "P",
       listUpdatedAt: { 5: RECENT },
       theyHave: [],
@@ -814,7 +832,8 @@ describe("matchSides", () => {
       holdings,
       new Map([["binary", [{ listId: 3, matchSale: true, matchHave: true }]]]),
       { all: myHaves, trade: myHaves, sale: new Map() },
-      viewerPostOf(lists),
+      // Spares and Binary hunt are one post, as `viewerPostOf` keys a pair row
+      { 1: 1, 3: 1 },
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);
@@ -1069,34 +1088,106 @@ describe("recount: the lists a swap runs through", () => {
       { all: new Map(), trade: new Map(), sale: new Map() },
       { 1: 1, 3: 1 },
     );
-    expect(result.posts).toEqual({ mine: { 1: 1, 3: 1 }, theirs: { 7: 7, 8: 7 } });
+    expect(result.posts).toEqual({
+      mine: { 1: [1], 3: [1] },
+      theirs: { 7: [7], 8: [7] },
+      leads: { 1: 1, 7: 7 },
+    });
   });
 });
 
 describe("viewerPostOf", () => {
-  test("keys both halves of a pair to its have or sale list, and nothing else", () => {
-    const lists: MyList[] = [
-      { id: 1, listType: "have", linkedListId: 3 },
-      { id: 2, listType: "have", linkedListId: null },
-      { id: 3, listType: "want", linkedListId: 1 },
-      { id: 5, listType: "sale", linkedListId: 6, takesSwaps: true },
-      { id: 6, listType: "want", linkedListId: 5 },
-      { id: 7, listType: "want", linkedListId: null },
-    ];
-    expect(viewerPostOf(lists)).toEqual({ 1: 1, 3: 1, 5: 5, 6: 5 });
+  const row = (over: Partial<PostRow> & Pick<PostRow, "id" | "leadListId">): PostRow => ({
+    wantListId: null,
+    leadOnTrade: true,
+    wantOnTrade: true,
+    leadBumpedAt: null,
+    wantBumpedAt: null,
+    matchHave: true,
+    matchSale: true,
+    takesSwaps: false,
+    ...over,
+  });
+  const list = (id: number, listType: MyList["listType"], takesSwaps = false) => ({
+    id,
+    listType,
+    linkedListId: null,
+    takesSwaps,
+    matchHave: true,
+    matchSale: true,
   });
 
-  test("a pair whose sale list is Sell only keys to nothing", () => {
-    const lists: MyList[] = [
-      { id: 5, listType: "sale", linkedListId: 6, takesSwaps: false },
-      { id: 6, listType: "want", linkedListId: 5 },
+  test("keys both halves of a pair row to the row, on Trade or off", () => {
+    const lists = [
+      list(1, "have"),
+      list(2, "have"),
+      list(3, "want"),
+      list(5, "sale"),
+      list(6, "want"),
+      list(7, "want"),
     ];
-    expect(viewerPostOf(lists)).toEqual({});
+    const rows = [
+      row({ id: 100, leadListId: 1, wantListId: 3 }),
+      row({ id: 101, leadListId: 2 }),
+      row({
+        id: 102,
+        leadListId: 5,
+        wantListId: 6,
+        takesSwaps: true,
+        leadOnTrade: false,
+        wantOnTrade: false,
+      }),
+      row({ id: 103, leadListId: 7 }),
+    ];
+    // off Trade, the sale list's own takes_swaps decides; it is false here
+    expect(viewerPostOf(lists, rows)).toEqual({
+      postOf: { 1: [100], 3: [100] },
+      postLeads: { 100: 1 },
+    });
+    expect(
+      viewerPostOf([...lists.slice(0, 3), list(5, "sale", true), list(6, "want")], rows),
+    ).toEqual({
+      postOf: { 1: [100], 3: [100], 5: [102], 6: [102] },
+      postLeads: { 100: 1, 102: 5 },
+    });
   });
 
-  test("a link to a list not taking part keys to nothing", () => {
-    // the have list it links to is unbound, so it is not among the lists
-    expect(viewerPostOf([{ id: 3, listType: "want", linkedListId: 1 }])).toEqual({});
+  test("a sale list on Trade swaps by its row, whatever the list's own", () => {
+    const rows = [row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: true })];
+    expect(viewerPostOf([list(5, "sale", false), list(6, "want")], rows).postOf).toEqual({
+      5: [102],
+      6: [102],
+    });
+    const sellOnly = [row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: false })];
+    expect(viewerPostOf([list(5, "sale", true), list(6, "want")], sellOnly).postOf).toEqual({});
+  });
+
+  test("an off pair whose row's takes_swaps lags the list follows the list", () => {
+    const rows = [
+      row({ id: 102, leadListId: 5, wantListId: 6, takesSwaps: false, leadOnTrade: false }),
+    ];
+    expect(viewerPostOf([list(5, "sale", true), list(6, "want")], rows).postOf).toEqual({
+      5: [102],
+      6: [102],
+    });
+  });
+
+  test("a list in two pair rows keys to both", () => {
+    const rows = [
+      row({ id: 100, leadListId: 1, wantListId: 3 }),
+      row({ id: 104, leadListId: 1, wantListId: 4 }),
+    ];
+    expect(viewerPostOf([list(1, "have"), list(3, "want"), list(4, "want")], rows)).toEqual({
+      postOf: { 1: [100, 104], 3: [100], 4: [104] },
+      postLeads: { 100: 1, 104: 1 },
+    });
+  });
+
+  test("a row whose other list does not take part keys to nothing", () => {
+    // the have list it pairs with is unbound, so it is not among the lists
+    expect(
+      viewerPostOf([list(3, "want")], [row({ id: 100, leadListId: 1, wantListId: 3 })]),
+    ).toEqual({ postOf: {}, postLeads: {} });
   });
 });
 

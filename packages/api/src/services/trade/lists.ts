@@ -1,4 +1,4 @@
-import { lists } from "@repo/db/schema";
+import { lists, tradePost } from "@repo/db/schema";
 import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 
 import { column, offersSwapsSql, onTradeRowsSql } from "../../lib/trade-sql";
@@ -59,24 +59,9 @@ export const postPartnerSql = (alias: string) =>
   )`;
 
 /**
- * The lists `viewer`'s hides cover, as `id`: the lead and the want list of each hidden row, on
- * Trade or off. A hide names a `trade_post` row and covers its lists. The same rule as
- * {@link hidesOfSql}, as a set the planner builds once and hashes for a fixed viewer; the two
- * change together.
- */
-export const coveredListsSql = (viewer: UserRef) =>
-  sql`SELECT hide_row.lead_list_id AS id FROM hidden_trade_post hp
-      JOIN trade_post hide_row ON hide_row.id = hp.post_id
-      WHERE hp.user_id = ${ref(viewer)}
-    UNION ALL
-    SELECT hide_row.want_list_id FROM hidden_trade_post hp
-      JOIN trade_post hide_row ON hide_row.id = hp.post_id
-      WHERE hp.user_id = ${ref(viewer)}`;
-
-/**
  * `viewer`'s hides whose row holds the list `alias`, as `hp`, from FROM onwards: the lists of a
- * hidden row, read from the list's end. For a read that needs the hides themselves, per viewer
- * and list; a read asking about many lists for one viewer takes {@link inHiddenPostSql}.
+ * hidden row, read from the list's end, for `unhidePost`, which names a list. A read about posts
+ * takes the row form, `hiddenRowsSql` (lib/trade-sql.ts).
  */
 export const hidesOfSql = (viewer: UserRef, alias: string) =>
   sql`FROM hidden_trade_post hp
@@ -84,14 +69,19 @@ export const hidesOfSql = (viewer: UserRef, alias: string) =>
     WHERE hp.user_id = ${ref(viewer)}
       AND ${column(alias, "id")} IN (hide_row.lead_list_id, hide_row.want_list_id)`;
 
-/** Whether the list `alias` is a list of a row `viewer` hid ({@link coveredListsSql}). */
-export const inHiddenPostSql = (viewer: UserRef, alias: string) =>
-  sql`EXISTS (
-    SELECT 1 FROM (${coveredListsSql(viewer)}) covered WHERE covered.id = ${column(alias, "id")})`;
-
-/** When `viewer` last hid the post the list `alias` belongs to, or null when it is not hidden. */
-export const hiddenPostAtSql = (viewer: UserRef, alias: string) =>
-  sql`(SELECT max(hp.created_at) ${hidesOfSql(viewer, alias)})`;
+/** A `trade_post` row's columns as `PostRow` (lib/trade-posts.ts) holds them. */
+export const postRowColumns = {
+  id: tradePost.id,
+  leadListId: tradePost.leadListId,
+  wantListId: tradePost.wantListId,
+  leadOnTrade: tradePost.leadOnTrade,
+  wantOnTrade: tradePost.wantOnTrade,
+  leadBumpedAt: tradePost.leadBumpedAt,
+  wantBumpedAt: tradePost.wantBumpedAt,
+  matchHave: tradePost.matchHave,
+  matchSale: tradePost.matchSale,
+  takesSwaps: tradePost.takesSwaps,
+};
 
 /** {@link matchableList} over a raw `lists` row, aliased or not. */
 export const matchableListSql = (alias?: string) =>

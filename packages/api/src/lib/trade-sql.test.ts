@@ -5,15 +5,20 @@ import { PgDialect } from "drizzle-orm/pg-core";
 
 import { offersSwaps, openToOf } from "../schemas/open-to";
 import { tagsOf } from "../schemas/trade-post";
+import { sideStateOf } from "./trade-post-state";
 import {
   TAG_WHERE,
   byOpenToSql,
+  hiddenRowAtSql,
+  hiddenRowsSql,
+  listPostSql,
+  listTradeStateSql,
   offersSwapsSql,
   onTradeRowsSql,
   postRowSql,
   personBumpSql,
-  postStateSql,
   sideOnTradeSql,
+  sideStateSql,
 } from "./trade-sql";
 
 const render = (q: SQL) => new PgDialect().sqlToQuery(q);
@@ -129,28 +134,16 @@ describe("postRowOf and postRowSql", () => {
   });
 });
 
-describe("onTradeRowsSql, sideOnTradeSql and postStateSql", () => {
+describe("onTradeRowsSql, sideOnTradeSql and personBumpSql", () => {
   test("one row per list side on Trade, the post's Open to by list type", () => {
     expect(flat(onTradeRowsSql(sql`(matchable l)`))).toBe(
-      "SELECT l.id, l.user_id, l.list_type, CASE WHEN l.list_type = 'want' THEN tp.match_sale ELSE l.match_sale END AS match_sale, CASE WHEN l.list_type = 'want' THEN tp.match_have ELSE l.match_have END AS match_have, CASE WHEN l.list_type = 'sale' THEN tp.takes_swaps ELSE l.takes_swaps END AS takes_swaps, side.bumped_at, l.updated_at, l.created_at FROM trade_post tp CROSS JOIN LATERAL (VALUES (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at), (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at) ) side(list_id, on_trade, bumped_at) JOIN lists l ON l.id = side.list_id WHERE side.on_trade AND (matchable l)",
+      "SELECT l.id, l.user_id, l.list_type, CASE WHEN l.list_type = 'want' THEN tp.match_sale ELSE l.match_sale END AS match_sale, CASE WHEN l.list_type = 'want' THEN tp.match_have ELSE l.match_have END AS match_have, CASE WHEN l.list_type = 'sale' THEN tp.takes_swaps ELSE l.takes_swaps END AS takes_swaps, side.bumped_at, l.updated_at, l.created_at, tp.id AS post_id, side.side FROM trade_post tp CROSS JOIN LATERAL (VALUES (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at, 'lead'), (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at, 'want') ) side(list_id, on_trade, bumped_at, side) JOIN lists l ON l.id = side.list_id WHERE side.on_trade AND (matchable l)",
     );
   });
 
   test("a list with a side on Trade", () => {
     expect(flat(sideOnTradeSql("l"))).toBe(
       "EXISTS (SELECT 1 FROM trade_post side_row WHERE (side_row.lead_list_id = l.id AND side_row.lead_on_trade) OR (side_row.want_list_id = l.id AND side_row.want_on_trade))",
-    );
-  });
-
-  // the row `postRowSql` names, rendered for `l`
-  const row =
-    "FROM (SELECT 1) state_one LEFT JOIN trade_post state_row ON state_row.id = coalesce((SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.lead_list_id = l.id), (SELECT min(post_row.id) FROM trade_post post_row WHERE post_row.want_list_id = l.id)))";
-  const onSide =
-    "CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_on_trade ELSE state_row.want_on_trade END";
-
-  test("the bump from the list's side, null for a list in no row", () => {
-    expect(flat(postStateSql("l", "bumpedAt"))).toBe(
-      `(SELECT CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_bumped_at ELSE state_row.want_bumped_at END ${row}`,
     );
   });
 
@@ -161,16 +154,95 @@ describe("onTradeRowsSql, sideOnTradeSql and postStateSql", () => {
     );
     expect(q.params).toEqual(["u1"]);
   });
+});
 
-  test("a want list's Open to and a sale list's takes_swaps from the row only while on Trade", () => {
-    expect(flat(postStateSql("l", "matchHave"))).toBe(
-      `(SELECT CASE WHEN l.list_type = 'want' AND ${onSide} THEN state_row.match_have ELSE l.match_have END ${row}`,
+describe("sideStateSql, listTradeStateSql and listPostSql", () => {
+  const onSide = "CASE WHEN r.lead_list_id = l.id THEN r.lead_on_trade ELSE r.want_on_trade END";
+  // the rows in which `l` has a side on Trade
+  const sides =
+    "FROM trade_post st WHERE (st.lead_list_id = l.id AND st.lead_on_trade) OR (st.want_list_id = l.id AND st.want_on_trade)";
+
+  test("sideStateOf takes from the row exactly what sideStateSql's CASE does", () => {
+    // per list type and side state: whether each flag comes from the row
+    const rows = [
+      ["want", true, { matchHave: true, matchSale: true, takesSwaps: false }],
+      ["want", false, { matchHave: false, matchSale: false, takesSwaps: false }],
+      ["sale", true, { matchHave: false, matchSale: false, takesSwaps: true }],
+      ["sale", false, { matchHave: false, matchSale: false, takesSwaps: false }],
+      ["have", true, { matchHave: false, matchSale: false, takesSwaps: false }],
+    ] as const;
+    for (const [listType, onTrade, fromRow] of rows) {
+      const list = { id: 1, listType, matchHave: false, matchSale: false, takesSwaps: false };
+      const state = sideStateOf(
+        {
+          id: 9,
+          leadListId: 1,
+          wantListId: null,
+          leadOnTrade: onTrade,
+          wantOnTrade: false,
+          leadBumpedAt: null,
+          wantBumpedAt: null,
+          matchHave: true,
+          matchSale: true,
+          takesSwaps: true,
+        },
+        list,
+      );
+      expect({
+        matchHave: state.matchHave,
+        matchSale: state.matchSale,
+        takesSwaps: state.takesSwaps,
+      }).toEqual(fromRow);
+    }
+  });
+
+  test("a list's side in one row: the row's value while on Trade, else the list's own", () => {
+    expect(flat(sideStateSql("r", "l", "onTrade"))).toBe(`(${onSide})`);
+    expect(flat(sideStateSql("r", "l", "bumpedAt"))).toBe(
+      "(CASE WHEN r.lead_list_id = l.id THEN r.lead_bumped_at ELSE r.want_bumped_at END)",
     );
-    expect(flat(postStateSql("l", "matchSale"))).toBe(
-      `(SELECT CASE WHEN l.list_type = 'want' AND ${onSide} THEN state_row.match_sale ELSE l.match_sale END ${row}`,
+    expect(flat(sideStateSql("r", "l", "matchHave"))).toBe(
+      `(CASE WHEN l.list_type = 'want' AND ${onSide} THEN r.match_have ELSE l.match_have END)`,
     );
-    expect(flat(postStateSql("l", "takesSwaps"))).toBe(
-      `(SELECT CASE WHEN l.list_type = 'sale' AND ${onSide} THEN state_row.takes_swaps ELSE l.takes_swaps END ${row}`,
+    expect(flat(sideStateSql("r", "l", "matchSale"))).toBe(
+      `(CASE WHEN l.list_type = 'want' AND ${onSide} THEN r.match_sale ELSE l.match_sale END)`,
+    );
+    expect(flat(sideStateSql("r", "l", "takesSwaps"))).toBe(
+      `(CASE WHEN l.list_type = 'sale' AND ${onSide} THEN r.takes_swaps ELSE l.takes_swaps END)`,
+    );
+  });
+
+  test("a list read by itself: the union of its sides on Trade, else its own", () => {
+    expect(flat(listTradeStateSql("l", "bumpedAt"))).toBe(
+      `(SELECT max(CASE WHEN st.lead_list_id = l.id THEN st.lead_bumped_at ELSE st.want_bumped_at END) ${sides})`,
+    );
+    expect(flat(listTradeStateSql("l", "matchHave"))).toBe(
+      `(CASE WHEN l.list_type = 'want' THEN coalesce((SELECT bool_or(st.match_have) ${sides}), l.match_have) ELSE l.match_have END)`,
+    );
+    expect(flat(listTradeStateSql("l", "matchSale"))).toBe(
+      `(CASE WHEN l.list_type = 'want' THEN coalesce((SELECT bool_or(st.match_sale) ${sides}), l.match_sale) ELSE l.match_sale END)`,
+    );
+    expect(flat(listTradeStateSql("l", "takesSwaps"))).toBe(
+      `(CASE WHEN l.list_type = 'sale' THEN coalesce((SELECT bool_or(st.takes_swaps) ${sides}), l.takes_swaps) ELSE l.takes_swaps END)`,
+    );
+  });
+
+  test("a list's post: the lowest row with its side on Trade, else postRowSql's", () => {
+    expect(flat(listPostSql("l"))).toBe(
+      `coalesce((SELECT min(st.id) ${sides}), ${flat(postRowSql("l"))})`,
+    );
+  });
+});
+
+describe("hiddenRowsSql and hiddenRowAtSql", () => {
+  test("a viewer's hides by row, through the primary key", () => {
+    const set = render(hiddenRowsSql("u1"));
+    expect(set.sql).toBe(
+      "SELECT hidden_row.post_id FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = $1",
+    );
+    expect(set.params).toEqual(["u1"]);
+    expect(flat(hiddenRowAtSql(sql.raw("p.user_id"), sql.raw("p.post_id")))).toBe(
+      "(SELECT hidden_row.created_at FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = p.user_id AND hidden_row.post_id = p.post_id)",
     );
   });
 });

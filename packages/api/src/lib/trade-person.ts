@@ -1,9 +1,18 @@
 import type { MatchCounts } from "../schemas/trade";
 
-type Direction = { slug: string; trade: boolean; myListIds: number[] }[];
+type Direction = readonly { slug: string; trade: boolean; myListIds: number[] }[];
 
-/** List id → post key, a post key being the id of the post's have or sale list. */
-export type PostOf = Readonly<Partial<Record<number, number>>>;
+/**
+ * List id → its post keys: the `trade_post` rows it is in as half of a pair that can swap. A list
+ * in two such rows has two keys.
+ */
+export type PostOf = Readonly<Partial<Record<number, readonly number[]>>>;
+
+/** Post key (a row id) → the row's lead list id, which is that feed post's `id`. */
+export type PostLeads = Readonly<Partial<Record<number, number>>>;
+
+/** Both sides' post keys, and the lead of every row either names. */
+export type MatchPosts = { mine: PostOf; theirs: PostOf; leads: PostLeads };
 
 type SwapMatch = {
   slug: string;
@@ -14,48 +23,51 @@ type SwapMatch = {
 };
 
 type Matched = {
-  theyHaveIWant: SwapMatch[];
-  iHaveTheyWant: SwapMatch[];
-  posts: { mine: PostOf; theirs: PostOf };
+  theyHaveIWant: readonly SwapMatch[];
+  iHaveTheyWant: readonly SwapMatch[];
+  posts: MatchPosts;
 };
 
-type Pairing = { swap: number; theyHave: number; myPost: number; theirPost: number };
+type Pairing = {
+  swap: number;
+  theyHave: number;
+  myLead: number;
+  theirLead: number;
+  myPost: number;
+  theirPost: number;
+};
 
 function beats(a: Pairing, b: Pairing) {
   return (
     (a.swap - b.swap ||
       a.theyHave - b.theyHave ||
+      b.theirLead - a.theirLead ||
+      b.myLead - a.myLead ||
       b.theirPost - a.theirPost ||
       b.myPost - a.myPost) > 0
   );
 }
 
 /**
- * What the two can swap inside one post on each side: per pairing of my post with theirs, the
- * smaller of the two swap counts, and the best pairing wins. `swapTheyHave` is that pairing's
- * count of what they have; a tie keeps the pairing with more of it, then the lowest post keys, so
- * the cached row and a live recount name the same pairing whatever order the matches came in.
- * `swapPair` names it: my lists in that post, and their post by its key, which is also its feed
- * post's id.
+ * The best pairing of my post with theirs: per pairing, the smaller of the two swap counts, and
+ * the best wins. A tie keeps the pairing with more of what they have, then the lowest leads, then
+ * the lowest rows, so the cached row and a live recount name the same pairing whatever order the
+ * matches came in. `myPost` and `theirPost` are rows.
  */
-export function swapScore({
-  theyHaveIWant,
-  iHaveTheyWant,
-  posts,
-}: Matched): Pick<MatchCounts, "swap" | "swapTheyHave" | "swapPair"> {
-  const byPairing = (matches: SwapMatch[]) => {
+export function bestPairing({ theyHaveIWant, iHaveTheyWant, posts }: Matched): Pairing | null {
+  const byPairing = (matches: readonly SwapMatch[]) => {
     const pairings = new Map<string, { myPost: number; theirPost: number; slugs: Set<string> }>();
     for (const match of matches) {
       for (const mine of match.swapMyListIds) {
-        const myPost = posts.mine[mine];
-        if (myPost === undefined) continue;
-        for (const theirs of match.swapPartnerListIds) {
-          const theirPost = posts.theirs[theirs];
-          if (theirPost === undefined) continue;
-          const key = `${myPost}:${theirPost}`;
-          const pairing = pairings.get(key) ?? { myPost, theirPost, slugs: new Set<string>() };
-          pairing.slugs.add(match.slug);
-          pairings.set(key, pairing);
+        for (const myPost of posts.mine[mine] ?? []) {
+          for (const theirs of match.swapPartnerListIds) {
+            for (const theirPost of posts.theirs[theirs] ?? []) {
+              const key = `${myPost}:${theirPost}`;
+              const pairing = pairings.get(key) ?? { myPost, theirPost, slugs: new Set<string>() };
+              pairing.slugs.add(match.slug);
+              pairings.set(key, pairing);
+            }
+          }
         }
       }
     }
@@ -65,18 +77,32 @@ export function swapScore({
   let best: Pairing | null = null;
   for (const [key, { myPost, theirPost, slugs }] of byPairing(theyHaveIWant)) {
     const swap = Math.min(slugs.size, youHave.get(key)?.slugs.size ?? 0);
-    if (swap === 0) continue;
-    const next = { swap, theyHave: slugs.size, myPost, theirPost };
+    const myLead = posts.leads[myPost];
+    const theirLead = posts.leads[theirPost];
+    if (swap === 0 || myLead === undefined || theirLead === undefined) continue;
+    const next = { swap, theyHave: slugs.size, myLead, theirLead, myPost, theirPost };
     if (!best || beats(next, best)) best = next;
   }
+  return best;
+}
+
+/**
+ * What the two can swap inside one post on each side ({@link bestPairing}). `swapTheyHave` is
+ * that pairing's count of what they have. `swapPair` names it: my lists in that post, and their
+ * post by its lead, which is also its feed post's id.
+ */
+export function swapScore(
+  matched: Matched,
+): Pick<MatchCounts, "swap" | "swapTheyHave" | "swapPair"> {
+  const best = bestPairing(matched);
   if (!best) return { swap: 0, swapTheyHave: 0, swapPair: null };
-  const myListIds = Object.entries(posts.mine).flatMap(([id, post]) =>
-    post === best.myPost ? [Number(id)] : [],
+  const myListIds = Object.entries(matched.posts.mine).flatMap(([id, rows]) =>
+    rows?.includes(best.myPost) ? [Number(id)] : [],
   );
   return {
     swap: best.swap,
     swapTheyHave: best.theyHave,
-    swapPair: { myListIds, theirPostId: best.theirPost },
+    swapPair: { myListIds, theirPostId: best.theirLead },
   };
 }
 

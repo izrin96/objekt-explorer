@@ -1,6 +1,5 @@
 import { groupKey, mergePayload } from "@repo/api/lib/notification-group";
 import { type AlertMatch, alertPayloadSchema } from "@repo/api/schemas/notification";
-import { hidesOfSql } from "@repo/api/services/trade/lists";
 import { db, type Tx } from "@repo/db";
 import { notification, wantAlertSent } from "@repo/db/schema";
 import { and, inArray, isNull, sql } from "drizzle-orm";
@@ -36,19 +35,18 @@ export async function recordRun(
   });
 }
 
-/** Drops each recipient's hide of the post that holds the list: the hide of the list's row. */
+/** Drops each recipient's hide of the post the entry was read through: the hide of that row. */
 async function unhidePosts(tx: Tx, unhides: Unhide[], now: Date) {
   await tx.execute(sql`
     DELETE FROM hidden_trade_post gone
     USING unnest(
       ${sql.param(unhides.map((unhide) => unhide.userId))}::text[],
-      ${sql.param(unhides.map((unhide) => unhide.listId))}::int[]
-    ) AS u(user_id, list_id)
-    JOIN lists pl ON pl.id = u.list_id
+      ${sql.param(unhides.map((unhide) => unhide.postId))}::int[]
+    ) AS u(user_id, post_id)
     WHERE gone.user_id = u.user_id
+      AND gone.post_id = u.post_id
       -- a hide made while this run was reading is newer than the entry it read
       AND gone.created_at < ${now.toISOString()}
-      AND gone.post_id IN (SELECT hp.post_id ${hidesOfSql(sql`u.user_id`, "pl")})
   `);
 }
 

@@ -46,19 +46,20 @@ export const postRowSql = (alias: string) =>
 /**
  * One row per list side on Trade, from the `trade_post` rows: Trade state and bump from the side,
  * a want list's Open to and a sale list's `takes_swaps` from the row (a want list in a row is
- * always its open list, and a sale list is only ever a lead), the rest from the list. The body of
- * `postsCte`'s `on_trade`; `matchable` filters `l`, the list.
+ * always its open list, and a sale list is only ever a lead), the rest from the list, with the
+ * row as `post_id` and the side (`lead` or `want`). The body of `postsCte`'s `on_trade`;
+ * `matchable` filters `l`, the list.
  */
 export const onTradeRowsSql = (matchable: SQL) => sql`SELECT l.id, l.user_id, l.list_type,
     CASE WHEN l.list_type = 'want' THEN tp.match_sale ELSE l.match_sale END AS match_sale,
     CASE WHEN l.list_type = 'want' THEN tp.match_have ELSE l.match_have END AS match_have,
     CASE WHEN l.list_type = 'sale' THEN tp.takes_swaps ELSE l.takes_swaps END AS takes_swaps,
-    side.bumped_at, l.updated_at, l.created_at
+    side.bumped_at, l.updated_at, l.created_at, tp.id AS post_id, side.side
   FROM trade_post tp
   CROSS JOIN LATERAL (VALUES
-    (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at),
-    (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at)
-  ) side(list_id, on_trade, bumped_at)
+    (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at, 'lead'),
+    (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at, 'want')
+  ) side(list_id, on_trade, bumped_at, side)
   JOIN lists l ON l.id = side.list_id
   WHERE side.on_trade AND ${matchable}`;
 
@@ -84,26 +85,79 @@ const POST_STATE = {
 } as const;
 
 /**
- * A list's value from the side of the row {@link postRowSql} names: its bump, null for a list in
- * no row; a want list's Open to and a sale list's `takes_swaps` from the row while that side is on
- * Trade, else the list's own, so a list off Trade reads as it always did, even after an off-Trade
- * `list.edit` the row has not caught up with. `onTradeSql`'s type rule, for `alias`.
+ * The list `list`'s side in the `trade_post` row `row`: its Trade state and bump; a want list's
+ * Open to and a sale list's `takes_swaps` from the row while that side is on Trade, else the
+ * list's own. The SQL twin of `sideStateOf` (lib/trade-posts.ts), locked to it by
+ * `trade-sql.test.ts`.
  */
-export function postStateSql(alias: string, field: "bumpedAt"): SQL<string | null>;
-export function postStateSql(
+export function sideStateSql(row: string, list: string, field: "onTrade"): SQL<boolean>;
+export function sideStateSql(row: string, list: string, field: "bumpedAt"): SQL<string | null>;
+export function sideStateSql(
+  row: string,
+  list: string,
+  field: "matchHave" | "matchSale" | "takesSwaps",
+): SQL<boolean>;
+export function sideStateSql(
+  row: string,
+  list: string,
+  field: "onTrade" | "bumpedAt" | keyof typeof POST_STATE,
+) {
+  const side = (name: string) =>
+    sql.raw(
+      `CASE WHEN ${row}.lead_list_id = ${list}.id THEN ${row}.lead_${name} ELSE ${row}.want_${name} END`,
+    );
+  if (field === "onTrade") return sql`(${side("on_trade")})`;
+  if (field === "bumpedAt") return sql`(${side("bumped_at")})`;
+  const rule = POST_STATE[field];
+  return sql`(CASE WHEN ${column(list, "list_type")} = '${sql.raw(rule.from)}' AND ${side("on_trade")}
+    THEN ${column(row, rule.own)} ELSE ${column(list, rule.own)} END)`;
+}
+
+/** The `trade_post` rows, as `st`, in which the list `alias` has a side on Trade. */
+const onTradeSidesOf = (alias: string) =>
+  sql`FROM trade_post st
+    WHERE (st.lead_list_id = ${column(alias, "id")} AND st.lead_on_trade)
+      OR (st.want_list_id = ${column(alias, "id")} AND st.want_on_trade)`;
+
+/**
+ * A list's value as a read that names only the list takes it: the union of its sides on Trade
+ * (any post that allows it), else the list's own; a want list's Open to and a sale list's
+ * `takes_swaps` by `onTradeSql`'s type rule, the list's own for every other list. Its bump is the
+ * latest of its sides on Trade, else null. A shared list holds the same entries in every post, so
+ * a match exists exactly when one of its posts allows it.
+ */
+export function listTradeStateSql(alias: string, field: "bumpedAt"): SQL<string | null>;
+export function listTradeStateSql(
   alias: string,
   field: "matchHave" | "matchSale" | "takesSwaps",
 ): SQL<boolean>;
-export function postStateSql(alias: string, field: "bumpedAt" | keyof typeof POST_STATE) {
-  const side = (name: string) =>
-    sql.raw(
-      `CASE WHEN state_row.lead_list_id = ${alias}.id THEN state_row.lead_${name} ELSE state_row.want_${name} END`,
-    );
-  const rule = field === "bumpedAt" ? null : POST_STATE[field];
-  const value = rule
-    ? sql`CASE WHEN ${column(alias, "list_type")} = '${sql.raw(rule.from)}' AND ${side("on_trade")}
-        THEN state_row.${sql.raw(rule.own)} ELSE ${column(alias, rule.own)} END`
-    : side("bumped_at");
-  return sql`(SELECT ${value} FROM (SELECT 1) state_one
-    LEFT JOIN trade_post state_row ON state_row.id = ${postRowSql(alias)})`;
+export function listTradeStateSql(alias: string, field: "bumpedAt" | keyof typeof POST_STATE) {
+  if (field === "bumpedAt") {
+    return sql`(SELECT max(CASE WHEN st.lead_list_id = ${column(alias, "id")} THEN st.lead_bumped_at ELSE st.want_bumped_at END) ${onTradeSidesOf(alias)})`;
+  }
+  const rule = POST_STATE[field];
+  const own = column(alias, rule.own);
+  return sql`(CASE WHEN ${column(alias, "list_type")} = '${sql.raw(rule.from)}'
+    THEN coalesce((SELECT bool_or(st.${sql.raw(rule.own)}) ${onTradeSidesOf(alias)}), ${own})
+    ELSE ${own} END)`;
 }
+
+/**
+ * The post a read keyed by a list shows: the lowest row whose side holding the list is on Trade,
+ * else {@link postRowSql}'s row. With one row per list the two name the same row.
+ */
+export const listPostSql = (alias: string) =>
+  sql<number | null>`coalesce((SELECT min(st.id) ${onTradeSidesOf(alias)}), ${postRowSql(alias)})`;
+
+/**
+ * The `trade_post` rows `viewer` hid, as `post_id`: a set the planner builds once and hashes, read
+ * through the hide's primary key. A post is hidden when its row is in it.
+ */
+export const hiddenRowsSql = (viewer: SQL | string) =>
+  sql`SELECT hidden_row.post_id FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = ${viewer}`;
+
+/** When `viewer` hid the `trade_post` row `row`, or null when they did not. */
+export const hiddenRowAtSql = (viewer: SQL | string, row: SQL) =>
+  sql<
+    string | null
+  >`(SELECT hidden_row.created_at FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = ${viewer} AND hidden_row.post_id = ${row})`;

@@ -5,16 +5,13 @@
  * here compares them with a second copy. It also checks that no offer's `post_id` is another
  * person's row.
  *
- * Check 2 stays a check, not a note, until `shared-lists`: the planner holds a list in several
- * rows, but readers still take one row per list, and `planPost` refuses a list in another post.
+ * Check 2 stays a check, not a note, until `shared-lists`: the planner and the readers hold a
+ * list in several rows, but `planPost` refuses a list in another post.
  *
  * Checks 5 and 6 hold whatever rows a list is in. Check 5 reads each list from its end: its
  * `discoverable` is "on Trade in some row", which `writePosts` derives from the rows. Check 6
- * reads each row against the post rules: no want-side state without a want list, `takes_swaps`
- * only under a sale lead, and, for a list in exactly one row whose side is on, the row's Open to
- * (its open list) and `takes_swaps` (its sale lead) equal the list's, since some reads still take
- * a list's Open to as its post's. Off Trade a row's Open to may lag its list after `list.edit`, so
- * 6's last part reads only sides on Trade. They need migration `trade_post_state`.
+ * reads each row against the post rules: no want-side state without a want list, and
+ * `takes_swaps` only under a sale lead. They need migration `trade_post_state`.
  *
  * Check 7 holds whatever the pairing: a hide names a row (`hidden_trade_post.post_id`), and a
  * person never hides their own post, so no hide sits on its hider's own row. It needs migration
@@ -90,25 +87,10 @@ const CHECKS: [label: string, query: SQL][] = [
   ],
   [
     "a row whose Open to or takes_swaps breaks a post rule (row ids)",
-    sql`WITH held AS (
-          SELECT s.list_id, count(*) AS rows
-          FROM trade_post tp
-          CROSS JOIN LATERAL (VALUES (tp.lead_list_id), (tp.want_list_id)) s(list_id)
-          WHERE s.list_id IS NOT NULL
-          GROUP BY s.list_id)
-        SELECT tp.id FROM trade_post tp
+    sql`SELECT tp.id FROM trade_post tp
         JOIN lists o ON o.id = tp.lead_list_id
-        LEFT JOIN lists w ON w.id = tp.want_list_id
-        LEFT JOIN held ho ON ho.list_id = o.id
-        LEFT JOIN held hw ON hw.list_id = w.id
         WHERE (tp.want_list_id IS NULL AND (tp.want_on_trade OR tp.want_bumped_at IS NOT NULL))
-          OR (o.list_type <> 'sale' AND tp.takes_swaps)
-          OR (w.id IS NOT NULL AND hw.rows = 1 AND tp.want_on_trade
-            AND (tp.match_have <> w.match_have OR tp.match_sale <> w.match_sale))
-          OR (w.id IS NULL AND o.list_type = 'want' AND ho.rows = 1 AND tp.lead_on_trade
-            AND (tp.match_have <> o.match_have OR tp.match_sale <> o.match_sale))
-          OR (o.list_type = 'sale' AND ho.rows = 1 AND tp.lead_on_trade
-            AND tp.takes_swaps <> o.takes_swaps)`,
+          OR (o.list_type <> 'sale' AND tp.takes_swaps)`,
   ],
   [
     "a hide on its hider's own row (row ids)",

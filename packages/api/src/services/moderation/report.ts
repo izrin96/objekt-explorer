@@ -6,8 +6,9 @@ import { lists, message, report, trade, userBlock } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../../lib/offer-rules";
-import { namedListVerdict, postSnapshot } from "../../lib/report-post";
+import { namedListVerdict, postSnapshot, type SnapshotList } from "../../lib/report-post";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../../lib/sanctions";
+import { sideStateOf } from "../../lib/trade-post-state";
 import type { ReportInput } from "../../schemas/moderation";
 import { lockUsersForWrite } from "../account/cosmo-link";
 import { afterBlockChange, findMembership, parseCard } from "../chat";
@@ -18,7 +19,7 @@ import {
   publishCancelled,
 } from "../offer/cancel";
 import { fetchOffers } from "../offer/view";
-import { postPartnerSql } from "../trade/lists";
+import { namedPostsOf } from "../trade/feed/post-cards";
 import { findAccount, refuseModeration } from "./core";
 
 const REPORTS_PER_DAY = 20;
@@ -70,7 +71,6 @@ const snapshotColumns = {
   id: lists.id,
   userId: lists.userId,
   listType: lists.listType,
-  linkedListId: postPartnerSql("lists"),
   takesSwaps: lists.takesSwaps,
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,
@@ -82,20 +82,41 @@ const snapshotColumns = {
 };
 
 /**
- * The post a report names, as it stands now. A list deleted before the report arrives is left
- * off, so the report still goes through; another account's list, or one of another type, is
- * refused as a mismatched conversation or trade is. Being on Trade is recorded, never required.
+ * The post a report names, as it stands now: the row the list shows ({@link namedPostsOf}), off
+ * Trade sides included, each list on Trade as its side in that row is. A list deleted before the
+ * report arrives is left off, so the report still goes through; another account's list, or one of
+ * another type, is refused as a mismatched conversation or trade is. Being on Trade is recorded,
+ * never required.
  */
 async function reportedPost(targetUserId: string, listId: number) {
-  const [named] = await db.select(snapshotColumns).from(lists).where(eq(lists.id, listId));
+  const [[named], { rowOf, listById }] = await Promise.all([
+    db.select(snapshotColumns).from(lists).where(eq(lists.id, listId)),
+    namedPostsOf([listId]),
+  ]);
   const verdict = namedListVerdict(named, targetUserId);
   if (verdict === "refuse") throw new ORPCError("NOT_FOUND");
   if (!named) return null;
-  const partner =
-    named.linkedListId === null
-      ? []
-      : await db.select(snapshotColumns).from(lists).where(eq(lists.id, named.linkedListId));
-  return postSnapshot([named, ...partner], named.id);
+  const row = rowOf(listId);
+  if (!row) return postSnapshot([{ ...named, linkedListId: null }], named.id);
+  const snapshotOf = (id: number | null, partner: number | null): SnapshotList[] => {
+    const list = id === null ? undefined : listById.get(id);
+    if (!list) return [];
+    const { onTrade, matchHave, matchSale, takesSwaps } = sideStateOf(row, list);
+    return [
+      {
+        ...list,
+        linkedListId: partner,
+        matchHave,
+        matchSale,
+        takesSwaps,
+        discoverable: onTrade,
+      },
+    ];
+  };
+  return postSnapshot(
+    [...snapshotOf(row.leadListId, row.wantListId), ...snapshotOf(row.wantListId, row.leadListId)],
+    named.id,
+  );
 }
 
 /** The excerpt and the also-block land in the report's transaction, or not at all. */

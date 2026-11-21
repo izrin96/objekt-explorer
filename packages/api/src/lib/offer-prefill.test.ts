@@ -10,6 +10,7 @@ import {
   type PartnerEntry,
   postSides,
 } from "./offer-prefill";
+import { type MatchPosts, type PostOf } from "./trade-person";
 import { matchCounts } from "./trade-person";
 
 function item(
@@ -206,8 +207,23 @@ describe("fillMatches", () => {
     swapPartnerListIds: [],
   });
   type M = ReturnType<typeof swap>;
-  const person = (theyHaveIWant: M[], iHaveTheyWant: M[], theirs: Record<number, number>) => {
-    const matched = { theyHaveIWant, iHaveTheyWant, posts: { mine, theirs } };
+  // each list's one post key is a row named by its lead, as before rows
+  const asRows = (keys: Record<number, number>): PostOf =>
+    Object.fromEntries(Object.entries(keys).map(([id, key]) => [id, [key]]));
+  const person = (
+    theyHaveIWant: M[],
+    iHaveTheyWant: M[],
+    theirs: Record<number, number>,
+    posts?: MatchPosts,
+  ) => {
+    const leads = Object.fromEntries(
+      [...Object.values(mine), ...Object.values(theirs)].map((key) => [key, key]),
+    );
+    const matched = {
+      theyHaveIWant,
+      iHaveTheyWant,
+      posts: posts ?? { mine: asRows(mine), theirs: asRows(theirs), leads },
+    };
     return { matched, counts: matchCounts(matched) };
   };
   const slugs = (matches: M[]) => matches.map((match) => match.slug);
@@ -491,5 +507,39 @@ describe("nearGroups", () => {
         get: none,
       }),
     ).toEqual([]);
+  });
+});
+
+describe("fillMatches over rows", () => {
+  const swap = (slug: string, my: number[], partner: number[]) => ({
+    slug,
+    myListIds: my,
+    partnerListIds: partner,
+    trade: true,
+    swapMyListIds: my,
+    swapPartnerListIds: partner,
+  });
+
+  test("a have list in two of their posts: only the best row's lists", () => {
+    // their have list 10 leads row 100 (want 11) and row 101 (want 12); 12 takes two from me
+    const matched = {
+      theyHaveIWant: [swap("a", [4], [10]), swap("b", [4], [10])],
+      iHaveTheyWant: [swap("x", [3], [11]), swap("y", [3], [12]), swap("z", [3], [12])],
+      posts: {
+        mine: { 3: [3], 4: [3] },
+        theirs: { 10: [100, 101], 11: [100], 12: [101] },
+        leads: { 3: 3, 100: 10, 101: 10 },
+      },
+    };
+    const counts = matchCounts(matched);
+    expect(counts.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 10 });
+    const { get, give } = fillMatches(matched, counts.swapPair);
+    expect(counts.swap).toBe(2);
+    expect(get.map((match) => match.partnerListIds)).toEqual([[10], [10]]);
+    // row 101's want list only: 11 is in the other post
+    expect(give.map((match) => [match.slug, match.partnerListIds])).toEqual([
+      ["y", [12]],
+      ["z", [12]],
+    ]);
   });
 });

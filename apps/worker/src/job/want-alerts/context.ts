@@ -1,7 +1,7 @@
 import { addressesByUser, copyPairsOf, toPartnerIdentity } from "@repo/api/lib/trade-rank";
-import { offersSwapsSql } from "@repo/api/lib/trade-sql";
+import { listTradeStateSql, sideStateSql } from "@repo/api/lib/trade-sql";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
-import { matchableListSql, postPartnerSql } from "@repo/api/services/trade/lists";
+import { matchableListSql } from "@repo/api/services/trade/lists";
 import { fetchHoldings } from "@repo/api/services/trade/matches/holdings";
 import { db } from "@repo/db";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";
@@ -9,6 +9,10 @@ import { and, asc, inArray, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
 import { type Alert, type AlertList, type AlertPair, prefKey } from "../../lib/want-alert-match";
+
+/** `offersSwapsSql` with the list's `takes_swaps` from its side in the row `r`. */
+const offersSwapsBySide = (list: string) =>
+  sql`(${sql.raw(list)}.list_type = 'have' OR (${sql.raw(list)}.list_type = 'sale' AND ${sideStateSql("r", list, "takesSwaps")}))`;
 
 export async function loadContext<P extends AlertPair>(pairs: P[]) {
   const listIds = unique(pairs.flatMap((pair) => [pair.offerListId, pair.wantListId]));
@@ -19,19 +23,24 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       slug: lists.slug,
       name: lists.name,
       listType: lists.listType,
-      takesSwaps: lists.takesSwaps,
-      matchHave: lists.matchHave,
+      // the recipient's list as a list: the union of its posts on Trade, else its own
+      takesSwaps: listTradeStateSql("lists", "takesSwaps"),
+      matchHave: listTradeStateSql("lists", "matchHave"),
       profileAddress: lists.profileAddress,
-      // `pickedSides`' pair, which Compare with on the alert's link compares, when both halves
-      // can swap. The outer columns are qualified by hand: drizzle leaves them bare, and bare
-      // they would bind to `p`
+      // a pair row, as `pickedSides` pairs (opposite sides, both lists matchable), whose two
+      // halves can swap: the offering half offers swaps and the want half takes them, each by its
+      // side in that row. The outer columns are qualified by hand: drizzle leaves them bare, and
+      // bare they would bind to `p`
       swapPair: sql<boolean>`exists (
-        SELECT 1 FROM lists p
-        WHERE p.id = ${postPartnerSql("lists")} AND p.user_id = lists.user_id
+        SELECT 1 FROM trade_post r
+        JOIN lists p ON p.id = CASE WHEN r.lead_list_id = lists.id THEN r.want_list_id ELSE r.lead_list_id END
+        WHERE (r.lead_list_id = lists.id OR r.want_list_id = lists.id)
+          AND p.user_id = lists.user_id
           AND ${matchableListSql("p")}
           AND (p.list_type = 'want') <> (lists.list_type = 'want')
-          AND CASE WHEN p.list_type = 'want' THEN ${offersSwapsSql("lists")} AND p.match_have
-            ELSE ${offersSwapsSql("p")} AND lists.match_have END
+          AND CASE WHEN p.list_type = 'want'
+            THEN ${offersSwapsBySide("lists")} AND ${sideStateSql("r", "p", "matchHave")}
+            ELSE ${offersSwapsBySide("p")} AND ${sideStateSql("r", "lists", "matchHave")} END
       )`,
     })
     .from(lists)

@@ -32,6 +32,8 @@ export type AlertPair = {
   wantListId: number;
   slug: string;
   objektId: string | null;
+  /** the `trade_post` row of the post the new entry is read through */
+  postId: number;
   /** the new entry sits in a post its recipient hid before it was added */
   hidden?: boolean;
   /** the partner's list as its post shows it: a sale list set to Sell only (forward) */
@@ -118,9 +120,10 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
   if (!(input.prefs.get(key) ?? NOTIFICATION_DEFAULTS[type])) return { kind: "skip" };
   let mode = input.matches.get(key) ?? ALERT_MATCH_DEFAULT;
   // a sale can never become a swap, so no recheck either
-  // the partner's Open to is its post's, read from the pair's row; the recipient's is its list's
-  const offerSale = forward ? first.partnerSale : offer.sale;
-  const wantsSwaps = forward ? want.wantsSwaps : first.partnerWantsSwaps;
+  // the partner's Open to is its posts', read from each pair's row: a group holds one pair per
+  // post, and the partner allows what any of them does. The recipient's is its list's
+  const offerSale = forward ? group.every((pair) => pair.partnerSale) : offer.sale;
+  const wantsSwaps = forward ? want.wantsSwaps : group.some((pair) => pair.partnerWantsSwaps);
   if (mode === "mutual" && offerSale) return { kind: "skip" };
   if (mode === "mutual" && !recipient.swapPair) {
     // a list with no pair can never make Can swap, so it alerts on a swap one way, as Any does
@@ -166,13 +169,14 @@ function tradable<P extends AlertPair>(
   return verdict === "ok" ? "ok" : "unowned";
 }
 
-export type Unhide = { userId: string; listId: number };
+export type Unhide = { userId: string; postId: number };
 
 /**
  * The hidden posts to bring back: one whose owner added an entry, after the hide, that matches
- * a list of the person who hid it. `listId` is the list the entry is on. This follows the match
- * alone, never the recipient's alert settings, since a post returning is not a notification.
- * `unowned` are the pairs to read again, as in {@link selectAlerts}.
+ * a list of the person who hid it. `postId` is the hidden post's row, one per hidden pair, so a
+ * hide of another post holding the same list stays. This follows the match alone, never the
+ * recipient's alert settings, since a post returning is not a notification. `unowned` are the
+ * pairs to read again, as in {@link selectAlerts}.
  */
 export function selectUnhides<P extends AlertPair>(
   input: AlertInput<P>,
@@ -190,10 +194,10 @@ export function selectUnhides<P extends AlertPair>(
       unowned.push(...group);
       continue;
     }
-    const forward = first.direction === "forward";
-    const userId = (forward ? want : offer).userId;
-    const listId = (forward ? offer : want).id;
-    unhides.set(`${userId}:${listId}`, { userId, listId });
+    const userId = (first.direction === "forward" ? want : offer).userId;
+    for (const pair of group) {
+      if (pair.hidden) unhides.set(`${userId}:${pair.postId}`, { userId, postId: pair.postId });
+    }
   }
   return { unhides: [...unhides.values()], unowned };
 }

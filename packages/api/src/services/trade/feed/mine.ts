@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { lists } from "@repo/db/schema";
+import { lists, tradePost } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { refuse } from "../../../lib/refuse";
@@ -11,28 +11,38 @@ import {
   isPostIdle,
   latest,
   nextBumpAt,
-  pairPosts,
 } from "../../../lib/trade-posts";
-import { personBumpSql, sideOnTradeSql } from "../../../lib/trade-sql";
+import { personBumpSql } from "../../../lib/trade-sql";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
 import { lockTradeLists } from "../../list/shared";
 import { notTradeSanctioned } from "../../moderation/safety";
 import { matchableList, matchableListSql } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
-import { feedListColumns } from "./entries";
+import { feedListColumns, fetchPostRows, postOfFeedRow } from "./entries";
+import { postsCte } from "./query";
 
-async function fetchOwnTradeLists(userId: string) {
-  return db
-    .select(feedListColumns)
-    .from(lists)
-    .where(and(eq(lists.userId, userId), sideOnTradeSql("lists"), matchableList));
+/** The person's posts on Trade, listed or idle, each built from its own row. */
+async function fetchOwnPosts(userId: string) {
+  const [postRows, ownLists, rowById] = await Promise.all([
+    db.execute<{ id: number; partner_id: number | null; post_id: number }>(sql`
+      WITH ${postsCte}
+      SELECT posts.id, posts.partner_id, posts.post_id FROM posts WHERE posts.user_id = ${userId}
+    `),
+    db
+      .select(feedListColumns)
+      .from(lists)
+      .where(and(eq(lists.userId, userId), matchableList)),
+    fetchPostRows(eq(tradePost.userId, userId)),
+  ]);
+  const listById = new Map(ownLists.map((list) => [list.id, list]));
+  return postRows.rows.flatMap((row) => postOfFeedRow(row, rowById, listById) ?? []);
 }
 
 export async function fetchMyPosts(userId: string) {
   const now = new Date();
   const [own, lastBump, tradeBlocked, addressRows] = await Promise.all([
-    fetchOwnTradeLists(userId),
+    fetchOwnPosts(userId),
     lastBumpOf(userId),
     isTradeBlocked(userId),
     fetchAddresses([userId]),
@@ -40,35 +50,33 @@ export async function fetchMyPosts(userId: string) {
   const next = nextBumpAt(lastBump, now);
   const handle = tradeHandle(addressRows);
   // every post carries the person's last and next bump, and whether a trade block hides them
-  return pairPosts(own)
-    .toSorted(comparePosts)
-    .map((post) => ({
-      id: post.anchor.id,
-      postId: post.anchor.postId,
-      slug: post.anchor.slug,
-      tags: post.tags,
-      kind: postKindOf(post).kind,
-      alsoPay: postKindOf(post).alsoPay,
-      lists: [post.have, post.sale, post.want].flatMap((list) =>
-        list
-          ? [
-              {
-                slug: list.slug,
-                name: list.name,
-                listType: list.listType,
-                role: list.listType as "have" | "want" | "sale",
-              },
-            ]
-          : [],
-      ),
-      listed: !isPostIdle(post, now),
-      bumpedAt: iso(post.bumpedAt),
-      updatedAt: iso(post.updatedAt)!,
-      lastBumpAt: iso(lastBump),
-      nextBumpAt: next,
-      tradeBlocked,
-      handle,
-    }));
+  return own.toSorted(comparePosts).map((post) => ({
+    id: post.anchor.id,
+    postId: post.anchor.postId,
+    slug: post.anchor.slug,
+    tags: post.tags,
+    kind: postKindOf(post).kind,
+    alsoPay: postKindOf(post).alsoPay,
+    lists: [post.have, post.sale, post.want].flatMap((list) =>
+      list
+        ? [
+            {
+              slug: list.slug,
+              name: list.name,
+              listType: list.listType,
+              role: list.listType as "have" | "want" | "sale",
+            },
+          ]
+        : [],
+    ),
+    listed: !isPostIdle(post, now),
+    bumpedAt: iso(post.bumpedAt),
+    updatedAt: iso(post.updatedAt)!,
+    lastBumpAt: iso(lastBump),
+    nextBumpAt: next,
+    tradeBlocked,
+    handle,
+  }));
 }
 
 export async function isTradeBlocked(userId: string) {

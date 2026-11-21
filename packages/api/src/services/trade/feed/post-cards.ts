@@ -1,38 +1,78 @@
 import { db } from "@repo/db";
-import { listEntries, lists, user } from "@repo/db/schema";
-import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { listEntries, lists, tradePost, user } from "@repo/db/schema";
+import { type SQL, and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-import { listOnTrade } from "../../../lib/report-post";
 import { previewSide } from "../../../lib/trade-feed";
-import { pairPosts, type PostTag } from "../../../lib/trade-posts";
+import { sideStateOf } from "../../../lib/trade-post-state";
+import { pairPosts, postFromRow, type PostTag } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
+import { listPostSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import type { PostCardView } from "../../../schemas/chat";
+import { canBeOnTrade } from "../../../schemas/list";
 import { tradeHandle } from "../../../schemas/trade-person";
-import { postPartnerSql } from "../lists";
 import { fetchAddresses } from "../matches/holdings";
-import { type FeedList, feedListColumns, fetchPostEntries } from "./entries";
+import { type FeedList, feedListColumns, fetchPostEntries, fetchPostRows } from "./entries";
 import { visibleOnTrade } from "./shared";
 
 const POST_CARD_LIMIT = 6;
 
 type PostCardPost = NonNullable<PostCardView["post"]>;
 
-/** The named lists and the other half of each one's pair, whichever half is named. */
-function inPostsOf(listIds: number[]) {
+/**
+ * The post each named list shows now ({@link listPostSql}): its row by the named list's id, and the
+ * named lists and the lists of those rows that `listWhere` keeps, all in one round trip. A list in
+ * no row has no row.
+ */
+export async function namedPostsOf(listIds: number[], listWhere?: SQL) {
   const named = alias(lists, "named");
-  const partnerIds = db
-    .select({ id: postPartnerSql("named") })
+  const rowIds = db
+    .select({ id: listPostSql("named") })
     .from(named)
     .where(inArray(named.id, listIds));
-  return or(inArray(lists.id, listIds), inArray(lists.id, partnerIds));
+  const [namedRows, rowById, members] = await Promise.all([
+    db
+      .select({ id: named.id, postId: listPostSql("named") })
+      .from(named)
+      .where(inArray(named.id, listIds)),
+    fetchPostRows(inArray(tradePost.id, rowIds)),
+    db
+      .select(feedListColumns)
+      .from(lists)
+      .where(
+        and(
+          or(
+            inArray(lists.id, listIds),
+            inArray(
+              lists.id,
+              db
+                .select({
+                  id: sql<number>`unnest(ARRAY[${tradePost.leadListId}, ${tradePost.wantListId}])`,
+                })
+                .from(tradePost)
+                .where(inArray(tradePost.id, rowIds)),
+            ),
+          ),
+          listWhere,
+        ),
+      ),
+  ]);
+  const listById = new Map(members.map((list) => [list.id, list]));
+  return {
+    rowOf: (id: number) => {
+      const postId = namedRows.find((row) => row.id === id)?.postId;
+      return postId == null ? undefined : rowById.get(postId);
+    },
+    listById,
+  };
 }
 
 /**
  * Posts as a chat card draws them, by the id of the list the card was sent from; a list that is
  * gone, or no longer shown on Trade, maps to null. A card's list is either half of a pair: the
- * post is the one that holds it now, so a want list later linked to a have list shows that post.
+ * post is the one that holds it now ({@link listPostSql}), so a want list later linked to a have
+ * list shows that post.
  */
 export async function fetchPostCards(
   listIds: number[],
@@ -41,13 +81,18 @@ export async function fetchPostCards(
   const result = new Map<number, PostCardPost | null>(listIds.map((id) => [id, null]));
   if (listIds.length === 0) return result;
 
-  const owned = await db
-    .select(feedListColumns)
-    .from(lists)
-    .where(and(inPostsOf(listIds), visibleOnTrade(viewerId)));
-  const posts = pairPosts(owned);
+  const { rowOf, listById } = await namedPostsOf(listIds, visibleOnTrade(viewerId));
   const found = listIds.flatMap((id) => {
-    const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
+    const row = rowOf(id);
+    if (!row) return [];
+    // a card shows only the sides on Trade, and the post only while the named list's side is
+    const side = (listId: number | null, onTrade: boolean) =>
+      listId !== null && onTrade ? (listById.get(listId) ?? null) : null;
+    const post = postFromRow(
+      row,
+      side(row.leadListId, row.leadOnTrade),
+      side(row.wantListId, row.wantOnTrade),
+    ).find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
     return post ? [{ id, post }] : [];
   });
   if (found.length === 0) return result;
@@ -149,9 +194,10 @@ export type StaffPost = {
 };
 
 /**
- * Posts as staff read them, by the id of a list a report named: the post that holds it now, with
- * no `visibleOnTrade` filter, so a block, a sanction or Trade hiding the post never hides it from
- * the console. A trade-blocked owner's post reads as posted; the console shows the sanction.
+ * Posts as staff read them, by the id of a list a report named: the post that holds it now, off
+ * Trade sides included, with no `visibleOnTrade` filter, so a block, a sanction or Trade hiding the
+ * post never hides it from the console. Posted is the anchor's side on Trade in that row. A
+ * trade-blocked owner's post reads as posted; the console shows the sanction.
  */
 export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPost>> {
   const result = new Map<number, StaffPost>(
@@ -159,16 +205,29 @@ export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPo
   );
   if (listIds.length === 0) return result;
 
-  const columns = { ...feedListColumns, discoverable: lists.discoverable };
-  const rows = await db.select(columns).from(lists).where(inPostsOf(listIds));
-  const posts = pairPosts(rows);
+  const { rowOf, listById } = await namedPostsOf(listIds);
 
   for (const id of listIds) {
+    const row = rowOf(id);
+    const member = (listId: number | null) =>
+      listId === null ? null : (listById.get(listId) ?? null);
+    const named = member(id);
+    // a list in no row is a post of its own, off Trade, as its lists read it
+    const posts = row
+      ? postFromRow(row, member(row.leadListId), member(row.wantListId))
+      : named
+        ? pairPosts([{ ...named, linkedListId: null, postId: null, bumpedAt: null }])
+        : [];
     const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
     if (!post) continue;
     const members = [post.anchor, ...(post.want && post.want !== post.anchor ? [post.want] : [])];
     result.set(id, {
-      state: listOnTrade(post.anchor) ? "posted" : "off_trade",
+      state:
+        row &&
+        sideStateOf(row, post.anchor).onTrade &&
+        canBeOnTrade(post.anchor.listType, post.anchor.isProfileBind)
+          ? "posted"
+          : "off_trade",
       now: {
         tags: post.tags,
         lists: members.map((list) => ({

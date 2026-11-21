@@ -2,24 +2,25 @@ import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
 import { IDLE_DAYS } from "../../../lib/trade-rank";
-import { TAG_WHERE, byOpenToSql, offersSwapsSql } from "../../../lib/trade-sql";
+import { TAG_WHERE, byOpenToSql, hiddenRowsSql, offersSwapsSql } from "../../../lib/trade-sql";
 import type { MatchIndex } from "../../../lib/trade-viewer";
 import { type PostType } from "../../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../../moderation/safety";
-import { inHiddenPostSql, onTradeSql, postPairsSql } from "../lists";
+import { onTradeSql, postPairsSql } from "../lists";
 
 /**
- * Posts on Trade: each list side on Trade in a `trade_post` row, with a want list folded into the
- * list offering swaps that its row pairs it with (a have list, or a sale list that takes swaps)
- * when both are on Trade. Trade state, bumps and the post's Open to come from the rows' sides
- * (`onTradeSql`); a post's bump is the latest of its sides', its change time the latest of its
- * lists'.
+ * Posts on Trade, one per `trade_post` row side: each list side on Trade in a row, with the row's
+ * want side folded into its lead when the lead offers swaps (a have list, or a sale list that takes
+ * swaps) and both are on Trade. Trade state, bumps and the post's Open to come from the row's sides
+ * (`onTradeSql`); `post_id` is the row. A post's bump is the latest of its sides', its change time
+ * the latest of its lists'. A list in two rows is in two posts.
  */
 export const postsCte = sql`
   on_trade AS (${onTradeSql}),
   posts AS (
     SELECT
       a.id,
+      a.post_id,
       a.user_id,
       a.list_type AS type,
       a.match_sale,
@@ -36,23 +37,26 @@ export const postsCte = sql`
       ) AS bumped_at,
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
-    LEFT JOIN trade_post tp ON tp.lead_list_id = a.id
-    LEFT JOIN on_trade p ON ${postPairsSql("tp", "a", "p")}
+    JOIN trade_post tp ON tp.id = a.post_id
+    LEFT JOIN on_trade p ON p.post_id = a.post_id AND ${postPairsSql("tp", "a", "p")}
     WHERE NOT EXISTS (
-      SELECT 1 FROM trade_post th JOIN on_trade h ON h.id = th.lead_list_id
-      WHERE ${postPairsSql("th", "h", "a")}
+      SELECT 1 FROM on_trade h WHERE h.post_id = a.post_id AND ${postPairsSql("tp", "h", "a")}
     )
   )
 `;
 
 export const listedPost = sql`greatest(posts.bumped_at, posts.updated_at) > now() - make_interval(days => ${IDLE_DAYS})`;
 
-/** The lists inside a listed post, as a set; follows {@link postsCte}. An idle list is in no post. */
-export const listedCte = sql`
-  listed AS (
-    SELECT id FROM posts WHERE ${listedPost}
+/**
+ * The list sides inside a listed post, as `(post_id, id)`; follows {@link postsCte}. An idle post's
+ * sides are in none. Keyed by side, not row alone: a row whose lead takes no swaps is two posts,
+ * each idle on its own.
+ */
+export const listedPostsCte = sql`
+  listed_posts AS (
+    SELECT post_id, id FROM posts WHERE ${listedPost}
     UNION
-    SELECT partner_id FROM posts WHERE ${listedPost} AND partner_id IS NOT NULL
+    SELECT post_id, partner_id FROM posts WHERE ${listedPost} AND partner_id IS NOT NULL
   )
 `;
 
@@ -66,7 +70,7 @@ const hasEntryIn = (listIds: SQL, slugs: string[]) =>
 const matchesIndex = (index: MatchIndex) =>
   sql`EXISTS (
     SELECT 1 FROM list_entries e
-    JOIN on_trade t ON t.id = e.list_id
+    JOIN on_trade t ON t.post_id = posts.post_id AND t.id = e.list_id
     WHERE e.list_id IN (posts.id, posts.partner_id)
       AND (
         (${offersSwapsSql("t")} AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
@@ -81,6 +85,8 @@ const matchesIndex = (index: MatchIndex) =>
 
 export type FeedRow = {
   id: number;
+  /** the post's `trade_post` row */
+  post_id: number;
   partner_id: number | null;
   user_id: string;
   cursor_at: string;
@@ -109,7 +115,9 @@ export function feedWhere(query: FeedQuery): SQL[] {
       SELECT 1 FROM hidden_trade_partner h
       WHERE h.user_id = ${query.viewerId} AND h.hidden_user_id = posts.user_id
     )`);
-    if (query.skipHiddenPosts) where.push(sql`NOT ${inHiddenPostSql(query.viewerId, "posts")}`);
+    if (query.skipHiddenPosts) {
+      where.push(sql`posts.post_id NOT IN (${hiddenRowsSql(query.viewerId)})`);
+    }
   }
   if (query.type !== "all") where.push(TAG_WHERE[query.type]);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
@@ -193,15 +201,16 @@ export async function fetchPersonRows(query: FeedQuery, ownerIds: string[]): Pro
     WITH ${postsCte}
     SELECT
       posts.id,
+      posts.post_id,
       posts.partner_id,
       posts.user_id,
       posts.bumped_at::text AS cursor_at,
       mp.allow AS message_allow,
-      ${query.viewerId === null ? sql`false` : inHiddenPostSql(query.viewerId, "posts")} AS hidden
+      ${query.viewerId === null ? sql`false` : sql`posts.post_id IN (${hiddenRowsSql(query.viewerId)})`} AS hidden
     FROM posts
     LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}
-    ORDER BY posts.user_id, posts.bumped_at DESC, posts.id DESC
+    ORDER BY posts.user_id, posts.bumped_at DESC, posts.id DESC, posts.post_id DESC
   `);
   return result.rows;
 }

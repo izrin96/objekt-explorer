@@ -1,7 +1,7 @@
+import { hiddenRowAtSql } from "@repo/api/lib/trade-sql";
 import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
-import { listedCte, postsCte } from "@repo/api/services/trade/feed/query";
+import { listedPostsCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
-  hiddenPostAtSql,
   offerMatchesWantSql,
   boundOfferListSql,
   tradePartnerSql,
@@ -14,6 +14,7 @@ import { type AlertPair, wholeEntries } from "../../lib/want-alert-match";
 type PairRow = {
   entry_id: number;
   list_id: number;
+  post_id: number;
   direction: "forward" | "reverse";
   offer_list_id: number;
   want_list_id: number;
@@ -45,21 +46,31 @@ export async function takeWhole(where: SQL, order: Order, limit: number) {
 export async function fetchPairs(where: SQL, order: Order, limit: number | null): Promise<Pair[]> {
   const result = await db.execute<PairRow>(sql`
     WITH ${postsCte},
-    ${listedCte},
+    ${listedPostsCte},
+    -- one row per side: an entry on a list in two listed posts is read once through each
     cand AS (
       SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, e.created_at, e.rule_id,
-        l.list_type,
+        l.post_id, l.list_type,
         l.match_sale, l.match_have, l.takes_swaps, l.user_id
       FROM list_entries e
       -- the post's Open to and takes_swaps, not the list's
       JOIN on_trade l ON l.id = e.list_id
-      WHERE l.id IN (SELECT id FROM listed)
+      WHERE (l.post_id, l.id) IN (SELECT post_id, id FROM listed_posts)
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),
+    -- each list's flags as a list reads them, listTradeStateSql's union of its sides on Trade;
+    -- a recipient list on no post reads its own. A set, so the planner hashes it once rather
+    -- than running a subquery per pair, which hid the row count from the anti join below
+    list_flags AS (
+      SELECT id, bool_or(match_have) AS match_have, bool_or(match_sale) AS match_sale,
+        bool_or(takes_swaps) AS takes_swaps
+      FROM on_trade
+      GROUP BY id
+    ),
     pairs AS (
-      SELECT c.id AS entry_id, c.list_id, 'forward' AS direction, c.list_id AS offer_list_id,
-        w.list_id AS want_list_id, c.slug, c.objekt_id,
+      SELECT c.id AS entry_id, c.list_id, c.post_id, 'forward' AS direction,
+        c.list_id AS offer_list_id, w.list_id AS want_list_id, c.slug, c.objekt_id,
         c.user_id AS offer_user_id, wl.user_id AS want_user_id, c.created_at AS entry_at,
         false AS by_rule,
         -- the new entry's list is the partner's, in either direction: its post's flags
@@ -68,31 +79,41 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
+      LEFT JOIN list_flags wlf ON wlf.id = wl.id
+      -- the recipient's want list counts with what any of its posts on Trade allows
+      CROSS JOIN LATERAL (
+        SELECT coalesce(wlf.match_have, wl.match_have) AS match_have,
+          coalesce(wlf.match_sale, wl.match_sale) AS match_sale
+      ) wf
       WHERE c.list_type IN ('have', 'sale')
-        AND ${offerMatchesWantSql("c", "wl")}
         AND wl.list_type = 'want' AND wl.user_id <> c.user_id
+        AND ${offerMatchesWantSql("c", "wf")}
       UNION ALL
-      SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id,
-        c.created_at, c.rule_id IS NOT NULL,
+      SELECT c.id, c.list_id, c.post_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id,
+        ol.user_id, c.user_id, c.created_at, c.rule_id IS NOT NULL,
         c.list_type = 'sale' AND NOT c.takes_swaps,
         c.list_type = 'want' AND c.match_have
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
+      LEFT JOIN list_flags olfl ON olfl.id = ol.id
+      -- the recipient's sale list takes swaps when any of its posts on Trade does
+      CROSS JOIN LATERAL (
+        SELECT ol.list_type, coalesce(olfl.takes_swaps, ol.takes_swaps) AS takes_swaps
+      ) olf
       WHERE c.list_type = 'want'
         AND ${boundOfferListSql("ol")}
-        AND ${offerMatchesWantSql("ol", "c")}
         AND ol.user_id <> c.user_id
+        AND ${offerMatchesWantSql("olf", "c")}
     )
-    SELECT p.entry_id, p.list_id, p.direction, p.offer_list_id, p.want_list_id, p.slug,
+    SELECT p.entry_id, p.list_id, p.post_id, p.direction, p.offer_list_id, p.want_list_id, p.slug,
       p.objekt_id, hid.at IS NOT NULL AS hidden, p.partner_sale, p.partner_wants_swaps
     FROM pairs p
-    -- the new entry's list is the partner's: when the recipient last hid its post, if they did
-    JOIN lists pl ON pl.id = p.list_id
+    -- the new entry's post is the partner's: when the recipient hid it, if they did
     CROSS JOIN LATERAL (
-      SELECT ${hiddenPostAtSql(
+      SELECT ${hiddenRowAtSql(
         sql`CASE p.direction WHEN 'forward' THEN p.want_user_id ELSE p.offer_user_id END`,
-        "pl",
+        sql`p.post_id`,
       )} AS at
     ) hid
     -- the new entry's owner is the partner, seen by the recipient as For you sees them
@@ -118,6 +139,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
   return result.rows.map((row): Pair => ({
     entryId: row.entry_id,
     listId: row.list_id,
+    postId: row.post_id,
     direction: row.direction,
     offerListId: row.offer_list_id,
     wantListId: row.want_list_id,

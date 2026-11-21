@@ -1,5 +1,5 @@
 import { db } from "@repo/db";
-import { listEntries, lists } from "@repo/db/schema";
+import { listEntries, lists, tradePost } from "@repo/db/schema";
 import { and, eq, inArray, or } from "drizzle-orm";
 
 import { matchCounts } from "../../../lib/trade-person";
@@ -15,16 +15,17 @@ import {
   recount,
   viewerPostOf,
 } from "../../../lib/trade-rank";
+import { listTradeStateSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import { mutualOf, type TradeFilter } from "../../../schemas/trade";
-import { matchableList, postPartnerSql } from "../lists";
+import { matchableList, postPartnerSql, postRowColumns } from "../lists";
 import { type CandidateOptions, fetchTradeCandidates } from "./candidates";
 import { fetchAddresses, fetchHoldings } from "./holdings";
 
 // Kept clear of `services/redis` (and so of `env.ts`): the worker imports this module.
 
 /** `postOf` keys every one of the user's paired lists, whatever the sides narrow to. */
-export type Sides = ReturnType<typeof matchSides> & { postOf: ReturnType<typeof viewerPostOf> };
+export type Sides = ReturnType<typeof matchSides> & ReturnType<typeof viewerPostOf>;
 
 /**
  * The user's bound have and sale lists and their want lists, narrowed by `slug` when it names
@@ -35,18 +36,24 @@ export async function resolveTradeSides(
   slug: string | undefined,
   filter: TradeFilter,
 ): Promise<Sides> {
-  const myLists = await db
-    .select({
-      id: lists.id,
-      slug: lists.slug,
-      listType: lists.listType,
-      linkedListId: postPartnerSql("lists"),
-      takesSwaps: lists.takesSwaps,
-    })
-    .from(lists)
-    .where(and(eq(lists.userId, userId), matchableList));
+  const [myLists, rows] = await Promise.all([
+    db
+      .select({
+        id: lists.id,
+        slug: lists.slug,
+        listType: lists.listType,
+        // Compare with pairs a list with one partner (`pickedSides`)
+        linkedListId: postPartnerSql("lists"),
+        takesSwaps: lists.takesSwaps,
+        matchHave: lists.matchHave,
+        matchSale: lists.matchSale,
+      })
+      .from(lists)
+      .where(and(eq(lists.userId, userId), matchableList)),
+    db.select(postRowColumns).from(tradePost).where(eq(tradePost.userId, userId)),
+  ]);
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
-  return { ...matchSides(myLists, named?.id ?? null, filter), postOf: viewerPostOf(myLists) };
+  return { ...matchSides(myLists, named?.id ?? null, filter), ...viewerPostOf(myLists, rows) };
 }
 
 /**
@@ -65,7 +72,8 @@ export async function recountPartners(
   const theyWantSlugs = unique(candidates.flatMap((c) => c.theyWant.map((e) => e.slug)));
   const partnerIds = candidates.map((c) => c.userId);
 
-  const [myEntries, addressRows] = await Promise.all([
+  const myListIds = [...sides.haveListIds, ...sides.wantListIds];
+  const [entryRows, myLists, addressRows] = await Promise.all([
     candidates.length === 0
       ? []
       : db
@@ -73,13 +81,8 @@ export async function recountPartners(
             listId: listEntries.listId,
             slug: listEntries.collectionSlug,
             objektId: listEntries.objektId,
-            listType: lists.listType,
-            takesSwaps: lists.takesSwaps,
-            matchSale: lists.matchSale,
-            matchHave: lists.matchHave,
           })
           .from(listEntries)
-          .innerJoin(lists, eq(lists.id, listEntries.listId))
           .where(
             or(
               and(
@@ -92,8 +95,26 @@ export async function recountPartners(
               ),
             ),
           ),
+    // each list's flags once, with the union of its posts on Trade, else its own
+    candidates.length === 0
+      ? []
+      : db
+          .select({
+            id: lists.id,
+            listType: lists.listType,
+            takesSwaps: listTradeStateSql("lists", "takesSwaps"),
+            matchSale: listTradeStateSql("lists", "matchSale"),
+            matchHave: listTradeStateSql("lists", "matchHave"),
+          })
+          .from(lists)
+          .where(inArray(lists.id, myListIds)),
     fetchAddresses([userId, ...partnerIds]),
   ]);
+  const listOf = new Map(myLists.map((list) => [list.id, list]));
+  const myEntries = entryRows.flatMap((entry) => {
+    const list = listOf.get(entry.listId);
+    return list ? [{ ...entry, ...list }] : [];
+  });
 
   const addressesOf = addressesByUser(addressRows);
   const none = new Set<string>();
@@ -155,7 +176,7 @@ export async function recountPartners(
 
   return {
     recounted: candidates.map((c) =>
-      recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves, sides.postOf),
+      recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves, sides),
     ),
     addressRows,
   };

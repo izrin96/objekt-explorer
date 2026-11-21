@@ -1,6 +1,6 @@
 import { offersSwaps } from "../schemas/open-to";
 import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT } from "../schemas/trade";
-import type { FeedEntry, Post, TradeList } from "./trade-posts";
+import type { FeedEntry, ListState, Post, TradeList } from "./trade-posts";
 import {
   indexFor,
   matchCollections,
@@ -290,7 +290,7 @@ const SIDE_PAGE = 200;
  */
 export function fullSide(
   role: "have" | "want" | "sale",
-  list: TradeList,
+  list: ListState,
   entries: FeedEntry[],
   viewer: Viewer | null,
   { offset = 0, limit = SIDE_PAGE }: { offset?: number; limit?: number } = {},
@@ -326,7 +326,7 @@ export function fullSide(
  */
 export function listMatchesOf(
   role: "have" | "want" | "sale",
-  list: TradeList,
+  list: ListState,
   entries: FeedEntry[],
   viewer: Viewer,
 ) {

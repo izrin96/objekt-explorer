@@ -2,13 +2,12 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { lists, user } from "@repo/db/schema";
+import { lists, tradePost, user } from "@repo/db/schema";
 import { and, inArray } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../../lib/chat-rules";
 import { iso } from "../../../lib/time";
 import { assemblePost } from "../../../lib/trade-feed";
-import { pairPosts } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { browseMode, matchesViewer, narrowViewer, type Viewer } from "../../../lib/trade-viewer";
 import { unique } from "../../../lib/unique";
@@ -25,7 +24,13 @@ import { resolveCompareSides, type Sides } from "../matches";
 import { fetchAddresses } from "../matches/holdings";
 import { getMutualPeople } from "../matches/mutual";
 import { type PersonMatch, personMatches } from "../matches/person";
-import { type FeedList, feedListColumns, fetchPostEntries } from "./entries";
+import {
+  type FeedList,
+  feedListColumns,
+  fetchPostEntries,
+  fetchPostRows,
+  postOfFeedRow,
+} from "./entries";
 import { type FeedRow } from "./query";
 import { fetchViewer, hasTradeList } from "./viewer";
 
@@ -99,11 +104,11 @@ export type LoadContext = {
 export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number) {
   const { viewerId, viewer, input, match, slugs, skipHiddenPosts } = ctx;
   const listIds = rows.flatMap((row) => (row.partner_id ? [row.id, row.partner_id] : [row.id]));
-  const feedLists = await db.select(feedListColumns).from(lists).where(inArray(lists.id, listIds));
-  const listById = new Map(feedLists.map((list) => [list.id, list]));
-  const ownerIds = unique(feedLists.map((list) => list.userId));
+  const ownerIds = unique(rows.map((row) => row.user_id));
 
-  const [users, addressRows, reputations, persons] = await Promise.all([
+  const [feedLists, rowById, users, addressRows, reputations, persons] = await Promise.all([
+    db.select(feedListColumns).from(lists).where(inArray(lists.id, listIds)),
+    fetchPostRows(inArray(tradePost.id, unique(rows.map((row) => row.post_id)))),
     db.select().from(user).where(inArray(user.id, ownerIds)),
     fetchAddresses(ownerIds),
     reputationOf(ownerIds),
@@ -111,6 +116,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
       ? new Map<string, PersonMatch>()
       : personMatches(viewerId, ownerIds, match?.sides, { skipHiddenPosts }),
   ]);
+  const listById = new Map(feedLists.map((list) => [list.id, list]));
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
   const nicknameOf = nicknamesByAddress(addressRows);
@@ -153,7 +159,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
     for (const row of batch) {
       last = row;
       const members = membersOf(row);
-      const [post] = pairPosts(members);
+      const post = postOfFeedRow(row, rowById, listById);
       const account = userMap.get(post?.anchor.userId ?? "");
       if (!post || !account) continue;
 

@@ -2,6 +2,7 @@ import type { ListType } from "../schemas/list";
 import type { OpenToFlags } from "../schemas/open-to";
 import { groupPosts, type PostTag, tagsOf } from "../schemas/trade-post";
 import { HOUR_MS } from "./time";
+import { type PostRow, sideStateOf, type SideList } from "./trade-post-state";
 import { isIdle } from "./trade-rank";
 
 export const BUMP_COOLDOWN_HOURS = 24;
@@ -18,6 +19,9 @@ export type TradeList = OpenToFlags & {
   bumpedAt: string | null;
   updatedAt: string;
 };
+
+/** What a side's matching reads of its list: its type and Open to, not its pairing or bump. */
+export type ListState = Pick<TradeList, "listType" | "matchHave" | "matchSale" | "takesSwaps">;
 
 export type Post<L extends TradeList> = {
   /** the have list when there is one, so a pair is keyed the same way the feed query keys it */
@@ -66,6 +70,28 @@ export function pairPosts<L extends TradeList>(lists: L[]): Post<L>[] {
   return groupPosts(lists).map((post) =>
     toPost(post.anchor, post.have || post.sale ? post.want : null),
   );
+}
+
+/** What {@link postFromRow} sets on each list from its row. */
+export type PostFields = { linkedListId: number | null; postId: number; bumpedAt: string | null };
+
+/**
+ * The posts of one `trade_post` row: copies of the lists passed (`lead`, the row's lead, and
+ * `want`, its want list; null for a side the caller leaves out), each with its side's state
+ * (`sideStateOf`), the row's other list as its partner and the row as `postId`, grouped as
+ * {@link pairPosts} groups them. A Sell only lead and a want side both passed are two posts.
+ */
+export function postFromRow<L extends SideList & { userId: string; updatedAt: string }>(
+  row: PostRow,
+  lead: L | null,
+  want: L | null,
+): Post<L & PostFields>[] {
+  const copy = (list: L | null, partner: number | null): (L & PostFields)[] => {
+    if (!list) return [];
+    const { onTrade: _onTrade, ...state } = sideStateOf(row, list);
+    return [{ ...list, ...state, linkedListId: partner, postId: row.id }];
+  };
+  return pairPosts([...copy(lead, row.wantListId), ...copy(want, row.leadListId)]);
 }
 
 type Ordered = { bumpedAt: string | null; updatedAt: string; anchor: { id: number } };

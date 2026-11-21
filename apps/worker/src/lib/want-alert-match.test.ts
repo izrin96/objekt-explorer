@@ -36,12 +36,16 @@ const list = (id: number, userId: string, extra: Partial<AlertList> = {}): Alert
 const SALE = list(1, SELLER);
 const WANT = list(2, WANTER);
 
+// the row of the post the new entry is read through
+const POST = 1_000_100;
+
 const forward = (extra: Partial<AlertPair> = {}): AlertPair => ({
   direction: "forward",
   offerListId: SALE.id,
   wantListId: WANT.id,
   slug: SLUG,
   objektId: null,
+  postId: POST,
   // the partner's post flags, equal to SALE's and WANT's own unless a test says otherwise
   partnerSale: false,
   partnerWantsSwaps: true,
@@ -431,6 +435,38 @@ describe("selectAlerts, Any or Can swap", () => {
       expect(selectAlerts(back)).toEqual({ alerts: [], unowned: [], notMutual: [] });
     });
 
+    test("a group of two rows reads the partner's union: one post that swaps is enough", () => {
+      // the sale list is in two posts: Sell only in the first, Sell or swap in the second
+      const one = input({
+        pairs: [forward({ partnerSale: true }), forward({ postId: POST + 1, partnerSale: false })],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER), unpairedWant),
+      });
+      expect(selectAlerts(one).alerts.map((alert) => [alert.userId, alert.mode])).toEqual([
+        [WANTER, "any"],
+      ]);
+      const sellOnly = input({
+        pairs: [forward({ partnerSale: true }), forward({ postId: POST + 1, partnerSale: true })],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER), unpairedWant),
+      });
+      expect(selectAlerts(sellOnly).alerts).toEqual([]);
+    });
+
+    test("a group of two rows in reverse: one want post open to swaps is enough", () => {
+      const back = input({
+        pairs: [
+          forward({ direction: "reverse", partnerWantsSwaps: false }),
+          forward({ direction: "reverse", postId: POST + 1, partnerWantsSwaps: true }),
+        ],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER, { swapPair: false }), WANT),
+      });
+      expect(selectAlerts(back).alerts.map((alert) => [alert.userId, alert.mode])).toEqual([
+        [SELLER, "any"],
+      ]);
+    });
+
     test("the recipient's flags still come from its list", () => {
       // the pair's want-side flag is the partner's; a forward recipient that buys only skips
       const one = input({
@@ -458,14 +494,14 @@ describe("selectUnhides", () => {
 
   test("a new offer entry on a post the wanter hid brings it back for the wanter", () => {
     expect(selectUnhides(input({ pairs: [hidden] }))).toEqual({
-      unhides: [{ userId: WANTER, listId: SALE.id }],
+      unhides: [{ userId: WANTER, postId: POST }],
       unowned: [],
     });
   });
 
   test("a new want entry on a post the offer's owner hid brings it back for them", () => {
     expect(selectUnhides(input({ pairs: [hiddenReverse] })).unhides).toEqual([
-      { userId: SELLER, listId: WANT.id },
+      { userId: SELLER, postId: POST },
     ]);
   });
 
@@ -497,12 +533,12 @@ describe("selectUnhides", () => {
       [WANTER_ADDR, SLUG, true],
     ]);
     expect(selectUnhides(input({ pairs: [hidden], holdings: held }))).toEqual({
-      unhides: [{ userId: WANTER, listId: SALE.id }],
+      unhides: [{ userId: WANTER, postId: POST }],
       unowned: [],
     });
     expect(alertsOf(input({ pairs: [hidden], holdings: held }))).toHaveLength(1);
     expect(selectUnhides(input({ pairs: [hiddenReverse], holdings: held })).unhides).toEqual([
-      { userId: SELLER, listId: WANT.id },
+      { userId: SELLER, postId: POST },
     ]);
   });
 
@@ -521,6 +557,14 @@ describe("selectUnhides", () => {
     expect(selectUnhides(value).unowned).toEqual([hidden]);
   });
 
+  test("an unhide names the hidden row only, not another post holding the list", () => {
+    // the sale list is in two posts; the wanter hid only the first
+    const second = forward({ postId: POST + 1 });
+    expect(selectUnhides(input({ pairs: [hidden, second] })).unhides).toEqual([
+      { userId: WANTER, postId: POST },
+    ]);
+  });
+
   test("several entries on one list unhide it once", () => {
     const other = forward({ hidden: true, slug: "nien-205z" });
     const held = holdings([
@@ -528,7 +572,7 @@ describe("selectUnhides", () => {
       [SELLER_ADDR, "nien-205z", true],
     ]);
     expect(selectUnhides(input({ pairs: [hidden, other], holdings: held })).unhides).toEqual([
-      { userId: WANTER, listId: SALE.id },
+      { userId: WANTER, postId: POST },
     ]);
   });
 });

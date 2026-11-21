@@ -16,6 +16,7 @@ const COUNTS_TTL_SECONDS = 60;
 
 type CountRow = {
   post_id: number;
+  anchor_id: number;
   user_id: string;
   list_type: ListType;
   objekt_id: string | null;
@@ -24,10 +25,10 @@ type CountRow = {
 async function computePostCounts(slug: string) {
   const result = await db.execute<CountRow>(sql`
     WITH ${postsCte}
-    SELECT posts.id AS post_id, posts.user_id, t.list_type, e.objekt_id
+    SELECT posts.post_id, posts.id AS anchor_id, posts.user_id, t.list_type, e.objekt_id
     FROM posts
     JOIN list_entries e ON e.list_id IN (posts.id, posts.partner_id)
-    JOIN on_trade t ON t.id = e.list_id
+    JOIN on_trade t ON t.post_id = posts.post_id AND t.id = e.list_id
     WHERE e.collection_slug = ${slug} AND ${listedPost} AND ${notTradeSanctioned(sql`posts.user_id`)}
   `);
 
@@ -40,10 +41,12 @@ async function computePostCounts(slug: string) {
   const havePosts = new Set(
     owned
       .filter((row, i) => !untradeable.has(untradeableKey(row.user_id, refs[i]!)))
-      .map((row) => row.post_id),
+      .map((row) => `${row.post_id}:${row.anchor_id}`),
   );
   const wantPosts = new Set(
-    result.rows.filter((row) => row.list_type === "want").map((row) => row.post_id),
+    result.rows
+      .filter((row) => row.list_type === "want")
+      .map((row) => `${row.post_id}:${row.anchor_id}`),
   );
   return { have: havePosts.size, want: wantPosts.size };
 }

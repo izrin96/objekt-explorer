@@ -11,7 +11,6 @@ import { realNickname } from "@repo/lib/address";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-import { postRowSql } from "../../lib/trade-sql";
 import { tradeHandle } from "../../schemas/trade-person";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { toPublicUser } from "../profile";
@@ -93,15 +92,15 @@ export async function fetchHiddenPartners(viewerId: string) {
 /**
  * A no-op unless `listId` leads another account's post on Trade (see `trade.hidePost`). Idle
  * posts count, so a post can be hidden from its page before its owner bumps it. The hide names
- * the post's row.
+ * the post's row, the lowest among the posts the list leads.
  */
 export async function hidePost(viewerId: string, listId: number) {
   const inserted = await db.execute<{ post_id: number }>(sql`
     WITH ${postsCte}
     INSERT INTO hidden_trade_post (user_id, post_id)
-    SELECT ${viewerId}, r.id FROM posts
-    CROSS JOIN LATERAL (SELECT ${postRowSql("posts")} AS id) r
-    WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId} AND r.id IS NOT NULL
+    SELECT ${viewerId}, min(posts.post_id) FROM posts
+    WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId}
+    HAVING min(posts.post_id) IS NOT NULL
     ON CONFLICT DO NOTHING
     RETURNING post_id
   `);
@@ -132,8 +131,8 @@ export async function fetchHiddenPosts(viewerId: string) {
       listId: lead.id,
       // a list of the post that is on Trade, so the link opens the post page
       slug: sql<string>`CASE
-        WHEN ${lead.discoverable} AND ${matchableListSql("lead")} THEN ${lead.slug}
-        WHEN ${want.discoverable} THEN ${want.slug}
+        WHEN ${tradePost.leadOnTrade} AND ${matchableListSql("lead")} THEN ${lead.slug}
+        WHEN ${tradePost.wantOnTrade} AND ${want.slug} IS NOT NULL THEN ${want.slug}
         ELSE ${lead.slug} END`,
       name: lead.name,
       wantName: want.name,
