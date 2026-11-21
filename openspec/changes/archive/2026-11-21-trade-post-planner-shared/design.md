@@ -558,3 +558,12 @@ Recorded by the worker that applied groups 1 to 7 (2026-11-21), on the worktree 
     - `writeList`'s insert still setting `discoverable` and `bumped_at`.
   - `packages/api/docs/offers.md` was stale and is updated: its "four cases" where `post_id` and `post_list_id` part ways gains a fifth, Edit post keeping its row with a new lead. The drift script's first note counts the last three.
   - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md`: none of their conventions, traps or workflows changed. None names the planner, the row state or Edit post's row. The diff adds no procedure, input, cache key, `.tsx` or message.
+- **9.2, production before the deploy** (read-only, 2026-11-21 08:40 UTC, after `6f4de4c2` was pushed).
+  - The old drift script (`70c82fb3`) and the new one: checks 1 to 7 at 0 each, over 1601 rows. Both print the same notes: note 1 at 0, note 2 at 9 (offers 8634, 8660, 8665, 8726, 8753, 8797, 8889, 8934, 9523), note 3 at 6 (rows 1000588, 1001662, 1001779, each listed twice). Notes are information.
+  - Baseline: 1601 `trade_post` rows, 2136 lists with `discoverable` (all 2136 have, sale or want), note 1's offers 0.
+  - `SHOW TimeZone` is `Etc/UTC`, the same zone as `UTC`: offset `+00` in every bump text.
+- **9.3.** The owner brought up web and the worker from `6f4de4c2` and reported both serving by 2026-11-21 08:42 UTC; the time each came up was not recorded.
+- **9.4, production after the deploy** (read-only, 2026-11-21 08:42 UTC).
+  - The new drift script: checks 1 to 7 at 0 each, over 1602 rows. Notes unchanged from 9.2: note 1 at 0, note 2 at 9, note 3 at 6.
+  - Counts: 1602 rows (+1) and 2134 lists on Trade (−2), both explained by writes since 9.2: one new post, row 1001876 (have 18778 and want 18779 on Trade, +2), and two posts taken down (lists 18362 with 18365 and 18284 with 18285 off Trade, −4). The other lists written since were bumps or edits that stayed on Trade.
+  - Rollback floor: web and worker `70c82fb3`, with no migration to undo.

@@ -247,17 +247,17 @@ The new entry is built as `planPostChange` beside `planPostWrite`, which stays a
 
 ## 9. Rollout (the owner)
 
-- [ ] 9.1 The owner commits and pushes, and CI passes and moves `:latest`. Nothing is deployed yet.
-- [ ] 9.2 With a go-ahead, right before web comes up, read-only on production:
+- [x] 9.1 The owner commits and pushes, and CI passes and moves `:latest`. Nothing is deployed yet.
+- [x] 9.2 With a go-ahead, right before web comes up, read-only on production:
   - the old drift script, checks 1 to 7 at zero;
   - the new drift script, checks 1 to 7 at zero;
   - the baseline counts: `trade_post` rows, lists with `discoverable`, and note 1's offers;
   - `SHOW TimeZone`, expected `UTC`: the session time zone sets the offset in the bump text the planner copies (`lockPosts`' `bumpAt` and the bump columns).
 
   Any other number stops the rollout. Record them in As built.
-- [ ] 9.3 The owner brings up web, and rebuilds and brings up the worker from the same commit on the VPS, in either order (design decision 11). Record the time each serves.
+- [x] 9.3 The owner brings up web, and rebuilds and brings up the worker from the same commit on the VPS, in either order (design decision 11). Record the time each serves.
   - **Rollback:** web and worker `70c82fb3`, at any time.
-- [ ] 9.4 With a go-ahead, read-only on production:
+- [x] 9.4 With a go-ahead, read-only on production:
   - the new drift script, checks 1 to 7 at zero;
   - the counts of 9.2, with any difference explained by writes since.
 
