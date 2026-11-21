@@ -282,3 +282,71 @@ Local database only, dev server on port 3210, one isolated browser context per a
    - (g) As localtest5: `trade.people` (no filter, Any) and `trade.myPosts` answer 200, Browse says "You have no posts on Trade" and For you "Nothing to match yet", no error.
    - (h) The server logged no error. The client logged the `ResizeObserver loop` warnings 0.1's baseline also logged, and, while (e)'s row existed, 10 React errors "Encountered two children with the same key, `13168`": the web keys posts by `id`, the anchor list (`apps/web/src/features/trade/person-row-view.tsx:262`, `my-posts.tsx:185`), and a list in two posts gives two posts that id. The owner accepted it as a known finding: no list can be in two posts in production until `shared-lists` lifts `planPost`'s refusal, so only (e)'s hand-made row shows it. Before `shared-lists` ships, those two keys must take `postId` (`post-id-inputs` or `shared-lists`). No `.tsx` change in this change.
 4. Put back: row 1000519, the hide, report 17, message 2543 and the seven sessions the pass made deleted; conversation 397's last message restored to 2542; list 13175's `updated_at` restored. The three accounts' lists, rows, hides and sessions equal 0.1's snapshot, list 13175's whole row equals its saved copy, no entry above 1,837,936 remains, and both drift scripts read 0. Local Valkey: localtest1's and localtest2's For you versions bumped so no cached match holds the pass. The dev server is stopped, the browser contexts closed, and the dev log holds no credential.
+- **8.1, G1** (production, read-only, 2026-11-21, after `345273b6` was pushed).
+  - The old drift script (`8b05487c`): checks 1 to 7 at 0 each, over 1629 rows. Note 1 read 5 (offers 8764, 9443, 11229, 11753, 12274: offers on posts Edit post re-led since `trade-post-planner-shared`, information). Note 2 read 9.
+  - 7.2's set equality: `old_not_new` 0, `new_not_old` 0, `post_id_not_post_row` 0, 1462 posts in each.
+  - `fetchPairs` over the last 1,000 entries, three warm-up runs: new 401, 214 and 239 ms; old (`8b05487c`, a throwaway checkout outside the repo, removed) 497, 337 and 238 ms. The new plan probes `want_alert_sent` by its primary key (index-only, 1727 loops).
+- **8.2.** The owner brought up web and the worker from `345273b6` and opened `/trade`, For you and Your posts, reported done by 15:42 UTC on 2026-11-21. The time each came up was not recorded.
+- **8.3, G2** (production, read-only, 15:42 UTC).
+  - The new drift script: checks 1 to 7 at 0 each, over 1630 rows. Note 1 read 5 and note 2 read 9, unchanged from G1.
+  - Sentry (`objekt-tracker`): no issue seen in the hour after the deploy.
+  - Rollback floor: web and worker `8b05487c`, with no data step.
+
+### 9.1 Agent docs
+
+Checked against `345273b6`, with `writing-for-agents` loaded; every code name the three files cite was looked up in the source.
+
+- `packages/api/docs/trade.md`: the bump cooldown names `turnOnBumpedAt` (`services/list/shared.ts`) for `personBumpedAt`, which no code defines; `postPartnerSql`'s readers add `list.edit`'s guards on a paired list; `postRowSql` is described as it is now used, `listPostSql`'s fallback, with `postRowOf` naming a list's row for the writers.
+- `apps/worker/AGENTS.md`, Want alerts: the recipient's flags in `pairs.ts` come from the `list_flags` CTE (the review's fix), and why; `context.ts` still reads `listTradeStateSql`.
+- `packages/db/AGENTS.md`, Trade posts: "until the readers take more" now says the readers take rows, and only `planPost`'s refusal and drift check 2 keep one row per list until `shared-lists`.
+- `packages/api/AGENTS.md`: the domain-docs table's Trade row adds `trade-post-state.ts`, the new pure module that `docs/trade.md` governs (oxfmt realigned the table).
+- `apps/web/AGENTS.md` and the root `AGENTS.md` need no change: neither describes how posts are read or keyed.
+
+Known findings for later, not fixed here: the web keys feed posts by `post.id`, the anchor list (`apps/web/src/features/trade/person-row-view.tsx:262`, `my-posts.tsx:185`, recorded under 7.4 (h)), which must become `postId` before `shared-lists`; and `sideOnTradeSql` (`lib/trade-sql.ts`) has no caller since `fetchOwnTradeLists` went, so `knip` may list it.
+
+### Incident 2026-11-21: For you's candidates read
+
+**What happened.** After `345273b6` went live, `fetchTradeCandidates` (`services/trade/matches/candidates.ts`) ran 17 to 21 at once, 30 s to 5 min each, and production's main Postgres reached 150% CPU at load 22. Web was rolled back to `8b05487c`; the worker stayed on `345273b6`. The worker runs this read too: want alerts ask `mutualPartnerIds` (`services/trade/matches/recount.ts`) for Can swap recipients, which calls `recountPartners` and so `fetchTradeCandidates`, narrowed by `ownerIds` to the alert's partners. So the fix ships to the worker as well as to web. A read-only repro for a heavy user (4 want lists, 3 have or sale lists, about 31,000 entries) ran past 90 s, where the feed's read of the same CTEs takes 0.5 s.
+
+**Cause.** The planner estimated whole CTEs at one row and chose nested loops over CTE scans, which grow with the product of their sizes:
+
+- `my_want` and `my_have` joined the `my_lists` CTE (`listTradeStateSql` per list) instead of `lists`. A CTE has no column statistics, so the join to `list_entries` was estimated at one row per list and the grouped `my_want` at 1 (locally 1 against `8b05487c`'s 296). With `partner_lists` also at 1, the planner crossed `my_want` with `partner_lists` and then probed `list_entries` by slug for every pair.
+- `partner_sides` tested `(post_id, id) IN (listed_posts)`, a two-column semi-join whose selectivity multiplies to about one row, then `post_id NOT IN (hidden rows)` and the partner anti joins.
+- `partner_post` self-joined `partner_sides`, and `matched_keys` semi-joined the `matched` CTE inside those loops.
+
+**Fix** (same output):
+
+- `my_side_flags`: the viewer's sides on Trade, grouped by list from `trade_post` (`user_id` index), the union `listTradeStateSql` takes. `my_want` and `my_have` go back to `8b05487c`'s join of `list_entries` with `lists` and take the flags by `LEFT JOIN` with `coalesce` to the list's own. A left join never lowers the outer estimate, so `my_want` is estimated as it was before (296).
+- `partner_posts`: the partner's posts filtered once on `posts`, as the feed filters them (listed, not hidden by row, `tradePartnerSql`, `ownerIds`). `partner_lists` takes each post's sides from it (the anchor's flags and the partner's `partner_match_*`; a paired half is always a want list, whose `takes_swaps` no rule reads) and `lists` for type and `updated_at`. `partner_post` is the posts with a partner: no self-join, and a pair's halves pass together, as before.
+- `all_posts AS MATERIALIZED (SELECT * FROM posts)`: the read names `posts` once, so Postgres would inline it into `partner_posts`, where the filters shrank its estimate and its anti join became a nested loop over `on_trade` per post. Both earlier builds named `posts` twice, which materialized it.
+- `post_of` and `post_leads` are built for every partner list, and the new pure `keyMatchedLists` (`lib/trade-rank.ts`, tested) keeps the matched lists' keys and their leads. No CTE is semi-joined to `matched` any more.
+- `packages/api/docs/trade.md` (Can swap) says what the CTEs must keep, and points to this As built, which leaves `openspec/changes/` when the change is archived (git keeps it).
+
+**Proof.**
+
+- `bun run check` (api 1,325 tests, the model test included; worker 552), `bun run build --filter=web` and `bunx oxfmt --check` exit 0.
+- Output, local and read-only: `fetchTradeCandidates` for every local account with a matchable list (562 viewers, filters `all` and `mutual`, 382 candidates, 107 of them with post keys) and for localtest1, localtest2 and localtest5 (all four filters, hidden posts skipped and kept) equals `345273b6`'s output exactly and `8b05487c`'s with each post key read as its lead. `trade.people` for localtest1 (no filter, Any, Mutual, person), localtest2 and localtest5 (no filter, Any), `mutualCount` and `tabCounts` equal 0.1's saved outputs. The two older builds ran in throwaway worktrees outside the repo, since removed. On the fixed build, each of 764 reads narrowed by `ownerIds` to one person (every local viewer, `all` and `mutual`, hidden posts skipped and kept) equals that person's entry in the unrestricted read.
+- Plans, local, `cand-explain.ts`, warm (third run), viewer localtest1. The local data is too small to show the blow-up, so the buffers and estimates are the signal:
+
+  | Build | Planning | Execution | Buffers | `partner_lists` est / actual | `my_want` est / actual |
+  | --- | --- | --- | --- | --- | --- |
+  | `8b05487c` | 7.6 ms | 6.9 ms | 2,205 | 12 / 31 | 296 / 7 |
+  | `345273b6` | 5.5 ms | 10.6 ms | 4,858 | 1 / 31 | 1 / 7 |
+  | fixed | 2.5 ms | 8.7 ms | 2,240 | 8 / 31 | 296 / 7 |
+
+  The local data is far too small to show the blow-up, so the evidence is the plan's parity with `8b05487c`: the same buffers, `my_want` estimated at 296 again, and `matched` run as `8b05487c` ran it, `partner_lists` → `list_entries` by `list_id` → a hash join on `my_want`. In the fixed plans no CTE is scanned more than once; the only nodes without an index that run per row are the per-post `VALUES` laterals and the partner rules' small `user_block`, `hidden_trade_partner` and `user_sanction` scans, as in `8b05487c`. The production `EXPLAIN` is the real gate. Localtest2: 13.3 / 5.8 / 10.0 ms run, 2,173 / 4,600 / 2,217 buffers. Plans and logs: `/private/tmp/claude-501/reads-by-row/cand-plan-*.txt`, `cand-explain-*.log`.
+
+**For production** (the owner's go-ahead, read-only): `/private/tmp/claude-501/reads-by-row/cand-explain.ts` explains this read for one viewer on any build. Copy it into the build's `apps/worker/.reads-by-row/` and run `VIEWER=<user id> BUILD=<label> PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=60000' bun run --env-file=<repo>/.env .reads-by-row/cand-explain.ts`, then remove the folder. It refuses to start unless `transaction_read_only` is on, and the explained statement also runs under `SET LOCAL statement_timeout` of 60 s. It prints planning and execution time, the CTEs with the nodes of 1 ms or more, the rescanned nodes that use no index, and the 15 worst estimates. When `EXPLAIN ANALYZE` passes 60 s (as `345273b6`'s will on production), it catches the cancel and prints the plain `EXPLAIN` with estimates only; `PLAN_ONLY=1` prints only that, executing nothing. `OUT=<file>` saves the full plan. Tested locally: the read-only refusal, the cancel fallback (`TIMEOUT_MS=1`, test only), `PLAN_ONLY` and the full run.
+
+**Same pattern elsewhere, not changed:** the worker's `fetchPairs` (`cand` tests `(post_id, id) IN (listed_posts)`) has the same two-column semi-join; locally it is fine and production's worker on `345273b6` has not shown a problem, but its `cand` estimate can fall to one row the same way. The feed reads use `posts` directly and were fine on production.
+- **Production timing of the fix** (read-only, 2026-11-22, with the owner's go-ahead). It used the three heaviest For you users by entries on Trade: user 1 has 6 lists with 21,823 want entries, user 2 has 4 lists with 13,362, and user 3 has 13 lists with 11,883 want and 1,233 offer entries. `cand-explain.ts` ran with a 60 s statement timeout. The old build ran from a throwaway checkout outside the repo, since removed.
+  - Execution times in ms, three runs each (first cold, then warm):
+
+    | User | Old (`8b05487c`) | Fixed |
+    | --- | --- | --- |
+    | 1 | 1848, 884, 972 | 898, 939, 893 |
+    | 2 | 979, 759, 856 | 858, 788, 858 |
+    | 3 | 1119, 907, 1082 | 1776, 1156, 1021 |
+
+  - The broken build (`345273b6`) ran plan-only so nothing executed. It estimates `partner_lists` at 1 row in each of its rescanned spots, the nested-loop shape that blew up.
+  - In the fixed plan, `partner_lists` is still estimated at 1 row (actual about 850 to 1,160). It is now scanned once (loops=1), as the outer side of an index lookup into `list_entries` by `list_id`. That is the old build's shape, so the estimate no longer multiplies into rescans. The largest repeat in the plan is about 2,600 memoized `lists_pkey` probes. This remains a watch item for `shared-lists`.

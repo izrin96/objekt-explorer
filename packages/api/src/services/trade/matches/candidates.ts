@@ -1,11 +1,16 @@
 import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
-import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../../lib/trade-rank";
-import { hiddenRowsSql, listTradeStateSql, offersSwapsSql } from "../../../lib/trade-sql";
+import {
+  CANDIDATE_LIMIT,
+  type Candidate,
+  keyMatchedLists,
+  type TheyWant,
+} from "../../../lib/trade-rank";
+import { hiddenRowsSql, offersSwapsSql } from "../../../lib/trade-sql";
 import type { TradeFilter } from "../../../schemas/trade";
-import { listedPostsCte, postsCte } from "../feed/query";
-import { offerMatchesWantSql, postPairsSql, tradePartnerSql } from "../lists";
+import { listedPost, postsCte } from "../feed/query";
+import { offerMatchesWantSql, tradePartnerSql } from "../lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -62,60 +67,77 @@ export async function fetchTradeCandidates(
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
-    -- a set, so each side is one hash lookup rather than a scan of posts
-    ${listedPostsCte},
-    -- each of my lists counts with the union of its posts on Trade, else its own Open to
-    my_lists AS (
-      SELECT l.id, l.list_type,
-        ${listTradeStateSql("l", "matchSale")} AS match_sale,
-        ${listTradeStateSql("l", "matchHave")} AS match_have,
-        ${listTradeStateSql("l", "takesSwaps")} AS takes_swaps
-      FROM lists l
-      WHERE l.id = ANY(${sql.param([...sides.wantListIds, ...sides.haveListIds])}::int[])
+    -- planned on its own, as the feed's posts are: inlined into partner_posts below, the filters
+    -- there shrank its estimate and its anti join became a nested loop over on_trade per post
+    all_posts AS MATERIALIZED (SELECT * FROM posts),
+    -- the union of my lists' sides on Trade, by list, as listTradeStateSql reads them. Joined LEFT
+    -- below, so my_want and my_have keep the row estimates of their real tables: a join to a CTE
+    -- there collapsed them to one row and the planner crossed my_want with partner_lists
+    my_side_flags AS (
+      SELECT side.id, bool_or(tp.match_have) AS match_have, bool_or(tp.match_sale) AS match_sale,
+        bool_or(tp.takes_swaps) AS takes_swaps
+      FROM trade_post tp
+      CROSS JOIN LATERAL (VALUES (tp.lead_list_id, tp.lead_on_trade), (tp.want_list_id, tp.want_on_trade))
+        AS side(id, on_trade)
+      WHERE tp.user_id = ${userId} AND side.on_trade
+      GROUP BY side.id
     ),
     my_want AS (
-      SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale, bool_or(l.match_have) AS match_have
+      SELECT e.collection_slug,
+        bool_or(coalesce(f.match_sale, l.match_sale)) AS match_sale,
+        bool_or(coalesce(f.match_have, l.match_have)) AS match_have
       FROM list_entries e
-      JOIN my_lists l ON l.id = e.list_id
+      JOIN lists l ON l.id = e.list_id
+      LEFT JOIN my_side_flags f ON f.id = l.id
       WHERE e.list_id = ANY(${sql.param(sides.wantListIds)}::int[]) AND e.collection_slug IS NOT NULL
       GROUP BY e.collection_slug
     ),
     my_have AS (
-      SELECT e.collection_slug, bool_or(${offersSwapsSql("l")}) AS on_have,
+      SELECT e.collection_slug,
+        bool_or(l.list_type = 'have' OR (l.list_type = 'sale' AND coalesce(f.takes_swaps, l.takes_swaps)))
+          AS on_have,
         bool_or(l.list_type = 'sale') AS on_sale
       FROM list_entries e
-      JOIN my_lists l ON l.id = e.list_id
+      JOIN lists l ON l.id = e.list_id
+      LEFT JOIN my_side_flags f ON f.id = l.id
       WHERE e.list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND e.collection_slug IS NOT NULL
       GROUP BY e.collection_slug
     ),
-    -- each side through on_trade, so a partner's Open to and takes_swaps are its post's
-    partner_sides AS (
-      SELECT l.id, l.post_id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps,
-        l.updated_at
-      FROM on_trade l
-      WHERE l.user_id <> ${userId}
-        -- an idle post does not count: a pair's lists share the pair's freshness
-        AND (l.post_id, l.id) IN (SELECT post_id, id FROM listed_posts)
-        ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
-        AND ${tradePartnerSql(userId, sql`l.user_id`)}
-        ${skipHiddenPosts ? sql`AND l.post_id NOT IN (${hiddenRowsSql(userId)})` : sql``}
+    -- the partner's posts that take part, as the feed filters them: listed, seen, not hidden. A
+    -- post's sides share its freshness and its row's hide, so each post is tested once, and no
+    -- side is matched back to its post through a two-column set (whose estimate fell to one row)
+    partner_posts AS (
+      SELECT posts.id, posts.partner_id, posts.post_id, posts.user_id, posts.type,
+        posts.match_sale, posts.match_have, posts.takes_swaps,
+        posts.partner_match_sale, posts.partner_match_have
+      FROM all_posts posts
+      WHERE posts.user_id <> ${userId}
+        AND ${listedPost}
+        ${ownerIds ? sql`AND posts.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
+        AND ${tradePartnerSql(userId, sql`posts.user_id`)}
+        ${skipHiddenPosts ? sql`AND posts.post_id NOT IN (${hiddenRowsSql(userId)})` : sql``}
     ),
-    -- a list in several posts counts with what any of them allows
+    -- each list counts with what any of its posts allows (a paired half is always a want list,
+    -- whose takes_swaps no rule reads)
     partner_lists AS (
-      SELECT id, user_id, list_type, bool_or(match_sale) AS match_sale,
-        bool_or(match_have) AS match_have, bool_or(takes_swaps) AS takes_swaps,
-        max(updated_at) AS updated_at
-      FROM partner_sides
-      GROUP BY id, user_id, list_type
+      SELECT side.id, pp.user_id, l.list_type, bool_or(side.match_sale) AS match_sale,
+        bool_or(side.match_have) AS match_have, bool_or(side.takes_swaps) AS takes_swaps,
+        l.updated_at
+      FROM partner_posts pp
+      CROSS JOIN LATERAL (VALUES
+        (pp.id, pp.match_sale, pp.match_have, pp.takes_swaps),
+        (pp.partner_id, pp.partner_match_sale, pp.partner_match_have, false)
+      ) AS side(id, match_sale, match_have, takes_swaps)
+      JOIN lists l ON l.id = side.id
+      GROUP BY side.id, pp.user_id, l.list_type, l.updated_at
     ),
-    -- a post is a pair in one trade_post row whose offering half can swap, keyed by the row; both
-    -- halves must take part, so a list paired with an unlisted one keys to no post
+    -- a post is a pair: a posts row with a partner (its lead offers swaps, both halves listed and
+    -- not hidden), keyed by its row
     partner_post AS (
-      SELECT o.user_id, half.id, o.post_id AS post_key, o.id AS lead_id
-      FROM partner_sides o
-      JOIN trade_post tp ON tp.id = o.post_id
-      JOIN partner_sides w ON w.post_id = o.post_id AND ${postPairsSql("tp", "o", "w")}
-      CROSS JOIN LATERAL (VALUES (o.id), (w.id)) AS half(id)
+      SELECT pp.user_id, half.id, pp.post_id AS post_key, pp.id AS lead_id
+      FROM partner_posts pp
+      CROSS JOIN LATERAL (VALUES (pp.id), (pp.partner_id)) AS half(id)
+      WHERE pp.partner_id IS NOT NULL
     ),
     matched AS (
       -- a swap when the list offers swaps and my want list takes them; a sale when it is a sale
@@ -166,24 +188,19 @@ export async function fetchTradeCandidates(
       GROUP BY user_id
       ${HAVING[filter]}
     ),
-    -- apart from matched, so it keeps one row per entry: each matched list's post keys, and the
-    -- lead of each key
-    matched_keys AS (
-      SELECT DISTINCT pp.user_id, pp.id AS list_id, pp.post_key, pp.lead_id
-      FROM partner_post pp
-      WHERE (pp.user_id, pp.id) IN (SELECT user_id, list_id FROM matched)
-    ),
+    -- every partner list's post keys and each key's lead, per person, apart from matched so it
+    -- keeps one row per entry; the caller keeps the matched lists' (keyMatchedLists)
     post_of AS (
-      SELECT user_id, jsonb_object_agg(list_id, post_keys) AS post_of
+      SELECT user_id, jsonb_object_agg(id, post_keys) AS post_of
       FROM (
-        SELECT user_id, list_id, array_agg(post_key ORDER BY post_key) AS post_keys
-        FROM matched_keys GROUP BY user_id, list_id
+        SELECT user_id, id, array_agg(DISTINCT post_key ORDER BY post_key) AS post_keys
+        FROM partner_post GROUP BY user_id, id
       ) keys
       GROUP BY user_id
     ),
     post_leads AS (
       SELECT user_id, jsonb_object_agg(post_key, lead_id) AS post_leads
-      FROM (SELECT DISTINCT user_id, post_key, lead_id FROM matched_keys) leads
+      FROM (SELECT DISTINCT user_id, post_key, lead_id FROM partner_post) leads
       GROUP BY user_id
     )
     SELECT g.user_id, g.list_updated_at, coalesce(po.post_of, '{}') AS post_of,
@@ -195,14 +212,21 @@ export async function fetchTradeCandidates(
     LIMIT ${limit}
   `);
 
-  return result.rows.map((row) => ({
-    userId: row.user_id,
-    listUpdatedAt: Object.fromEntries(
-      Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
-    ),
-    postOf: row.post_of,
-    postLeads: row.post_leads,
-    theyHave: row.they_have,
-    theyWant: row.they_want,
-  }));
+  return result.rows.map((row) => {
+    const { postOf, postLeads } = keyMatchedLists(
+      row.post_of,
+      row.post_leads,
+      Object.keys(row.list_updated_at),
+    );
+    return {
+      userId: row.user_id,
+      listUpdatedAt: Object.fromEntries(
+        Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
+      ),
+      postOf,
+      postLeads,
+      theyHave: row.they_have,
+      theyWant: row.they_want,
+    };
+  });
 }

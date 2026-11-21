@@ -175,17 +175,17 @@
 
 ## 8. Rollout
 
-- [ ] 8.1 **G1**, read-only, with a go-ahead, after the push and before the deploy:
+- [x] 8.1 **G1**, read-only, with a go-ahead, after the push and before the deploy:
   - the old drift script: checks 1 to 7 at 0;
   - task 7.2's set-equality script on production: no difference.
 
   A non-zero check or any difference stops the rollout for the owner. Record both in As built.
-- [ ] 8.2 The owner brings up web and rebuilds and brings up the worker from the same commit. Record the times.
-- [ ] 8.3 **G2**, read-only, with a go-ahead: the new drift script, checks 1 to 7 at 0. The owner opens `/trade` once. Record the rollback floor (design, Migration Plan) in As built.
+- [x] 8.2 The owner brings up web and rebuilds and brings up the worker from the same commit. Record the times.
+- [x] 8.3 **G2**, read-only, with a go-ahead: the new drift script, checks 1 to 7 at 0. The owner opens `/trade` once. Record the rollback floor (design, Migration Plan) in As built.
 
 ## 9. Agent docs
 
-- [ ] 9.1 With `writing-for-agents` loaded, check what groups 2 to 6 wrote against the code as built:
+- [x] 9.1 With `writing-for-agents` loaded, check what groups 2 to 6 wrote against the code as built:
   - `packages/api/docs/trade.md`;
   - `apps/worker/AGENTS.md`;
   - `packages/db/AGENTS.md`, Trade posts, whose "until the readers take more" now reads: the readers take rows, and only `planPost`'s refusal and drift check 2 keep one row per list until `shared-lists`.

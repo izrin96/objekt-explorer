@@ -204,6 +204,24 @@ export type Candidate = {
   postLeads: Record<string, number>;
 };
 
+/**
+ * A candidate's post keys narrowed to its matched lists (`listIds`), and the leads of the keys
+ * left: the read computes them for every partner list, apart from the matches.
+ */
+export function keyMatchedLists(
+  postOf: Record<string, number[]>,
+  postLeads: Record<string, number>,
+  listIds: Iterable<string>,
+): Pick<Candidate, "postOf" | "postLeads"> {
+  const matched = new Set(listIds);
+  const kept = Object.entries(postOf).filter(([id]) => matched.has(id));
+  const keys = new Set(kept.flatMap(([, rows]) => rows.map(String)));
+  return {
+    postOf: Object.fromEntries(kept),
+    postLeads: Object.fromEntries(Object.entries(postLeads).filter(([key]) => keys.has(key))),
+  };
+}
+
 type Recounted = {
   userId: string;
   updatedAt: string;

@@ -8,6 +8,7 @@ import {
   entryVerdict,
   groupBySlug,
   type Holdings,
+  keyMatchedLists,
   matchSides,
   mutualOrder,
   mutualPeople,
@@ -1230,5 +1231,26 @@ describe("copyPairsOf", () => {
     );
     expect(read.length).toBeGreaterThan(0);
     for (const key of read) expect(asked.has(key)).toBe(true);
+  });
+});
+
+describe("keyMatchedLists", () => {
+  test("keeps the matched lists' post keys and those keys' leads", () => {
+    // list 7 leads row 100 with want list 8; list 9 is in row 101 with list 10, unmatched
+    expect(
+      keyMatchedLists({ 7: [100], 8: [100], 9: [101], 10: [101] }, { 100: 7, 101: 9 }, [
+        "7",
+        "8",
+        "3",
+      ]),
+    ).toEqual({ postOf: { 7: [100], 8: [100] }, postLeads: { 100: 7 } });
+  });
+
+  test("a list in two rows keeps both, and nothing matched keeps nothing", () => {
+    expect(keyMatchedLists({ 7: [100, 102] }, { 100: 7, 102: 7 }, ["7"])).toEqual({
+      postOf: { 7: [100, 102] },
+      postLeads: { 100: 7, 102: 7 },
+    });
+    expect(keyMatchedLists({ 7: [100] }, { 100: 7 }, [])).toEqual({ postOf: {}, postLeads: {} });
   });
 });
