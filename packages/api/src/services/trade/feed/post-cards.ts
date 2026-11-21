@@ -4,7 +4,7 @@ import { type SQL, and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { previewSide } from "../../../lib/trade-feed";
-import { DEFAULT_OPEN_TO, sideStateOf } from "../../../lib/trade-post-state";
+import { sideStateOf } from "../../../lib/trade-post-state";
 import { pairPosts, postFromRow, type PostTag } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { listPostSql } from "../../../lib/trade-sql";
@@ -212,13 +212,11 @@ export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPo
     const member = (listId: number | null) =>
       listId === null ? null : (listById.get(listId) ?? null);
     const named = member(id);
-    // a list in no row is a post of its own, off Trade, with the defaults' Open to
+    // a list in no row is a post of its own, off Trade, as its lists read it
     const posts = row
       ? postFromRow(row, member(row.leadListId), member(row.wantListId))
       : named
-        ? pairPosts([
-            { ...named, ...DEFAULT_OPEN_TO, linkedListId: null, postId: null, bumpedAt: null },
-          ])
+        ? pairPosts([{ ...named, linkedListId: null, postId: null, bumpedAt: null }])
         : [];
     const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
     if (!post) continue;

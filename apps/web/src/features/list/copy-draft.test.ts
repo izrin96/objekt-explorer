@@ -18,9 +18,12 @@ const source = (patch: Partial<CopySource> = {}): CopySource => ({
   currency: null,
   profileAddress: B,
   isProfileBind: true,
+  matchSale: true,
+  matchHave: true,
   gridColumns: 4,
   hideSerial: true,
   removeOnReceive: false,
+  takesSwaps: false,
   ...patch,
 });
 
@@ -40,31 +43,36 @@ describe("toCopyDraft without a fixed type", () => {
       linkedListId: null,
       profileAddress: GONE,
       isProfileBind: false,
+      matchSale: EMPTY_DRAFT.matchSale,
+      matchHave: EMPTY_DRAFT.matchHave,
       gridColumns: 4,
       hideSerial: true,
       regenerateSlug: false,
       ratio: null,
       removeOnReceive: true,
+      takesSwaps: false,
     });
   });
 
-  test("never carries Open to, which is its post's: `list.find` still returns it", () => {
-    const stored = { matchSale: false, matchHave: true, takesSwaps: true };
-    for (const listType of ["want", "sale"] as const) {
-      const draft = toCopyDraft({ ...source({ listType }), ...stored }, { profiles: PROFILES });
-      expect(draft).not.toContainAnyKeys(["matchSale", "matchHave", "takesSwaps"]);
-    }
+  test("a want source keeps its Open to", () => {
+    const draft = toCopyDraft(source({ listType: "want", matchSale: false, matchHave: true }), {
+      profiles: PROFILES,
+    });
+    expect(draft.matchSale).toBe(false);
+    expect(draft.matchHave).toBe(true);
   });
 });
 
 describe("toCopyDraft with a fixed type", () => {
-  test("want to want is unbound", () => {
-    const draft = toCopyDraft(source({ listType: "want" }), {
+  test("want to want keeps Open to", () => {
+    const draft = toCopyDraft(source({ listType: "want", matchSale: false, matchHave: true }), {
       fixedType: "want",
       profiles: PROFILES,
     });
     expect(draft.listType).toBe("want");
     expect(draft.isProfileBind).toBe(false);
+    expect(draft.matchSale).toBe(false);
+    expect(draft.matchHave).toBe(true);
   });
 
   test("have to sale is bound to the source's profile and carries no currency", () => {
@@ -112,6 +120,16 @@ describe("toCopyDraft with a fixed type", () => {
     expect(draft.profileAddress).toBe(A);
   });
 
+  test("sale to want resets Open to", () => {
+    const draft = toCopyDraft(
+      source({ listType: "sale", currency: "USD", matchSale: false, matchHave: false }),
+      { fixedType: "want", profiles: PROFILES },
+    );
+    expect(draft.listType).toBe("want");
+    expect(draft.matchSale).toBe(EMPTY_DRAFT.matchSale);
+    expect(draft.matchHave).toBe(EMPTY_DRAFT.matchHave);
+  });
+
   test("a source whose profile the viewer no longer has falls back to the first profile", () => {
     const draft = toCopyDraft(source({ profileAddress: GONE }), {
       fixedType: "have",
@@ -153,5 +171,22 @@ describe("toCopyDraft, Remove objekts I get in a trade", () => {
     expect(toCopyDraft(source(), { fixedType: "want", profiles: PROFILES }).removeOnReceive).toBe(
       EMPTY_DRAFT.removeOnReceive,
     );
+  });
+});
+
+describe("toCopyDraft, Sell or swap", () => {
+  const sale = source({ listType: "sale", currency: "USD", takesSwaps: true });
+
+  test("a sale source keeps it in a sale copy", () => {
+    expect(toCopyDraft(sale, { profiles: PROFILES }).takesSwaps).toBe(true);
+    expect(toCopyDraft(sale, { fixedType: "sale", profiles: PROFILES }).takesSwaps).toBe(true);
+  });
+
+  test("any other copy starts without it", () => {
+    expect(toCopyDraft(sale, { fixedType: "have", profiles: PROFILES }).takesSwaps).toBe(false);
+    expect(
+      toCopyDraft(source({ takesSwaps: true }), { fixedType: "sale", profiles: PROFILES })
+        .takesSwaps,
+    ).toBe(false);
   });
 });

@@ -34,6 +34,7 @@ import {
   toEditInput,
 } from "./list-draft";
 import { ListForm } from "./list-form";
+import { offTradeOpenTo, offTradeSaleOpenTo } from "./list-open-to";
 import { listFindOptions } from "./queries";
 
 export function EditListDialog({
@@ -123,6 +124,23 @@ function EditListForm({
   const [seed] = useState(() => toDraft(list));
   const [draft, setDraft] = useState<ListDraft>(seed);
   const [errors, setErrors] = useState<FieldErrors>({});
+  // the seed's flags, which the draft is compared with; inside the composer its Post sets Open to
+  const storedOpenTo = showTradeLine
+    ? offTradeOpenTo({
+        listType: list.listType,
+        discoverable: list.discoverable,
+        matchSale: seed.matchSale,
+        matchHave: seed.matchHave,
+      })
+    : null;
+  const storedSaleOpenTo = showTradeLine
+    ? offTradeSaleOpenTo({
+        listType: list.listType,
+        discoverable: list.discoverable,
+        isProfileBind: list.isProfileBind,
+        takesSwaps: seed.takesSwaps,
+      })
+    : null;
 
   return (
     <Form
@@ -132,7 +150,7 @@ function EditListForm({
         const next = zodErrors(listDraftSchema(), draft);
         setErrors(next);
         if (Object.keys(next).length > 0) return;
-        edit.mutate(toEditInput(list.slug, draft, seed.ratio), {
+        edit.mutate(toEditInput(list.slug, draft, seed.ratio, storedOpenTo, storedSaleOpenTo), {
           onSuccess: onDone,
         });
       }}
@@ -148,6 +166,7 @@ function EditListForm({
           onChange={setDraft}
           profiles={profiles}
           url={toListUrl(list, profiles)}
+          showOpenTo={storedOpenTo !== null || storedSaleOpenTo !== null}
           tradeLine={
             showTradeLine ? (
               <TradeLine

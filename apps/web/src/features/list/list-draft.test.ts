@@ -42,9 +42,10 @@ const draft = (patch: Partial<ListDraft> = {}): ListDraft => ({
 const errorsOf = (patch: Partial<ListDraft> = {}) => zodErrors(listDraftSchema(), draft(patch));
 
 describe("EMPTY_DRAFT", () => {
-  test("is a general list with no Open to, which a post sets", () => {
+  test("is a general list open to swaps and buying", () => {
     expect(EMPTY_DRAFT.listType).toBe("general");
-    expect(EMPTY_DRAFT).not.toContainAnyKeys(["matchSale", "matchHave", "takesSwaps"]);
+    expect(EMPTY_DRAFT.matchSale).toBe(true);
+    expect(EMPTY_DRAFT.matchHave).toBe(true);
   });
 });
 
@@ -113,11 +114,19 @@ describe("toCreateInput", () => {
     expect(toCreateInput(draft({ listType: "want", ...bound })).isProfileBind).toBe(false);
   });
 
-  test("sends no Open to for any type: a post sets it", () => {
-    for (const listType of ["general", "have", "want", "sale"] as const) {
-      const input = toCreateInput(draft({ listType, currency: "USD", isProfileBind: true }));
-      expect(input).not.toContainAnyKeys(["matchSale", "matchHave", "takesSwaps"]);
+  test("takesSwaps goes only for a bound sale list that has it set", () => {
+    const bound = { isProfileBind: true, profileAddress: ADDRESS, takesSwaps: true };
+    expect(toCreateInput(draft({ listType: "sale", currency: "USD", ...bound })).takesSwaps).toBe(
+      true,
+    );
+    expect(
+      toCreateInput(draft({ listType: "sale", currency: "USD", ...bound, isProfileBind: false }))
+        .takesSwaps,
+    ).toBe(false);
+    for (const listType of ["general", "have", "want"] as const) {
+      expect(toCreateInput(draft({ listType, ...bound })).takesSwaps).toBe(false);
     }
+    expect(toCreateInput(draft({ listType: "sale", isProfileBind: true })).takesSwaps).toBe(false);
   });
 
   test("the profile address and hide serial pass through", () => {
@@ -129,7 +138,7 @@ describe("toCreateInput", () => {
   const cases: [string, Partial<ListDraft>][] = [
     ["general", { listType: "general", profileAddress: ADDRESS, description: "d" }],
     ["have", { listType: "have", linkedListId: 3, isProfileBind: true, profileAddress: ADDRESS }],
-    ["want", { listType: "want", linkedListId: 3 }],
+    ["want", { listType: "want", linkedListId: 3, matchHave: false }],
     ["sale", { listType: "sale", currency: "usd", isProfileBind: true, profileAddress: ADDRESS }],
   ];
 
@@ -193,9 +202,7 @@ describe("toEditInput", () => {
       "linkedListId",
       "matchSale",
       "matchHave",
-      "takesSwaps",
       "openTo",
-      "saleOpenTo",
     ]) {
       expect(input).not.toHaveProperty(key);
     }
@@ -217,10 +224,48 @@ describe("toEditInput", () => {
     }
   });
 
-  test("never sends Open to, for any type", () => {
-    for (const listType of ["general", "have", "want", "sale"] as const) {
-      const input = toEditInput("my-list", draft({ listType, currency: "USD" }));
-      expect(input).not.toContainAnyKeys(["openTo", "saleOpenTo", "takesSwaps"]);
+  test("sends a want list's Open to only when the form may change it and it changed", () => {
+    const swaps = draft({ listType: "want", matchSale: false, matchHave: true });
+    expect(toEditInput("my-list", swaps, null, "both")).toMatchObject({ openTo: "swaps" });
+    expect(toEditInput("my-list", swaps, null, "swaps")).not.toHaveProperty("openTo");
+    // on Trade or inside the composer the post sets it, so the caller passes null
+    expect(toEditInput("my-list", swaps, null, null)).not.toHaveProperty("openTo");
+    expect(toEditInput("my-list", swaps)).not.toHaveProperty("openTo");
+    expect(editListInputSchema.parse(toEditInput("my-list", swaps, null, "both")).openTo).toBe(
+      "swaps",
+    );
+  });
+
+  test("a paired want list saved as Buying only before pairs took swaps saves untouched", () => {
+    const legacy = draft({ listType: "want", linkedListId: 3, matchSale: true, matchHave: false });
+    expect(toEditInput("my-list", legacy, null, "buying")).not.toHaveProperty("openTo");
+  });
+
+  test("sends a sale list's Open to as saleOpenTo only when it changed, never takesSwaps", () => {
+    const both = draft({ listType: "sale", currency: "USD", takesSwaps: true });
+    expect(toEditInput("my-list", both, null, null, "sell")).toMatchObject({ saleOpenTo: "both" });
+    expect(toEditInput("my-list", both, null, null, "both")).not.toHaveProperty("saleOpenTo");
+    expect(toEditInput("my-list", both, null, null, null)).not.toHaveProperty("saleOpenTo");
+    expect(toEditInput("my-list", both)).not.toHaveProperty("saleOpenTo");
+    expect(toEditInput("my-list", both, null, null, "sell")).not.toHaveProperty("takesSwaps");
+    const sell = draft({ listType: "sale", currency: "USD" });
+    expect(toEditInput("my-list", sell, null, null, "both")).toMatchObject({ saleOpenTo: "sell" });
+    expect(
+      editListInputSchema.parse(toEditInput("my-list", both, null, null, "sell")).saleOpenTo,
+    ).toBe("both");
+  });
+
+  test("never sends a sale Open to for another type", () => {
+    for (const listType of ["general", "have", "want"] as const) {
+      const other = draft({ listType, takesSwaps: true });
+      expect(toEditInput("my-list", other, null, null, "sell")).not.toHaveProperty("saleOpenTo");
+    }
+  });
+
+  test("never sends Open to for another type", () => {
+    for (const listType of ["general", "have", "sale"] as const) {
+      const other = draft({ listType, currency: "USD", matchSale: false, matchHave: true });
+      expect(toEditInput("my-list", other, null, "both")).not.toHaveProperty("openTo");
     }
   });
 

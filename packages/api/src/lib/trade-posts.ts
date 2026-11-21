@@ -2,7 +2,7 @@ import type { ListType } from "../schemas/list";
 import type { OpenToFlags } from "../schemas/open-to";
 import { groupPosts, type PostTag, tagsOf } from "../schemas/trade-post";
 import { HOUR_MS } from "./time";
-import { type PostOpenTo, type PostRow, sideStateOf, type SideList } from "./trade-post-state";
+import { type PostRow, sideStateOf, type SideList } from "./trade-post-state";
 import { isIdle } from "./trade-rank";
 
 export const BUMP_COOLDOWN_HOURS = 24;
@@ -73,11 +73,7 @@ export function pairPosts<L extends TradeList>(lists: L[]): Post<L>[] {
 }
 
 /** What {@link postFromRow} sets on each list from its row. */
-export type PostFields = PostOpenTo & {
-  linkedListId: number | null;
-  postId: number;
-  bumpedAt: string | null;
-};
+export type PostFields = { linkedListId: number | null; postId: number; bumpedAt: string | null };
 
 /**
  * The posts of one `trade_post` row: copies of the lists passed (`lead`, the row's lead, and

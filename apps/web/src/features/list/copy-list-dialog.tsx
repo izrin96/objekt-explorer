@@ -124,6 +124,7 @@ export function CopyListForm({
           onChange={setDraft}
           profiles={profiles}
           lockBind={fixedType !== undefined}
+          showOpenTo={fixedType === undefined}
           notice={
             // mounted empty so the text, once it arrives, is announced
             <p role="status" className="text-muted-foreground text-xs text-pretty empty:sr-only">

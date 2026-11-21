@@ -35,7 +35,12 @@ import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
-import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
+import {
+  ListBoundBadge,
+  ListCurrencyBadge,
+  ListOpenToBadge,
+  ListTypeBadge,
+} from "./list-type-badge";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "./list-type-labels";
 import { TagBadges } from "./tag-label";
 import { useCopyListLink } from "./use-copy-list-link";
@@ -136,6 +141,7 @@ export function ListRow({
             </span>
           ) : null}
           <ListTradeMark list={list} />
+          <ListOpenToBadge list={list} className="relative z-10" />
           {list.listType === "sale" && list.currency ? (
             <span className="relative z-10">
               <ListCurrencyBadge currency={list.currency} />

@@ -44,6 +44,9 @@ export async function resolveTradeSides(
         listType: lists.listType,
         // Compare with pairs a list with one partner (`pickedSides`)
         linkedListId: postPartnerSql("lists"),
+        takesSwaps: lists.takesSwaps,
+        matchHave: lists.matchHave,
+        matchSale: lists.matchSale,
       })
       .from(lists)
       .where(and(eq(lists.userId, userId), matchableList)),
@@ -92,7 +95,7 @@ export async function recountPartners(
               ),
             ),
           ),
-    // each list's flags once, by its posts: the union of those on Trade, else of all, else the default
+    // each list's flags once, with the union of its posts on Trade, else its own
     candidates.length === 0
       ? []
       : db

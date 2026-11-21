@@ -99,6 +99,12 @@ export const lists = pgTable(
     description: text("description"),
     currency: varchar("currency", { length: 10 }),
     discoverable: boolean("discoverable").notNull().default(false),
+    /** a want list's matches include sale lists; off, it matches have lists only */
+    matchSale: boolean("match_sale").notNull().default(true),
+    /** a want list's matches include have lists; off with matchSale on, it is Buying only */
+    matchHave: boolean("match_have").notNull().default(true),
+    /** a sale list that also takes swaps (Sell or swap): it matches want lists open to swaps as a have list does */
+    takesSwaps: boolean("takes_swaps").notNull().default(false),
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -119,6 +125,8 @@ export const lists = pgTable(
     index("lists_trade_discoverable_idx")
       .on(t.listType)
       .where(sql`discoverable`),
+    check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
+    check("lists_takes_swaps_sale_only", sql`NOT ${t.takesSwaps} OR ${t.listType} = 'sale'`),
     check("lists_ratio_range", sql`${t.ratio} BETWEEN 2 AND 5`),
   ],
 );
@@ -247,9 +255,8 @@ export const hiddenTradePost = pgTable(
  * want list. The only place a post's pairing is stored: `writePosts`
  * (`packages/api/src/services/list/shared.ts`) writes it. No unique index on either list: one
  * list may sit in more than one post later. It also holds each side's Trade state and bump, and
- * the post's Open to, which each write sets per row from its own side intents. Bumps and Open to
- * live here only: a list holds no copy, and a list in no row reads the column defaults;
- * `lists.discoverable` follows from the rows (`packages/api/docs/trade.md`, Trade posts).
+ * the post's Open to, which each write sets per row from its own side intents. Bumps live here
+ * only; `lists.discoverable` follows from the rows (`packages/api/docs/trade.md`, Trade posts).
  */
 export const tradePost = pgTable(
   "trade_post",

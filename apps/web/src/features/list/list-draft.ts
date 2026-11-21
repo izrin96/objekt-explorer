@@ -1,5 +1,11 @@
 import { normalizeUserText } from "@repo/api/schemas/common/user-text";
 import type { ListType } from "@repo/api/schemas/list";
+import {
+  type OpenTo,
+  type OpenToFlags,
+  openToOf,
+  type SaleOpenTo,
+} from "@repo/api/schemas/open-to";
 import { takesRatio } from "@repo/api/schemas/trade-ratio";
 import * as z from "zod";
 
@@ -9,7 +15,7 @@ import { m } from "@/paraglide/messages";
 
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
-export type ListDraft = {
+export type ListDraft = OpenToFlags & {
   name: string;
   description: string;
   listType: ListType;
@@ -24,6 +30,8 @@ export type ListDraft = {
   ratio: number | null;
   /** a want list drops a hand-added objekt once a trade delivers it */
   removeOnReceive: boolean;
+  /** a bound sale list is open to swaps too (Sell or swap) */
+  takesSwaps: boolean;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
@@ -34,12 +42,16 @@ export const EMPTY_DRAFT: ListDraft = {
   linkedListId: null,
   profileAddress: null,
   isProfileBind: false,
+  // a new want list is open to swaps and buying until its form or a post narrows it
+  matchSale: true,
+  matchHave: true,
   gridColumns: null,
   hideSerial: false,
   regenerateSlug: false,
   ratio: null,
   // a new want list starts with it on; lists made before it existed are off
   removeOnReceive: true,
+  takesSwaps: false,
 };
 
 /** Built per submit: the message functions read the request's locale. */
@@ -53,6 +65,8 @@ export function listDraftSchema() {
       profileAddress: z.string().nullable(),
       isProfileBind: z.boolean(),
       linkedListId: z.number().nullable(),
+      matchSale: z.boolean(),
+      matchHave: z.boolean(),
     })
     .superRefine((draft, ctx) => {
       if (draft.listType === "sale" && !CURRENCY_RE.test(draft.currency)) {
@@ -75,7 +89,7 @@ export function listDraftSchema() {
 /**
  * `list.create`'s input, normalised the way the router does before it writes: the fields a type
  * does not carry are dropped rather than kept stale. A list starts off Trade, and a have or want
- * list unpaired; the post composer puts it on Trade and sets its Open to.
+ * list unpaired; the post composer puts it on Trade.
  */
 export function toCreateInput(draft: ListDraft) {
   const isProfileBind = ["have", "sale"].includes(draft.listType) && draft.isProfileBind;
@@ -88,28 +102,51 @@ export function toCreateInput(draft: ListDraft) {
     linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
+    matchSale: draft.matchSale,
+    matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
     removeOnReceive: draft.listType === "want" && draft.removeOnReceive,
+    takesSwaps: draft.listType === "sale" && isProfileBind && draft.takesSwaps,
   };
 }
 
 /**
- * `list.edit`'s input. A list's link, Trade state and Open to belong to its post, so they are
- * left out and the list keeps them. Ratio for all goes only when it differs from `storedRatio`.
+ * `list.edit`'s input. A list's link and Trade state belong to its post, so they are left out and
+ * the list keeps them. Ratio for all goes only when it differs from `storedRatio`, and a want
+ * list's Open to only when it differs from `storedOpenTo`, null where the post sets it; a sale
+ * list's Open to likewise against `storedSaleOpenTo`, sent as `saleOpenTo` since `takesSwaps` is
+ * create's field.
  */
-export function toEditInput(slug: string, draft: ListDraft, storedRatio: number | null = null) {
+export function toEditInput(
+  slug: string,
+  draft: ListDraft,
+  storedRatio: number | null = null,
+  storedOpenTo: OpenTo | null = null,
+  storedSaleOpenTo: SaleOpenTo | null = null,
+) {
   const {
     listType: _type,
     isProfileBind: _bind,
     linkedListId: _link,
+    matchSale: _sale,
+    matchHave: _have,
+    takesSwaps: _swaps,
     ...rest
   } = toCreateInput(draft);
+  const openTo = openToOf(draft);
+  const saleOpenTo: SaleOpenTo = draft.takesSwaps ? "both" : "sell";
   return {
     slug,
     ...rest,
     gridColumns: draft.gridColumns,
     regenerateSlug: draft.regenerateSlug,
     ...(takesRatio(draft.listType) && draft.ratio !== storedRatio && { ratio: draft.ratio }),
+    ...(draft.listType === "want" &&
+      storedOpenTo !== null &&
+      openTo !== storedOpenTo && { openTo }),
+    ...(draft.listType === "sale" &&
+      storedSaleOpenTo !== null &&
+      saleOpenTo !== storedSaleOpenTo && { saleOpenTo }),
   };
 }
 
@@ -202,10 +239,13 @@ export function toDraft(list: StoredList): ListDraft {
     linkedListId: list.linkedListId,
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
+    matchSale: list.matchSale,
+    matchHave: list.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,
     ratio: list.ratio,
     removeOnReceive: list.removeOnReceive,
+    takesSwaps: list.takesSwaps ?? false,
   };
 }

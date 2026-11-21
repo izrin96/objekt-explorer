@@ -1,5 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
+import { lists } from "@repo/db/schema";
+import { eq } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import { postRowOf } from "../../lib/trade-post-rows";
@@ -34,8 +36,22 @@ export async function savePost(userId: string, choice: PostChoice) {
       });
     }
 
-    const touched = new Set<number>([...plan.on.map(({ id }) => id), ...plan.off]);
-    if (plan.saleSwaps) touched.add(plan.saleSwaps.id);
+    const touched = new Set<number>();
+
+    // a want list's own Open to: its values off Trade and the composer's start
+    for (const { id, flags } of plan.on) {
+      if (flags) await tx.update(lists).set(flags).where(eq(lists.id, id));
+      touched.add(id);
+    }
+
+    if (plan.saleSwaps) {
+      await tx
+        .update(lists)
+        .set({ takesSwaps: plan.saleSwaps.takesSwaps })
+        .where(eq(lists.id, plan.saleSwaps.id));
+      touched.add(plan.saleSwaps.id);
+    }
+    for (const id of plan.off) touched.add(id);
 
     const row = plan.replaced === null ? null : postRowOf(locked.current.rows, plan.replaced);
     const relinked = await writePosts(tx, userId, locked, {
