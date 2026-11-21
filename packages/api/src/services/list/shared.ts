@@ -14,6 +14,7 @@ import {
   type TradeListState,
 } from "../../lib/trade-post-rows";
 import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-posts";
+import { personBumpSql } from "../../lib/trade-sql";
 import type { ListType } from "../../schemas/list";
 import type { PlanList } from "../../schemas/trade-post";
 import { versionCounter } from "../moderation/safety-cache";
@@ -21,19 +22,13 @@ import { versionCounter } from "../moderation/safety-cache";
 const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
 
 /**
- * A person's last bump: the latest bump of any of their lists, on Trade or not, so turning a list
- * off and on, or posting a new one, cannot stand in for Bump.
- */
-function personBumpedAt(userId: SQL | string) {
-  return sql`(SELECT max(p.bumped_at) FROM lists p WHERE p.user_id = ${userId})`;
-}
-
-/**
  * The bump time of a list turning Show on Trade on, or created with it on: a bump of its own,
- * unless its owner bumped in the last 24 hours, in which case it takes that bump's time.
+ * unless its owner bumped in the last 24 hours, in which case it takes that bump's time. The last
+ * bump counts off sides, so turning a post off and on, or posting a new one, cannot stand in for
+ * Bump.
  */
-export function turnOnBumpedAt(userId: SQL | string) {
-  const last = personBumpedAt(userId);
+function turnOnBumpedAt(userId: SQL | string) {
+  const last = personBumpSql(userId);
   return sql`CASE WHEN ${last} > ${bumpCutoff} THEN ${last} ELSE now() END`;
 }
 
@@ -134,7 +129,6 @@ export const tradeState = {
   id: lists.id,
   listType: lists.listType,
   discoverable: lists.discoverable,
-  bumpedAt: lists.bumpedAt,
   matchHave: lists.matchHave,
   matchSale: lists.matchSale,
   takesSwaps: lists.takesSwaps,
@@ -173,16 +167,15 @@ async function writeStates(tx: Tx, states: { id: PostId; state: PostState }[]) {
   `);
 }
 
-/** One `UPDATE … FROM unnest(…)` for every list whose `discoverable` or `bumped_at` the plan changed. */
+/** One `UPDATE … FROM unnest(…)` for every list whose `discoverable` the plan changed. */
 async function writeLists(tx: Tx, summaries: ListSummary[]) {
   if (summaries.length === 0) return;
   await tx.execute(sql`
-    UPDATE ${lists} SET discoverable = s.discoverable, bumped_at = s.bumped_at
+    UPDATE ${lists} SET discoverable = s.discoverable
     FROM unnest(
       ${sql.param(summaries.map(({ id }) => id))}::int[],
-      ${sql.param(summaries.map(({ discoverable }) => discoverable))}::boolean[],
-      ${sql.param(summaries.map(({ bumpedAt }) => bumpedAt))}::timestamptz[]
-    ) AS s(id, discoverable, bumped_at)
+      ${sql.param(summaries.map(({ discoverable }) => discoverable))}::boolean[]
+    ) AS s(id, discoverable)
     WHERE ${lists.id} = s.id
   `);
 }
@@ -196,9 +189,8 @@ async function writeMoves(tx: Tx, moves: { from: PostId; to: PostId }[]) {
   if (moves.length === 0) return;
   const from = sql.param(moves.map((move) => move.from));
   await tx.execute(sql`
-    INSERT INTO hidden_trade_post (user_id, post_id, list_id, created_at)
-    SELECT hp.user_id, m.to_id, (array_agg(hp.list_id ORDER BY hp.created_at DESC))[1],
-      max(hp.created_at)
+    INSERT INTO hidden_trade_post (user_id, post_id, created_at)
+    SELECT hp.user_id, m.to_id, max(hp.created_at)
     FROM hidden_trade_post hp
     JOIN unnest(${from}::int[], ${sql.param(moves.map((move) => move.to))}::int[])
       AS m(from_id, to_id) ON hp.post_id = m.from_id
@@ -212,7 +204,7 @@ async function writeMoves(tx: Tx, moves: { from: PostId; to: PostId }[]) {
 /**
  * Plans the write over the rows it is about (`planPostChange`) and writes the row operations:
  * each row's Trade state, bumps and Open to come from the write's side intents (`rowStateOf`),
- * and `lists.discoverable` and `bumped_at` follow from the rows, written last. Call it after the
+ * and `lists.discoverable` follows from the rows, written last. Call it after the
  * list writes, and before a list delete (`removed`), so a row is re-led while its lists are still
  * there. Returns the lists whose partner changed, for `touchList`. A new writer of a pairing, of a
  * post's Trade state, bump, Open to or `takes_swaps`, or one that deletes a have, sale or want
@@ -223,13 +215,21 @@ export async function writePosts(
   tx: Tx,
   userId: string,
   locked: LockedPosts,
-  write: Omit<PostChange, "created"> & { created?: WrittenList | null },
+  {
+    createdAt,
+    ...write
+  }: Omit<PostChange, "created"> & {
+    /** a list the write inserted, and its `created_at` as the insert returned it */
+    created?: WrittenList | null;
+    createdAt?: string;
+  },
 ): Promise<number[]> {
   const created = write.created ? tradeStates(write.created)[0] : undefined;
   const { ops, relinked } = planPostChange(
     // with no have, sale or want list at the lock there is no row to read `bumpAt` from; only a
-    // list create runs then, and its insert took the same value in the same transaction
-    { ...locked.current, bumpAt: locked.current.bumpAt ?? created?.bumpedAt ?? "" },
+    // list create runs then, the person has no row, so `turnOnBumpedAt` is now(): the insert's
+    // `created_at` default, in the same transaction and the same text form
+    { ...locked.current, bumpAt: locked.current.bumpAt ?? createdAt ?? "" },
     { ...write, created },
   );
 

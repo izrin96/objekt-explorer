@@ -12,7 +12,7 @@ import { refuse } from "../../lib/refuse";
 import { canBeOnTrade, type createListInputSchema, type ListType } from "../../schemas/list";
 import { type OpenToFlags, resolveOpenTo } from "../../schemas/open-to";
 import { assertProfileOwned } from "../profile";
-import { lockPosts, tradeState, turnOnBumpedAt, writePosts } from "./shared";
+import { lockPosts, tradeState, writePosts } from "./shared";
 
 export function resolveDiscoverable(
   type: ListType,
@@ -174,7 +174,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
     ? await generateProfileSlug(input.name, slug, input.profileAddress.toLowerCase(), undefined, tx)
     : null;
 
-  const [inserted] = await tx
+  const [row] = await tx
     .insert(lists)
     .values({
       name: input.name,
@@ -194,11 +194,11 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
       ...resolveOpenTo(input.listType, input),
       takesSwaps: input.listType === "sale" && isProfileBind && input.takesSwaps,
       removeOnReceive: input.listType === "want" && input.removeOnReceive,
-      bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })
-    .returning(tradeState);
+    .returning({ ...tradeState, createdAt: lists.createdAt });
 
-  if (!inserted) throw new ORPCError("INTERNAL_SERVER_ERROR");
+  if (!row) throw new ORPCError("INTERNAL_SERVER_ERROR");
+  const { createdAt, ...inserted } = row;
   if (!locked) return { id: inserted.id, slug, changed: [inserted.id] };
 
   const sides = discoverable ? [{ listId: inserted.id, on: true }] : [];
@@ -214,6 +214,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
   const relinked = await writePosts(tx, userId, locked, {
     pair: linkedListId === null ? null : [inserted.id, linkedListId],
     created: inserted,
+    createdAt,
     sides,
   });
   return { id: inserted.id, slug, changed: [...new Set([inserted.id, ...relinked])] };

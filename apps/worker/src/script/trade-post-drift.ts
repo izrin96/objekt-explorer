@@ -9,18 +9,16 @@
  * rows, but readers still take one row per list, and `planPost` refuses a list in another post.
  *
  * Checks 5 and 6 hold whatever rows a list is in. Check 5 reads each list from its end: its
- * `discoverable` is "on Trade in some row" and its `bumped_at` the latest bump of its sides, which
- * `writePosts` derives from the rows. Check 6 reads each row against the post rules: no want-side
- * state without a want list, `takes_swaps` only under a sale lead, and, for a list in exactly one
- * row whose side is on, the row's Open to (its open list) and `takes_swaps` (its sale lead) equal
- * the list's, since some reads still take a list's Open to as its post's. Off Trade a row's Open to
- * may lag its list after `list.edit`, so 6's last part reads only sides on Trade. They need
- * migration `trade_post_state`.
+ * `discoverable` is "on Trade in some row", which `writePosts` derives from the rows. Check 6
+ * reads each row against the post rules: no want-side state without a want list, `takes_swaps`
+ * only under a sale lead, and, for a list in exactly one row whose side is on, the row's Open to
+ * (its open list) and `takes_swaps` (its sale lead) equal the list's, since some reads still take
+ * a list's Open to as its post's. Off Trade a row's Open to may lag its list after `list.edit`, so
+ * 6's last part reads only sides on Trade. They need migration `trade_post_state`.
  *
  * Check 7 holds whatever the pairing: a hide names a row (`hidden_trade_post.post_id`), and a
  * person never hides their own post, so no hide sits on its hider's own row. It needs migration
- * `hidden_trade_post_by_row`. The third note counts the hides a build before that migration,
- * which reads `list_id`, reads differently: what a rollback to it would lose.
+ * `hidden_trade_post_by_row`.
  *
  * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
  * row to another list, or Edit post swapped or dropped any of the post's lists, and an offer
@@ -76,20 +74,19 @@ const CHECKS: [label: string, query: SQL][] = [
         WHERE tp.user_id <> o.to_user_id`,
   ],
   [
-    "a list whose Trade state or bump disagrees with its rows (list ids)",
+    "a list whose Trade state disagrees with its rows (list ids)",
     sql`WITH sides AS (
-          SELECT s.list_id, bool_or(s.on_trade) AS on_trade, max(s.bumped_at) AS bumped_at
+          SELECT s.list_id, bool_or(s.on_trade) AS on_trade
           FROM trade_post tp
           CROSS JOIN LATERAL (VALUES
-            (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at),
-            (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at)
-          ) s(list_id, on_trade, bumped_at)
+            (tp.lead_list_id, tp.lead_on_trade),
+            (tp.want_list_id, tp.want_on_trade)
+          ) s(list_id, on_trade)
           WHERE s.list_id IS NOT NULL
           GROUP BY s.list_id)
         SELECT l.id FROM lists l LEFT JOIN sides ON sides.list_id = l.id
         WHERE l.list_type IN ('have', 'sale', 'want')
-          AND (l.discoverable <> coalesce(sides.on_trade, false)
-            OR (sides.list_id IS NOT NULL AND l.bumped_at IS DISTINCT FROM sides.bumped_at))`,
+          AND l.discoverable <> coalesce(sides.on_trade, false)`,
   ],
   [
     "a row whose Open to or takes_swaps breaks a post rule (row ids)",
@@ -133,13 +130,6 @@ const NOTES: [label: string, query: SQL][] = [
     sql`SELECT o.id FROM offer o
         WHERE o.post_id IS NULL AND o.post_list_id IS NOT NULL AND EXISTS (
           SELECT 1 FROM trade_post tp WHERE tp.lead_list_id = o.post_list_id)`,
-  ],
-  [
-    "a hide that a build before hidden_trade_post_by_row reads differently (row ids)",
-    sql`SELECT hp.post_id AS id FROM hidden_trade_post hp
-        JOIN trade_post tp ON tp.id = hp.post_id
-        WHERE hp.list_id IS NULL OR (hp.list_id IS DISTINCT FROM tp.lead_list_id
-          AND hp.list_id IS DISTINCT FROM tp.want_list_id)`,
   ],
 ];
 

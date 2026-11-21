@@ -108,7 +108,6 @@ export const lists = pgTable(
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
-    bumpedAt: timestamp("bumped_at", { mode: "string", withTimezone: true }),
     /** a have or want list's trade ratio, which entries and rules without one follow; null is 1:1, never matched */
     ratio: smallint("ratio"),
     /** a want list drops a hand-added entry when a trade leg delivers its collection to the owner */
@@ -125,9 +124,6 @@ export const lists = pgTable(
       .where(sql`profile_address IS NOT NULL`),
     index("lists_trade_discoverable_idx")
       .on(t.listType)
-      .where(sql`list_type IN ('have', 'want') AND discoverable = true`),
-    index("lists_trade_feed_idx")
-      .on(t.bumpedAt.desc(), t.id)
       .where(sql`discoverable`),
     check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
     check("lists_takes_swaps_sale_only", sql`NOT ${t.takesSwaps} OR ${t.listType} = 'sale'`),
@@ -233,9 +229,7 @@ export const hiddenTradePartner = pgTable(
 
 /**
  * A Trade post the viewer hid. It names the post's `trade_post` row and covers that row's lists
- * (`coveredListsSql`); `writePosts` moves it when a write ends or re-leads the row. `list_id` is
- * the anchor the hide was made on, read only by builds before `hidden_trade_post_by_row`, so it
- * keeps no key. The migration's `BEFORE INSERT` trigger fills `post_id` for those builds' hides.
+ * (`coveredListsSql`); `writePosts` moves it when a write ends or re-leads the row.
  */
 export const hiddenTradePost = pgTable(
   "hidden_trade_post",
@@ -243,7 +237,6 @@ export const hiddenTradePost = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    listId: integer("list_id"),
     postId: integer("post_id")
       .notNull()
       .references(() => tradePost.id, { onDelete: "cascade" }),
@@ -254,7 +247,6 @@ export const hiddenTradePost = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.postId] }),
     index("hidden_trade_post_post_id_idx").on(t.postId),
-    index("hidden_trade_post_list_id_idx").on(t.listId),
   ],
 );
 
@@ -263,8 +255,8 @@ export const hiddenTradePost = pgTable(
  * want list. The only place a post's pairing is stored: `writePosts`
  * (`packages/api/src/services/list/shared.ts`) writes it. No unique index on either list: one
  * list may sit in more than one post later. It also holds each side's Trade state and bump, and
- * the post's Open to, which each write sets per row from its own side intents; `lists.discoverable`
- * and `bumped_at` follow from the rows (`packages/api/docs/trade.md`, Trade posts).
+ * the post's Open to, which each write sets per row from its own side intents. Bumps live here
+ * only; `lists.discoverable` follows from the rows (`packages/api/docs/trade.md`, Trade posts).
  */
 export const tradePost = pgTable(
   "trade_post",

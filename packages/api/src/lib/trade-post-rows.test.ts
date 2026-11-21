@@ -293,12 +293,15 @@ describe("applyPairing", () => {
   });
 });
 
+/** A list with the bump its side holds: the planner reads no bump from a list, equation E does. */
+type SideList = TradeListState & { bumpedAt: string | null };
+
 const state = (
   id: number,
   listType: TradeListState["listType"],
   discoverable = true,
-  more: Partial<TradeListState> = {},
-): TradeListState => ({
+  more: Partial<SideList> = {},
+): SideList => ({
   id,
   listType,
   discoverable,
@@ -353,7 +356,7 @@ describe("planPostRows moves a hide with its lead", () => {
 });
 
 /** Equation E: each side from its list, Open to from the open list, `takes_swaps` from a sale lead. */
-function equation(lead: TradeListState, want: TradeListState | null): PostState {
+function equation(lead: SideList, want: SideList | null): PostState {
   const open = want ?? (lead.listType === "want" ? lead : null);
   return {
     leadOnTrade: lead.discoverable,
@@ -367,7 +370,7 @@ function equation(lead: TradeListState, want: TradeListState | null): PostState 
 }
 
 /** A row stored in step with its lists, as every write leaves one while a list is in one row. */
-function stored(lists: TradeListState[], id: number, lead: number, want: number | null = null) {
+function stored(lists: SideList[], id: number, lead: number, want: number | null = null) {
   const byId = new Map(lists.map((entry) => [entry.id, entry]));
   return row(id, lead, want, equation(byId.get(lead)!, want === null ? null : byId.get(want)!));
 }
@@ -916,7 +919,6 @@ describe("rowStateOf", () => {
     id,
     listType,
     discoverable: false,
-    bumpedAt: "list",
     matchHave: true,
     matchSale: false,
     takesSwaps: true,
@@ -1027,10 +1029,17 @@ describe("rowStateOf", () => {
   });
 
   test("a created list with no intent is off, with the list's own values", () => {
-    const created = stored(3, "want", { bumpedAt: null, matchHave: false, matchSale: true });
+    const created = stored(3, "want", { matchHave: false, matchSale: true });
     expect(rowStateOf({ leadListId: 3, wantListId: null }, ctx([created], []))).toEqual(
       sideState({ matchHave: false, matchSale: true }),
     );
+  });
+
+  test("a list entering a row off, with no side before, has no bump", () => {
+    const lists = [stored(1, "have", { discoverable: true }), stored(2, "want")];
+    expect(
+      rowStateOf({ leadListId: 1, wantListId: 2 }, ctx(lists, [], [{ listId: 2, on: false }])),
+    ).toEqual(sideState({ matchSale: false }));
   });
 
   test("a row with no want list, and a have-led row with no open list", () => {
@@ -1053,12 +1062,10 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
     id: number,
     listType: TradeListState["listType"],
     discoverable: boolean,
-    bumpedAt: string | null,
   ): TradeListState => ({
     id,
     listType,
     discoverable,
-    bumpedAt,
     matchHave: true,
     matchSale: true,
     takesSwaps: false,
@@ -1072,12 +1079,12 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
   });
   // have L 1 is in R1 (10) with want 2, and in R3 (12) with want 5; have 3 leads R2 (11) with want 4
   const lists = [
-    stored(1, "have", true, T1),
-    stored(2, "want", true, T0),
-    stored(3, "have", true, T0),
-    stored(4, "want", true, T0),
-    stored(5, "want", true, T1),
-    stored(6, "want", true, T0),
+    stored(1, "have", true),
+    stored(2, "want", true),
+    stored(3, "have", true),
+    stored(4, "want", true),
+    stored(5, "want", true),
+    stored(6, "want", true),
   ];
   const rows = [
     row(10, 1, 2, sides([true, T0], [true, T0])),
@@ -1098,7 +1105,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
   };
 
   test("a new post with a list already in a post adds a row, and the other post is untouched", () => {
-    const fresh = [...lists, stored(7, "want", false, null)];
+    const fresh = [...lists, stored(7, "want", false)];
     expect(
       run(
         {
@@ -1123,10 +1130,8 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
       ],
       moves: [],
       states: [],
-      lists: [
-        { id: 3, discoverable: true, bumpedAt: NOW },
-        { id: 7, discoverable: true, bumpedAt: NOW },
-      ],
+      // list 3 was on Trade already
+      lists: [{ id: 7, discoverable: true }],
       relinked: [3, 7],
     });
   });
@@ -1155,7 +1160,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
 
   test("Edit post on a post swapping out a shared list keeps that post's row and hide", () => {
     // R3 (12) swaps L for a new have list 7; R1 keeps L
-    const fresh = [...lists, stored(7, "have", false, null)];
+    const fresh = [...lists, stored(7, "have", false)];
     expect(
       run(
         {
@@ -1175,7 +1180,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
       inserts: [{ leadListId: 1, wantListId: null, state: sides([false, T1]) }],
       moves: [],
       states: [{ id: 12, state: sides([true, NOW], [true, T1]) }],
-      lists: [{ id: 7, discoverable: true, bumpedAt: NOW }],
+      lists: [{ id: 7, discoverable: true }],
       relinked: [1, 5, 7],
     });
   });
@@ -1196,7 +1201,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
       moves: [],
       states: [{ id: 12, state: sides([false, T1], [false, T1]) }],
       // list 1 stays on Trade in R1; list 5 is in no post on Trade now
-      lists: [{ id: 5, discoverable: false, bumpedAt: T1 }],
+      lists: [{ id: 5, discoverable: false }],
       relinked: [],
     });
   });
@@ -1217,9 +1222,9 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
     });
   });
 
-  test("a list on in one row and off in another is discoverable, with its latest bump", () => {
+  test("a list on in one row and off in another is discoverable", () => {
     const stale = lists.map((entry) =>
-      entry.id === 1 ? { ...entry, discoverable: false, bumpedAt: null } : entry,
+      entry.id === 1 ? { ...entry, discoverable: false } : entry,
     );
     // R3's lead side off but bumped later than R1's
     const mixed = rows.map((entry) =>
@@ -1230,29 +1235,7 @@ describe("planPostChange with shared lists (decisions 6 and 7)", () => {
         { post: { row: 12 as PostId }, sides: [{ listId: 5, on: true }] },
         { lists: stale, rows: mixed },
       ).lists,
-    ).toEqual([{ id: 1, discoverable: true, bumpedAt: T2 }]);
-  });
-
-  test("the latest bump is the latest in time, whatever each text's UTC offset", () => {
-    // as text "01:30:00+01" sorts after "01:10:00+00", but it is 00:30 UTC, twenty minutes earlier
-    const EARLY = "2026-03-29 01:30:00+01";
-    const LATE = "2026-03-29 01:10:00+00";
-    const stale = lists.map((entry) =>
-      entry.id === 1 ? { ...entry, discoverable: false, bumpedAt: null } : entry,
-    );
-    const offsets = rows.map((entry) =>
-      entry.id === 10
-        ? { ...entry, state: sides([true, LATE], [true, T0]) }
-        : entry.id === 12
-          ? { ...entry, state: sides([false, EARLY], [true, T1]) }
-          : entry,
-    );
-    expect(
-      run(
-        { post: { row: 12 as PostId }, sides: [{ listId: 5, on: true }] },
-        { lists: stale, rows: offsets },
-      ).lists,
-    ).toEqual([{ id: 1, discoverable: true, bumpedAt: LATE }]);
+    ).toEqual([{ id: 1, discoverable: true }]);
   });
 
   test("a merge into the shared list's other post leaves its first post and hide alone", () => {

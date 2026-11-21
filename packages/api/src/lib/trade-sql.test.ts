@@ -11,6 +11,7 @@ import {
   offersSwapsSql,
   onTradeRowsSql,
   postRowSql,
+  personBumpSql,
   postStateSql,
   sideOnTradeSql,
 } from "./trade-sql";
@@ -147,10 +148,18 @@ describe("onTradeRowsSql, sideOnTradeSql and postStateSql", () => {
   const onSide =
     "CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_on_trade ELSE state_row.want_on_trade END";
 
-  test("the bump from the list's side whenever it is in a row, else its own", () => {
+  test("the bump from the list's side, null for a list in no row", () => {
     expect(flat(postStateSql("l", "bumpedAt"))).toBe(
-      `(SELECT CASE WHEN state_row.id IS NULL THEN l.bumped_at ELSE CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_bumped_at ELSE state_row.want_bumped_at END END ${row}`,
+      `(SELECT CASE WHEN state_row.lead_list_id = l.id THEN state_row.lead_bumped_at ELSE state_row.want_bumped_at END ${row}`,
     );
+  });
+
+  test("a person's last bump: the latest of every side of their rows, on Trade or not", () => {
+    const q = render(personBumpSql("u1"));
+    expect(q.sql.replace(/\s+/g, " ")).toBe(
+      "(SELECT max(greatest(tp.lead_bumped_at, tp.want_bumped_at)) FROM trade_post tp WHERE tp.user_id = $1)",
+    );
+    expect(q.params).toEqual(["u1"]);
   });
 
   test("a want list's Open to and a sale list's takes_swaps from the row only while on Trade", () => {

@@ -80,7 +80,6 @@ const baseListSchema = z.object({
   takesSwaps: z.boolean().nullish(),
   /** a have or want list's trade ratio, which entries and rules without one follow */
   ratio: z.number().int().nullish(),
-  bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
 });

@@ -93,13 +93,13 @@ export async function fetchHiddenPartners(viewerId: string) {
 /**
  * A no-op unless `listId` leads another account's post on Trade (see `trade.hidePost`). Idle
  * posts count, so a post can be hidden from its page before its owner bumps it. The hide names
- * the post's row, and the anchor as `list_id` for builds before hides moved to rows.
+ * the post's row.
  */
 export async function hidePost(viewerId: string, listId: number) {
   const inserted = await db.execute<{ post_id: number }>(sql`
     WITH ${postsCte}
-    INSERT INTO hidden_trade_post (user_id, post_id, list_id)
-    SELECT ${viewerId}, r.id, posts.id FROM posts
+    INSERT INTO hidden_trade_post (user_id, post_id)
+    SELECT ${viewerId}, r.id FROM posts
     CROSS JOIN LATERAL (SELECT ${postRowSql("posts")} AS id) r
     WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId} AND r.id IS NOT NULL
     ON CONFLICT DO NOTHING

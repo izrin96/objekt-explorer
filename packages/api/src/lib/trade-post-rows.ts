@@ -268,7 +268,6 @@ export type TradeListState = {
   id: number;
   listType: RowList["listType"];
   discoverable: boolean;
-  bumpedAt: string | null;
   matchHave: boolean;
   matchSale: boolean;
   takesSwaps: boolean;
@@ -312,8 +311,8 @@ export type PostChange = PairChange & {
   removed?: readonly number[];
 };
 
-/** A list's `discoverable` and `bumped_at`, as its rows give them. */
-export type ListSummary = { id: number; discoverable: boolean; bumpedAt: string | null };
+/** A list's `discoverable`, as its rows give it. */
+export type ListSummary = { id: number; discoverable: boolean };
 
 /** `PostRowOps` with each row's state, and the lists' summaries. */
 export type PostChangeOps = Omit<PostRowOps, "inserts"> & {
@@ -397,9 +396,11 @@ export type StateContext = {
 /**
  * A row's state after a write (design decision 4). A list with an intent takes its `on`; its bump
  * stays when its side was on, else a turn-on takes `bumpAt`. Any other list brings the side it had
- * in the component, or comes in off. Open to and `takes_swaps` come from the intent, else from
- * the list when the intent turns its side on from off, else from the row the list was the open
- * list or sale lead of, else from the list: a list moving between rows keeps its post's values.
+ * in the component, or comes in off. A list entering the rows off has no bump: no read takes an
+ * off side's, and a later turn-on takes `bumpAt`. Open to and `takes_swaps` come from the intent,
+ * else from the list when the intent turns its side on from off, else from the row the list was
+ * the open list or sale lead of, else from the list: a list moving between rows keeps its post's
+ * values.
  */
 export function rowStateOf(
   row: { leadListId: number; wantListId: number | null },
@@ -422,16 +423,9 @@ export function rowStateOf(
   const side = (id: number) => {
     const intent = ctx.intents.get(id);
     const old = sideBefore(id);
-    const list = ctx.lists.get(id)!;
     if (!intent)
-      return old ? { on: old.on, bumpedAt: old.bumpedAt } : { on: false, bumpedAt: list.bumpedAt };
-    const bumpedAt = old?.on
-      ? old.bumpedAt
-      : intent.on
-        ? ctx.bumpAt
-        : old
-          ? old.bumpedAt
-          : list.bumpedAt;
+      return old ? { on: old.on, bumpedAt: old.bumpedAt } : { on: false, bumpedAt: null };
+    const bumpedAt = old?.on ? old.bumpedAt : intent.on ? ctx.bumpAt : (old?.bumpedAt ?? null);
     return { on: intent.on, bumpedAt };
   };
 
@@ -477,23 +471,12 @@ export function rowStateOf(
 }
 
 /**
- * Whether bump `a` is later than `b`, both as `timestamptz` text. By time, since two texts may carry
- * different UTC offsets; within one millisecond, which `Date.parse` drops past, by text, which
- * orders the microseconds of one offset. The winner is kept as its own text, the value written.
- */
-function laterBump(a: string, b: string) {
-  const at = Date.parse(a);
-  const bt = Date.parse(b);
-  return at === bt ? a > b : at > bt;
-}
-
-/**
  * One write to a person's posts, planned over the rows it is about (`componentOf`) and nothing
  * else: each component by today's rules (`partnersOf`, `applyPairing`, `planPostRows`), where a
  * list is on when the write's intent says so, else when its side in the component was. Every
  * other row is left as it is, state included, so one list can sit in several posts. Each row of
  * a component takes its state from `rowStateOf`, and `ops.lists` gives each list's
- * `discoverable` and `bumped_at` from all of the person's rows after the write.
+ * `discoverable` from all of the person's rows after the write.
  */
 export function planPostChange(
   before: { lists: readonly TradeListState[]; rows: readonly PostRow[]; bumpAt: string },
@@ -598,31 +581,15 @@ export function planPostChange(
     }
   }
 
-  const sides = new Map<number, { on: boolean; bumpedAt: string | null }[]>();
+  const on = new Set<number>();
   for (const row of [...after.values(), ...added]) {
-    const push = (id: number, on: boolean, bumpedAt: string | null) =>
-      sides.set(id, [...(sides.get(id) ?? []), { on, bumpedAt }]);
-    push(row.leadListId, row.state.leadOnTrade, row.state.leadBumpedAt);
-    if (row.wantListId !== null)
-      push(row.wantListId, row.state.wantOnTrade, row.state.wantBumpedAt);
+    if (row.state.leadOnTrade) on.add(row.leadListId);
+    if (row.wantListId !== null && row.state.wantOnTrade) on.add(row.wantListId);
   }
   for (const id of touched) {
     if (removed.has(id)) continue;
-    const list = stored.get(id)!;
-    const held = sides.get(id);
-    const bumpedAt = held
-      ? held.reduce<string | null>(
-          (latest, side) =>
-            side.bumpedAt !== null && (latest === null || laterBump(side.bumpedAt, latest))
-              ? side.bumpedAt
-              : latest,
-          null,
-        )
-      : list.bumpedAt;
-    const discoverable = held?.some((side) => side.on) ?? false;
-    if (discoverable !== list.discoverable || bumpedAt !== list.bumpedAt) {
-      ops.lists.push({ id, discoverable, bumpedAt });
-    }
+    const discoverable = on.has(id);
+    if (discoverable !== stored.get(id)!.discoverable) ops.lists.push({ id, discoverable });
   }
 
   return { ops, relinked: [...relinked] };

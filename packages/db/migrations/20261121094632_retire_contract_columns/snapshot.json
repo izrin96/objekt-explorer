@@ -1,0 +1,137 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "91fd98eb-05ea-4028-b582-d524b478c63b",
+  "prevIds": [
+    "7a59ceac-44b6-4967-97b4-26752fabb2db"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "lists",
+        "lists_trade_feed_idx"
+      ],
+      "writes": [
+        "s|idx|public.lists_trade_feed_idx",
+        "n|idx|public.lists_trade_feed_idx",
+        "e|idx|public.lists_trade_feed_idx",
+        "n|rel|public.lists_trade_feed_idx"
+      ],
+      "reads": [
+        "e|tbl|public.lists",
+        "n|sch|public",
+        "e|col|public.lists.bumped_at",
+        "e|col|public.lists.id"
+      ],
+      "sharedWrites": []
+    },
+    {
+      "statementType": "drop_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "hidden_trade_post",
+        "hidden_trade_post_list_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.hidden_trade_post_list_id_idx",
+        "n|idx|public.hidden_trade_post_list_id_idx",
+        "e|idx|public.hidden_trade_post_list_id_idx",
+        "n|rel|public.hidden_trade_post_list_id_idx"
+      ],
+      "reads": [
+        "e|tbl|public.hidden_trade_post",
+        "n|sch|public",
+        "e|col|public.hidden_trade_post.list_id"
+      ],
+      "sharedWrites": []
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "bumped_at"
+      ],
+      "writes": [
+        "s|col|public.lists.bumped_at",
+        "n|col|public.lists.bumped_at",
+        "e|col|public.lists.bumped_at"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "hidden_trade_post",
+        "list_id"
+      ],
+      "writes": [
+        "s|col|public.hidden_trade_post.list_id",
+        "n|col|public.hidden_trade_post.list_id",
+        "e|col|public.hidden_trade_post.list_id"
+      ],
+      "reads": [
+        "n|tbl|public.hidden_trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "recreate_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "lists",
+        "lists_trade_discoverable_idx"
+      ],
+      "writes": [
+        "s|idx|public.lists_trade_discoverable_idx",
+        "n|idx|public.lists_trade_discoverable_idx",
+        "e|idx|public.lists_trade_discoverable_idx",
+        "n|rel|public.lists_trade_discoverable_idx"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "n|col|public.lists.list_type"
+      ],
+      "sharedWrites": [],
+      "sqlHash": "81fda4b421bbe73d"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"lists\",\"bumped_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"hidden_trade_post\",\"list_id\"]"
+    },
+    {
+      "op": "drop",
+      "key": "indexes\u0000[\"public\",\"lists_trade_feed_idx\"]"
+    },
+    {
+      "op": "drop",
+      "key": "indexes\u0000[\"public\",\"hidden_trade_post_list_id_idx\"]"
+    },
+    {
+      "op": "alter",
+      "key": "indexes\u0000[\"public\",\"lists_trade_discoverable_idx\"]",
+      "set": {
+        "where": "discoverable"
+      }
+    }
+  ]
+}

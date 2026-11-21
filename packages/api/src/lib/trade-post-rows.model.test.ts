@@ -33,9 +33,10 @@ import {
 // `trade-post-writes` ran them in SQL (transcribed below, and kept only here), then derives the
 // rows from the link, through the planner as it was before `trade-post-planner-shared` (frozen
 // below). `rows` plans each write with `planPostChange`: its writers pass side intents, never a
-// list's Trade state, and its lists show the partner the rows give and take `discoverable` and
-// `bumped_at` from the plan. After every write both must hold the same lists, rows and touched
-// lists: the link writes stay the reference for what pair and unpair mean. Neither side runs SQL:
+// list's Trade state, and its lists show the partner the rows give and take `discoverable` from
+// the plan. After every write both must hold the same lists, rows and touched lists, apart from
+// the lists' bumps, which only the legacy world keeps: the link writes stay the reference for
+// what pair and unpair mean. Neither side runs SQL:
 // the statements themselves are proven by running them.
 //
 // The rows world also keeps each row's state, and after every write every row must equal its
@@ -105,7 +106,6 @@ const stateOf = ({
   id,
   listType,
   discoverable,
-  bumpedAt,
   matchHave,
   matchSale,
   takesSwaps,
@@ -113,7 +113,6 @@ const stateOf = ({
   id,
   listType,
   discoverable,
-  bumpedAt,
   matchHave,
   matchSale,
   takesSwaps,
@@ -237,7 +236,6 @@ function applyOps(world: World, userId: string, ops: PostRowOps | PostChangeOps)
     const summary = summaries.get(list.id);
     if (!summary) continue;
     list.discoverable = summary.discoverable;
-    list.bumpedAt = summary.bumpedAt;
   }
 }
 
@@ -663,11 +661,10 @@ function byRows(world: World, write: Write): Outcome {
   }
 
   if (write.kind === "bump") {
-    // its row half: each side holding a bumped list takes the list's new bump
-    const bumped = bumpLists(world, userId);
+    // `bumpPerson`: each side on Trade, all at once
     for (const row of rowsOf(world, userId)) {
-      if (bumped.has(row.leadListId)) row.state!.leadBumpedAt = clock;
-      if (row.wantListId !== null && bumped.has(row.wantListId)) row.state!.wantBumpedAt = clock;
+      if (row.state!.leadOnTrade) row.state!.leadBumpedAt = clock;
+      if (row.state!.wantOnTrade) row.state!.wantBumpedAt = clock;
     }
     return done([]);
   }
@@ -851,18 +848,25 @@ function check(world: World, at: string) {
   }
 }
 
-/** Equation E in full: each side from its list, Open to from the open list, `takes_swaps` from a sale lead. */
-function checkStates(world: World, at: string) {
+/**
+ * Equation E: each side from its list, Open to from the open list, `takes_swaps` from a sale lead.
+ * A side on Trade holds the bump of the legacy world's list of the same id; an off side holds it
+ * too, or none, since a want list that left the rows off comes back with none (design decision 2).
+ */
+function checkStates(world: World, legacyWorld: World, at: string) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
+  const legacyBump = new Map(legacyWorld.lists.map((list) => [list.id, list.bumpedAt]));
   for (const row of world.rows) {
     const lead = byId.get(row.leadListId)!;
     const want = row.wantListId === null ? undefined : byId.get(row.wantListId)!;
     const open = want ?? (lead.listType === "want" ? lead : undefined);
+    const bumpOf = (list: ModelList, side: string | null) =>
+      list.discoverable || side !== null ? (legacyBump.get(list.id) ?? null) : null;
     expect(row.state, `${at}: row ${row.id} state`).toEqual({
       leadOnTrade: lead.discoverable,
-      leadBumpedAt: lead.bumpedAt,
+      leadBumpedAt: bumpOf(lead, row.state!.leadBumpedAt),
       wantOnTrade: want ? want.discoverable : false,
-      wantBumpedAt: want ? want.bumpedAt : null,
+      wantBumpedAt: want ? bumpOf(want, row.state!.wantBumpedAt) : null,
       matchHave: open ? open.matchHave : true,
       matchSale: open ? open.matchSale : true,
       takesSwaps: lead.listType === "sale" ? lead.takesSwaps : false,
@@ -873,7 +877,7 @@ function checkStates(world: World, at: string) {
 // rows without their ids: the row world keeps an id where the link world, whose delete lets the
 // cascade take the row, makes a new one
 const sorted = (world: World) => ({
-  lists: world.lists.toSorted((a, b) => a.id - b.id),
+  lists: world.lists.map(({ bumpedAt: _, ...list }) => list).toSorted((a, b) => a.id - b.id),
   rows: world.rows
     .map(({ userId, leadListId, wantListId }) => ({ userId, leadListId, wantListId }))
     .toSorted((a, b) => a.leadListId - b.leadListId),
@@ -896,7 +900,7 @@ function differential(seed: number, counts: Counts) {
 
     expect(sorted(rows), at).toEqual(sorted(link));
     check(rows, at);
-    checkStates(rows, at);
+    checkStates(rows, link, at);
     checkRollbackFloor(rows, at);
   }
 }
@@ -1076,7 +1080,7 @@ function checkShared(
 /** Assertions 3 and 4 of the shared run, over the whole world after a write. */
 function checkWorld(world: World, at: string) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
-  const sides = new Map<number, { on: boolean; bumpedAt: string | null }[]>();
+  const sides = new Map<number, boolean[]>();
   for (const row of world.rows) {
     // 3. check 3's shape: the owner's lists, a want list on the want side, none under a want lead
     const lead = byId.get(row.leadListId)!;
@@ -1087,30 +1091,18 @@ function checkWorld(world: World, at: string) {
       expect(want.listType, `${at}: row ${row.id} want type`).toBe("want");
       expect(lead.listType, `${at}: row ${row.id} holds two want lists`).not.toBe("want");
     }
-    const push = (id: number, on: boolean, bumpedAt: string | null) =>
-      sides.set(id, [...(sides.get(id) ?? []), { on, bumpedAt }]);
-    push(row.leadListId, row.state!.leadOnTrade, row.state!.leadBumpedAt);
-    if (row.wantListId !== null) {
-      push(row.wantListId, row.state!.wantOnTrade, row.state!.wantBumpedAt);
-    }
+    const push = (id: number, on: boolean) => sides.set(id, [...(sides.get(id) ?? []), on]);
+    push(row.leadListId, row.state!.leadOnTrade);
+    if (row.wantListId !== null) push(row.wantListId, row.state!.wantOnTrade);
   }
-  // 4. each list's summary: on in some row, and its latest bump, by time as well as by string
-  const time = (bump: string) => Date.parse(bump);
+  // 4. each list's summary: on in some row
   for (const list of world.lists) {
     const held = sides.get(list.id);
     if (!held) {
       expect(list.discoverable, `${at}: list ${list.id} in no row`).toBe(false);
       continue;
     }
-    expect(list.discoverable, `${at}: list ${list.id} discoverable`).toBe(held.some((s) => s.on));
-    const bumps = held.flatMap((side) => (side.bumpedAt === null ? [] : [side.bumpedAt]));
-    const byString = bumps.reduce<string | null>((a, b) => (a === null || b > a ? b : a), null);
-    const byTime = bumps.reduce<string | null>(
-      (a, b) => (a === null || time(b) > time(a) ? b : a),
-      null,
-    );
-    expect(byString, `${at}: list ${list.id} bump order`).toBe(byTime);
-    expect(list.bumpedAt, `${at}: list ${list.id} bump`).toBe(byString);
+    expect(list.discoverable, `${at}: list ${list.id} discoverable`).toBe(held.some(Boolean));
   }
 }
 

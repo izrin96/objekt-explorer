@@ -13,7 +13,7 @@ import {
   nextBumpAt,
   pairPosts,
 } from "../../../lib/trade-posts";
-import { sideOnTradeSql } from "../../../lib/trade-sql";
+import { personBumpSql, sideOnTradeSql } from "../../../lib/trade-sql";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { postKindOf } from "../../../schemas/trade-post";
 import { lockTradeLists } from "../../list/shared";
@@ -79,49 +79,44 @@ export async function isTradeBlocked(userId: string) {
 }
 
 async function lastBumpOf(userId: string) {
-  const [row] = await db
-    .select({ at: sql<string | null>`max(${lists.bumpedAt})::text` })
-    .from(lists)
-    .where(eq(lists.userId, userId));
-  return row?.at ?? null;
+  const { rows } = await db.execute<{ at: string | null }>(
+    sql`SELECT ${personBumpSql(userId)}::text AS at`,
+  );
+  return rows[0]?.at ?? null;
 }
 
 /**
- * Every post on Trade is bumped together, or none: one statement bumps the lists and the sides of
- * the person's `trade_post` rows that hold them. The NOT EXISTS covers the person's other lists,
- * Trade or not, bumped more recently.
+ * Every post on Trade is bumped together, or none: one statement bumps each on-Trade side of the
+ * person's `trade_post` rows whose list is matchable, so a person whose only side on Trade holds
+ * an unmatchable list gets NOT_FOUND, not a cooldown. The NOT EXISTS reads every side of their
+ * rows, on Trade or not, as `personBumpSql` does.
  */
 export async function bumpPerson(userId: string) {
   const result = await db.transaction(async (tx) => {
-    // the row half reads the snapshot the statement started with, so a post writer that inserted
-    // a row while the list half waited would keep its side's old bump; under the lock the
-    // statement starts after any such writer committed
+    // the statement reads the snapshot it started with, so a row a post writer inserted while it
+    // waited would keep its side's old bump; under the lock it starts after any such writer committed
     await lockTradeLists(tx, userId);
     return tx.execute<{ bumped_at: string }>(sql`
-      WITH bumped AS (
-        UPDATE lists SET bumped_at = now()
-        WHERE user_id = ${userId}
-          AND discoverable
-          AND ${matchableListSql()}
-          AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
-          AND NOT EXISTS (
-            SELECT 1 FROM lists x
-            WHERE x.user_id = ${userId}
-              AND x.bumped_at > now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})
-          )
-        RETURNING id, bumped_at
-      ), posts AS (
-        UPDATE trade_post tp SET
-          lead_bumped_at = coalesce(lead.bumped_at, tp.lead_bumped_at),
-          want_bumped_at = coalesce(want.bumped_at, tp.want_bumped_at)
-        FROM trade_post r
-        LEFT JOIN bumped lead ON lead.id = r.lead_list_id
-        LEFT JOIN bumped want ON want.id = r.want_list_id
-        WHERE tp.id = r.id
-          AND r.user_id = ${userId}
-          AND (lead.id IS NOT NULL OR want.id IS NOT NULL)
+      WITH sides AS (
+        SELECT tp.id,
+          tp.lead_on_trade AND ${matchableListSql("lead")} AS lead_bumps,
+          tp.want_on_trade AND coalesce(${matchableListSql("want")}, false) AS want_bumps
+        FROM trade_post tp
+        JOIN lists lead ON lead.id = tp.lead_list_id
+        LEFT JOIN lists want ON want.id = tp.want_list_id
+        WHERE tp.user_id = ${userId}
       )
-      SELECT bumped_at::text FROM bumped
+      UPDATE trade_post tp SET
+        lead_bumped_at = CASE WHEN s.lead_bumps THEN now() ELSE tp.lead_bumped_at END,
+        want_bumped_at = CASE WHEN s.want_bumps THEN now() ELSE tp.want_bumped_at END
+      FROM sides s
+      WHERE tp.id = s.id AND (s.lead_bumps OR s.want_bumps)
+        AND NOT EXISTS (
+          SELECT 1 FROM trade_post x
+          WHERE x.user_id = ${userId}
+            AND greatest(x.lead_bumped_at, x.want_bumped_at) > now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})
+        )
+      RETURNING now()::text AS bumped_at
     `);
   });
 
