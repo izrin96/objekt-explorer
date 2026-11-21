@@ -228,6 +228,10 @@ export type PostPlan =
       link: [number, number] | null;
       /** lists whose link to their partner is cleared, both halves listed */
       unlink: number[];
+      /** the anchor list id of the post `replaces` names, or null */
+      replaced: number | null;
+      /** the list that leads the post's row after the save */
+      lead: number;
     };
 
 const SLOTS = ["have", "want", "sale"] as const;
@@ -322,6 +326,8 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
     picked.find(({ slot }) => slot === "have")?.list ??
     picked.find(({ slot }) => slot === "sale")?.list;
   const want = picked.find(({ slot }) => slot === "want")?.list;
+  const kept = want && keepsPair(choice.kind, alsoSwap) ? partnerOf(lists, want) : null;
+  const lead = offer ?? (kept && !unlink.includes(kept.id) ? kept : want);
   return {
     ok: true,
     on: picked.map(({ list }) => ({
@@ -335,6 +341,9 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
     off: dropped.map((list) => list.id),
     link: writes.link && offer && want ? [offer.id, want.id] : null,
     unlink,
+    replaced: old?.anchor.id ?? null,
+    // `trade_post_empty` refuses a choice with no list
+    lead: lead!.id,
   };
 }
 

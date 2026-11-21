@@ -263,8 +263,8 @@ export const hiddenTradePost = pgTable(
  * want list. The only place a post's pairing is stored: `writePosts`
  * (`packages/api/src/services/list/shared.ts`) writes it. No unique index on either list: one
  * list may sit in more than one post later. It also holds each side's Trade state and bump, and
- * the post's Open to, which `writePosts` keeps equal to its lists while a list is in at most one
- * row (`packages/api/docs/trade.md`, Trade posts).
+ * the post's Open to, which each write sets per row from its own side intents; `lists.discoverable`
+ * and `bumped_at` follow from the rows (`packages/api/docs/trade.md`, Trade posts).
  */
 export const tradePost = pgTable(
   "trade_post",

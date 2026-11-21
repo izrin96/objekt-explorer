@@ -20,6 +20,8 @@ type PairRow = {
   slug: string;
   objekt_id: string | null;
   hidden: boolean;
+  partner_sale: boolean;
+  partner_wants_swaps: boolean;
 };
 
 export type Pair = AlertPair & { entryId: number; listId: number };
@@ -59,7 +61,10 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       SELECT c.id AS entry_id, c.list_id, 'forward' AS direction, c.list_id AS offer_list_id,
         w.list_id AS want_list_id, c.slug, c.objekt_id,
         c.user_id AS offer_user_id, wl.user_id AS want_user_id, c.created_at AS entry_at,
-        false AS by_rule
+        false AS by_rule,
+        -- the new entry's list is the partner's, in either direction: its post's flags
+        c.list_type = 'sale' AND NOT c.takes_swaps AS partner_sale,
+        c.list_type = 'want' AND c.match_have AS partner_wants_swaps
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
@@ -68,7 +73,9 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND wl.list_type = 'want' AND wl.user_id <> c.user_id
       UNION ALL
       SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id,
-        c.created_at, c.rule_id IS NOT NULL
+        c.created_at, c.rule_id IS NOT NULL,
+        c.list_type = 'sale' AND NOT c.takes_swaps,
+        c.list_type = 'want' AND c.match_have
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
@@ -78,7 +85,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND ol.user_id <> c.user_id
     )
     SELECT p.entry_id, p.list_id, p.direction, p.offer_list_id, p.want_list_id, p.slug,
-      p.objekt_id, hid.at IS NOT NULL AS hidden
+      p.objekt_id, hid.at IS NOT NULL AS hidden, p.partner_sale, p.partner_wants_swaps
     FROM pairs p
     -- the new entry's list is the partner's: when the recipient last hid its post, if they did
     JOIN lists pl ON pl.id = p.list_id
@@ -117,5 +124,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
     slug: row.slug,
     objektId: row.objekt_id,
     hidden: row.hidden,
+    partnerSale: row.partner_sale,
+    partnerWantsSwaps: row.partner_wants_swaps,
   }));
 }

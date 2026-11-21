@@ -155,6 +155,8 @@ describe("planPost", () => {
       off: [],
       link: [spares.id, hunt.id],
       unlink: [],
+      replaced: null,
+      lead: spares.id,
     });
   });
 
@@ -217,6 +219,8 @@ describe("planPost", () => {
       off: [],
       link: null,
       unlink: [hunt.id, spares.id],
+      replaced: null,
+      lead: hunt.id,
     });
   });
 
@@ -243,6 +247,8 @@ describe("planPost", () => {
       off: [],
       link: null,
       unlink: [],
+      replaced: hunt.id,
+      lead: spares.id,
     });
   });
 
@@ -267,6 +273,8 @@ describe("planPost", () => {
       off: [spares.id],
       link: null,
       unlink: [hunt.id, spares.id],
+      replaced: spares.id,
+      lead: hunt.id,
     });
   });
 
@@ -281,6 +289,8 @@ describe("planPost", () => {
       off: [spares.id],
       link: null,
       unlink: [hunt.id, spares.id],
+      replaced: spares.id,
+      lead: hunt.id,
     });
   });
 
@@ -298,6 +308,87 @@ describe("planPost", () => {
       off: [spares.id, hunt.id],
       link: null,
       unlink: [],
+      replaced: spares.id,
+      lead: sale.id,
+    });
+  });
+
+  describe("the post's row after the save: replaced and lead", () => {
+    const of = (lists: PlanList[], choice: Parameters<typeof planPost>[1]) => {
+      const plan = planPost(lists, choice);
+      if (!plan.ok) throw new Error(plan.reason);
+      return { replaced: plan.replaced, lead: plan.lead };
+    };
+
+    test("Swap with both lists: the have list leads; no replaces, no replaced", () => {
+      const spares = list({ slug: "spares", listType: "have" });
+      const hunt = list({ slug: "hunt", listType: "want" });
+      expect(of([spares, hunt], { kind: "swap", have: "spares", want: "hunt" })).toEqual({
+        replaced: null,
+        lead: spares.id,
+      });
+    });
+
+    test("Swap with only the have list: the have list leads", () => {
+      const spares = list({ slug: "spares", listType: "have", discoverable: true });
+      expect(of([spares], { kind: "swap", have: "spares", replaces: "spares" })).toEqual({
+        replaced: spares.id,
+        lead: spares.id,
+      });
+    });
+
+    test("Swap with only the want list of a kept pair: its partner leads", () => {
+      const spares = list({ slug: "spares", listType: "have" });
+      const hunt = list({ slug: "hunt", listType: "want", discoverable: true });
+      pair(spares, hunt);
+      expect(of([spares, hunt], { kind: "swap", want: "hunt", replaces: "hunt" })).toEqual({
+        replaced: hunt.id,
+        lead: spares.id,
+      });
+    });
+
+    test("Swap with only the want list after an edit dropped the have list: the want list leads", () => {
+      const spares = list({ slug: "spares", listType: "have", discoverable: true });
+      const hunt = list({ slug: "hunt", listType: "want", discoverable: true });
+      pair(spares, hunt);
+      expect(of([spares, hunt], { kind: "swap", want: "hunt", replaces: "spares" })).toEqual({
+        replaced: spares.id,
+        lead: hunt.id,
+      });
+    });
+
+    test("Sell with a want list: the sale list leads", () => {
+      const sale = list({ slug: "sale", listType: "sale" });
+      const hunt = list({ slug: "hunt", listType: "want" });
+      expect(
+        of([sale, hunt], { kind: "sell", sale: "sale", want: "hunt", alsoSwap: true }),
+      ).toEqual({ replaced: null, lead: sale.id });
+    });
+
+    test("Sell without a want list: the sale list leads", () => {
+      const sale = list({ slug: "sale", listType: "sale", discoverable: true });
+      expect(of([sale], { kind: "sell", sale: "sale", replaces: "sale" })).toEqual({
+        replaced: sale.id,
+        lead: sale.id,
+      });
+    });
+
+    test("Buy: the want list leads, even with a partner it unpairs", () => {
+      const spares = list({ slug: "spares", listType: "have" });
+      const hunt = list({ slug: "hunt", listType: "want" });
+      pair(spares, hunt);
+      expect(of([spares, hunt], { kind: "buy", want: "hunt", unpair: true })).toEqual({
+        replaced: null,
+        lead: hunt.id,
+      });
+    });
+
+    test("replaces naming no post on Trade gives no replaced", () => {
+      const hunt = list({ slug: "hunt", listType: "want" });
+      expect(of([hunt], { kind: "buy", want: "hunt", replaces: "gone" })).toEqual({
+        replaced: null,
+        lead: hunt.id,
+      });
     });
   });
 });

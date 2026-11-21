@@ -1,9 +1,10 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
+import { postRowOf } from "../../lib/trade-post-rows";
 import type { TradePostRefusal } from "../../schemas/trade";
 import {
   membersOf,
@@ -12,7 +13,7 @@ import {
   postHolding,
   postsOf,
 } from "../../schemas/trade-post";
-import { lockPosts, touchList, tradeColumns, tradeState, writePosts } from "../list/shared";
+import { lockPosts, touchList, writePosts } from "../list/shared";
 
 const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_list_in_post: "That list is already in another post on Trade",
@@ -36,42 +37,36 @@ export async function savePost(userId: string, choice: PostChoice) {
     }
 
     const touched = new Set<number>();
-    const written = [];
 
+    // a want list's own Open to: its values off Trade and the composer's start
     for (const { id, flags } of plan.on) {
-      const rows = await tx
-        .update(lists)
-        .set({ ...tradeColumns(true), ...flags })
-        .where(eq(lists.id, id))
-        .returning(tradeState);
-      written.push(...rows);
+      if (flags) await tx.update(lists).set(flags).where(eq(lists.id, id));
       touched.add(id);
     }
 
     if (plan.saleSwaps) {
-      const rows = await tx
+      await tx
         .update(lists)
         .set({ takesSwaps: plan.saleSwaps.takesSwaps })
-        .where(eq(lists.id, plan.saleSwaps.id))
-        .returning(tradeState);
-      written.push(...rows);
+        .where(eq(lists.id, plan.saleSwaps.id));
       touched.add(plan.saleSwaps.id);
     }
+    for (const id of plan.off) touched.add(id);
 
-    if (plan.off.length > 0) {
-      const rows = await tx
-        .update(lists)
-        .set(tradeColumns(false))
-        .where(inArray(lists.id, plan.off))
-        .returning(tradeState);
-      written.push(...rows);
-      for (const id of plan.off) touched.add(id);
-    }
-
+    const row = plan.replaced === null ? null : postRowOf(locked.current.rows, plan.replaced);
     const relinked = await writePosts(tx, userId, locked, {
       pair: plan.link,
       unpair: plan.unlink,
-      written,
+      post: row === null ? null : { row, lead: plan.lead },
+      sides: [
+        ...plan.on.map(({ id, flags }) => ({
+          listId: id,
+          on: true,
+          ...flags,
+          ...(plan.saleSwaps?.id === id ? { takesSwaps: plan.saleSwaps.takesSwaps } : {}),
+        })),
+        ...plan.off.map((id) => ({ listId: id, on: false })),
+      ],
     });
     for (const id of relinked) touched.add(id);
     return [...touched];
@@ -87,12 +82,11 @@ export async function takeDownPost(userId: string, slug: string) {
     const post = list ? postHolding(postsOf(locked.lists), list.id) : null;
     if (!post) throw new ORPCError("NOT_FOUND");
     const ids = membersOf(post).map((member) => member.id);
-    const written = await tx
-      .update(lists)
-      .set(tradeColumns(false))
-      .where(inArray(lists.id, ids))
-      .returning(tradeState);
-    const relinked = await writePosts(tx, userId, locked, { written });
+    const row = postRowOf(locked.current.rows, post.anchor.id);
+    const relinked = await writePosts(tx, userId, locked, {
+      post: row === null ? null : { row },
+      sides: ids.map((id) => ({ listId: id, on: false })),
+    });
     return [...new Set([...ids, ...relinked])];
   });
   await touchList(changed);

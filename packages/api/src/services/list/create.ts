@@ -12,7 +12,7 @@ import { refuse } from "../../lib/refuse";
 import { canBeOnTrade, type createListInputSchema, type ListType } from "../../schemas/list";
 import { type OpenToFlags, resolveOpenTo } from "../../schemas/open-to";
 import { assertProfileOwned } from "../profile";
-import { lockPosts, tradeColumns, tradeState, turnOnBumpedAt, writePosts } from "./shared";
+import { lockPosts, tradeState, turnOnBumpedAt, writePosts } from "./shared";
 
 export function resolveDiscoverable(
   type: ListType,
@@ -201,24 +201,20 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
   if (!inserted) throw new ORPCError("INTERNAL_SERVER_ERROR");
   if (!locked) return { id: inserted.id, slug, changed: [inserted.id] };
 
-  const written = [inserted];
+  const sides = discoverable ? [{ listId: inserted.id, on: true }] : [];
   if (
     linkedListId !== null &&
     partner &&
     resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)
   ) {
-    const on = await tx
-      .update(lists)
-      .set(tradeColumns(true))
-      .where(eq(lists.id, linkedListId))
-      .returning(tradeState);
-    written.push(...on);
+    sides.push({ listId: linkedListId, on: true });
   }
 
   // pairing takes the target from the list it was paired with, which is touched with the pair
   const relinked = await writePosts(tx, userId, locked, {
     pair: linkedListId === null ? null : [inserted.id, linkedListId],
-    written,
+    created: inserted,
+    sides,
   });
   return { id: inserted.id, slug, changed: [...new Set([inserted.id, ...relinked])] };
 }

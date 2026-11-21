@@ -4,12 +4,13 @@ import { touchListWith } from "@repo/lib/server/list-touch";
 import { type SQL, and, eq, inArray, sql } from "drizzle-orm";
 
 import {
+  type ListSummary,
   partnersOf,
   type PostId,
   type PostRow,
   type PostState,
-  type PostWrite,
-  planPostWrite,
+  type PostChange,
+  planPostChange,
   type TradeListState,
 } from "../../lib/trade-post-rows";
 import { BUMP_COOLDOWN_HOURS } from "../../lib/trade-posts";
@@ -34,19 +35,6 @@ function personBumpedAt(userId: SQL | string) {
 export function turnOnBumpedAt(userId: SQL | string) {
   const last = personBumpedAt(userId);
   return sql`CASE WHEN ${last} > ${bumpCutoff} THEN ${last} ELSE now() END`;
-}
-
-/** The columns that put a list on or off Trade: turning it on from off counts as a bump. */
-export function tradeColumns(on: boolean) {
-  if (!on) return { discoverable: false };
-  return {
-    discoverable: true,
-    // raw name: inside the subquery a rendered column could bind to `p`
-    bumpedAt: sql<string | null>`CASE
-      WHEN lists.discoverable THEN lists.bumped_at
-      ELSE ${turnOnBumpedAt(sql`lists.user_id`)}
-    END`,
-  };
 }
 
 /** Every list or entry write calls this once committed, so idle ranking and the cached trade matches stay right. */
@@ -87,8 +75,11 @@ export async function lockTradeLists(tx: Tx, userId: string): Promise<LockedList
 export type LockedPosts = {
   /** the locked lists, each with its partner by the rows: what `planPost` and the refusals read */
   lists: PlanList[];
-  /** the person's have, sale and want lists and their rows, read after the lock: what the plan starts from */
-  current: { lists: TradeListState[]; rows: PostRow[] };
+  /**
+   * the person's have, sale and want lists and their rows, read after the lock: what the plan
+   * starts from; `bumpAt` is the bump a list turning on takes, null when the person has no such list
+   */
+  current: { lists: TradeListState[]; rows: PostRow[]; bumpAt: string | null };
 };
 
 /**
@@ -101,6 +92,8 @@ export async function lockPosts(tx: Tx, userId: string): Promise<LockedPosts> {
   const found = await tx
     .select({
       list: tradeState,
+      // uncorrelated, so it runs once; text, as the bump columns arrive, so the planner can copy it
+      bumpAt: sql<string>`(${turnOnBumpedAt(userId)})::text`,
       row: {
         id: tradePost.id,
         wantListId: tradePost.wantListId,
@@ -132,11 +125,11 @@ export async function lockPosts(tx: Tx, userId: string): Promise<LockedPosts> {
     lists: locked.map((list) =>
       Object.assign(list, { linkedListId: partners.get(list.id) ?? null }),
     ),
-    current: { lists: current, rows },
+    current: { lists: current, rows, bumpAt: found[0]?.bumpAt ?? null },
   };
 }
 
-/** RETURNING columns of a list write, for `writePosts`' `written`. */
+/** A list's Trade state as the planner reads it: `lockPosts`' read, and `writeList`'s insert for `created`. */
 export const tradeState = {
   id: lists.id,
   listType: lists.listType,
@@ -180,6 +173,20 @@ async function writeStates(tx: Tx, states: { id: PostId; state: PostState }[]) {
   `);
 }
 
+/** One `UPDATE … FROM unnest(…)` for every list whose `discoverable` or `bumped_at` the plan changed. */
+async function writeLists(tx: Tx, summaries: ListSummary[]) {
+  if (summaries.length === 0) return;
+  await tx.execute(sql`
+    UPDATE ${lists} SET discoverable = s.discoverable, bumped_at = s.bumped_at
+    FROM unnest(
+      ${sql.param(summaries.map(({ id }) => id))}::int[],
+      ${sql.param(summaries.map(({ discoverable }) => discoverable))}::boolean[],
+      ${sql.param(summaries.map(({ bumpedAt }) => bumpedAt))}::timestamptz[]
+    ) AS s(id, discoverable, bumped_at)
+    WHERE ${lists.id} = s.id
+  `);
+}
+
 /**
  * Moves the hides of each `from` row to its `to` row: copied, so a person who already hides the
  * target, or hides two rows that merge into it, keeps one hide at the later time, then deleted
@@ -203,25 +210,28 @@ async function writeMoves(tx: Tx, moves: { from: PostId; to: PostId }[]) {
 }
 
 /**
- * Plans the write over the rows `lockPosts` read (`planPostWrite`) and writes the row
- * operations, keeping each row's Trade state, bumps and Open to equal to its lists'
- * (`postStateOf`). Call it after the list writes, and before a list delete (`removed`), so a row
- * is re-led while its lists are still there. Returns the lists whose partner changed, for
- * `touchList`. A new writer of a pairing, of `discoverable`, `bumped_at`, Open to or
- * `takes_swaps` on Trade, or one that deletes a have, sale or want list goes through it: the rows
- * are the only place a pairing is stored. It moves hides as the planner says (`moves`), in the
- * same transaction.
+ * Plans the write over the rows it is about (`planPostChange`) and writes the row operations:
+ * each row's Trade state, bumps and Open to come from the write's side intents (`rowStateOf`),
+ * and `lists.discoverable` and `bumped_at` follow from the rows, written last. Call it after the
+ * list writes, and before a list delete (`removed`), so a row is re-led while its lists are still
+ * there. Returns the lists whose partner changed, for `touchList`. A new writer of a pairing, of a
+ * post's Trade state, bump, Open to or `takes_swaps`, or one that deletes a have, sale or want
+ * list goes through it: the rows are the only place a pairing is stored. It moves hides as the
+ * planner says (`moves`), in the same transaction.
  */
 export async function writePosts(
   tx: Tx,
   userId: string,
   locked: LockedPosts,
-  write: Omit<PostWrite, "written"> & { written?: WrittenList[] },
+  write: Omit<PostChange, "created"> & { created?: WrittenList | null },
 ): Promise<number[]> {
-  const { ops, relinked } = planPostWrite(locked.current, {
-    ...write,
-    written: write.written?.flatMap(tradeStates),
-  });
+  const created = write.created ? tradeStates(write.created)[0] : undefined;
+  const { ops, relinked } = planPostChange(
+    // with no have, sale or want list at the lock there is no row to read `bumpAt` from; only a
+    // list create runs then, and its insert took the same value in the same transaction
+    { ...locked.current, bumpAt: locked.current.bumpAt ?? created?.bumpedAt ?? "" },
+    { ...write, created },
+  );
 
   // before the deletes, or the post_id cascade takes the hides first
   await writeMoves(tx, ops.moves);
@@ -242,5 +252,6 @@ export async function writePosts(
         ),
       );
   }
+  await writeLists(tx, ops.lists);
   return relinked;
 }

@@ -18,9 +18,12 @@ import {
   type PostRow,
   type PostRowOps,
   type PostState,
-  type PostWriteOps,
-  planPostRows,
-  planPostWrite,
+  type PostChange,
+  type PostChangeOps,
+  planPostChange,
+  postRowOf,
+  type SideIntent,
+  type RowList,
   type TradeListState,
 } from "./trade-post-rows";
 
@@ -28,15 +31,18 @@ import {
 //
 // The differential run keeps two worlds. `legacy` applies the link writes as the build before
 // `trade-post-writes` ran them in SQL (transcribed below, and kept only here), then derives the
-// rows from the link. `rows` plans each write with `planPostWrite`, and its lists show the partner
-// the rows give. After every write both must hold the same lists, rows and touched lists: the
-// link writes stay the reference for what pair and unpair mean. Neither side runs SQL: the
-// statements themselves are proven by running them.
+// rows from the link, through the planner as it was before `trade-post-planner-shared` (frozen
+// below). `rows` plans each write with `planPostChange`: its writers pass side intents, never a
+// list's Trade state, and its lists show the partner the rows give and take `discoverable` and
+// `bumped_at` from the plan. After every write both must hold the same lists, rows and touched
+// lists: the link writes stay the reference for what pair and unpair mean. Neither side runs SQL:
+// the statements themselves are proven by running them.
 //
 // The rows world also keeps each row's state, and after every write every row must equal its
-// lists by the state equation, written out below apart from `postStateOf` so a broken rule fails.
+// lists by the state equation, written out below apart from `rowStateOf` so a broken rule fails.
+// The frozen planner, the previous build's, must plan nothing over the rows it leaves.
 //
-// The healing run corrupts the rows before each write and checks that one plan repairs them.
+// The shared run makes lists sit in several rows, which only the rows world can hold.
 
 type ModelList = {
   id: number;
@@ -116,6 +122,13 @@ const stateOf = ({
 /** The time a write runs at: the step, so both worlds stamp the same bump. */
 let clock = "";
 
+/** A step's time as `timestamptz` text: a minute per step, so text order is time order too. */
+const stepTime = (seed: number, step: number) =>
+  new Date(Date.UTC(2026, 0, 1) + (seed * 100 + step) * 60_000)
+    .toISOString()
+    .replace("T", " ")
+    .replace(".000Z", "+00");
+
 /** `tradeColumns(true)`: turning a list on from off counts as a bump. */
 function turnOn(list: ModelList) {
   if (!list.discoverable) list.bumpedAt = clock;
@@ -128,6 +141,8 @@ const done = (touched: Iterable<number>): Outcome => ({
 const refused = (refusal: string): Outcome => ({ refusal, touched: [] });
 
 let releads = 0;
+/** Edit posts whose row changed its lead and kept its id */
+let editLead = 0;
 const moveKinds = { D1: 0, D2: 0, D3: 0, takeover: 0 };
 
 type Slots = { id: number; leadListId: number; wantListId: number | null };
@@ -138,7 +153,7 @@ type Slots = { id: number; leadListId: number; wantListId: number | null };
  * lead, stay on a row that keeps its lead or was re-led because its lead is gone, and end only
  * when its lead is in no surviving row.
  */
-function checkMoves(before: Slots[], after: Slots[], ops: PostWriteOps, at: string) {
+function checkMoves(before: Slots[], after: Slots[], ops: PostRowOps, at: string) {
   const old = new Map(before.map((row) => [row.id, row]));
   const now = new Map(after.map((row) => [row.id, row]));
   const deleted = new Set<number>(ops.deletes);
@@ -186,7 +201,7 @@ function checkMoves(before: Slots[], after: Slots[], ops: PostWriteOps, at: stri
   }
 }
 
-function applyOps(world: World, userId: string, ops: PostRowOps | PostWriteOps) {
+function applyOps(world: World, userId: string, ops: PostRowOps | PostChangeOps) {
   const gone = new Set<number>(ops.deletes);
   // a post keeps its id: no plan deletes a row and inserts one that holds one of its lists
   for (const row of world.rows.filter((entry) => gone.has(entry.id))) {
@@ -216,6 +231,13 @@ function applyOps(world: World, userId: string, ops: PostRowOps | PostWriteOps) 
   for (const row of world.rows) {
     const state = states.get(row.id);
     if (state) row.state = state;
+  }
+  const summaries = new Map(ops.lists.map((entry) => [entry.id, entry]));
+  for (const list of world.lists) {
+    const summary = summaries.get(list.id);
+    if (!summary) continue;
+    list.discoverable = summary.discoverable;
+    list.bumpedAt = summary.bumpedAt;
   }
 }
 
@@ -262,39 +284,162 @@ function linkRefusal(own: PlanList[], write: Write & { kind: "create" }) {
   );
 }
 
-/** The on, `saleSwaps` and off writes of `savePost`, which neither build changes. */
-function tradeWrites(world: World, plan: Extract<ReturnType<typeof planPost>, { ok: true }>) {
+type SavePlan = Extract<ReturnType<typeof planPost>, { ok: true }>;
+
+/**
+ * The list writes of `savePost`: the build before writes the on, `saleSwaps` and off writes; this
+ * one writes only a want list's Open to and the sale list's `takes_swaps`, and states the rest as
+ * intents.
+ */
+function tradeWrites(world: World, plan: SavePlan, rowsWorld = false) {
   const byId = new Map(world.lists.map((list) => [list.id, list]));
-  const written: TradeListState[] = [];
   for (const { id, flags } of plan.on) {
     const list = byId.get(id)!;
-    turnOn(list);
+    if (!rowsWorld) turnOn(list);
     Object.assign(list, flags);
-    written.push(stateOf(list));
   }
-  if (plan.saleSwaps) {
-    const list = byId.get(plan.saleSwaps.id)!;
-    list.takesSwaps = plan.saleSwaps.takesSwaps;
-    written.push(stateOf(list));
+  if (plan.saleSwaps) byId.get(plan.saleSwaps.id)!.takesSwaps = plan.saleSwaps.takesSwaps;
+  if (!rowsWorld) for (const id of plan.off) byId.get(id)!.discoverable = false;
+  return [
+    ...plan.on.map((on) => on.id),
+    ...(plan.saleSwaps ? [plan.saleSwaps.id] : []),
+    ...plan.off,
+  ];
+}
+
+/** `savePost`'s intents (design decision 4). */
+function saveIntents(plan: SavePlan): SideIntent[] {
+  return [
+    ...plan.on.map(({ id, flags }) => ({
+      listId: id,
+      on: true,
+      ...flags,
+      ...(plan.saleSwaps?.id === id ? { takesSwaps: plan.saleSwaps.takesSwaps } : {}),
+    })),
+    ...plan.off.map((id) => ({ listId: id, on: false })),
+  ];
+}
+
+// ---- the planner as it was before `trade-post-planner-shared`, kept as the differential's reference
+
+type RowWrites = Omit<PostRowOps, "moves">;
+
+function frozenPlanPostRows(
+  rows: readonly PostRow[],
+  lists: readonly RowList[],
+  live?: ReadonlySet<number>,
+): PostRowOps {
+  const byId = new Map(lists.map((list) => [list.id, list]));
+  const ops: RowWrites = { deletes: [], updates: [], inserts: [] };
+
+  const kept = new Map<number, PostRow>();
+  for (const row of rows.toSorted((a, b) => a.id - b.id)) {
+    if (kept.has(row.leadListId)) ops.deletes.push(row.id);
+    else kept.set(row.leadListId, row);
   }
-  for (const id of plan.off) {
-    byId.get(id)!.discoverable = false;
-    written.push(stateOf(byId.get(id)!));
+
+  // the partner read from the have or sale side; `planPostWrite` hands over a matching, so two
+  // lists naming one want list should not happen, and the lower id keeps it so no list sits in
+  // two rows
+  const wantOf = new Map<number, number>();
+  const taken = new Set<number>();
+  for (const list of lists.toSorted((a, b) => a.id - b.id)) {
+    if (list.listType === "want" || list.linkedListId === null) continue;
+    const want = byId.get(list.linkedListId);
+    if (want?.listType !== "want" || taken.has(want.id)) continue;
+    wantOf.set(list.id, want.id);
+    taken.add(want.id);
   }
-  return {
-    touched: [
-      ...plan.on.map((on) => on.id),
-      ...(plan.saleSwaps ? [plan.saleSwaps.id] : []),
-      ...plan.off,
-    ],
-    written,
-  };
+
+  for (const list of lists) {
+    const row = kept.get(list.id);
+    const wantListId = wantOf.get(list.id) ?? null;
+    const leads =
+      list.listType === "want"
+        ? !taken.has(list.id) && (list.discoverable || row !== undefined)
+        : wantListId !== null || list.discoverable || row !== undefined;
+    if (!leads) continue;
+    kept.delete(list.id);
+    const wantRow = wantListId === null ? undefined : kept.get(wantListId);
+    if (row && wantRow && live?.has(wantListId!) && !live.has(list.id)) {
+      kept.delete(wantListId!);
+      ops.deletes.push(row.id);
+      ops.updates.push({ id: wantRow.id, leadListId: list.id, wantListId });
+      continue;
+    }
+    if (!row) ops.inserts.push({ leadListId: list.id, wantListId });
+    else if (row.wantListId !== wantListId) ops.updates.push({ id: row.id, wantListId });
+  }
+
+  // what is left leads nothing: its list is gone, or a have or sale list took it as its want list
+  for (const row of kept.values()) ops.deletes.push(row.id);
+  const written = frozenRelead(rows, ops);
+  return { ...written, moves: frozenMovesOf(rows, written) };
+}
+
+/** Turns each insert that shares a list with a row the plan deletes into an update of that row. */
+function frozenRelead(rows: readonly PostRow[], ops: RowWrites): RowWrites {
+  if (ops.inserts.length === 0 || ops.deletes.length === 0) return ops;
+  const doomed = new Set<number>(ops.deletes);
+  const candidates = rows.filter((row) => doomed.has(row.id)).toSorted((a, b) => a.id - b.id);
+  const inserts: RowWrites["inserts"] = [];
+  const updates = [...ops.updates];
+  for (const insert of ops.inserts) {
+    const holds = (id: number | null) =>
+      id !== null && (id === insert.leadListId || id === insert.wantListId);
+    const row = candidates.find(
+      (entry) => doomed.has(entry.id) && (holds(entry.leadListId) || holds(entry.wantListId)),
+    );
+    if (!row) {
+      inserts.push(insert);
+      continue;
+    }
+    doomed.delete(row.id);
+    updates.push({ id: row.id, leadListId: insert.leadListId, wantListId: insert.wantListId });
+  }
+  return { deletes: ops.deletes.filter((id) => doomed.has(id)), updates, inserts };
+}
+
+/**
+ * Where each hide goes: from a row that was deleted or lost its lead, to the surviving row now
+ * holding that lead. Inserts have no id yet, and a list that lands only in one is a post of its
+ * own, which the hide does not follow.
+ */
+function frozenMovesOf(rows: readonly PostRow[], ops: RowWrites): PostRowOps["moves"] {
+  const deleted = new Set<number>(ops.deletes);
+  const after = new Map(
+    rows.flatMap((row) =>
+      deleted.has(row.id)
+        ? []
+        : [
+            [
+              row.id,
+              { id: row.id, leadListId: row.leadListId, wantListId: row.wantListId },
+            ] as const,
+          ],
+    ),
+  );
+  for (const update of ops.updates) {
+    const row = after.get(update.id)!;
+    after.set(update.id, {
+      id: row.id,
+      leadListId: update.leadListId ?? row.leadListId,
+      wantListId: update.wantListId,
+    });
+  }
+  const holder = (listId: number) =>
+    [...after.values()].find((row) => row.leadListId === listId || row.wantListId === listId);
+  return rows.flatMap((row) => {
+    if (after.get(row.id)?.leadListId === row.leadListId) return [];
+    const to = holder(row.leadListId);
+    return to && to.id !== row.id ? [{ from: row.id, to: to.id }] : [];
+  });
 }
 
 // ---- legacy: the link is written first, and the rows are derived from it
 
 function legacySync(world: World, userId: string) {
-  applyOps(world, userId, planPostRows(slots(rowsOf(world, userId)), ownOf(world, userId)));
+  applyOps(world, userId, frozenPlanPostRows(slots(rowsOf(world, userId)), ownOf(world, userId)));
 }
 
 function legacy(world: World, write: Write): Outcome {
@@ -328,7 +473,7 @@ function legacy(world: World, write: Write): Outcome {
       world.lists.find((list) => list.id === wantId)!.linkedListId = offerId;
       touched.push(offerId, wantId);
     }
-    touched.push(...tradeWrites(world, plan).touched);
+    touched.push(...tradeWrites(world, plan));
     legacySync(world, userId);
     return done(touched);
   }
@@ -418,7 +563,7 @@ function locked(world: World, userId: string) {
   }
   return {
     lists,
-    current: { lists: ownOf(world, userId).map(stateOf), rows: slots(rows) },
+    current: { lists: ownOf(world, userId).map(stateOf), rows: slots(rows), bumpAt: clock },
   };
 }
 
@@ -427,14 +572,19 @@ function writePosts(
   world: World,
   userId: string,
   current: ReturnType<typeof locked>["current"],
-  write: Parameters<typeof planPostWrite>[1],
+  write: PostChange,
 ) {
-  const plan = planPostWrite(current, write);
+  // the shared run's own reading of decision 2: a write it calls one-row-per-list must plan
+  const components = shared ? writeComponents(current.rows, write) : null;
+  if (components?.some(holdsTwice(current.rows))) throw new TwiceInOneWrite();
+  const plan = planPostChange(current, write);
   const slots = (rows: ModelRow[]) =>
     rows.map(({ id, leadListId, wantListId }) => ({ id: id as number, leadListId, wantListId }));
-  const before = slots(rowsOf(world, userId));
+  const rowsBefore = structuredClone(rowsOf(world, userId));
   applyOps(world, userId, plan.ops);
-  checkMoves(before, slots(rowsOf(world, userId)), plan.ops, `${userId} ${JSON.stringify(write)}`);
+  const at = `${userId} ${JSON.stringify(write)}`;
+  if (components) checkShared(rowsBefore, rowsOf(world, userId), components, write, plan.ops, at);
+  else checkMoves(slots(rowsBefore), slots(rowsOf(world, userId)), plan.ops, at);
   // what a read gives: the partner is the rows', and no write keeps a link
   for (const list of world.lists.filter((entry) => entry.userId === userId)) {
     list.linkedListId = partnerByRows(world.rows, list.id);
@@ -449,12 +599,25 @@ function byRows(world: World, write: Write): Outcome {
   if (write.kind === "post") {
     const plan = planPost(own, write.choice);
     if (!plan.ok) return refused(`${plan.reason}:${plan.slug ?? ""}:${plan.partner ?? ""}`);
-    const { touched, written } = tradeWrites(world, plan);
+    const touched = tradeWrites(world, plan, true);
+    const row = plan.replaced === null ? null : postRowOf(current.rows, plan.replaced);
+    const post = row === null ? null : { row, lead: plan.lead };
     const relinked = writePosts(world, userId, current, {
       pair: plan.link,
       unpair: plan.unlink,
-      written,
+      post,
+      sides: saveIntents(plan),
     });
+    // the differential's check: in the shared run `planPost` reads one partner per list, the
+    // lowest row's, so its lead may name a pair another row of the list holds
+    if (post && !shared) {
+      // the edited post keeps its row, now led by the write's lead
+      const edited = world.rows.find((entry) => entry.id === post.row);
+      expect(edited?.leadListId, `edited row ${post.row} after ${JSON.stringify(write)}`).toBe(
+        post.lead,
+      );
+      if (current.rows.find((entry) => entry.id === post.row)!.leadListId !== post.lead) editLead++;
+    }
     return done([...touched, ...relinked]);
   }
 
@@ -463,9 +626,11 @@ function byRows(world: World, write: Write): Outcome {
     const post = list ? postHolding(postsOf(own), list.id) : null;
     if (!post) return refused("not_found");
     const ids = membersOf(post).map((member) => member.id);
-    const off = world.lists.filter((member) => ids.includes(member.id));
-    for (const member of off) member.discoverable = false;
-    const relinked = writePosts(world, userId, current, { written: off.map(stateOf) });
+    const row = postRowOf(current.rows, post.anchor.id);
+    const relinked = writePosts(world, userId, current, {
+      post: row === null ? null : { row },
+      sides: ids.map((id) => ({ listId: id, on: false })),
+    });
     return done([...ids, ...relinked]);
   }
 
@@ -473,17 +638,17 @@ function byRows(world: World, write: Write): Outcome {
     const refusal = linkRefusal(own, write);
     if (refusal) return refused(refusal);
     const created = insertList(world, write, null);
-    const written = [stateOf(created)];
+    const sides: SideIntent[] = created.discoverable ? [{ listId: created.id, on: true }] : [];
     if (write.linkedListId !== null) {
       const target = world.lists.find((list) => list.id === write.linkedListId)!;
       if (created.discoverable && canBeOnTrade(target.listType, target.isProfileBind)) {
-        turnOn(target);
-        written.push(stateOf(target));
+        sides.push({ listId: target.id, on: true });
       }
     }
     const relinked = writePosts(world, userId, current, {
       pair: write.linkedListId === null ? null : [created.id, write.linkedListId],
-      written,
+      created: stateOf(created),
+      sides,
     });
     return done([created.id, ...relinked]);
   }
@@ -721,7 +886,7 @@ function differential(seed: number, counts: Counts) {
   let lastList = 0;
   for (let i = 0; i < 40; i++) {
     const at = `seed ${seed} step ${i}`;
-    clock = `${seed}:${i}`;
+    clock = stepTime(seed, i);
     const before = structuredClone(link.lists);
     const write = pickWrite(link, rand, () => ++lastList);
     const was = legacy(link, write);
@@ -732,7 +897,341 @@ function differential(seed: number, counts: Counts) {
     expect(sorted(rows), at).toEqual(sorted(link));
     check(rows, at);
     checkStates(rows, at);
+    checkRollbackFloor(rows, at);
   }
+}
+
+/** What the previous build plans on its next write over these rows: nothing (design decision 10). */
+function checkRollbackFloor(world: World, at: string) {
+  for (const userId of USERS) {
+    const own: RowList[] = ownOf(world, userId).map(({ id, listType, discoverable }) => ({
+      id,
+      listType,
+      discoverable,
+      linkedListId: partnerByRows(world.rows, id),
+    }));
+    const { deletes, updates, inserts } = frozenPlanPostRows(slots(rowsOf(world, userId)), own);
+    expect(
+      { deletes, updates, inserts },
+      `${at}: the previous build would write ${userId}'s rows`,
+    ).toEqual({
+      deletes: [],
+      updates: [],
+      inserts: [],
+    });
+  }
+}
+
+// ---- the shared run: lists in several rows, which only the rows world can hold
+
+/** Set by the shared run: `writePosts` then asserts its six rules instead of `checkMoves`. */
+let shared = false;
+
+const sharedCounts = { share: 0, dropRow: 0, downRow: 0, deleteShared: 0, mergeShared: 0 };
+/** set by `checkShared` when the write merged into a row holding a list another row holds too */
+let merged = false;
+
+/** A write the shared run never generates: it would hold one list in two rows of one component. */
+class TwiceInOneWrite extends Error {}
+
+/**
+ * Decision 2 written out apart from `componentOf`, as `partnerByRows` is apart from `partnersOf`:
+ * the edited row and the row of each list the write names (in the edited row if there, else the
+ * lowest it leads, else the lowest it is the want list of), and each row of a removed list alone.
+ */
+function writeComponents(rows: readonly PostRow[], write: PostChange): number[][] {
+  const named = [
+    ...(write.pair ?? []),
+    ...(write.unpair ?? []),
+    ...(write.sides ?? []).map((side) => side.listId),
+  ];
+  const byId = rows.toSorted((a, b) => a.id - b.id);
+  const components: number[][] = [];
+  if (write.post || named.length > 0) {
+    const main = new Set<number>();
+    if (!write.newPost) {
+      const edited = write.post ? rows.find((row) => row.id === write.post!.row) : undefined;
+      if (edited) main.add(edited.id);
+      for (const id of named) {
+        const row =
+          edited && (edited.leadListId === id || edited.wantListId === id)
+            ? edited
+            : (byId.find((entry) => entry.leadListId === id) ??
+              byId.find((entry) => entry.wantListId === id));
+        if (row) main.add(row.id);
+      }
+    }
+    components.push([...main]);
+  }
+  const taken = new Set(components.flat());
+  for (const row of byId) {
+    const holdsRemoved = (write.removed ?? []).some(
+      (id) => row.leadListId === id || row.wantListId === id,
+    );
+    if (holdsRemoved && !taken.has(row.id)) components.push([row.id]);
+  }
+  return components;
+}
+
+const holdsTwice = (rows: readonly PostRow[]) => (component: number[]) => {
+  const lists = component.flatMap((id) => {
+    const row = rows.find((entry) => entry.id === id)!;
+    return row.wantListId === null ? [row.leadListId] : [row.leadListId, row.wantListId];
+  });
+  return new Set(lists).size !== lists.length;
+};
+
+/** Assertions 1, 2, 5 and 6 of the shared run, over one person's rows around one write. */
+function checkShared(
+  before: ModelRow[],
+  after: ModelRow[],
+  components: number[][],
+  write: PostChange,
+  ops: PostChangeOps,
+  at: string,
+) {
+  const inWrite = new Set<number>(components.flat());
+  const now = new Map(after.map((row) => [row.id as number, row]));
+  const deleted = new Set<number>(ops.deletes);
+
+  // 1. a row the write is not about is left as it is, state included
+  for (const row of before) {
+    if (inWrite.has(row.id)) continue;
+    expect(now.get(row.id), `${at}: row ${row.id} is outside the write`).toEqual(row);
+  }
+
+  // 2. a list leaves a row only when the write unpaired, dropped, paired away or removed it, or
+  // the list beside it in that row; or the row was the one an Edit post's lead led, and the edited
+  // row now holds the list (decision 3's last case)
+  const named = new Set([
+    ...(write.unpair ?? []),
+    ...(write.pair ?? []),
+    ...(write.removed ?? []),
+    ...(write.sides ?? []).flatMap((side) => (side.on ? [] : [side.listId])),
+  ]);
+  for (const row of before) {
+    const kept = now.get(row.id);
+    for (const id of [row.leadListId, row.wantListId]) {
+      if (id === null || (kept && (kept.leadListId === id || kept.wantListId === id))) continue;
+      const mate = id === row.leadListId ? row.wantListId : row.leadListId;
+      const edited = write.post ? now.get(write.post.row) : undefined;
+      // the row the edit's lead led, folded into the edited row with its lists
+      const handedIn =
+        row.leadListId === write.post?.lead &&
+        row.id !== write.post.row &&
+        edited !== undefined &&
+        (edited.leadListId === id || edited.wantListId === id);
+      expect(
+        named.has(id) || (mate !== null && named.has(mate)) || handedIn,
+        `${at}: list ${id} left row ${row.id}`,
+      ).toBe(true);
+    }
+  }
+
+  // 5. the moves
+  const froms = ops.moves.map((move) => move.from as number);
+  const tos = new Set(ops.moves.map((move) => move.to as number));
+  expect(new Set(froms).size, `${at}: a from twice`).toBe(froms.length);
+  const old = new Set(before.map((row) => row.id as number));
+  for (const move of ops.moves) {
+    expect(old.has(move.to) && now.has(move.to), `${at}: move to ${move.to}`).toBe(true);
+    expect(tos.has(move.from), `${at}: ${move.from} is both a from and a to`).toBe(false);
+  }
+
+  // 6. one simulated hide per row: it stays unless a move names its row, and ends with its row
+  const hides = new Map(before.map((row) => [row.id as number, new Set([row.id as number])]));
+  for (const move of ops.moves) {
+    hides.set(move.to, new Set([...hides.get(move.to)!, ...hides.get(move.from)!]));
+  }
+  for (const move of ops.moves) hides.delete(move.from);
+  for (const id of hides.keys()) if (!now.has(id)) hides.delete(id);
+  for (const row of before) {
+    if (deleted.has(row.id) || froms.includes(row.id)) continue;
+    expect(hides.get(row.id)?.has(row.id), `${at}: row ${row.id} lost its hide`).toBe(true);
+  }
+  expect(
+    [...hides.keys()].every((id) => now.has(id)),
+    `${at}: a hide on a deleted row`,
+  ).toBe(true);
+
+  // a merge into a row holding a list that is in another row too
+  const rowsAfter = [...now.values()];
+  const elsewhere = (row: ModelRow, id: number | null) =>
+    id !== null &&
+    rowsAfter.some(
+      (other) => other.id !== row.id && (other.leadListId === id || other.wantListId === id),
+    );
+  if (
+    ops.moves.some((move) => {
+      const to = now.get(move.to)!;
+      return (
+        deleted.has(move.from) && (elsewhere(to, to.leadListId) || elsewhere(to, to.wantListId))
+      );
+    })
+  ) {
+    merged = true;
+  }
+}
+
+/** Assertions 3 and 4 of the shared run, over the whole world after a write. */
+function checkWorld(world: World, at: string) {
+  const byId = new Map(world.lists.map((list) => [list.id, list]));
+  const sides = new Map<number, { on: boolean; bumpedAt: string | null }[]>();
+  for (const row of world.rows) {
+    // 3. check 3's shape: the owner's lists, a want list on the want side, none under a want lead
+    const lead = byId.get(row.leadListId)!;
+    expect(lead.userId, `${at}: row ${row.id} lead owner`).toBe(row.userId);
+    if (row.wantListId !== null) {
+      const want = byId.get(row.wantListId)!;
+      expect(want.userId, `${at}: row ${row.id} want owner`).toBe(row.userId);
+      expect(want.listType, `${at}: row ${row.id} want type`).toBe("want");
+      expect(lead.listType, `${at}: row ${row.id} holds two want lists`).not.toBe("want");
+    }
+    const push = (id: number, on: boolean, bumpedAt: string | null) =>
+      sides.set(id, [...(sides.get(id) ?? []), { on, bumpedAt }]);
+    push(row.leadListId, row.state!.leadOnTrade, row.state!.leadBumpedAt);
+    if (row.wantListId !== null) {
+      push(row.wantListId, row.state!.wantOnTrade, row.state!.wantBumpedAt);
+    }
+  }
+  // 4. each list's summary: on in some row, and its latest bump, by time as well as by string
+  const time = (bump: string) => Date.parse(bump);
+  for (const list of world.lists) {
+    const held = sides.get(list.id);
+    if (!held) {
+      expect(list.discoverable, `${at}: list ${list.id} in no row`).toBe(false);
+      continue;
+    }
+    expect(list.discoverable, `${at}: list ${list.id} discoverable`).toBe(held.some((s) => s.on));
+    const bumps = held.flatMap((side) => (side.bumpedAt === null ? [] : [side.bumpedAt]));
+    const byString = bumps.reduce<string | null>((a, b) => (a === null || b > a ? b : a), null);
+    const byTime = bumps.reduce<string | null>(
+      (a, b) => (a === null || time(b) > time(a) ? b : a),
+      null,
+    );
+    expect(byString, `${at}: list ${list.id} bump order`).toBe(byTime);
+    expect(list.bumpedAt, `${at}: list ${list.id} bump`).toBe(byString);
+  }
+}
+
+/** Open Question 4: no want list leads a row and is another row's want list. */
+function wantInTwoRoles(world: World) {
+  const leads = new Set(world.rows.map((row) => row.leadListId));
+  return world.rows.some((row) => row.wantListId !== null && leads.has(row.wantListId));
+}
+
+type SharedWrite = { kind: "share" | "dropRow" | "downRow"; userId: string; change: PostChange };
+
+function pickShared(world: World, rand: () => number): SharedWrite | null {
+  const pick = <T>(items: readonly T[]) => items[Math.floor(rand() * items.length)]!;
+  const userId = pick(USERS);
+  const own = ownOf(world, userId);
+  const rows = rowsOf(world, userId);
+  const roll = rand();
+  if (roll < 0.5) {
+    const leads = own.filter((list) => list.listType !== "want" && list.discoverable);
+    if (leads.length === 0) return null;
+    const lead = pick(leads);
+    const ledRows = new Set(rows.map((row) => row.leadListId));
+    const wants = own.filter(
+      (list) =>
+        list.listType === "want" &&
+        !ledRows.has(list.id) &&
+        !rows.some((row) => row.leadListId === lead.id && row.wantListId === list.id),
+    );
+    const want = wants.length > 0 && rand() < 0.6 ? pick(wants) : null;
+    const flags = pick([
+      { matchHave: true, matchSale: true },
+      { matchHave: true, matchSale: false },
+      { matchHave: false, matchSale: true },
+    ]);
+    return {
+      kind: "share",
+      userId,
+      change: {
+        newPost: true,
+        pair: want ? [lead.id, want.id] : null,
+        sides: [
+          { listId: lead.id, on: true },
+          ...(want ? [{ listId: want.id, on: true, ...flags }] : []),
+        ],
+      },
+    };
+  }
+  if (rows.length === 0) return null;
+  if (roll < 0.8) {
+    const pairs = rows.filter((row) => row.wantListId !== null);
+    if (pairs.length === 0) return null;
+    const row = pick(pairs);
+    const want = row.wantListId!;
+    const dropLead = rand() < 0.5;
+    return {
+      kind: "dropRow",
+      userId,
+      change: {
+        post: { row: row.id, lead: dropLead ? want : row.leadListId },
+        unpair: [row.leadListId, want],
+        sides: [
+          { listId: row.leadListId, on: !dropLead },
+          { listId: want, on: dropLead },
+        ],
+      },
+    };
+  }
+  const row = pick(rows);
+  return {
+    kind: "downRow",
+    userId,
+    change: {
+      post: { row: row.id },
+      sides: [row.leadListId, ...(row.wantListId === null ? [] : [row.wantListId])].map((id) => ({
+        listId: id,
+        on: false,
+      })),
+    },
+  };
+}
+
+function sharedRun(seed: number) {
+  const rand = mulberry32(seed);
+  let world: World = { lists: [], rows: [], nextRow: 1_000_000 };
+  let lastList = 0;
+  const skipped = { twice: 0, wantRoles: 0 };
+  for (let i = 0; i < 40; i++) {
+    merged = false;
+    const at = `shared seed ${seed} step ${i}`;
+    clock = stepTime(seed, i);
+    const kept = structuredClone(world);
+    const special = rand() < 0.35 ? pickShared(world, rand) : null;
+    const write = special ? null : pickWrite(world, rand, () => ++lastList);
+    const twice =
+      write?.kind === "delete" &&
+      world.rows.filter((row) => row.leadListId === write.id || row.wantListId === write.id)
+        .length > 1;
+    try {
+      if (special) {
+        const { current } = locked(world, special.userId);
+        writePosts(world, special.userId, current, special.change);
+      } else byRows(world, write!);
+    } catch (error) {
+      // a write that would hold a list twice in one component is one no writer sends; the
+      // planner's own throw on any other write fails the run
+      if (!(error instanceof TwiceInOneWrite)) throw error;
+      world = kept;
+      skipped.twice++;
+      continue;
+    }
+    if (wantInTwoRoles(world)) {
+      world = kept;
+      skipped.wantRoles++;
+      continue;
+    }
+    if (special) sharedCounts[special.kind]++;
+    if (twice) sharedCounts.deleteShared++;
+    if (merged) sharedCounts.mergeShared++;
+    checkWorld(world, at);
+  }
+  return skipped;
 }
 
 // Under a second locally, but 12 s on the CI runner beside lint and typecheck: bun's default
@@ -761,10 +1260,12 @@ test(
     for (const [transition, n] of Object.entries(counts)) {
       expect(n, `${transition} ran ${n} times`).toBeGreaterThanOrEqual(100);
     }
-    if (process.env.COUNTS) console.log({ releads, moveKinds });
+    if (process.env.COUNTS) console.log({ releads, moveKinds, editLead });
     expect(releads, "rows that changed their lead and kept their id").toBeGreaterThanOrEqual(100);
-    // the random writes make 96 D2, 41 D3 and 2 takeover moves over these runs; 100 of each
-    // would take tens of thousands of runs, so each floor sits below its count, at least once.
+    expect(editLead, "Edit posts whose row took a new lead").toBeGreaterThanOrEqual(100);
+    // the random writes make 248 D2 (96 before Edit post kept its row), 40 D3 and 2 takeover
+    // moves over these runs; 100 of each would take tens of thousands of runs, so each floor
+    // sits below its count, at least once.
     // No random write makes a second row of one lead, so D1 is the unit test's alone
     expect(moveKinds.D2, "D2 moves").toBeGreaterThanOrEqual(50);
     expect(moveKinds.D3, "D3 moves").toBeGreaterThanOrEqual(20);
@@ -774,48 +1275,28 @@ test(
   CI_TIMEOUT,
 );
 
-/** Rows as a build without the planner, or a missed writer, could have left them. */
-function corrupt(world: World, rand: () => number) {
-  world.rows = world.rows.filter(() => rand() > 0.3);
-  for (const row of world.rows) {
-    const own = world.lists.filter(
-      (list) => list.userId === row.userId && list.id !== row.leadListId,
-    );
-    if (own.length > 0 && rand() < 0.3) {
-      row.wantListId = rand() < 0.5 ? null : own[Math.floor(rand() * own.length)]!.id;
-    }
-  }
-  for (const list of world.lists) {
-    if (rand() < 0.2) {
-      world.rows.push({
-        id: world.nextRow++ as PostId,
-        userId: list.userId,
-        leadListId: list.id,
-        wantListId: null,
-      });
-    }
-  }
-}
-
 test(
-  "one plan over the link repairs corrupted rows, over 1,000 runs of 30 writes",
+  "shared lists: a write changes only its own rows, over 1,000 runs of 40 writes",
   () => {
-    for (let seed = 1; seed <= 1000; seed++) {
-      const rand = mulberry32(seed);
-      const world: World = { lists: [], rows: [], nextRow: 1_000_000 };
-      let lastList = 0;
-      for (let i = 0; i < 30; i++) {
-        clock = `${seed}:${i}`;
-        corrupt(world, rand);
-        legacy(
-          world,
-          pickWrite(world, rand, () => ++lastList),
-        );
-        // both people had rows corrupted
-        for (const userId of USERS) legacySync(world, userId);
-        check(world, `seed ${seed} step ${i}`);
+    shared = true;
+    const skipped = { twice: 0, wantRoles: 0 };
+    try {
+      for (let seed = 1; seed <= 1000; seed++) {
+        const run = sharedRun(seed);
+        skipped.twice += run.twice;
+        skipped.wantRoles += run.wantRoles;
       }
+    } finally {
+      shared = false;
     }
+    if (process.env.COUNTS) console.log({ ...sharedCounts, skipped });
+    // floors at about half of a measured run (share 2651, dropRow 376, downRow 1778, a delete of
+    // a list in two rows 471, a merge into a shared list's row 36)
+    expect(sharedCounts.share, "share").toBeGreaterThanOrEqual(1000);
+    expect(sharedCounts.dropRow, "dropRow").toBeGreaterThanOrEqual(150);
+    expect(sharedCounts.downRow, "downRow").toBeGreaterThanOrEqual(800);
+    expect(sharedCounts.deleteShared, "a delete of a list in two rows").toBeGreaterThanOrEqual(200);
+    expect(sharedCounts.mergeShared, "a merge into a shared list's row").toBeGreaterThanOrEqual(15);
   },
   CI_TIMEOUT,
 );

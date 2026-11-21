@@ -34,6 +34,10 @@ export type AlertPair = {
   objektId: string | null;
   /** the new entry sits in a post its recipient hid before it was added */
   hidden?: boolean;
+  /** the partner's list as its post shows it: a sale list set to Sell only (forward) */
+  partnerSale: boolean;
+  /** the partner's want list open to swaps, as its post shows it (reverse) */
+  partnerWantsSwaps: boolean;
 };
 
 export type AlertInput<P extends AlertPair = AlertPair> = {
@@ -114,10 +118,13 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
   if (!(input.prefs.get(key) ?? NOTIFICATION_DEFAULTS[type])) return { kind: "skip" };
   let mode = input.matches.get(key) ?? ALERT_MATCH_DEFAULT;
   // a sale can never become a swap, so no recheck either
-  if (mode === "mutual" && offer.sale) return { kind: "skip" };
+  // the partner's Open to is its post's, read from the pair's row; the recipient's is its list's
+  const offerSale = forward ? first.partnerSale : offer.sale;
+  const wantsSwaps = forward ? want.wantsSwaps : first.partnerWantsSwaps;
+  if (mode === "mutual" && offerSale) return { kind: "skip" };
   if (mode === "mutual" && !recipient.swapPair) {
     // a list with no pair can never make Can swap, so it alerts on a swap one way, as Any does
-    if (!want.wantsSwaps) return { kind: "skip" };
+    if (!wantsSwaps) return { kind: "skip" };
     mode = "any";
   }
 

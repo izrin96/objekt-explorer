@@ -5,12 +5,17 @@
  * here compares them with a second copy. It also checks that no offer's `post_id` is another
  * person's row.
  *
- * Checks 5 and 6 compare each row's Trade state, bumps, Open to and `takes_swaps` with its lists
- * (`postStateOf` in packages/api/src/lib/trade-post-rows.ts). They hold only while a list is in
- * at most one row; `trade-post-planner-shared` rewrites them. Off Trade, a row's Open to may lag
- * its list after `list.edit`, so check 6 reads only sides on Trade. They need migration
- * `trade_post_state`; until `trade_post_state_reconcile` runs, they also count the rows of people
- * who have not written since the first.
+ * Check 2 stays a check, not a note, until `shared-lists`: the planner holds a list in several
+ * rows, but readers still take one row per list, and `planPost` refuses a list in another post.
+ *
+ * Checks 5 and 6 hold whatever rows a list is in. Check 5 reads each list from its end: its
+ * `discoverable` is "on Trade in some row" and its `bumped_at` the latest bump of its sides, which
+ * `writePosts` derives from the rows. Check 6 reads each row against the post rules: no want-side
+ * state without a want list, `takes_swaps` only under a sale lead, and, for a list in exactly one
+ * row whose side is on, the row's Open to (its open list) and `takes_swaps` (its sale lead) equal
+ * the list's, since some reads still take a list's Open to as its post's. Off Trade a row's Open to
+ * may lag its list after `list.edit`, so 6's last part reads only sides on Trade. They need
+ * migration `trade_post_state`.
  *
  * Check 7 holds whatever the pairing: a hide names a row (`hidden_trade_post.post_id`), and a
  * person never hides their own post, so no hide sits on its hider's own row. It needs migration
@@ -18,8 +23,8 @@
  * which reads `list_id`, reads differently: what a rollback to it would lose.
  *
  * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
- * row to another list, and an offer made by the old build after the migration has no post id, so
- * neither is wrong data.
+ * row to another list, or Edit post swapped or dropped any of the post's lists, and an offer
+ * made by the old build after the migration has no post id, so neither is wrong data.
  *
  * Plain reads only, and it refuses to start unless the connection is read-only:
  *
@@ -71,29 +76,42 @@ const CHECKS: [label: string, query: SQL][] = [
         WHERE tp.user_id <> o.to_user_id`,
   ],
   [
-    "a row whose Trade state or bump differs from its lists (row ids)",
-    sql`SELECT tp.id FROM trade_post tp
-        JOIN lists o ON o.id = tp.lead_list_id
-        LEFT JOIN lists w ON w.id = tp.want_list_id
-        WHERE tp.lead_on_trade <> o.discoverable
-          OR tp.lead_bumped_at IS DISTINCT FROM o.bumped_at
-          OR tp.want_on_trade <> coalesce(w.discoverable, false)
-          OR tp.want_bumped_at IS DISTINCT FROM w.bumped_at`,
+    "a list whose Trade state or bump disagrees with its rows (list ids)",
+    sql`WITH sides AS (
+          SELECT s.list_id, bool_or(s.on_trade) AS on_trade, max(s.bumped_at) AS bumped_at
+          FROM trade_post tp
+          CROSS JOIN LATERAL (VALUES
+            (tp.lead_list_id, tp.lead_on_trade, tp.lead_bumped_at),
+            (tp.want_list_id, tp.want_on_trade, tp.want_bumped_at)
+          ) s(list_id, on_trade, bumped_at)
+          WHERE s.list_id IS NOT NULL
+          GROUP BY s.list_id)
+        SELECT l.id FROM lists l LEFT JOIN sides ON sides.list_id = l.id
+        WHERE l.list_type IN ('have', 'sale', 'want')
+          AND (l.discoverable <> coalesce(sides.on_trade, false)
+            OR (sides.list_id IS NOT NULL AND l.bumped_at IS DISTINCT FROM sides.bumped_at))`,
   ],
   [
-    "a row whose Open to or takes_swaps differs from its lists on Trade (row ids)",
-    sql`SELECT tp.id FROM trade_post tp
+    "a row whose Open to or takes_swaps breaks a post rule (row ids)",
+    sql`WITH held AS (
+          SELECT s.list_id, count(*) AS rows
+          FROM trade_post tp
+          CROSS JOIN LATERAL (VALUES (tp.lead_list_id), (tp.want_list_id)) s(list_id)
+          WHERE s.list_id IS NOT NULL
+          GROUP BY s.list_id)
+        SELECT tp.id FROM trade_post tp
         JOIN lists o ON o.id = tp.lead_list_id
         LEFT JOIN lists w ON w.id = tp.want_list_id
-        WHERE CASE
-            WHEN w.id IS NOT NULL THEN w.discoverable
-              AND (tp.match_have <> w.match_have OR tp.match_sale <> w.match_sale)
-            WHEN o.list_type = 'want' THEN o.discoverable
-              AND (tp.match_have <> o.match_have OR tp.match_sale <> o.match_sale)
-            ELSE false
-          END
-          OR (o.list_type = 'sale' AND o.discoverable AND tp.takes_swaps <> o.takes_swaps)
-          OR (o.list_type <> 'sale' AND tp.takes_swaps)`,
+        LEFT JOIN held ho ON ho.list_id = o.id
+        LEFT JOIN held hw ON hw.list_id = w.id
+        WHERE (tp.want_list_id IS NULL AND (tp.want_on_trade OR tp.want_bumped_at IS NOT NULL))
+          OR (o.list_type <> 'sale' AND tp.takes_swaps)
+          OR (w.id IS NOT NULL AND hw.rows = 1 AND tp.want_on_trade
+            AND (tp.match_have <> w.match_have OR tp.match_sale <> w.match_sale))
+          OR (w.id IS NULL AND o.list_type = 'want' AND ho.rows = 1 AND tp.lead_on_trade
+            AND (tp.match_have <> o.match_have OR tp.match_sale <> o.match_sale))
+          OR (o.list_type = 'sale' AND ho.rows = 1 AND tp.lead_on_trade
+            AND tp.takes_swaps <> o.takes_swaps)`,
   ],
   [
     "a hide on its hider's own row (row ids)",

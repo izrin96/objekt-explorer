@@ -42,6 +42,9 @@ const forward = (extra: Partial<AlertPair> = {}): AlertPair => ({
   wantListId: WANT.id,
   slug: SLUG,
   objektId: null,
+  // the partner's post flags, equal to SALE's and WANT's own unless a test says otherwise
+  partnerSale: false,
+  partnerWantsSwaps: true,
   ...extra,
 });
 
@@ -290,6 +293,7 @@ describe("selectAlerts, Any or Can swap", () => {
 
   test("a sale-list pair under Can swap is neither alerted, asked nor rechecked", () => {
     const sale = input({
+      pairs: [forward({ partnerSale: true })],
       matches: mutualOnly,
       lists: new Map([saleList, WANT].map((l) => [l.id, l])),
     });
@@ -355,7 +359,11 @@ describe("selectAlerts, Any or Can swap", () => {
     });
 
     test("a want list on Can swap skips a Sell only listing", () => {
-      const one = input({ matches: mutualOnly, lists: listsOf(saleList, unpairedWant) });
+      const one = input({
+        pairs: [forward({ partnerSale: true })],
+        matches: mutualOnly,
+        lists: listsOf(saleList, unpairedWant),
+      });
       expect(mutualQuestions(one)).toEqual([]);
       expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [] });
     });
@@ -380,7 +388,7 @@ describe("selectAlerts, Any or Can swap", () => {
 
     test("a Sell or swap list on Can swap skips a want list that only buys", () => {
       const back = input({
-        pairs: [reverse],
+        pairs: [forward({ direction: "reverse", partnerWantsSwaps: false })],
         matches: mutualOnly,
         lists: listsOf(
           list(1, SELLER, { swapPair: false }),
@@ -399,6 +407,38 @@ describe("selectAlerts, Any or Can swap", () => {
       });
       expect(mutualQuestions(back)).toEqual([]);
       expect(selectAlerts(back)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("the partner's flags come from its post, not its list: a Sell only post forward", () => {
+      // the sale list itself reads Sell or swap; its post on Trade is Sell only
+      const one = input({
+        pairs: [forward({ partnerSale: true })],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER), unpairedWant),
+      });
+      expect(mutualQuestions(one)).toEqual([]);
+      expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("the partner's flags come from its post, not its list: a Buying only want post in reverse", () => {
+      // the want list itself reads open to swaps; its post on Trade buys only
+      const back = input({
+        pairs: [forward({ direction: "reverse", partnerWantsSwaps: false })],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER, { swapPair: false }), WANT),
+      });
+      expect(mutualQuestions(back)).toEqual([]);
+      expect(selectAlerts(back)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("the recipient's flags still come from its list", () => {
+      // the pair's want-side flag is the partner's; a forward recipient that buys only skips
+      const one = input({
+        pairs: [forward({ partnerWantsSwaps: true })],
+        matches: mutualOnly,
+        lists: listsOf(haveList, list(2, WANTER, { swapPair: false, wantsSwaps: false })),
+      });
+      expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [] });
     });
 
     test("a paired list still asks the two-way question", () => {
