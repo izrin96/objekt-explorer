@@ -432,3 +432,60 @@ Groups 1 to 5 and task 6.1, on 2026-11-21, over `38f516a1`. Nothing ran against 
   - `localtest5@local.invalid` is kept, with no lists, as the owner did not ask to remove it. Its test session row was deleted.
   - The local database keeps step 1's migration.
   - The dev server is stopped and the browser contexts are closed.
+- **7.1, G1** (production, read-only, 2026-11-21 10:19 UTC, after `8b05487c` was pushed).
+  - The old drift script (`6f4de4c2`) and the new one: checks 1 to 7 at 0 each, over 1608 rows. Note 2 read 9 in both. The old script's note 3 read 9; the new script has no note 3.
+  - Decision 2's count: `differs` 5, `matters` 1. The one person has a sale post on Trade bumped 2026-11-02 and an off-Trade want list in no row holding a bump of 2026-11-03. After step 1 their last bump reads 11-02 instead of 11-03. Both are past the 24 hours, so their cooldown and their post's place in the feed are unchanged; only Your posts' "Bumped" line moves by a day. `matters` counts anyone with a post on Trade, not only a bump inside 24 hours. The owner went ahead.
+  - Have, sale and want lists in no row with a `bumped_at`: 101 (information).
+  - Baseline: 1608 rows, 2147 lists on Trade.
+- **7.2.** The owner ran migrate (`20261121094632_retire_contract_columns`) and brought up web and the worker from `8b05487c`, reported done after G1; the time each came up was not recorded.
+- **7.3, G2** (production, read-only, after 7.2).
+  - The new drift script: checks 1 to 7 at 0 each, over 1608 rows; note 2 at 9.
+  - The market's per-slug count (`countedListings`): a bitmap scan on `lists_trade_discoverable_idx` (452 sale lists), 184.1 ms cold and 83.9 ms warm, against `trade-post-state` 11.3's 162.4 ms.
+  - Want alerts' `discoverable` read: a BitmapOr of two scans on `lists_trade_discoverable_idx` (926 want, 1221 have and sale), 3.6 ms cold and 0.8 ms warm.
+- **8.1, step 2** (local only).
+  - **Timing.** Step 1 (`8b05487c`) went live on 2026-11-21 at about 10:30 UTC. Production web and the worker now run `0129b5c4`, which is later than step 1. On 2026-11-22 the owner chose to go ahead without waiting out the full day 8.1 asks for.
+  - **Migration.** `packages/db/migrations/20261121171021_drop_contract_columns`, generated with `--custom`, is written as decision 6, step 2 gives it:
+    - the `lock_timeout` 1 s header;
+    - `lists` `ACCESS EXCLUSIVE`, then `hidden_trade_post` `ACCESS EXCLUSIVE NOWAIT`;
+    - the trigger, then its function;
+    - `DROP COLUMN IF EXISTS` on `hidden_trade_post.list_id`, then on `lists.bumped_at`.
+
+    The trigger and function names match `20261120103752_hidden_trade_post_by_row`.
+  - **Snapshot.** Its snapshot has empty `deltas` and `footprints`, and `prevIds` names step 1's snapshot (`91fd98eb…`), the same shape as `drop_linked_list_id`. A plain `db:generate` afterwards reported "No schema changes".
+  - **Applied locally** (`DATABASE_URL` in `.env.local` is `localhost`).
+    - Before: both columns, `hidden_trade_post_list_id_idx`, the trigger and its function were present (2, 1, 1, 1).
+    - After: all four are gone (0, 0, 0, 0).
+    - The new drift script read 0 on checks 1 to 7 at 411 rows, both after the migrate and after the put-back.
+  - **Smoke.** The dev server ran from this worktree on `.env.local`, on port 3201 (with `SITE_URL` set for that process). Each account had its own isolated context and tab and signed in by `fetch` after load; no credential reached the dev-server log.
+    - As localtest2:
+      - The list page (`lt2spares`), Browse, For you and My trades rendered.
+      - Before the bump, `trade/myPosts` returned 200 for five posts. Their `lastBumpAt` was `2026-11-16T03:26:39Z`, their `nextBumpAt` null, and their own `bumpedAt` values ran from 11-13 to 11-16.
+      - Bump returned 200 with `bumpedAt` `2026-11-21T17:13:16Z` and `nextBumpAt` `2026-11-22T17:13:16Z`.
+      - After the bump, every post's `bumpedAt` and `lastBumpAt` was that time and every `nextBumpAt` 24 hours later.
+      - Your posts is the section on Browse, and it rendered both before and after the bump.
+    - As localtest1:
+      - Hiding localtest2's post 1000303 (list 13168) wrote a hide row `(user_id, post_id)`, and the post left `trade/people`.
+      - Unhiding removed the row, and the post came back.
+    - Errors: the client and the server log showed only the ResizeObserver loop notice, already judged harmless in 6.2 (g). There was no server error.
+  - **Put back.**
+    - The bump's row times were restored from the saved copy. localtest1's and localtest2's lists, rows and hides, read again, are byte-identical to the saved files.
+    - This pass's two session rows were deleted.
+    - The dev server is stopped and the contexts are disposed.
+    - The local database keeps step 2's migration.
+  - **Raw-SQL grep at HEAD** (after `345273b6` and `0129b5c4`): `bumped_at|bumpedAt|fill_post_id|list_id_idx` and a hidden `list_id` in `packages` and `apps` (`*.ts`, `*.tsx`, `*.sql`, outside `migrations/`).
+    - The only `bumped_at` hits are `trade_post` sides: `lead_`/`want_bumped_at`, the `side.bumped_at` of `onTradeRowsSql` and `sideStateSql`, and the feed's `on_trade` aliases.
+    - The only `bumpedAt` hits are post bumps and the people cursor.
+    - The remaining `list_id` columns belong to `list_rule`, `list_entries` and `offer_item`.
+    - No comment still says a column, the index or the trigger stays.
+
+    The worker was not run in the smoke. This grep covers the api services it imports.
+  - **Shared local database:** it now lacks both columns, so a worktree on a build older than `8b05487c` fails against it.
+  - **Rollback floor** (8.3 records the production one): after step 2, web and the worker can go back to `8b05487c` at the lowest.
+- **9.1, agent docs.**
+  - `packages/db/AGENTS.md`, Trade posts, now records both migrations, the drop of both columns, the trigger and its function, and that no web or worker build older than `8b05487c` can run. The old sentence that an older worker "reads `lists`, which equal the rows" is now in the past tense.
+  - Checked against the code:
+    - `apps/worker/AGENTS.md`, Trade post drift: check 5 is `discoverable` only, and the notes are two.
+    - `packages/api/docs/trade.md`, Trade posts: bumps go through `personBumpSql` (`turnOnBumpedAt`, `lastBumpOf`). The reads that stay on `lists` no longer name a bump reader. Partner rules no longer mentions `list_id`.
+
+    Both match the code.
+  - `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md` mention neither column, the trigger nor these bump readers, so they need no change.

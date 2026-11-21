@@ -156,7 +156,7 @@
 
 ## 7. Step 1 rollout
 
-- [ ] 7.1 **G1**, read-only, with a go-ahead, after the push and before step 1's web comes up:
+- [x] 7.1 **G1**, read-only, with a go-ahead, after the push and before step 1's web comes up:
   - the old and the new drift script: checks 1 to 7 at 0;
   - decision 2's count:
 
@@ -175,8 +175,8 @@
   - the baseline: rows and lists on Trade.
 
   A non-zero drift check, or a `matters` above 0, stops the rollout for the owner. `differs` is information. Record all of it in As built.
-- [ ] 7.2 The owner runs `docker compose run --build --rm migrate`, brings up web, and rebuilds and brings up the worker from the same commit. Record the times.
-- [ ] 7.3 **G2**, read-only, with a go-ahead:
+- [x] 7.2 The owner runs `docker compose run --build --rm migrate`, brings up web, and rebuilds and brings up the worker from the same commit. Record the times.
+- [x] 7.3 **G2**, read-only, with a go-ahead:
   - the new drift script: checks 1 to 7 at 0;
   - `EXPLAIN (ANALYZE, BUFFERS OFF, TIMING OFF, COSTS OFF)` of `countedListings`' per-slug count and of want alerts' `discoverable` read (`apps/worker/src/job/want-alerts/index.ts:48-51`).
 
@@ -184,7 +184,7 @@
 
 ## 8. Step 2: drop the column
 
-- [ ] 8.1 Once step 1 has served for a day with G2 clean:
+- [x] 8.1 Once step 1 has served for a day with G2 clean:
   1. Run `bun run --filter=@repo/db db:generate --custom --name drop_contract_columns`.
   2. Write its SQL as design decision 6, step 2 gives it: the locks in order, the trigger and its function, then both columns, with a comment on why it is safe now.
   3. Apply it locally (the approval of 6.2 covers it).
@@ -197,7 +197,7 @@
 
 ## 9. Agent docs
 
-- [ ] 9.1 With `writing-for-agents` loaded, check what groups 1 to 5 and 8 wrote against the code as built:
+- [x] 9.1 With `writing-for-agents` loaded, check what groups 1 to 5 and 8 wrote against the code as built:
   - `packages/db/AGENTS.md`;
   - `apps/worker/AGENTS.md`;
   - `packages/api/docs/trade.md`, Trade posts. Its list of reads that stay on `lists` loses `personBumpedAt` and `lastBumpOf`. Partner rules no longer mentions `list_id`.
