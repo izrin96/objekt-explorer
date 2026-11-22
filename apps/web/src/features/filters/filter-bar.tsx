@@ -1,5 +1,10 @@
-import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react";
-import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/cosmo/types/common";
+import {
+  ArrowsDownUpIcon,
+  ColumnsIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+} from "@phosphor-icons/react";
+import type { ValidCustomSort, ValidGroupBy } from "@repo/cosmo/types/common";
 import { validGroupBy } from "@repo/cosmo/types/common";
 import { type ReactNode, useMemo } from "react";
 
@@ -22,11 +27,18 @@ import { useDeclaredFacets, useFacetParity } from "./facet-parity";
 import type { Facets, MemberGroup } from "./facets";
 import { FilterSearchField } from "./filter-search";
 import { FilterSheet } from "./filter-sheet";
-import { GROUP_BY_LABEL, SORT_DESC, SORT_LABEL } from "./labels";
+import { GROUP_BY_LABEL, SORT_OPTION_LABEL } from "./labels";
 import { LONG_TAIL, longTailCount, type LongTailField } from "./long-tail";
 import { LongTailFields, LongTailToolbar } from "./long-tail-fields";
 import { ResetButton } from "./reset-button";
-import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
+import { canReset } from "./search-schema";
+import {
+  currentSortOption,
+  parseSortOptionValue,
+  type SortOptionValue,
+  sortMenu,
+  sortOptionValue,
+} from "./sort-options";
 import { toolbarTrigger } from "./toolbar-trigger";
 import { useActiveChips } from "./use-active-chips";
 import {
@@ -36,24 +48,6 @@ import {
   useSetFacet,
   useSetFilters,
 } from "./use-filters";
-
-/**
- * Picking a sort resets the direction to the one that sort is normally read
- * in, so the arrow is never a surprise; the arrow button then flips it.
- */
-const SORT_DEFAULT_DIR: Record<ValidCustomSort, ValidSortDirection> = {
-  date: "desc",
-  season: "asc",
-  collectionNo: "asc",
-  member: "asc",
-  serial: "asc",
-  duplicate: "desc",
-  rare: "asc",
-  price: "asc",
-  floor: "asc",
-  listedAt: "desc",
-  supply: "desc",
-};
 
 /** a collection row has no serial, no price and no listing, so neither has its sort */
 const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
@@ -82,71 +76,49 @@ function ColumnsSelect() {
   );
 }
 
-function SortSelect({
-  sorts,
-  className,
-}: {
-  sorts: readonly ValidCustomSort[];
-  className?: string;
-}) {
+function SortSelect({ sorts }: { sorts: readonly ValidCustomSort[] }) {
   const sort = useFilters((f) => f.sort);
   const sortDir = useFilters((f) => f.sort_dir);
   const setFilters = useSetFilters();
 
-  const current = sort ?? sorts[0] ?? "date";
-  const descending = (sortDir ?? SORT_DEFAULT_DIR[current]) === "desc";
-  // a link can carry a sort this surface does not offer; keep it selectable
-  // rather than silently rewriting someone's URL
-  const options = sorts.includes(current) ? sorts : [current, ...sorts];
+  const current = currentSortOption(sorts, sort, sortDir);
 
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      <Select
-        value={current}
-        onValueChange={(value: ValidCustomSort | null) =>
-          value &&
-          setFilters({
-            sort: value,
-            sort_dir: SORT_DEFAULT_DIR[value],
-            // a duplicate count only exists once copies share a card, and a
-            // serial only belongs to a card standing for one copy
-            ...(value === "duplicate"
-              ? { grouped: true }
-              : value === "serial"
-                ? { grouped: undefined }
-                : {}),
-          })
-        }
-      >
-        <SelectPrimitive.Trigger aria-label={m.filter_sort_by_label()} className={toolbarTrigger}>
-          {descending ? <SortAscendingIcon /> : <SortDescendingIcon />}
-          <SelectValue>{(value: ValidCustomSort) => SORT_LABEL[value]()}</SelectValue>
-        </SelectPrimitive.Trigger>
-        <SelectPopup alignItemWithTrigger={false} align="end">
-          {options.map((option) => (
-            <SelectItem key={option} value={option} className="py-1.5">
-              <span className="flex flex-col">
-                {SORT_LABEL[option]()}
-                <span className="text-muted-foreground text-xs">{SORT_DESC[option]()}</span>
-              </span>
-            </SelectItem>
-          ))}
-        </SelectPopup>
-      </Select>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        aria-label={descending ? m.filter_desc() : m.filter_asc()}
-        onClick={() =>
-          setFilters({
-            sort: current,
-            sort_dir: descending ? "asc" : DEFAULT_SORT_DIR,
-          })
-        }
-      >
-        {descending ? <SortAscendingIcon /> : <SortDescendingIcon />}
-      </Button>
-    </div>
+    <Select
+      value={sortOptionValue(current)}
+      onValueChange={(value: SortOptionValue | null) => {
+        if (!value) return;
+        const next = parseSortOptionValue(value);
+        setFilters({
+          sort: next.sort,
+          sort_dir: next.dir,
+          // a duplicate count only exists once copies share a card, and a
+          // serial only belongs to a card standing for one copy
+          ...(next.sort === "duplicate"
+            ? { grouped: true }
+            : next.sort === "serial"
+              ? { grouped: undefined }
+              : {}),
+        });
+      }}
+    >
+      <SelectPrimitive.Trigger aria-label={m.filter_sort_by_label()} className={toolbarTrigger}>
+        <ArrowsDownUpIcon />
+        <SelectValue>
+          {(value: SortOptionValue) => {
+            const option = parseSortOptionValue(value);
+            return SORT_OPTION_LABEL[option.sort][option.dir]();
+          }}
+        </SelectValue>
+      </SelectPrimitive.Trigger>
+      <SelectPopup alignItemWithTrigger={false} align="end">
+        {sortMenu(sorts, current).map((option) => (
+          <SelectItem key={sortOptionValue(option)} value={sortOptionValue(option)}>
+            {SORT_OPTION_LABEL[option.sort][option.dir]()}
+          </SelectItem>
+        ))}
+      </SelectPopup>
+    </Select>
   );
 }
 

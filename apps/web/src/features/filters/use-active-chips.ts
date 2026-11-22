@@ -7,10 +7,11 @@ import {
   GROUP_BY_LABEL,
   LISTED_WINDOW_LABEL,
   ONLINE_TYPE_LABEL,
-  SORT_LABEL,
+  SORT_OPTION_LABEL,
 } from "./labels";
 import { useMemberColor } from "./member-colors";
 import type { FilterSearch } from "./search-schema";
+import { SORT_DEFAULT_DIR } from "./sort-options";
 import { useCanonicalFilters, type FilterPatch } from "./use-filters";
 
 export type ActiveChip = {
@@ -188,7 +189,7 @@ function buildChips(
   if (filters.sort !== undefined) {
     chips.push({
       key: "sort",
-      label: `${m.filter_sort_by_label()}: ${SORT_LABEL[filters.sort]()}`,
+      label: `${m.filter_sort_by_label()}: ${SORT_OPTION_LABEL[filters.sort][filters.sort_dir ?? SORT_DEFAULT_DIR[filters.sort]]()}`,
       // the direction is a property of the sort, so it leaves with it
       remove: { sort: undefined, sort_dir: undefined },
     });

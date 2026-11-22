@@ -135,6 +135,11 @@ describe("sortObjekts", () => {
     expect(order({ sort: "date", sort_dir: "asc" })).toEqual(["b", "d", "a", "e", "c", "f", "g"]);
   });
 
+  test("a sort with no direction runs the way the sort menu names it", () => {
+    expect(order({ sort: "season" })).toEqual(order({ sort: "season", sort_dir: "asc" }));
+    expect(order({ sort: "member" })).toEqual(order({ sort: "member", sort_dir: "asc" }));
+  });
+
   test("rare leads with the fewest copies and breaks ties by date", () => {
     const rarity = new Map([
       ["a", 5],

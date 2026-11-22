@@ -122,7 +122,6 @@ export const defaultFilters: FilterSearch = Object.fromEntries(
 ) as FilterSearch;
 
 export const DEFAULT_SORT = "date";
-export const DEFAULT_SORT_DIR = "desc";
 /** the Delta-E a colour filter uses until the Sensitivity slider is moved */
 export const DEFAULT_COLOR_SENSITIVITY = 7;
 /** the slider's ends; 1 is "this exact swatch", 20 is "this family of hues" */

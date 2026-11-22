@@ -4,12 +4,8 @@ import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { type Lab, deltaE2000, parseLab } from "@/lib/color-distance";
 
 import { isListedWithin } from "./listed-window";
-import {
-  DEFAULT_COLOR_SENSITIVITY,
-  DEFAULT_SORT,
-  DEFAULT_SORT_DIR,
-  type FilterSearch,
-} from "./search-schema";
+import { DEFAULT_COLOR_SENSITIVITY, DEFAULT_SORT, type FilterSearch } from "./search-schema";
+import { SORT_DEFAULT_DIR } from "./sort-options";
 
 function parseCollectionNo(value: string) {
   // the last class is only a, z, A or Z, the two collection types, not a typo of [a-zA-Z]
@@ -262,7 +258,7 @@ export function sortObjekts<T extends GridObjekt>(
   let objekts = data;
 
   const sort = filters.sort ?? DEFAULT_SORT;
-  const sortDir = filters.sort_dir ?? DEFAULT_SORT_DIR;
+  const sortDir = filters.sort_dir ?? SORT_DEFAULT_DIR[sort];
   const dir = sortDir === "asc" ? 1 : -1;
 
   if (sort === "date" || sort === "rare") {

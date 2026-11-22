@@ -3,6 +3,7 @@ import type {
   ValidEdition,
   ValidGroupBy,
   ValidOnlineType,
+  ValidSortDirection,
 } from "@repo/cosmo/types/common";
 
 import { m } from "@/paraglide/messages";
@@ -17,32 +18,25 @@ export const ONLINE_TYPE_LABEL: Record<ValidOnlineType, () => string> = {
   offline: m.filter_physical,
 };
 
-export const SORT_LABEL: Record<ValidCustomSort, () => string> = {
-  date: m.filter_sort_by_date_label,
-  season: m.filter_sort_by_season_label,
-  collectionNo: m.filter_sort_by_collection_no_label,
-  member: m.filter_sort_by_member_label,
-  serial: m.filter_sort_by_serial_label,
-  duplicate: m.filter_sort_by_dups_label,
-  rare: m.filter_sort_by_rare_label,
-  price: m.filter_sort_by_price_label,
-  floor: m.filter_sort_by_floor_label,
-  listedAt: m.filter_sort_by_listed_label,
-  supply: m.filter_sort_by_supply_label,
-};
-
-export const SORT_DESC: Record<ValidCustomSort, () => string> = {
-  date: m.filter_sort_by_date_desc,
-  season: m.filter_sort_by_season_desc,
-  collectionNo: m.filter_sort_by_collection_no_desc,
-  member: m.filter_sort_by_member_desc,
-  serial: m.filter_sort_by_serial_desc,
-  duplicate: m.filter_sort_by_dups_desc,
-  rare: m.filter_sort_by_rare_desc,
-  price: m.filter_sort_by_price_desc,
-  floor: m.filter_sort_by_floor_desc,
-  listedAt: m.filter_sort_by_listed_desc,
-  supply: m.filter_sort_by_supply_desc,
+/** a sort's menu label names its direction, so the menu needs no separate arrow */
+export const SORT_OPTION_LABEL: Record<
+  ValidCustomSort,
+  Record<ValidSortDirection, () => string>
+> = {
+  date: { desc: m.filter_sort_option_date_desc, asc: m.filter_sort_option_date_asc },
+  season: { asc: m.filter_sort_option_season_asc, desc: m.filter_sort_option_season_desc },
+  collectionNo: {
+    asc: m.filter_sort_option_collection_no_asc,
+    desc: m.filter_sort_option_collection_no_desc,
+  },
+  member: { asc: m.filter_sort_option_member_asc, desc: m.filter_sort_option_member_desc },
+  serial: { asc: m.filter_sort_option_serial_asc, desc: m.filter_sort_option_serial_desc },
+  duplicate: { desc: m.filter_sort_option_dups_desc, asc: m.filter_sort_option_dups_asc },
+  rare: { asc: m.filter_sort_option_rare_asc, desc: m.filter_sort_option_rare_desc },
+  price: { asc: m.filter_sort_option_price_asc, desc: m.filter_sort_option_price_desc },
+  floor: { asc: m.filter_sort_option_floor_asc, desc: m.filter_sort_option_floor_desc },
+  listedAt: { desc: m.filter_sort_option_listed_desc, asc: m.filter_sort_option_listed_asc },
+  supply: { desc: m.filter_sort_option_supply_desc, asc: m.filter_sort_option_supply_asc },
 };
 
 export const GROUP_BY_LABEL: Record<ValidGroupBy, () => string> = {
