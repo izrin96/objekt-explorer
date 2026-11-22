@@ -1,3 +1,4 @@
+import { clientIp } from "@repo/lib/client-ip";
 import { RedisClient } from "bun";
 
 import { serverEnv } from "../env";
@@ -151,13 +152,9 @@ export async function rateLimit(key: string, windowSeconds: number): Promise<num
 const IP_RATE_LIMIT = 30;
 const IP_RATE_WINDOW_SECONDS = 60;
 
-/**
- * A best-effort per-IP limit protecting the upstream Cosmo API. Traefik
- * overwrites x-real-ip with the peer address; any other header arrives as the
- * client wrote it.
- */
+/** A best-effort per-IP limit protecting the upstream Cosmo API; the address is `clientIp`'s. */
 export function isIpRateLimited(scope: string, headers: Headers): Promise<boolean> {
-  const ip = headers.get("x-real-ip") ?? "unknown";
+  const ip = clientIp(headers) ?? "unknown";
   return rateLimitedFailOpen(scope, `${scope}:rl:${ip}`, IP_RATE_LIMIT, IP_RATE_WINDOW_SECONDS);
 }
 
@@ -251,7 +248,7 @@ export function userRateLimited(scope: string, userId: string, max: number, wind
 
 /** A per-IP limit, failing open (`rateLimitedFailOpen`); the address as `isIpRateLimited` reads it. */
 export function ipRateLimited(scope: string, headers: Headers, max: number, windowSeconds: number) {
-  const ip = headers.get("x-real-ip")?.trim() || "unknown";
+  const ip = clientIp(headers) ?? "unknown";
   return rateLimitedFailOpen(scope, `${scope}:rl:ip:${ip}`, max, windowSeconds);
 }
 

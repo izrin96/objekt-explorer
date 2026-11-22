@@ -1,5 +1,6 @@
 import { serverEnv } from "@repo/api/env";
 import { ipRateLimited } from "@repo/api/services/redis";
+import { clientIp } from "@repo/lib/client-ip";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { READ_DEADLINE_MS, readCapped } from "@/lib/server/error-tunnel";
@@ -9,12 +10,6 @@ const MAX_EVENT_BYTES = 16 * 1024;
 // one person sends one event per navigation; a shared address (mobile carrier NAT) sends more
 const PER_IP_PER_MINUTE = 120;
 const FORWARDED_HEADERS = ["content-type", "user-agent", "accept-language"];
-// Traefik overwrites x-real-ip with the peer address; any other header arrives
-// as the client wrote it
-function getClientIp(headers: Headers) {
-  return headers.get("x-real-ip")?.trim() || undefined;
-}
-
 // umami prioritizes payload ip over proxy headers, which its reverse proxy overwrites
 function withClientIp(body: string, ip: string) {
   try {
@@ -59,7 +54,7 @@ export const Route = createFileRoute("/m/e")({
           if (name.startsWith("x-umami-")) headers.set(name, value);
         });
 
-        const ip = getClientIp(request.headers);
+        const ip = clientIp(request.headers);
         let body = new TextDecoder().decode(read);
         if (ip) {
           headers.set("x-forwarded-for", ip);

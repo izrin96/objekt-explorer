@@ -1,6 +1,7 @@
 import { i18n } from "@better-auth/i18n";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
+import { CLIENT_IP_HEADERS } from "@repo/lib/client-ip";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
@@ -116,8 +117,8 @@ export const auth = betterAuth({
       : ["http://localhost:*", "http://127.0.0.1:*", "http://192.168.*.*:*", "http://10.*.*.*:*"],
   advanced: {
     ipAddress: {
-      // the only one Traefik overwrites; the rest arrive as the client wrote them
-      ipAddressHeaders: ["x-real-ip"],
+      // the first header with a valid address wins, so the order matches `clientIp`
+      ipAddressHeaders: [...CLIENT_IP_HEADERS],
     },
   },
   user: {
