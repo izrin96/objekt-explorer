@@ -2,7 +2,7 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, offer, offerItem } from "@repo/db/schema";
+import { listEntries, lists, offer, offerItem, tradePost } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import { type SQL, and, asc, desc, eq, gt, inArray, lt, notInArray, or, sql } from "drizzle-orm";
 
@@ -17,6 +17,7 @@ import {
   type CandidateCursor,
   type CandidateItem,
   type PartnerList,
+  type PartnerPost,
 } from "../../../schemas/offer";
 import type { PickerTag } from "../../../schemas/trade";
 import { fetchCollectionsBySlug } from "../../list/collections";
@@ -60,6 +61,8 @@ export type CandidatesPage = {
   lists?: PartnerList[];
   /** theirs, whole list only: the partner's want lists on Trade with entries; `buy` is true for a Buy post, a want list that leads its own post */
   wantLists?: { slug: string; name: string; buy: boolean }[];
+  /** theirs, whole list only: the partner's posts an offer can be on, in Offer on's order */
+  posts?: PartnerPost[];
   /** the partner's offer rules as they apply now, for the builder to follow */
   partnerRules?: PartnerRules;
   wanted: string[];
@@ -167,14 +170,21 @@ export async function wantedAmong(userId: string, slugs: string[]) {
 }
 
 /**
- * Of `slugs`, those on the want list paired with the post `postListId`, or null when that post
- * has no want list on Trade (or an empty one), which callers read as "no objekts".
+ * Of `slugs`, those on the want list paired with the post `postListId` leads, or null when that
+ * post has no want list on Trade (or an empty one), which callers read as "no objekts". With
+ * `row`, the post the sender named: that row's want list.
  */
-export async function postWantedAmong(postListId: number, slugs: string[]) {
-  const [post] = await db
-    .select({ want: postPartnerSql("lists") })
-    .from(lists)
-    .where(eq(lists.id, postListId));
+export async function postWantedAmong(postListId: number, slugs: string[], row?: number) {
+  const [post] =
+    row === undefined
+      ? await db
+          .select({ want: postPartnerSql("lists") })
+          .from(lists)
+          .where(eq(lists.id, postListId))
+      : await db
+          .select({ want: tradePost.wantListId })
+          .from(tradePost)
+          .where(eq(tradePost.id, row));
   if (post?.want == null) return null;
   return wantedOn(
     and(eq(lists.id, post.want), eq(lists.listType, "want"), eq(lists.discoverable, true)),

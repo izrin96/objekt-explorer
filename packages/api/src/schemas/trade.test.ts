@@ -5,8 +5,6 @@ import {
   fullestFilter,
   mutualCountInputSchema,
   peopleInputSchema,
-  postRefOf,
-  resolvePostRef,
   tradePostInputSchema,
 } from "./trade";
 
@@ -90,66 +88,20 @@ describe("feed inputs", () => {
 });
 
 describe("tradePostInputSchema", () => {
-  test("an open tab's { listId } parses to the same data", () => {
-    expect(tradePostInputSchema.parse({ listId: 812 })).toEqual({ listId: 812 });
-  });
-
-  test("takes postId, alone or with the old field", () => {
-    expect(tradePostInputSchema.parse({ postId: 1000123 })).toEqual({ postId: 1000123 });
+  test("a tab of the build before this one sends { postId, listId }: it parses to postId alone", () => {
     expect(tradePostInputSchema.parse({ postId: 1000123, listId: 812 })).toEqual({
       postId: 1000123,
-      listId: 812,
     });
+    expect(tradePostInputSchema.parse({ postId: 1000123 })).toEqual({ postId: 1000123 });
+  });
+
+  test("a tab from before post ids sends { listId } alone, which is refused", () => {
+    expect(tradePostInputSchema.safeParse({ listId: 812 }).success).toBe(false);
   });
 
   test("refuses an input naming no post, and ids that are not positive integers", () => {
-    for (const bad of [{}, { postId: 0 }, { listId: -1 }, { postId: 1.5 }]) {
+    for (const bad of [{}, { postId: 0 }, { postId: -1 }, { postId: 1.5 }]) {
       expect(tradePostInputSchema.safeParse(bad).success).toBe(false);
     }
-  });
-});
-
-describe("postRefOf", () => {
-  test("keeps each id the input sent", () => {
-    expect(postRefOf(1000123, undefined)).toEqual({ postId: 1000123 });
-    expect(postRefOf(1000123, 812)).toEqual({ postId: 1000123, legacyId: 812 });
-    expect(postRefOf(undefined, 812)).toEqual({ legacyId: 812 });
-  });
-
-  test("neither names no post", () => {
-    expect(postRefOf(undefined, undefined)).toBeNull();
-  });
-});
-
-describe("resolvePostRef", () => {
-  const rows = new Set([1000123, 1000456]);
-  const isRow = (id: number) => rows.has(id);
-
-  test("a postId that is a row is that row, whatever the old field holds", () => {
-    expect(resolvePostRef({ postId: 1000123, legacyId: 812 }, isRow)).toEqual({
-      kind: "row",
-      id: 1000123,
-    });
-  });
-
-  test("the old field alone: a row id is that row, a list id is the list", () => {
-    expect(resolvePostRef({ legacyId: 1000456 }, isRow)).toEqual({ kind: "row", id: 1000456 });
-    expect(resolvePostRef({ legacyId: 812 }, isRow)).toEqual({ kind: "list", id: 812 });
-  });
-
-  test("a postId that names no row falls back to the old field", () => {
-    // a tab of this build that refetched the old feed during a rollback: post.id is a list id
-    expect(resolvePostRef({ postId: 812, legacyId: 812 }, isRow)).toEqual({
-      kind: "list",
-      id: 812,
-    });
-    expect(resolvePostRef({ postId: 999999999, legacyId: 1000456 }, isRow)).toEqual({
-      kind: "row",
-      id: 1000456,
-    });
-  });
-
-  test("a postId that names no row, with no old field, names nothing", () => {
-    expect(resolvePostRef({ postId: 812 }, isRow)).toBeNull();
   });
 });

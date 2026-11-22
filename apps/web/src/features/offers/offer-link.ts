@@ -14,8 +14,10 @@ export type OfferStart = {
   handle: string;
   /** one of their lists, or the conversation; neither addresses the person */
   to?: { list: string } | { conversation: number };
-  /** the row's matches, or with `post` one post's */
-  matches?: { list?: string; mutual?: boolean; post?: string };
+  /** the row's matches, or with `post` (its lead's slug) and `postId` one post's */
+  matches?: { list?: string; mutual?: boolean; post?: string; postId?: number };
+  /** the post the builder starts from, when no matches name it */
+  postId?: number;
   /** Make offer with it: a near match's collection */
   near?: string;
   /** the offer being countered */
@@ -42,6 +44,9 @@ export const offerSearchSchema = z.object({
   to: text,
   conversation: id,
   match: z.enum(["row", "post"]).optional().catch(undefined),
+  /** the post the offer starts from */
+  postId: id,
+  /** that post's lead list, which a URL from before post ids names alone */
   post: text,
   /** Compare with: one of the viewer's lists */
   list: text,
@@ -65,6 +70,9 @@ export function offerLink(start: OfferStart) {
     ...(to && "list" in to && { to: to.list }),
     ...(to && "conversation" in to && { conversation: to.conversation }),
     ...(matches && { match: matches.post ? ("post" as const) : ("row" as const) }),
+    ...((start.postId ?? matches?.postId) !== undefined && {
+      postId: start.postId ?? matches?.postId,
+    }),
     ...(matches?.post && { post: matches.post }),
     ...(matches?.list && { list: matches.list }),
     ...(matches?.mutual && { mutual: true }),
@@ -119,11 +127,13 @@ export function requestOf(
     ...(search.counter !== undefined && { counter: search.counter }),
     ...(ask && { prefill: ask }),
     ...(search.start !== undefined && { startList: search.start }),
+    ...(search.postId !== undefined && { startPost: search.postId }),
     ...(matched && {
       matches: {
         partnerId: partner.userId,
         ...(search.list !== undefined && { list: search.list }),
         ...(search.mutual && { mutual: true }),
+        ...(post !== undefined && search.postId !== undefined && { postId: search.postId }),
         ...(post !== undefined && { post }),
         ...(post === undefined && search.to !== undefined && { lead: search.to }),
       },
@@ -144,6 +154,7 @@ export function listSlugsOf(search: OfferSearch) {
 export function withoutLists(search: OfferSearch): OfferSearch {
   const {
     to: _to,
+    postId: _postId,
     post: _post,
     start: _start,
     match: _match,

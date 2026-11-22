@@ -19,6 +19,8 @@ export type OfferMatches = {
   partnerId: string;
   list?: string;
   mutual?: boolean;
+  /** one post's matches: its id, which wins over `post`, its lead's slug */
+  postId?: number;
   post?: string;
   /** a row's lead post, which wins a tie when the partner takes asks from one post */
   lead?: string;
@@ -33,6 +35,8 @@ export type AddedMatches = {
   postName: string | null;
   /** that list's slug: the post the offer is on */
   postSlug: string | null;
+  /** that post's id; null from a server before post ids */
+  postId: number | null;
   /** the want list You give's matches came from, when You give won */
   wantSlug: string | null;
   /** near matches still waiting on their lines, never added on their own */
@@ -52,6 +56,8 @@ export type OfferRequest = {
   prefill?: OfferPrefill;
   /** a list of theirs You get's List choice opens on, as a Market listing's sale list */
   startList?: string;
+  /** the post Offer on opens on */
+  startPost?: number;
   /** read the matches before the sides show, and add them */
   matches?: OfferMatches;
   /** Make offer with it: this collection's near match is added at open, beside the matches */

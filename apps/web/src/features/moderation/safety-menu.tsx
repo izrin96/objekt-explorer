@@ -27,8 +27,8 @@ export function SafetyMenu({
   report?: boolean;
   /** the viewer's own block, which turns Block into Unblock */
   blockedByMe?: boolean;
-  /** the Trade post Report… names, by its id and its anchor list's id */
-  post?: { postId: number; listId: number; attachment: string };
+  /** the Trade post Report… names, by its id */
+  post?: { postId: number; attachment: string };
   /** the surface's own items, above Block */
   extraItems?: ReactNode;
   className?: string;
@@ -61,7 +61,7 @@ function SafetyMenuInner({
   name: string;
   report: boolean;
   blockedByMe: boolean;
-  post: { postId: number; listId: number; attachment: string } | undefined;
+  post: { postId: number; attachment: string } | undefined;
   extraItems: ReactNode;
   className?: string;
 }) {

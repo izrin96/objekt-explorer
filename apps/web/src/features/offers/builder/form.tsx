@@ -52,11 +52,12 @@ import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
 import {
-  buyPostsOf,
   chosenPostOf,
   giveRule,
   offerOnOf,
   openPostOf,
+  postChoicesOf,
+  postKeyOf,
   postProblem,
   startWantOf,
 } from "./post-choice";
@@ -114,19 +115,23 @@ export function BuilderForm({
 
   const theirs = useQuery(theirCandidatesOptions(to));
   const rules = theirs.data?.partnerRules;
-  const theirLists = theirs.data?.lists ?? [];
   // unknown until the partner's lists have loaded; an error leaves it on lists, which refuse alone
   const source: GetSource | undefined = theirs.isPending ? undefined : sourceOf(theirs.data ?? {});
-  // the partner's lists on Trade are the posts an offer can be on
-  const posts = source === "lists" ? theirLists : [];
-  // every offer to a partner with lists is on one of them: the sender chooses it under Offer on
+  // every offer to a partner with lists is on one of their posts: the sender chooses it under
+  // Offer on, from their posts on Trade while You get asks from lists, then their Buy posts; a
+  // counter offers no Buy post, as it answers the partner's own offer
   const onePost = rules?.onePost === true;
   const wantLists = theirs.data?.wantLists ?? [];
-  const buyPosts = buyPostsOf(wantLists);
-  // a counter offers no Buy post: it answers the partner's own offer
-  const choices: (((typeof posts)[number] & { buy?: boolean }) | (typeof buyPosts)[number])[] =
-    onePost ? [...posts, ...(request.counter === undefined ? buyPosts : [])] : [];
+  const choices = onePost
+    ? postChoicesOf(theirs.data ?? {}, {
+        lists: source === "lists",
+        buy: request.counter === undefined,
+      })
+    : [];
   const openPost = openPostOf(choices, {
+    startPost: request.startPost,
+    matchesPostId: request.matches?.postId,
+    addedPostId: added?.postId,
     startList: request.startList,
     matchesPost: request.matches?.post,
     addedPost: added?.postSlug ?? added?.wantSlug,
@@ -135,11 +140,11 @@ export function BuilderForm({
   });
   // undefined until the sender chooses
   const [chosenPost, setChosenPost] = useState<string | undefined>(undefined);
-  const postSlug = onePost ? chosenPostOf(choices, chosenPost, openPost) : null;
-  const listName = (slug: string | null) =>
-    [...theirLists, ...buyPosts].find((list) => list.slug === slug)?.name;
-  const postName = listName(postSlug) ?? null;
-  const onBuyPost = choices.some((post) => post.buy === true && post.slug === postSlug);
+  const postKey = onePost ? chosenPostOf(choices, chosenPost, openPost) : null;
+  const chosen = choices.find((post) => postKeyOf(post) === postKey) ?? null;
+  const postSlug = chosen?.slug ?? null;
+  const postName = chosen?.name ?? null;
+  const onBuyPost = chosen?.buy === true;
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
@@ -187,7 +192,7 @@ export function BuilderForm({
     target: "target" in to && to.target.kind === "list" ? to.target.slug : undefined,
   });
   const offerOn = offerOnOf({
-    postSlug,
+    postKey,
     posts: choices,
     startWant,
     newAsk,
@@ -333,7 +338,7 @@ export function BuilderForm({
     }
     if (onBuyPost) return m.offer_rule_buy_post({ post: postName ?? postSlug! });
     if (rules?.asksClosed && source === "collection") return m.offer_rule_asks_closed({ name });
-    if (posts.length < 2) return null;
+    if (choices.filter((post) => !post.buy).length < 2) return null;
     return m.offer_rule_one_post();
   };
   const shown = { give: giveShown, get: getShown };
@@ -383,12 +388,15 @@ export function BuilderForm({
         status={region !== undefined}
         sides={
           <>
-            {choices.length > 1 && postSlug !== null && openPost !== undefined ? (
+            {choices.length > 1 && postKey !== null && openPost !== undefined ? (
               <div className="flex">
                 <SingleSelect
                   label={m.offer_post_label()}
-                  options={choices.map(listOption)}
-                  value={postSlug}
+                  options={choices.map((post) => {
+                    const { label, text } = listOption(post);
+                    return { value: postKeyOf(post), label, text };
+                  })}
+                  value={postKey}
                   defaultValue={openPost}
                   showValue
                   onChange={setChosenPost}

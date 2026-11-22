@@ -488,15 +488,16 @@ export const offer = pgTable(
       .default(sql`now() + interval '7 days'`),
     respondedAt: timestamp("responded_at", { mode: "string", withTimezone: true }),
     /**
-     * the recipient's have or sale post the offer is on: the sender's choice, else the one every
-     * ask came from; null for a partner with no posts, a counter asking only for kept objekts, a
-     * gives-only offer started from a want list (a Buy post), or a client that named no post.
-     * It is the offer's history, which every reader uses (`packages/api/docs/offers.md`)
+     * the list that led the recipient's post the offer was sent on: the sender's choice, else the
+     * one every ask came from; null for a partner with no posts, a counter asking only for kept
+     * objekts, or a client that named no post. "Offer on" falls back to it once `post_id`'s row is
+     * gone (`packages/api/docs/offers.md`)
      */
     postListId: integer("post_list_id").references(() => lists.id, { onDelete: "set null" }),
     /**
-     * the lowest `trade_post` row `post_list_id` led when the offer was sent: an address for later
-     * features, not history; NULL with it
+     * the `trade_post` row the offer is on: the post the sender named while `post_list_id` leads
+     * it, else the lowest row that list led when the offer was sent; NULL with it. "Offer on"
+     * reads this post's lead as it is now
      */
     postId: integer("post_id").references(() => tradePost.id, { onDelete: "set null" }),
   },

@@ -3,9 +3,11 @@ import { describe, expect, test } from "bun:test";
 import {
   type CandidateItem,
   candidatesInputSchema,
+  createOfferInputSchema,
   listedAsAny,
   noteObjekts,
   offerPayloadSchema,
+  suggestInputSchema,
   tradePayloadSchema,
   tradeViewSchema,
 } from "./offer";
@@ -192,5 +194,41 @@ describe("candidatesInputSchema cursor", () => {
   test("sort and transferableOnly are optional", () => {
     expect(candidatesInputSchema.safeParse({ ...base }).success).toBe(true);
     expect(candidatesInputSchema.safeParse({ ...base, sort: "newest" }).success).toBe(false);
+  });
+});
+
+describe("offer inputs from a tab of the build before postId", () => {
+  const give = [{ collectionSlug: "binary01-seoyeon-101z", objektId: "1001" }];
+  const conversationId = 7;
+
+  test("offer.create with post alone parses to the same data", () => {
+    const input = { conversationId, give, get: [], post: "doubles" };
+    expect(createOfferInputSchema.parse(input)).toEqual(input);
+  });
+
+  test("offer.create with wantList alone parses to the same data", () => {
+    const input = { conversationId, give, get: [], wantList: "looking" };
+    expect(createOfferInputSchema.parse(input)).toEqual(input);
+  });
+
+  test("offer.suggest with partnerId, post and lead parses to the same data", () => {
+    const input = { partnerId: "u1", post: "doubles", lead: "doubles" };
+    expect(suggestInputSchema.parse(input)).toEqual(input);
+  });
+
+  test("postId is read beside the legacy slug", () => {
+    expect(
+      createOfferInputSchema.parse({
+        conversationId,
+        give,
+        get: [],
+        postId: 1000123,
+        post: "doubles",
+      }),
+    ).toMatchObject({ postId: 1000123, post: "doubles" });
+    expect(suggestInputSchema.parse({ partnerId: "u1", postId: 1000123 })).toEqual({
+      partnerId: "u1",
+      postId: 1000123,
+    });
   });
 });

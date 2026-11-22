@@ -263,3 +263,57 @@ describe("lists a URL names", () => {
     expect(withoutLists(search).from).toBe("/trade");
   });
 });
+
+describe("a post named by its id", () => {
+  test("one post's matches carry its id and its lead's slug, and Offer on starts there", () => {
+    const { link, request } = roundTrip({
+      handle: "rin.trades",
+      to: { list: "spares001" },
+      startList: "spares001",
+      matches: { post: "spares001", postId: 1000123 },
+    });
+    expect(link.search).toMatchObject({ match: "post", postId: 1000123, post: "spares001" });
+    expect(request).toEqual({
+      to: { target: { kind: "list", slug: "spares001" } },
+      name: "rin.trades",
+      startList: "spares001",
+      startPost: 1000123,
+      matches: { partnerId: "u-rin", postId: 1000123, post: "spares001" },
+    });
+  });
+
+  test("a start with no matches carries the post alone", () => {
+    const { link, request } = roundTrip({
+      handle: "rin.trades",
+      to: { list: "spares001" },
+      startList: "spares001",
+      postId: 1000123,
+      ask: { collectionSlug: "artms-seoyeon-204z", objektId: null, serial: null },
+    });
+    expect(link.search).toMatchObject({ postId: 1000123 });
+    expect(request.startPost).toBe(1000123);
+    expect(request.matches).toBeUndefined();
+  });
+
+  test("an id the URL parser read as a string comes back as a number", () => {
+    const search = offerSearchSchema.parse({ match: "post", postId: "1000123", post: "spares001" });
+    expect(requestOf(search, partner).matches).toEqual({
+      partnerId: "u-rin",
+      postId: 1000123,
+      post: "spares001",
+    });
+  });
+
+  test("a URL from before post ids, with ?post= alone, starts where it did", () => {
+    const search = offerSearchSchema.parse({ match: "post", post: "spares001" });
+    const request = requestOf(search, partner);
+    expect(request.startPost).toBeUndefined();
+    expect(request.matches).toEqual({ partnerId: "u-rin", post: "spares001" });
+  });
+
+  test("a search whose lists aren't the person's drops the post's id with them", () => {
+    const search = offerSearchSchema.parse({ match: "post", postId: 1000123, post: "spares001" });
+    expect(withoutLists(search)).toEqual({});
+    expect(listSlugsOf(search)).toEqual(["spares001"]);
+  });
+});

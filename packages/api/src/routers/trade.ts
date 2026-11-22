@@ -17,7 +17,6 @@ import {
   tabCountsOutputSchema,
   takeDownPostInputSchema,
   tradePartnerInputSchema,
-  postRefOf,
   tradePostInputSchema,
   unshownEntriesInputSchema,
 } from "../schemas/trade";
@@ -232,21 +231,18 @@ export const tradeRouter = {
 
   /**
    * Only another account's post on Trade is hidden; any other id gets the same empty response,
-   * so the call never tells whether a post or a list exists. `postId` names the post; the old
-   * `listId`, alone, is a list id or a row id for one release.
+   * so the call never tells whether a post exists.
    */
   hidePost: authed
     .input(tradePostInputSchema)
-    .handler(async ({ input: { postId, listId }, context: { session } }) => {
-      const ref = postRefOf(postId, listId);
-      if (ref) await hidePost(session.user.id, ref);
+    .handler(async ({ input: { postId }, context: { session } }) => {
+      await hidePost(session.user.id, postId);
     }),
 
   unhidePost: authed
     .input(tradePostInputSchema)
-    .handler(async ({ input: { postId, listId }, context: { session } }) => {
-      const ref = postRefOf(postId, listId);
-      if (ref) await unhidePost(session.user.id, ref);
+    .handler(async ({ input: { postId }, context: { session } }) => {
+      await unhidePost(session.user.id, postId);
     }),
 
   hiddenPosts: authed.handler(({ context: { session } }) => fetchHiddenPosts(session.user.id)),

@@ -22,9 +22,10 @@
  * sale list and the want list as posts of their own. The writers never write that row. The check
  * also counts such a row whose lead the feed does not show, which errs toward a stop.
  *
- * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
- * row to another list, or Edit post swapped or dropped any of the post's lists, and an offer
- * made by the old build after the migration has no post id, so neither is wrong data.
+ * One offer count is printed as a note and never sets the exit code: an offer whose list leads a
+ * row but which has no post id, made by the build before `offer.post_id` or left by a merge that
+ * deleted its row, reads its "Offer on" line through `post_list_id`, which is not wrong data. An
+ * offer on a post now led by another list is no note: "Offer on" reads the post as it is now.
  *
  * Plain reads only, and it refuses to start unless the connection is read-only:
  *
@@ -114,11 +115,6 @@ const CHECKS: [label: string, query: SQL][] = [
 
 /** Counted and printed like the checks, but information: they never count as drift. */
 const NOTES: [label: string, query: SQL][] = [
-  [
-    "an offer on a post now led by another list, its own list still there (offer ids)",
-    sql`SELECT o.id FROM offer o JOIN trade_post tp ON tp.id = o.post_id
-        WHERE o.post_list_id IS NOT NULL AND tp.lead_list_id <> o.post_list_id`,
-  ],
   [
     "an offer on a list that leads a row, with no post id (offer ids)",
     sql`SELECT o.id FROM offer o

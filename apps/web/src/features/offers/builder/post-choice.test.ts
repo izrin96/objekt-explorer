@@ -6,6 +6,8 @@ import {
   giveRule,
   offerOnOf,
   openPostOf,
+  postChoicesOf,
+  postKeyOf,
   postProblem,
   startWantOf,
 } from "./post-choice";
@@ -82,8 +84,8 @@ describe("buyPostsOf", () => {
         { slug: "b", name: "B", buy: true },
       ]),
     ).toEqual([
-      { slug: "a", name: "A", type: "want", want: null, buy: true },
-      { slug: "b", name: "B", type: "want", want: null, buy: true },
+      { postId: null, slug: "a", name: "A", type: "want", want: null, buy: true },
+      { postId: null, slug: "b", name: "B", type: "want", want: null, buy: true },
     ]);
   });
 });
@@ -162,10 +164,10 @@ describe("offerOnOf", () => {
     { slug: "doubles", want: "hunting" },
     { slug: "extras", want: null },
   ];
-  const base = { postSlug: "doubles", posts, startWant: undefined, newAsk: false, counter: false };
+  const base = { postKey: "doubles", posts, startWant: undefined, newAsk: false, counter: false };
 
   test("1: a new ask with no posts", () => {
-    expect(offerOnOf({ ...base, posts: [], postSlug: null, newAsk: true })).toEqual({
+    expect(offerOnOf({ ...base, posts: [], postKey: null, newAsk: true })).toEqual({
       gives: "every",
       input: {},
     });
@@ -179,7 +181,7 @@ describe("offerOnOf", () => {
   });
 
   test("3: a new ask on a post without one", () => {
-    expect(offerOnOf({ ...base, postSlug: "extras", newAsk: true })).toEqual({
+    expect(offerOnOf({ ...base, postKey: "extras", newAsk: true })).toEqual({
       gives: "none",
       input: { post: "extras" },
     });
@@ -198,8 +200,8 @@ describe("offerOnOf", () => {
       gives: { want: "lookingfor", buy: true },
       input: { wantList: "lookingfor" },
     };
-    expect(offerOnOf({ ...base, posts: withBuy, postSlug: "lookingfor" })).toEqual(expected);
-    expect(offerOnOf({ ...base, posts: withBuy, postSlug: "lookingfor", newAsk: true })).toEqual(
+    expect(offerOnOf({ ...base, posts: withBuy, postKey: "lookingfor" })).toEqual(expected);
+    expect(offerOnOf({ ...base, posts: withBuy, postKey: "lookingfor", newAsk: true })).toEqual(
       expected,
     );
   });
@@ -212,7 +214,7 @@ describe("offerOnOf", () => {
   });
 
   test("a start with no posts sends its want list, and with a new ask sends nothing", () => {
-    const none = { ...base, posts: [], postSlug: null, startWant: "lookingfor" };
+    const none = { ...base, posts: [], postKey: null, startWant: "lookingfor" };
     expect(offerOnOf(none)).toEqual({
       gives: { want: "lookingfor", buy: true },
       input: { wantList: "lookingfor" },
@@ -235,14 +237,14 @@ describe("offerOnOf", () => {
   });
 
   test("7: no ask on a post without one", () => {
-    expect(offerOnOf({ ...base, postSlug: "extras" })).toEqual({
+    expect(offerOnOf({ ...base, postKey: "extras" })).toEqual({
       gives: "none",
       input: { post: "extras" },
     });
   });
 
   test("8: no ask and no posts", () => {
-    expect(offerOnOf({ ...base, posts: [], postSlug: null })).toEqual({
+    expect(offerOnOf({ ...base, posts: [], postKey: null })).toEqual({
       gives: "every",
       input: {},
     });
@@ -273,5 +275,103 @@ describe("giveRule", () => {
 
   test("every want list with none on Trade filters nothing", () => {
     expect(giveRule({ ...on, wantsOnTrade: false }, "every")).toBeNull();
+  });
+});
+
+describe("Offer on by post id", () => {
+  const lists = [
+    { slug: "doubles", name: "doubles", type: "have" as const, want: "hunting" },
+    { slug: "sale", name: "for sale", type: "sale" as const, want: null },
+  ];
+  const wantLists = [
+    { slug: "lookingfor", name: "looking for", buy: true },
+    { slug: "hunting", name: "hunting", buy: false },
+  ];
+  const posts = [
+    { postId: 1000200, lead: "doubles", want: "hunting", buy: false },
+    { postId: 1000300, lead: "doubles", want: null, buy: false },
+    { postId: 1000201, lead: "sale", want: null, buy: false },
+    { postId: 1000100, lead: "lookingfor", want: null, buy: true },
+  ];
+  const choices = postChoicesOf({ lists, wantLists, posts }, { lists: true, buy: true });
+
+  test("one choice per post, keyed by its id, named by its lead", () => {
+    expect(choices.map((c) => [postKeyOf(c), c.slug, c.name, c.type, c.want, c.buy])).toEqual([
+      ["1000200", "doubles", "doubles", "have", "hunting", false],
+      ["1000300", "doubles", "doubles", "have", null, false],
+      ["1000201", "sale", "for sale", "sale", null, false],
+      ["1000100", "lookingfor", "looking for", "want", null, true],
+    ]);
+  });
+
+  test("a counter offers no Buy post, and a partner asked by collection no list post", () => {
+    expect(postChoicesOf({ lists, wantLists, posts }, { lists: true, buy: false })).toHaveLength(3);
+    expect(
+      postChoicesOf({ lists, wantLists, posts }, { lists: false, buy: true }).map(postKeyOf),
+    ).toEqual(["1000100"]);
+  });
+
+  test("from a server before posts, choices are the lists, keyed by slug", () => {
+    const old = postChoicesOf({ lists, wantLists }, { lists: true, buy: true });
+    expect(old.map((c) => [postKeyOf(c), c.postId])).toEqual([
+      ["doubles", null],
+      ["sale", null],
+      ["lookingfor", null],
+    ]);
+  });
+
+  test("opens on the post the builder started from, then the matches' post, then the added one", () => {
+    const from = { startPost: 1000300, matchesPostId: 1000201, addedPostId: 1000100 };
+    expect(openPostOf(choices, from)).toBe("1000300");
+    expect(openPostOf(choices, { ...from, startPost: undefined })).toBe("1000201");
+    expect(openPostOf(choices, { addedPostId: 1000100 })).toBe("1000100");
+  });
+
+  test("the start and a row's matches win over the suggestion's post, as by slug before", () => {
+    // a post page's Make offer: the start is the post, the suggestion may come from another one
+    expect(openPostOf(choices, { startList: "sale", addedPostId: 1000200 })).toBe("1000201");
+    expect(openPostOf(choices, { matchesPost: "sale", addedPostId: 1000100 })).toBe("1000201");
+    expect(
+      openPostOf(choices, { startList: "sale", matchesPostId: 1000300, addedPostId: 1000200 }),
+    ).toBe("1000201");
+  });
+
+  test("an id among no choice falls to the slug inputs", () => {
+    expect(openPostOf(choices, { startPost: 42, startList: "sale" })).toBe("1000201");
+    expect(openPostOf(choices, { matchesPostId: 42 })).toBe("1000200");
+  });
+
+  test("the chosen key is kept only while it is a choice", () => {
+    expect(chosenPostOf(choices, "1000300", "1000200")).toBe("1000300");
+    expect(chosenPostOf(choices, "doubles", "1000200")).toBe("1000200");
+  });
+
+  test("the request names the post by id and by its lead's slug", () => {
+    const base = { posts: choices, startWant: undefined, newAsk: true, counter: false };
+    expect(offerOnOf({ ...base, postKey: "1000300" })).toEqual({
+      gives: "none",
+      input: { postId: 1000300, post: "doubles" },
+    });
+    expect(offerOnOf({ ...base, postKey: "1000200" })).toEqual({
+      gives: { want: "hunting", buy: false },
+      input: { postId: 1000200, post: "doubles" },
+    });
+    expect(offerOnOf({ ...base, postKey: "1000100", newAsk: false })).toEqual({
+      gives: { want: "lookingfor", buy: true },
+      input: { postId: 1000100, wantList: "lookingfor" },
+    });
+  });
+
+  test("a choice with no post id sends the slug alone", () => {
+    const old = postChoicesOf({ lists, wantLists }, { lists: true, buy: true });
+    expect(
+      offerOnOf({
+        posts: old,
+        postKey: "doubles",
+        startWant: undefined,
+        newAsk: true,
+        counter: false,
+      }).input,
+    ).toEqual({ post: "doubles" });
   });
 });

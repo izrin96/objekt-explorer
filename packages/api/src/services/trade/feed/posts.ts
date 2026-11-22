@@ -180,7 +180,6 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
 
       posts.push({
         id: post.anchor.postId,
-        postId: post.anchor.postId,
         tags: post.tags,
         narrowed,
         hidden: row.hidden,

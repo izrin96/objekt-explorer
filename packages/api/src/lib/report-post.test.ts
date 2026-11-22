@@ -114,7 +114,7 @@ describe("postSnapshot", () => {
 });
 
 describe("reportInputSchema", () => {
-  test("an open tab's input, with no postListId, parses to the same data as before", () => {
+  test("an input naming no post parses to the same data as before", () => {
     const old = { userId: "rin", reason: "scam", note: "paid first", tradeId: 4 };
     expect(reportInputSchema.parse(old)).toEqual({
       userId: "rin",
@@ -126,36 +126,25 @@ describe("reportInputSchema", () => {
     });
   });
 
-  test("an open tab's postListId alone parses to the same data", () => {
+  test("a tab of the build before this one sends { postId, postListId }: it parses to postId alone", () => {
+    expect(
+      reportInputSchema.parse({ userId: "rin", reason: "spam", postId: 1000123, postListId: 7 }),
+    ).toEqual({ userId: "rin", reason: "spam", postId: 1000123, share: true, alsoBlock: false });
+  });
+
+  test("a tab from before post ids sends postListId alone: it is stripped, so the report names no post", () => {
     expect(reportInputSchema.parse({ userId: "rin", reason: "spam", postListId: 7 })).toEqual({
       userId: "rin",
       reason: "spam",
-      postListId: 7,
       share: true,
       alsoBlock: false,
     });
   });
 
-  test("postId is a positive integer, kept beside postListId", () => {
-    const parsed = reportInputSchema.parse({
-      userId: "rin",
-      reason: "spam",
-      postId: 1000123,
-      postListId: 7,
-    });
-    expect([parsed.postId, parsed.postListId]).toEqual([1000123, 7]);
+  test("postId is a positive integer", () => {
     expect(reportInputSchema.safeParse({ userId: "rin", reason: "spam", postId: 0 }).success).toBe(
       false,
     );
-  });
-
-  test("postListId is a positive integer", () => {
-    expect(
-      reportInputSchema.parse({ userId: "rin", reason: "spam", postListId: 7 }).postListId,
-    ).toBe(7);
-    expect(
-      reportInputSchema.safeParse({ userId: "rin", reason: "spam", postListId: 0 }).success,
-    ).toBe(false);
   });
 });
 

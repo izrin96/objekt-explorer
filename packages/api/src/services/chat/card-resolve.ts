@@ -41,21 +41,16 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
 }
 
 /**
- * A post is a list shown on Trade that the partner owns, and with `postId`, when a row has that
- * id, a row holding that list with the list's side on Trade; a match is the server's, never the
- * client's. A `postId` that names no row is read as absent: a tab of this build that refetched the
- * old feed during a rollback sends a list id there, and the card then names its list alone.
+ * A post is a list shown on Trade that the partner owns, and with `postId`, a row holding that list
+ * with the list's side on Trade; a match is the server's, never the client's. Without `postId` (a
+ * tab from before it) the card names its list alone.
  */
 async function resolvePostCard(
   input: PostCardInput,
   { senderId, partnerId }: CardContext,
 ): Promise<{ stored: StoredPostCard; list: CardList }> {
-  const namedRow =
-    input.postId === undefined
-      ? sql<boolean>`false`
-      : sql<boolean>`EXISTS (SELECT 1 FROM trade_post named_row WHERE named_row.id = ${input.postId})`;
   const [list] = await db
-    .select({ id: lists.id, listType: lists.listType, namedRow })
+    .select({ id: lists.id, listType: lists.listType })
     .from(lists)
     .where(
       and(
@@ -66,12 +61,12 @@ async function resolvePostCard(
         notTradeSanctioned(sql`${lists.userId}`),
         input.postId === undefined
           ? undefined
-          : sql`(NOT ${namedRow} OR EXISTS (
+          : sql`EXISTS (
               SELECT 1 FROM trade_post card_row
               WHERE card_row.id = ${input.postId}
                 AND ((card_row.lead_list_id = ${lists.id} AND card_row.lead_on_trade)
                   OR (card_row.want_list_id = ${lists.id} AND card_row.want_on_trade))
-            ))`,
+            )`,
       ),
     );
   if (!list) refuseChat("invalid_card");
@@ -80,7 +75,7 @@ async function resolvePostCard(
     stored: {
       kind: "post",
       listId: list.id,
-      ...(input.postId !== undefined && list.namedRow ? { postId: input.postId } : {}),
+      ...(input.postId !== undefined ? { postId: input.postId } : {}),
       ...(match ? { match } : {}),
     },
     list: { ownerId: partnerId, listType: list.listType },

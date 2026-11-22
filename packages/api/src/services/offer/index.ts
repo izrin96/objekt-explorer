@@ -3,7 +3,7 @@ import { listEntries, lists, offer, offerItem, tradePost, userSanction } from "@
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { firstListed } from "../../lib/chat-rules";
-import { givesRuleOf, placeAsks, unwantedGives } from "../../lib/offer-recipient-rules";
+import { givesRuleOf, namedRowOf, placeAsks, unwantedGives } from "../../lib/offer-recipient-rules";
 import {
   type ActorLimits,
   anyCopyScope,
@@ -44,6 +44,7 @@ import {
   offerRulesOf,
   partnerHasLists,
   resolvePostList,
+  resolvePostRow,
   resolveWantList,
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
@@ -127,7 +128,9 @@ export async function createOffer(
   const firstRead =
     startCtx === null && addressed.empty ? prepareFirst(me, meCreatedAt, partnerId) : null;
   // none of these reads refuses, so the refusals below keep their order
-  const [firstCtx, safety, addresses, entries, kept, hasLists, rules, postListId, wantListId] =
+  // `postId` names the post; the slugs are read only from a tab of the build before it
+  const byRow = input.postId !== undefined;
+  const [firstCtx, safety, addresses, entries, kept, hasLists, rules, postRow, slugPost, slugWant] =
     await Promise.all([
       startCtx ?? firstRead,
       startCtx?.safety ?? firstRead?.then((ctx) => ctx.safety) ?? chatSafety(me, partnerId),
@@ -139,9 +142,12 @@ export async function createOffer(
       counteredGives(addressed.conversationId, me),
       partnerHasLists(partnerId),
       offerRulesOf(partnerId),
-      resolvePostList(partnerId, input.post),
-      resolveWantList(partnerId, input.wantList),
+      resolvePostRow(partnerId, input.postId),
+      byRow ? null : resolvePostList(partnerId, input.post),
+      byRow ? null : resolveWantList(partnerId, input.wantList),
     ]);
+  const postListId = byRow ? (postRow?.post ?? null) : slugPost;
+  const wantListId = byRow ? (postRow?.wantList ?? null) : slugWant;
   const myAddresses = addresses.get(me)!;
   if (myAddresses.size === 0) refuseOffer("no_address");
   refuseUnsafe("send", safety);
@@ -167,7 +173,9 @@ export async function createOffer(
     counter: input.counters !== undefined,
     onPost,
     wantList: wantListId,
+    named: postRow?.named ?? null,
   });
+  const namedRow = namedRowOf(postRow?.named ?? null, stored);
   if (rules.onlyWantedOffers) {
     const slugs = input.give.map((item) => item.collectionSlug);
     // one want list, or every one (web-trade-offers); a post without one takes no objekts
@@ -175,7 +183,7 @@ export async function createOffer(
       check === "every"
         ? wantedAmong(partnerId, slugs)
         : "post" in check
-          ? postWantedAmong(check.post, slugs).then((w) => w ?? new Set<string>())
+          ? postWantedAmong(check.post, slugs, check.row).then((w) => w ?? new Set<string>())
           : wantListWantedAmong(check.want, slugs).then((w) => w ?? new Set<string>()),
       counteredAsks(addressed.conversationId, me),
     ]);
@@ -358,11 +366,14 @@ export async function createOffer(
           note,
           caution: caution.length ? caution : null,
           postListId: stored,
-          // resolved in the statement, so it costs no round trip and reads the rows as late as possible
+          // resolved in the statement, so it costs no round trip and reads the rows as late as
+          // possible: a named row deleted or re-led since the pre-read falls to the lowest row
           postId:
             stored === null
               ? null
-              : sql`(SELECT min(${tradePost.id}) FROM ${tradePost} WHERE ${tradePost.leadListId} = ${stored})`,
+              : sql`coalesce(
+                  (SELECT ${tradePost.id} FROM ${tradePost} WHERE ${tradePost.id} = ${namedRow}::int AND ${tradePost.leadListId} = ${stored}),
+                  (SELECT min(${tradePost.id}) FROM ${tradePost} WHERE ${tradePost.leadListId} = ${stored}))`,
         })
         .returning({ id: offer.id });
       const offerId = inserted!.id;

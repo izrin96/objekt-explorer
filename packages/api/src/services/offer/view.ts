@@ -111,7 +111,9 @@ export async function fetchOffers(
       ), '[]') AS items
     FROM offer o
     LEFT JOIN trade t ON t.offer_id = o.id
-    LEFT JOIN lists pl ON pl.id = o.post_list_id
+    LEFT JOIN trade_post op ON op.id = o.post_id
+    -- the post as it is now, else the list the offer was sent on once the row is gone
+    LEFT JOIN lists pl ON pl.id = coalesce(op.lead_list_id, o.post_list_id)
     JOIN "user" ru ON ru.id = o.to_user_id
     WHERE o.id = ANY(${sql.param(unique(offerIds))}::int[])
   `);

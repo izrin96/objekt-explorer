@@ -446,3 +446,32 @@ export async function resolvePostList(partnerId: string, slug: string | undefine
     .where(and(eq(lists.userId, partnerId), eq(lists.slug, slug), askableOnTrade));
   return row?.id ?? null;
 }
+
+/**
+ * The partner's post (`trade_post` row) a `postId` names, with the list that leads it now: as `post`
+ * when it is a have or sale list on Trade, as `wantList` when it is a Buy post's want list (the
+ * `resolveWantList` predicate). Null for another person's row or any other lead: a post never refuses.
+ */
+export async function resolvePostRow(partnerId: string, postId: number | undefined) {
+  if (postId === undefined) return null;
+  const [row] = await db
+    .select({
+      row: tradePost.id,
+      lead: lists.id,
+      askable: sql<boolean>`${askableOnTrade}`,
+      buy: sql<boolean>`(${lists.listType} = 'want' AND ${lists.discoverable}
+        AND EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${lists.id})
+        AND NOT EXISTS (SELECT 1 FROM ${tradePost} paired WHERE paired.want_list_id = ${lists.id}))`,
+    })
+    .from(tradePost)
+    .innerJoin(lists, eq(lists.id, tradePost.leadListId))
+    .where(
+      and(eq(tradePost.id, postId), eq(tradePost.userId, partnerId), eq(lists.userId, partnerId)),
+    );
+  if (!row || (!row.askable && !row.buy)) return null;
+  return {
+    named: { row: row.row, lead: row.lead },
+    post: row.askable ? row.lead : null,
+    wantList: row.buy ? row.lead : null,
+  };
+}

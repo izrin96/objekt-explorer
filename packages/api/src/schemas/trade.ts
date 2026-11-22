@@ -73,48 +73,8 @@ export const tabCountsOutputSchema = z.object({ mine: z.number().int() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
-/**
- * The ids an input names a post by, for one release: `postId`, and the old field. Either may be a
- * row id or a list id. A tab loaded before the deploy sends a list id in the old field, or a row
- * id it read from the new feed; a tab of this build that refetched the old feed during a rollback
- * sends a list id as `postId`.
- */
-export type PostRef = { postId?: number; legacyId?: number };
-
-export function postRefOf(
-  postId: number | undefined,
-  legacyId: number | undefined,
-): PostRef | null {
-  if (postId === undefined && legacyId === undefined) return null;
-  return {
-    ...(postId === undefined ? {} : { postId }),
-    ...(legacyId === undefined ? {} : { legacyId }),
-  };
-}
-
-/**
- * What a ref names, given which ids are `trade_post` rows: `postId` when it is a row, else the old
- * field as a row when it is one, else the old field as a list; null when neither names anything.
- * Row ids start above every list id, so no id is both. The services render the same order in SQL.
- */
-export function resolvePostRef(
-  ref: PostRef,
-  isRow: (id: number) => boolean,
-): { kind: "row" | "list"; id: number } | null {
-  if (ref.postId !== undefined && isRow(ref.postId)) return { kind: "row", id: ref.postId };
-  if (ref.legacyId === undefined) return null;
-  return { kind: isRow(ref.legacyId) ? "row" : "list", id: ref.legacyId };
-}
-
-/** A post, by its row (the feed post's `id`); `listId` is the old field, a list id or a row id. */
-export const tradePostInputSchema = z
-  .object({
-    postId: z.number().int().positive().optional(),
-    listId: z.number().int().positive().optional(),
-  })
-  .refine((input) => input.postId !== undefined || input.listId !== undefined, {
-    message: "post_required",
-  });
+/** A post, by its row (the feed post's `id`). */
+export const tradePostInputSchema = z.object({ postId: z.number().int().positive() });
 
 export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
@@ -263,10 +223,6 @@ const feedPostSchema = z.object({
   id: z.number().int().meta({
     description:
       "The post's id. A post keeps it while it stays one post, whichever of its lists its owner's edits swap or drop. Its anchor list's id is `sides[0].list.id`.",
-  }),
-  postId: z.number().int().meta({
-    deprecated: true,
-    description: "Deprecated: equal to `id`, and removed in a later release. Read `id` instead.",
   }),
   tags: z.array(postTagSchema),
   narrowed: z.boolean(),

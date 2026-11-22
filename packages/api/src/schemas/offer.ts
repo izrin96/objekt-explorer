@@ -174,9 +174,11 @@ export const createOfferInputSchema = addressedSchema
     get: getItemInputSchema.array().max(OFFER_SIDE_LIMIT * 10),
     /** the offer a counter answers, as its sender saw it */
     counters: idSchema.optional(),
-    /** the partner's post (a have or sale list) the builder started on; never narrows asks alone */
+    /** the partner's post (`trade_post` row) the offer is on; never narrows asks alone */
+    postId: z.number().int().positive().optional(),
+    /** legacy, read only without `postId`: the post's have or sale list */
     post: z.string().min(1).max(12).optional(),
-    /** the want list a gives-only offer started from (a Buy post's): its gives are held to it */
+    /** legacy, read only without `postId`: a Buy post's want list, which a gives-only offer's gives are held to */
     wantList: z.string().min(1).max(12).optional(),
     topup: topupInputSchema.optional(),
     note: z
@@ -206,13 +208,15 @@ export const tradeIdInputSchema = z.object({ tradeId: idSchema });
 export const substituteIdInputSchema = z.object({ substituteId: idSchema });
 export const legIdInputSchema = z.object({ legId: idSchema });
 export const answerCancelInputSchema = z.object({ tradeId: idSchema, accept: z.boolean() });
-/** `list`, `mutual` and `post` are optional, so a tab that sends `{ partnerId }` alone still validates. */
+/** `list`, `mutual`, `postId` and `post` are optional, so a tab that sends `{ partnerId }` alone still validates. */
 export const suggestInputSchema = z.object({
   partnerId: z.string().min(1),
   /** Compare with: one of the viewer's lists, as the Trade row counted with it */
   list: z.string().min(1).optional(),
   mutual: z.boolean().optional(),
-  /** one of the partner's lists: only that post's matches */
+  /** one of the partner's posts (`trade_post` row): only that post's matches */
+  postId: z.number().int().positive().optional(),
+  /** legacy, read only without `postId`: one of the partner's lists, naming its post */
   post: z.string().min(1).optional(),
   /** the row's lead post, which wins a tie under Only asks from one post */
   lead: z.string().min(1).optional(),
@@ -304,6 +308,16 @@ export type CandidateItem = z.infer<typeof candidateItemSchema>;
  */
 export const listedAsAny = (item: CandidateItem) =>
   item.objektId === null && (item.bySerial || (item.hidden ?? 1) > 0);
+
+/** One of the partner's posts an offer can be on: a `trade_post` row and its lead's slug. */
+export type PartnerPost = {
+  postId: number;
+  lead: string;
+  /** the row's want list while it is a want list on Trade with an entry */
+  want: string | null;
+  /** the lead is a want list: a Buy post */
+  buy: boolean;
+};
 
 /** One of the partner's have or sale lists on Trade: a post the offer can be on. */
 export type PartnerList = {

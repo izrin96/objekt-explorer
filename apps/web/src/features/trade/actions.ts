@@ -197,11 +197,8 @@ function useHidePost() {
   );
 }
 
-/**
- * A post as Hide post and Unhide name it: its id, and its anchor list's id, which the build before
- * post ids reads, so the call still works after a rollback.
- */
-export type HidePostRef = { postId: number; listId: number };
+/** A post as Hide post and Unhide name it: its id. */
+export type HidePostRef = { postId: number };
 
 /** Hide post with a toast offering Undo. */
 export function useHidePostWithUndo() {

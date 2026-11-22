@@ -75,10 +75,8 @@ export const reportInputSchema = z.object({
   alsoBlock: z.boolean().default(false),
   /** Report a problem: a trade between the reporter and the reported account */
   tradeId: z.number().int().positive().optional(),
-  /** a Trade post of the reported account, by its row; wins over `postListId` */
+  /** a Trade post of the reported account, by its row */
   postId: z.number().int().positive().optional(),
-  /** the old field: either half's list id, or a row id from a tab that read the new feed */
-  postListId: z.number().int().positive().optional(),
 });
 export type ReportInput = z.infer<typeof reportInputSchema>;
 

@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts as objektTable } from "@repo/db/indexer/schema";
 import { listEntries, lists, tradePost } from "@repo/db/schema";
-import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
+import { type AnyColumn, type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { anyCopyItem, anyEntryOf } from "../../../lib/offer-any-item";
@@ -17,6 +17,7 @@ import {
   type CandidateCursor,
   type CandidateItem,
   type PartnerList,
+  type PartnerPost,
   type PickerNarrowing,
 } from "../../../schemas/offer";
 import { getArtists } from "../../artist";
@@ -201,14 +202,32 @@ export async function resolveTheirItems(me: string, addressed: Addressed, fromLi
 }
 
 /**
- * The partner's lists on Trade, for the picker's List choice, and their want lists on Trade with
- * entries: `buy` is true for a Buy post, a want list that leads its own post.
+ * The partner's lists on Trade, for the picker's List choice, their want lists on Trade with
+ * entries (`buy` is true for a Buy post, a want list that leads its own post), and the posts an
+ * offer can be on, for Offer on.
  */
-export async function partnerListChoices(
-  addressed: Addressed,
-): Promise<{ lists: PartnerList[]; wantLists: { slug: string; name: string; buy: boolean }[] }> {
+export async function partnerListChoices(addressed: Addressed): Promise<{
+  lists: PartnerList[];
+  wantLists: { slug: string; name: string; buy: boolean }[];
+  posts: PartnerPost[];
+}> {
+  const [rows, posts] = await Promise.all([listChoiceRows(addressed), postChoices(addressed)]);
+  return {
+    lists: rows.flatMap((row) =>
+      row.type === "have" || row.type === "sale"
+        ? [{ slug: row.slug, name: row.name, type: row.type, want: row.want }]
+        : [],
+    ),
+    wantLists: rows.flatMap((row) =>
+      row.type === "want" && row.filled ? [{ slug: row.slug, name: row.name, buy: row.buy }] : [],
+    ),
+    posts,
+  };
+}
+
+function listChoiceRows(addressed: Addressed) {
   const wantHalf = alias(lists, "want_half");
-  const rows = await db
+  return db
     .select({
       slug: lists.slug,
       name: lists.name,
@@ -235,16 +254,49 @@ export async function partnerListChoices(
       ),
     )
     .orderBy(lists.id);
-  return {
-    lists: rows.flatMap((row) =>
-      row.type === "have" || row.type === "sale"
-        ? [{ slug: row.slug, name: row.name, type: row.type, want: row.want }]
-        : [],
-    ),
-    wantLists: rows.flatMap((row) =>
-      row.type === "want" && row.filled ? [{ slug: row.slug, name: row.name, buy: row.buy }] : [],
-    ),
-  };
+}
+
+/**
+ * One choice per partner row whose lead is askable or a Buy post's want list (`resolvePostRow`'s
+ * rule), have and sale posts first, as Offer on lists them; `want` as `lists[].want` reads it.
+ */
+async function postChoices(addressed: Addressed): Promise<PartnerPost[]> {
+  const want = alias(lists, "row_want");
+  const filled = (id: AnyColumn) =>
+    sql`EXISTS (SELECT 1 FROM ${listEntries} WHERE ${listEntries.listId} = ${id})`;
+  const buy = and(
+    eq(lists.listType, "want"),
+    eq(lists.discoverable, true),
+    filled(lists.id),
+    sql`NOT EXISTS (SELECT 1 FROM ${tradePost} paired WHERE paired.want_list_id = ${lists.id})`,
+  );
+  const rows = await db
+    .select({
+      postId: tradePost.id,
+      lead: lists.slug,
+      want: want.slug,
+      buy: sql<boolean>`${lists.listType} = 'want'`,
+    })
+    .from(tradePost)
+    .innerJoin(lists, eq(lists.id, tradePost.leadListId))
+    .leftJoin(
+      want,
+      and(
+        eq(want.id, tradePost.wantListId),
+        eq(want.listType, "want"),
+        eq(want.discoverable, true),
+        filled(want.id),
+      ),
+    )
+    .where(
+      and(
+        eq(tradePost.userId, addressed.partnerId),
+        eq(lists.userId, addressed.partnerId),
+        or(askableOnTrade, buy),
+      ),
+    )
+    .orderBy(sql`${lists.listType} = 'want'`, tradePost.leadListId, tradePost.id);
+  return rows;
 }
 
 /**

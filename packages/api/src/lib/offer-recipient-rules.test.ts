@@ -10,6 +10,7 @@ import {
   placeAsks,
   rowPost,
   givesRuleOf,
+  namedRowOf,
   unwantedGives,
 } from "./offer-recipient-rules";
 
@@ -305,6 +306,53 @@ describe("givesRuleOf", () => {
 
   test("gives-only, no post", () => {
     expect(givesRuleOf(base)).toEqual({ check: "every", stored: null });
+  });
+
+  const named = { row: 1000123, lead: 7 };
+
+  test("a new ask on the named post's lead reads its row", () => {
+    expect(givesRuleOf({ ...base, newAsk: true, onPost: 7, named })).toEqual({
+      check: { post: 7, row: 1000123 },
+      stored: 7,
+    });
+  });
+
+  test("gives-only on the named post reads its row", () => {
+    expect(givesRuleOf({ ...base, onPost: 7, named })).toEqual({
+      check: { post: 7, row: 1000123 },
+      stored: 7,
+    });
+  });
+
+  test("asks that fit another post than the named one read no row", () => {
+    expect(givesRuleOf({ ...base, newAsk: true, onPost: 8, named })).toEqual({
+      check: { post: 8 },
+      stored: 8,
+    });
+  });
+
+  test("a counter asking nothing new still checks every want list", () => {
+    expect(givesRuleOf({ ...base, counter: true, onPost: 7, named })).toEqual({
+      check: "every",
+      stored: null,
+    });
+  });
+});
+
+describe("namedRowOf", () => {
+  const named = { row: 1000123, lead: 7 };
+
+  test("the named row when its lead is the list stored", () => {
+    expect(namedRowOf(named, 7)).toBe(1000123);
+  });
+
+  test("no row when the offer is stored on another list", () => {
+    expect(namedRowOf(named, 8)).toBeNull();
+  });
+
+  test("no row when nothing is stored or no row was named", () => {
+    expect(namedRowOf(named, null)).toBeNull();
+    expect(namedRowOf(null, 7)).toBeNull();
   });
 });
 

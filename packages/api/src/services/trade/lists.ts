@@ -58,17 +58,6 @@ export const postPartnerSql = (alias: string) =>
       WHERE partner_row.want_list_id = ${column(alias, "id")} ORDER BY partner_row.id LIMIT 1)
   )`;
 
-/**
- * `viewer`'s hides whose row holds the list `alias`, as `hp`, from FROM onwards: the lists of a
- * hidden row, read from the list's end, for `unhidePost`, which names a list. A read about posts
- * takes the row form, `hiddenRowsSql` (lib/trade-sql.ts).
- */
-export const hidesOfSql = (viewer: UserRef, alias: string) =>
-  sql`FROM hidden_trade_post hp
-    JOIN trade_post hide_row ON hide_row.id = hp.post_id
-    WHERE hp.user_id = ${ref(viewer)}
-      AND ${column(alias, "id")} IN (hide_row.lead_list_id, hide_row.want_list_id)`;
-
 /** A `trade_post` row's columns as `PostRow` (lib/trade-posts.ts) holds them. */
 export const postRowColumns = {
   id: tradePost.id,

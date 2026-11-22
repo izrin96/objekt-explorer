@@ -179,6 +179,7 @@ export function PostBlock({
                   handle: offerHandle,
                   to: { list: anchor.list.slug },
                   startList: side.list.slug,
+                  postId: post.id,
                   ask: { collectionSlug: objekt.slug, objektId: null, serial: null },
                 }),
             }
@@ -196,8 +197,14 @@ export function PostBlock({
       handle: offerHandle,
       to: { list: anchor.list.slug },
       startList: offering?.list.slug ?? anchor.list.slug,
+      postId: post.id,
       matches: matched
-        ? { list: compare.list, mutual: compare.mutual || undefined, post: anchor.list.slug }
+        ? {
+            list: compare.list,
+            mutual: compare.mutual || undefined,
+            post: anchor.list.slug,
+            postId: post.id,
+          }
         : undefined,
       near: addNear,
     });
@@ -273,7 +280,7 @@ export function PostBlock({
       {!own && signedIn ? (
         <>
           <MenuSeparator />
-          <HidePostItem post={{ postId: post.id, listId: anchor.list.id }} hidden={post.hidden} />
+          <HidePostItem post={{ postId: post.id }} hidden={post.hidden} />
           <MenuItem onClick={() => setReportRequest((n) => n + 1)}>
             <FlagIcon />
             {m.trade_post_report()}
@@ -381,7 +388,6 @@ export function PostBlock({
           userId={ownerId}
           name={name}
           postId={post.id}
-          listId={anchor.list.id}
           list={anchor.list.name}
           menuRef={menuRef}
         />
@@ -399,21 +405,19 @@ function PostReport({
   userId,
   name,
   postId,
-  listId,
   list,
   menuRef,
 }: {
   userId: string;
   name: string;
   postId: number;
-  listId: number;
   list: string;
   menuRef: RefObject<HTMLButtonElement | null>;
 }) {
   const { openReport, dialogs } = useSafetyDialogs({
     userId,
     name,
-    post: { postId, listId, attachment: m.mod_report_post_attached({ list }) },
+    post: { postId, attachment: m.mod_report_post_attached({ list }) },
     finalFocus: menuRef,
   });
   // once per mount: the parent remounts this for each Report this post…

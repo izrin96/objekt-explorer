@@ -1,5 +1,5 @@
 import { db } from "@repo/db";
-import { conversation, listEntries, lists } from "@repo/db/schema";
+import { conversation, listEntries, lists, tradePost } from "@repo/db/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
@@ -17,6 +17,7 @@ import { oneListOf } from "../../../lib/offer-recipient-rules";
 import { itemFlags } from "../../../lib/offer-rules";
 import { bestPairing, matchCounts } from "../../../lib/trade-person";
 import type { Match } from "../../../lib/trade-rank";
+import { postRowSql } from "../../../lib/trade-sql";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
 import {
@@ -109,7 +110,7 @@ async function sidePage(
     theirCandidates(me, addressed),
     partnerListChoices(addressed),
   ]);
-  return { ...page, lists: choices.lists, wantLists: choices.wantLists };
+  return { ...page, lists: choices.lists, wantLists: choices.wantLists, posts: choices.posts };
 }
 
 /** Each rule only where it would filter something, as `createOffer` applies them. */
@@ -131,6 +132,7 @@ type SuggestInput = {
   partnerId: string;
   list?: string;
   mutual?: boolean;
+  postId?: number;
   post?: string;
   lead?: string;
 };
@@ -143,7 +145,7 @@ type SuggestInput = {
  */
 export async function suggestOffer(
   me: string,
-  { partnerId, list, mutual, post, lead }: SuggestInput,
+  { partnerId, list, mutual, postId, post, lead }: SuggestInput,
 ): Promise<Suggestion> {
   if (partnerId === me) refuseOffer("self");
   const empty = {
@@ -153,24 +155,33 @@ export async function suggestOffer(
     near: [] as SuggestedNear[],
     postName: null as string | null,
     postSlug: null as string | null,
+    postId: null as number | null,
     wantSlug: null as string | null,
     collections: {},
   };
+  // `postId` names the post; `post` is read only from a tab of the build before it
+  const named = postId !== undefined ? { postId } : post !== undefined ? { slug: post } : null;
   const { userLow, userHigh } = pairKey(me, partnerId);
   // each early result is the same `empty` and no read here refuses, so the order holds
   const [safety, sides, postLists, existing, pref, partnerLists] = await Promise.all([
     chatSafety(me, partnerId),
     resolveCompareSides(me, list, mutual ?? false),
-    post === undefined ? null : postListsOf(partnerId, post),
+    named === null ? null : postListsOf(partnerId, named),
     db
       .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
       .from(conversation)
       .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh))),
     fetchPref(partnerId),
     // only a row cut chooses among the partner's lists, so a post skips the read
-    post === undefined
+    named === null
       ? db
-          .select({ id: lists.id, slug: lists.slug, name: lists.name, listType: lists.listType })
+          .select({
+            id: lists.id,
+            slug: lists.slug,
+            name: lists.name,
+            listType: lists.listType,
+            row: postRowSql("lists"),
+          })
           .from(lists)
           .where(
             and(
@@ -182,7 +193,7 @@ export async function suggestOffer(
       : null,
   ]);
   if (safety.blocked || safety.tradeBlocked || safety.partnerTradeBlocked) return empty;
-  if (post !== undefined && !postLists) return empty;
+  if (named !== null && !postLists) return empty;
   // until the first message, someone who accepts no messages gets no suggestion at all
   const held = holdsMessage(existing[0]?.lastMessageId);
   if (!held && pref.allow === "nobody") return empty;
@@ -208,7 +219,7 @@ export async function suggestOffer(
     ? fillMatches(partner, swapPair, postLists ?? undefined)
     : { get: [], give: [] };
   // a row's matches outside a Can swap pair come from one post (You get) or one want list (You give)
-  const rowCut = post === undefined && !swapPair;
+  const rowCut = named === null && !swapPair;
   // the uncut side matches: `filled` has already emptied You get when the give side is bigger
   const getAll = rowCut ? matchesThrough(partner?.theyHaveIWant ?? [], undefined) : filled.get;
   const giveAll = rowCut ? matchesThrough(partner?.iHaveTheyWant ?? [], undefined) : [];
@@ -298,7 +309,10 @@ export async function suggestOffer(
       ? giveWant!.name
       : (onePost?.name ?? pairPost?.name ?? postLists?.name ?? null),
     wantSlug: giveWins ? giveWant!.slug : null,
-    postSlug: onePost?.slug ?? pairPost?.slug ?? (postLists ? post! : null),
+    postSlug: onePost?.slug ?? pairPost?.slug ?? postLists?.slug ?? null,
+    postId: giveWins
+      ? giveWant!.row
+      : (onePost?.row ?? (pairPost ? swapPair!.theirPostId : null) ?? postLists?.row ?? null),
     collections: await collectionsOf(
       [...picks.give, ...picks.get, ...near.flatMap((group) => group.items)].map(
         (item) => item.collectionSlug,
@@ -324,6 +338,8 @@ type Suggestion = {
   near: SuggestedNear[];
   postName: string | null;
   postSlug: string | null;
+  /** the post (`trade_post` row) the matches came from */
+  postId: number | null;
   /** the want list You give's matches came from, when You give won */
   wantSlug: string | null;
   collections: Awaited<ReturnType<typeof collectionsOf>>;
@@ -376,32 +392,49 @@ async function nearPicks(
   });
 }
 
-/** The partner's post named by one of its lists (`postSides`), null when it is not on Trade. */
-async function postListsOf(partnerId: string, slug: string) {
-  const named = alias(lists, "named");
+/**
+ * The partner's post (`postSides`) named by its row, or by one of its lists from a tab of the build
+ * before post ids; null when the row's lead, or the named list, is not on Trade. `slug` is what the
+ * suggestion returns as `postSlug`, and `row` the post.
+ */
+async function postListsOf(partnerId: string, named: { postId: number } | { slug: string }) {
+  const columns = { id: lists.id, slug: lists.slug, name: lists.name, listType: lists.listType };
+  const where = and(eq(lists.userId, partnerId), eq(lists.discoverable, true), matchableList);
+  if ("postId" in named) {
+    const rows = await db
+      .select({ ...columns, lead: sql<boolean>`${lists.id} = ${tradePost.leadListId}` })
+      .from(tradePost)
+      .innerJoin(lists, or(eq(lists.id, tradePost.leadListId), eq(lists.id, tradePost.wantListId)))
+      .where(and(eq(tradePost.id, named.postId), eq(tradePost.userId, partnerId), where));
+    // the lead must itself be on Trade; its want half alone is not the post
+    const lead = rows.find((row) => row.lead);
+    if (!lead) return null;
+    return { ...postSides(rows), slug: lead.slug, row: named.postId };
+  }
+  const slug = named.slug;
+  const pair = alias(lists, "named");
   const rows = await db
-    .select({ id: lists.id, slug: lists.slug, name: lists.name, listType: lists.listType })
+    .select({ ...columns, row: postRowSql("lists") })
     .from(lists)
     .where(
       and(
-        eq(lists.userId, partnerId),
-        eq(lists.discoverable, true),
-        matchableList,
+        where,
         or(
           eq(lists.slug, slug),
           inArray(
             lists.id,
             db
               .select({ id: postPartnerSql("named") })
-              .from(named)
-              .where(eq(named.slug, slug)),
+              .from(pair)
+              .where(eq(pair.slug, slug)),
           ),
         ),
       ),
     );
   // the named list must itself be on Trade; its pair half alone is not the post
-  if (!rows.some((row) => row.slug === slug)) return null;
-  return postSides(rows);
+  const own = rows.find((row) => row.slug === slug);
+  if (!own) return null;
+  return { ...postSides(rows), slug, row: own.row };
 }
 
 /**

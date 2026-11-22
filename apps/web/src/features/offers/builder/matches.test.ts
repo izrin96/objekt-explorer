@@ -18,6 +18,7 @@ const added = (give: string[], get: string[]): AddedMatches => ({
   keys: { give, get },
   matched: { give: give.length, get: get.length },
   postName: null,
+  postId: null,
   postSlug: null,
   wantSlug: null,
   near: [],

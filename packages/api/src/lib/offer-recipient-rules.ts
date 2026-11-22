@@ -237,7 +237,16 @@ export function notWanted(i: {
   return i.viewerIsRecipient && i.side === "give" && !i.wanted && !i.asked;
 }
 
-export type GivesCheck = { post: number } | { want: number } | "every";
+/** `row`: the post the sender named, whose want list the gives are held to */
+export type GivesCheck = { post: number; row?: number } | { want: number } | "every";
+
+/** A post the sender named by id (`resolvePostRow`): its row and the list that led it then. */
+export type NamedPost = { row: number; lead: number };
+
+/** The named post's row when the offer is stored on its lead, else null: what `post_id` records. */
+export function namedRowOf(named: NamedPost | null, stored: number | null): number | null {
+  return named !== null && stored !== null && named.lead === stored ? named.row : null;
+}
 
 /**
  * Which want list gives are held to, and the post stored: `web-trade-offers` Recipients who take only
@@ -252,12 +261,17 @@ export function givesRuleOf(i: {
   onPost: number | null;
   /** resolved `wantList` */
   wantList: number | null;
+  /** the post named by `postId` */
+  named?: NamedPost | null;
 }): { check: GivesCheck; stored: number | null } {
-  if (i.newAsk)
-    return { check: i.onPost === null ? "every" : { post: i.onPost }, stored: i.onPost };
+  const onPost = (post: number): GivesCheck => {
+    const row = namedRowOf(i.named ?? null, post);
+    return row === null ? { post } : { post, row };
+  };
+  if (i.newAsk) return { check: i.onPost === null ? "every" : onPost(i.onPost), stored: i.onPost };
   if (i.counter) return { check: "every", stored: null };
   if (i.wantList !== null) return { check: { want: i.wantList }, stored: i.onPost ?? i.wantList };
-  if (i.onPost !== null) return { check: { post: i.onPost }, stored: i.onPost };
+  if (i.onPost !== null) return { check: onPost(i.onPost), stored: i.onPost };
   return { check: "every", stored: null };
 }
 

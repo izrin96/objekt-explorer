@@ -122,7 +122,12 @@ export const PersonRow = memo(function PersonRow({
       signedIn &&
       focused.sides.some((side) => listCount(focused, side) > 0 || side.near) &&
       anchor
-      ? { list: compare.list, mutual: compare.mutual || undefined, post: anchor.list.slug }
+      ? {
+          list: compare.list,
+          mutual: compare.mutual || undefined,
+          post: anchor.list.slug,
+          postId: focused.id,
+        }
       : undefined
     : band ||
         (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
@@ -218,7 +223,6 @@ export const PersonRow = memo(function PersonRow({
                   focused && anchor
                     ? {
                         postId: focused.id,
-                        listId: anchor.list.id,
                         attachment: m.mod_report_post_attached({ list: anchor.list.name }),
                       }
                     : undefined

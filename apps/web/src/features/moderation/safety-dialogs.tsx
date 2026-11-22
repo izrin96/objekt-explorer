@@ -25,11 +25,8 @@ export function useSafetyDialogs({
   conversationId?: number;
   /** Report a problem: the trade goes along, and the reason starts on scam */
   trade?: { id: number; attachment: string; reason: ReportReason };
-  /**
-   * a Trade post of this account, named on the report by its id and its anchor list's id, which the
-   * build before post ids reads
-   */
-  post?: { postId: number; listId: number; attachment: string };
+  /** a Trade post of this account, named on the report by its id */
+  post?: { postId: number; attachment: string };
   /** where focus returns when the report closes, if the control that opened it is gone */
   finalFocus?: RefObject<HTMLElement | null>;
 }) {
@@ -76,7 +73,6 @@ export function useSafetyDialogs({
               alsoBlock: values.alsoBlock,
               tradeId: trade?.id,
               postId: post?.postId,
-              postListId: post?.listId,
             })
           }
         />

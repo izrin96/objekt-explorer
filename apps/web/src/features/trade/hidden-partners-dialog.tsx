@@ -199,7 +199,7 @@ export function HiddenPostsList({ enabled }: { enabled: boolean }) {
               variant="outline"
               size="sm"
               disabled={pending}
-              onClick={() => unhide.mutate({ postId: post.postId, listId: post.listId })}
+              onClick={() => unhide.mutate({ postId: post.postId })}
             >
               <EyeIcon />
               {m.trade_unhide()}
