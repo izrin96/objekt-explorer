@@ -6,14 +6,14 @@ Filling indexed collections with the media and fields Cosmo shows a signed-in ac
 ## Requirements
 
 ### Requirement: Sync schedule
-A newly connected session SHALL be synced on the first run with budget left, and each live session again about every 3 days (72 hours, spread by up to 6 hours per session). A requested sync SHALL start before any scheduled one, in request order. Signed-out sessions SHALL be skipped. With no session key configured, nothing SHALL be synced.
+A newly connected session SHALL be synced on the first run with budget left, and each live session again about every 6 hours (spread by up to 30 minutes per session). A requested sync SHALL start before any scheduled one, in request order. Signed-out sessions SHALL be skipped. With no session key configured, nothing SHALL be synced.
 
 #### Scenario: Just connected
 - **WHEN** rin.trades connects rin.t and no other sync is waiting
 - **THEN** rin.t is synced within 10 minutes, and its row then shows the sync time and counts
 
-#### Scenario: Every three days
-- **WHEN** rin.t last synced 79 hours ago
+#### Scenario: Every six hours
+- **WHEN** rin.t last synced 7 hours ago
 - **THEN** it is synced again within 10 minutes when no requested sync is waiting
 
 #### Scenario: Sync now goes first
@@ -49,7 +49,7 @@ For each collection read, the site SHALL record, by collection, the motion video
 A session confirms a collection's record when every non-empty value it reports equals the recorded one, or when its report fills or replaces a value. A different non-empty value SHALL replace a recorded one only when no session has confirmed the record in the last 7 days. The same reports in the same order SHALL always give the same record.
 
 #### Scenario: Two sessions disagree
-- **WHEN** session A keeps reporting band image X for a collection and session B keeps reporting band image Y, each every 3 days, and X was recorded first
+- **WHEN** session A keeps reporting band image X for a collection and session B keeps reporting band image Y, each every 6 hours, and X was recorded first
 - **THEN** the record keeps X, and it is not rewritten on either session's sync
 
 #### Scenario: Cosmo changed the value

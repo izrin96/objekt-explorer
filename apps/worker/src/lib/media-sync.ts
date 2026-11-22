@@ -8,8 +8,8 @@ export const MAX_PAGES = 40;
 const RUN_REQUESTS = 50;
 const RUN_MS = 4 * MINUTE_MS;
 const SESSION_MIN_REQUESTS = 2;
-const SYNC_EVERY_MS = 72 * HOUR_MS;
-const JITTER_MINUTES = 360;
+const SYNC_EVERY_MS = 6 * HOUR_MS;
+const JITTER_MINUTES = 30;
 const BACKOFF_FIRST = 5;
 const BACKOFF_CAP = 120;
 const RETRY_AFTER_MS = 6 * HOUR_MS;
@@ -70,7 +70,7 @@ function hashId(id: number) {
   return h >>> 0;
 }
 
-/** 72 hours after `completedAt`, plus the id hashed to 0..360 minutes so accounts connected together drift apart. */
+/** 6 hours after `completedAt`, plus the id hashed to 0..30 minutes so accounts connected together drift apart. */
 export function nextSyncAt(id: number, completedAt: number) {
   return completedAt + SYNC_EVERY_MS + (hashId(id) % (JITTER_MINUTES + 1)) * MINUTE_MS;
 }

@@ -120,11 +120,11 @@ describe("orderDue", () => {
 });
 
 describe("nextSyncAt", () => {
-  test("is 72 hours plus 0 to 360 minutes", () => {
+  test("is 6 hours plus 0 to 30 minutes", () => {
     for (let id = 1; id <= 500; id++) {
-      const offset = nextSyncAt(id, now) - now - 72 * HOUR;
+      const offset = nextSyncAt(id, now) - now - 6 * HOUR;
       expect(offset).toBeGreaterThanOrEqual(0);
-      expect(offset).toBeLessThanOrEqual(360 * MIN);
+      expect(offset).toBeLessThanOrEqual(30 * MIN);
       expect(offset % MIN).toBe(0);
     }
   });
@@ -136,14 +136,14 @@ describe("nextSyncAt", () => {
 
   test("is fixed by the id alone, the same in every process", () => {
     // pinned values: a changed hash would move every session's schedule at once
-    expect(nextSyncAt(1, 0)).toBe(72 * HOUR + 245 * MIN);
-    expect(nextSyncAt(2, 0)).toBe(72 * HOUR + 316 * MIN);
-    expect(nextSyncAt(1234, 0)).toBe(72 * HOUR + 61 * MIN);
+    expect(nextSyncAt(1, 0)).toBe(6 * HOUR + 19 * MIN);
+    expect(nextSyncAt(2, 0)).toBe(6 * HOUR + 5 * MIN);
+    expect(nextSyncAt(1234, 0)).toBe(6 * HOUR + 5 * MIN);
   });
 
   test("spreads neighbouring ids apart", () => {
     const offsets = new Set(Array.from({ length: 50 }, (_, i) => nextSyncAt(i + 1, 0)));
-    expect(offsets.size).toBeGreaterThan(40);
+    expect(offsets.size).toBeGreaterThan(20);
   });
 });
 
