@@ -15,24 +15,6 @@ export const SORT_DEFAULT_DIR: Record<ValidCustomSort, ValidSortDirection> = {
   supply: "desc",
 };
 
-/**
- * The directions the sort menu offers, the default first. A sort with one
- * direction is only ever read that way; a link can still carry the other.
- */
-const SORT_DIRS: Record<ValidCustomSort, readonly ValidSortDirection[]> = {
-  date: ["desc", "asc"],
-  season: ["asc", "desc"],
-  collectionNo: ["asc", "desc"],
-  member: ["asc"],
-  serial: ["asc", "desc"],
-  duplicate: ["desc"],
-  rare: ["asc"],
-  price: ["asc", "desc"],
-  floor: ["asc", "desc"],
-  listedAt: ["desc"],
-  supply: ["desc"],
-};
-
 export type SortOption = { sort: ValidCustomSort; dir: ValidSortDirection };
 
 /** One menu value per sort and direction, since the select holds a single string. */
@@ -58,11 +40,17 @@ export function currentSortOption(
 }
 
 /**
- * The menu for a surface. A link can carry a sort or a direction the surface
- * does not offer; it leads the list rather than silently rewriting the URL.
+ * The menu for a surface: each sort in its usual direction, then reversed. A
+ * link can carry a sort the surface does not offer; it leads the list rather
+ * than silently rewriting the URL.
  */
 export function sortMenu(sorts: readonly ValidCustomSort[], current: SortOption): SortOption[] {
-  const options = sorts.flatMap((sort) => SORT_DIRS[sort].map((dir) => ({ sort, dir })));
-  const offered = options.some((o) => o.sort === current.sort && o.dir === current.dir);
-  return offered ? options : [current, ...options];
+  const options = sorts.flatMap((sort): SortOption[] => {
+    const dir = SORT_DEFAULT_DIR[sort];
+    return [
+      { sort, dir },
+      { sort, dir: dir === "asc" ? "desc" : "asc" },
+    ];
+  });
+  return sorts.includes(current.sort) ? options : [current, ...options];
 }

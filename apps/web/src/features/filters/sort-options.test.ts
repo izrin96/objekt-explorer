@@ -20,30 +20,21 @@ describe("currentSortOption", () => {
 });
 
 describe("sortMenu", () => {
-  test("lists both directions only where both are offered, default first", () => {
-    const menu = sortMenu(["date", "member", "price"], { sort: "date", dir: "desc" });
+  test("lists every sort both ways, its usual direction first", () => {
+    const menu = sortMenu(["date", "member", "duplicate"], { sort: "date", dir: "desc" });
     expect(menu.map(sortOptionValue)).toEqual([
       "date:desc",
       "date:asc",
       "member:asc",
-      "price:asc",
-      "price:desc",
-    ]);
-  });
-
-  test("a direction the menu does not offer leads the list", () => {
-    const menu = sortMenu(["date", "member"], { sort: "member", dir: "desc" });
-    expect(menu.map(sortOptionValue)).toEqual([
       "member:desc",
-      "date:desc",
-      "date:asc",
-      "member:asc",
+      "duplicate:desc",
+      "duplicate:asc",
     ]);
   });
 
   test("a sort the surface does not offer leads the list", () => {
-    const menu = sortMenu(["date"], { sort: "serial", dir: "asc" });
-    expect(menu.map(sortOptionValue)).toEqual(["serial:asc", "date:desc", "date:asc"]);
+    const menu = sortMenu(["date"], { sort: "serial", dir: "desc" });
+    expect(menu.map(sortOptionValue)).toEqual(["serial:desc", "date:desc", "date:asc"]);
   });
 });
 
