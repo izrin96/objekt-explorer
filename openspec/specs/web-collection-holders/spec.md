@@ -56,13 +56,17 @@ When the signed-in viewer has a linked address that holds copies and that holder
 - **WHEN** the viewer's address ranks 3rd
 - **THEN** its row in the list is marked as the viewer's and no row is pinned
 
-### Requirement: Holder data freshness
-Holder figures SHALL reflect ownership no more than five minutes old.
+### Requirement: Holder data refresh
+Holder figures SHALL reflect ownership no more than fifteen minutes old, and each holder's nickname SHALL be no more than fifteen minutes old.
 
 #### Scenario: Privacy change applies immediately
 - **WHEN** a holder had a private profile before this change and another viewer opens the tab
 - **THEN** that holder's row shows its address link and lowest serial
 
-#### Scenario: New copy shows within five minutes
-- **WHEN** a holder receives another copy and a viewer reopens the tab six minutes later
+#### Scenario: New copy shows within fifteen minutes
+- **WHEN** a holder receives another copy and a viewer reopens the tab sixteen minutes later
 - **THEN** that holder's copy count includes it
+
+#### Scenario: Rename shows within fifteen minutes
+- **WHEN** a holder changes their nickname and a viewer reopens the tab sixteen minutes later
+- **THEN** that holder's row shows the new nickname
