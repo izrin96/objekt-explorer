@@ -532,7 +532,7 @@ describe("fillMatches over rows", () => {
       },
     };
     const counts = matchCounts(matched);
-    expect(counts.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 10 });
+    expect(counts.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 101 });
     const { get, give } = fillMatches(matched, counts.swapPair);
     expect(counts.swap).toBe(2);
     expect(get.map((match) => match.partnerListIds)).toEqual([[10], [10]]);
@@ -541,5 +541,25 @@ describe("fillMatches over rows", () => {
       ["y", [12]],
       ["z", [12]],
     ]);
+  });
+
+  test("opened from the pair's post, named by its lead list while swapPair names its row", () => {
+    // row 101 is led by have list 10; the post names lists, so it is found by the lead
+    const matched = {
+      theyHaveIWant: [swap("a", [4], [10]), swap("b", [4], [10])],
+      iHaveTheyWant: [swap("y", [3], [12]), swap("z", [3], [12])],
+      posts: {
+        mine: { 3: [3], 4: [3] },
+        theirs: { 10: [101], 12: [101] },
+        leads: { 3: 3, 101: 10 },
+      },
+    };
+    const counts = matchCounts(matched);
+    expect(counts.swapPair?.theirPostId).toBe(101);
+    const pairPost = { offerIds: new Set([10]), wantIds: new Set([12]) };
+    const { get, give } = fillMatches(matched, counts.swapPair, pairPost);
+    // the pair's matches both ways, not the bigger side alone
+    expect(get.map((match) => match.slug)).toEqual(["a", "b"]);
+    expect(give.map((match) => match.slug)).toEqual(["y", "z"]);
   });
 });

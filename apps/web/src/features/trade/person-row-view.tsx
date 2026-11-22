@@ -91,11 +91,11 @@ export const PersonRow = memo(function PersonRow({
   const matches = !!counts && (counts.theyHave > 0 || counts.youHave > 0);
   const contact: TradeContact = own
     ? { kind: "own" }
-    : person.messageable && anchor
+    : person.messageable && lead && anchor
       ? {
           kind: "open",
           target: { kind: "list", slug: anchor.list.slug },
-          card: { kind: "post", listSlug: anchor.list.slug, withMatch: matches },
+          card: { kind: "post", listSlug: anchor.list.slug, postId: lead.id, withMatch: matches },
         }
       : { kind: "closed" };
 
@@ -217,7 +217,8 @@ export const PersonRow = memo(function PersonRow({
                 post={
                   focused && anchor
                     ? {
-                        listId: focused.id,
+                        postId: focused.id,
+                        listId: anchor.list.id,
                         attachment: m.mod_report_post_attached({ list: anchor.list.name }),
                       }
                     : undefined

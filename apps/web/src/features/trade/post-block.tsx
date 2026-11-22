@@ -26,7 +26,13 @@ import { useOpenOffer } from "@/features/offers/use-open-offer";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useCopyTradeLink, useHidePostWithUndo, useTakeDownPost, useUnhidePost } from "./actions";
+import {
+  type HidePostRef,
+  useCopyTradeLink,
+  useHidePostWithUndo,
+  useTakeDownPost,
+  useUnhidePost,
+} from "./actions";
 import type { Surface } from "./browse-search";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { CopyLinkItem, ReasonItem } from "./copy-link-item";
@@ -46,17 +52,17 @@ import { TradeSides } from "./trade-row";
  * Hide post, or Unhide post on a post the viewer hid. It mounts with the open menu, so a feed's
  * posts hold no mutation until one is opened.
  */
-function HidePostItem({ listId, hidden }: { listId: number; hidden: boolean }) {
+function HidePostItem({ post, hidden }: { post: HidePostRef; hidden: boolean }) {
   const hide = useHidePostWithUndo();
   const unhide = useUnhidePost();
 
   return hidden ? (
-    <MenuItem onClick={() => unhide.mutate({ listId })}>
+    <MenuItem onClick={() => unhide.mutate(post)}>
       <EyeIcon />
       {m.trade_post_unhide()}
     </MenuItem>
   ) : (
-    <MenuItem onClick={() => hide(listId)}>
+    <MenuItem onClick={() => hide(post)}>
       <EyeSlashIcon />
       {m.trade_post_hide()}
     </MenuItem>
@@ -142,7 +148,7 @@ export function PostBlock({
     const withMatch = strips.some((side) => listCount(post, side) > 0);
     conversation.start(
       { kind: "list", slug: anchor.list.slug },
-      { kind: "post", listSlug: anchor.list.slug, withMatch },
+      { kind: "post", listSlug: anchor.list.slug, postId: post.id, withMatch },
     );
   };
   // a near match's drawer names the person, and offers it on this post when the row offers one
@@ -267,7 +273,7 @@ export function PostBlock({
       {!own && signedIn ? (
         <>
           <MenuSeparator />
-          <HidePostItem listId={post.id} hidden={post.hidden} />
+          <HidePostItem post={{ postId: post.id, listId: anchor.list.id }} hidden={post.hidden} />
           <MenuItem onClick={() => setReportRequest((n) => n + 1)}>
             <FlagIcon />
             {m.trade_post_report()}
@@ -374,7 +380,8 @@ export function PostBlock({
           key={reportRequest}
           userId={ownerId}
           name={name}
-          listId={post.id}
+          postId={post.id}
+          listId={anchor.list.id}
           list={anchor.list.name}
           menuRef={menuRef}
         />
@@ -391,12 +398,14 @@ export function PostBlock({
 function PostReport({
   userId,
   name,
+  postId,
   listId,
   list,
   menuRef,
 }: {
   userId: string;
   name: string;
+  postId: number;
   listId: number;
   list: string;
   menuRef: RefObject<HTMLButtonElement | null>;
@@ -404,7 +413,7 @@ function PostReport({
   const { openReport, dialogs } = useSafetyDialogs({
     userId,
     name,
-    post: { listId, attachment: m.mod_report_post_attached({ list }) },
+    post: { postId, listId, attachment: m.mod_report_post_attached({ list }) },
     finalFocus: menuRef,
   });
   // once per mount: the parent remounts this for each Report this post…

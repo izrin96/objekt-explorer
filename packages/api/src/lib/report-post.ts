@@ -41,9 +41,14 @@ export function namedListVerdict(
 
 /**
  * The post that holds `namedId` among `lists` (the named list and its pair partner), as a report
- * keeps it; null when no post holds it. Either half of a pair names the post, anchor first.
+ * keeps it, with `postId`, its row, when it has one; null when no post holds it. Either half of a
+ * pair names the post, anchor first.
  */
-export function postSnapshot(lists: SnapshotList[], namedId: number): ReportPost | null {
+export function postSnapshot(
+  lists: SnapshotList[],
+  namedId: number,
+  postId?: number,
+): ReportPost | null {
   const post = groupPosts(lists).find((group) =>
     [group.have, group.want, group.sale].some((list) => list?.id === namedId),
   );
@@ -51,6 +56,7 @@ export function postSnapshot(lists: SnapshotList[], namedId: number): ReportPost
   const members = [post.anchor, ...(post.want && post.want !== post.anchor ? [post.want] : [])];
   return {
     listId: post.anchor.id,
+    ...(postId === undefined ? {} : { postId }),
     linkedListId: members[1]?.id ?? null,
     lists: members.map((list) => ({
       id: list.id,

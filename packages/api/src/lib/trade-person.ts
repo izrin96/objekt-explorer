@@ -8,7 +8,7 @@ type Direction = readonly { slug: string; trade: boolean; myListIds: number[] }[
  */
 export type PostOf = Readonly<Partial<Record<number, readonly number[]>>>;
 
-/** Post key (a row id) → the row's lead list id, which is that feed post's `id`. */
+/** Post key (a row id) → the row's lead list id, which the tie reads. */
 export type PostLeads = Readonly<Partial<Record<number, number>>>;
 
 /** Both sides' post keys, and the lead of every row either names. */
@@ -89,7 +89,7 @@ export function bestPairing({ theyHaveIWant, iHaveTheyWant, posts }: Matched): P
 /**
  * What the two can swap inside one post on each side ({@link bestPairing}). `swapTheyHave` is
  * that pairing's count of what they have. `swapPair` names it: my lists in that post, and their
- * post by its lead, which is also its feed post's id.
+ * post by its row, which is also its feed post's id.
  */
 export function swapScore(
   matched: Matched,
@@ -102,7 +102,7 @@ export function swapScore(
   return {
     swap: best.swap,
     swapTheyHave: best.theyHave,
-    swapPair: { myListIds, theirPostId: best.theirLead },
+    swapPair: { myListIds, theirPostId: best.theirPost },
   };
 }
 

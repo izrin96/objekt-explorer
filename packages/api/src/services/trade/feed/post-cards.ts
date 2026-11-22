@@ -4,7 +4,7 @@ import { type SQL, and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { previewSide } from "../../../lib/trade-feed";
-import { sideStateOf } from "../../../lib/trade-post-state";
+import { type PostRow, sideStateOf } from "../../../lib/trade-post-state";
 import { pairPosts, postFromRow, type PostTag } from "../../../lib/trade-posts";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { listPostSql } from "../../../lib/trade-sql";
@@ -13,7 +13,13 @@ import type { PostCardView } from "../../../schemas/chat";
 import { canBeOnTrade } from "../../../schemas/list";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { fetchAddresses } from "../matches/holdings";
-import { type FeedList, feedListColumns, fetchPostEntries, fetchPostRows } from "./entries";
+import {
+  type FeedList,
+  type FeedListRow,
+  feedListColumns,
+  fetchPostEntries,
+  fetchPostRows,
+} from "./entries";
 import { visibleOnTrade } from "./shared";
 
 const POST_CARD_LIMIT = 6;
@@ -68,32 +74,92 @@ export async function namedPostsOf(listIds: number[], listWhere?: SQL) {
   };
 }
 
+/** The rows by primary key, and those rows' lists that `listWhere` keeps, in one round trip. */
+export async function postsByRowOf(rowIds: number[], listWhere?: SQL) {
+  const [rowById, members] = await Promise.all([
+    fetchPostRows(inArray(tradePost.id, rowIds)),
+    db
+      .select(feedListColumns)
+      .from(lists)
+      .where(
+        and(
+          inArray(
+            lists.id,
+            db
+              .select({
+                id: sql<number>`unnest(ARRAY[${tradePost.leadListId}, ${tradePost.wantListId}])`,
+              })
+              .from(tradePost)
+              .where(inArray(tradePost.id, rowIds)),
+          ),
+          listWhere,
+        ),
+      ),
+  ]);
+  return { rowById, listById: new Map(members.map((list) => [list.id, list])) };
+}
+
+/** What a post card names: the list it was sent from, and the post's row on a card that names it. */
+export type PostCardRef = { listId: number; postId?: number };
+
+/** The key {@link fetchPostCards} files a card's post under. */
+export const postCardKey = (ref: PostCardRef) =>
+  ref.postId === undefined ? `list:${ref.listId}` : `row:${ref.postId}:${ref.listId}`;
+
+export type PostCardRead = { post: PostCardPost | null; postId: number | null };
+
 /**
- * Posts as a chat card draws them, by the id of the list the card was sent from; a list that is
- * gone, or no longer shown on Trade, maps to null. A card's list is either half of a pair: the
- * post is the one that holds it now ({@link listPostSql}), so a want list later linked to a have
- * list shows that post.
+ * Posts as a chat card draws them, under {@link postCardKey}, from their sides on Trade. A card
+ * that names its row shows that row's post, the one holding the card's list while one does, so it
+ * follows the post through its owner's edits; it reads null once the row is gone or has no side on
+ * Trade. A card from before cards named their row shows the post that holds its list now
+ * ({@link listPostSql}), and null once the list is gone or its side there is off Trade.
  */
 export async function fetchPostCards(
-  listIds: number[],
+  refs: PostCardRef[],
   viewerId: string | null,
-): Promise<Map<number, PostCardPost | null>> {
-  const result = new Map<number, PostCardPost | null>(listIds.map((id) => [id, null]));
-  if (listIds.length === 0) return result;
+): Promise<Map<string, PostCardRead>> {
+  const result = new Map<string, PostCardRead>(
+    refs.map((ref) => [postCardKey(ref), { post: null, postId: null }]),
+  );
+  if (refs.length === 0) return result;
 
-  const { rowOf, listById } = await namedPostsOf(listIds, visibleOnTrade(viewerId));
-  const found = listIds.flatMap((id) => {
-    const row = rowOf(id);
-    if (!row) return [];
-    // a card shows only the sides on Trade, and the post only while the named list's side is
+  const byList = unique(refs.flatMap((ref) => (ref.postId === undefined ? [ref.listId] : [])));
+  const byRow = unique(refs.flatMap((ref) => (ref.postId === undefined ? [] : [ref.postId])));
+  const visible = visibleOnTrade(viewerId);
+  const [named, rows] = await Promise.all([
+    byList.length === 0 ? null : namedPostsOf(byList, visible),
+    byRow.length === 0 ? null : postsByRowOf(byRow, visible),
+  ]);
+  // a card shows only the sides on Trade
+  const postsOf = <L extends FeedListRow>(row: PostRow, listById: ReadonlyMap<number, L>) => {
     const side = (listId: number | null, onTrade: boolean) =>
       listId !== null && onTrade ? (listById.get(listId) ?? null) : null;
-    const post = postFromRow(
+    return postFromRow(
       row,
       side(row.leadListId, row.leadOnTrade),
       side(row.wantListId, row.wantOnTrade),
-    ).find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
-    return post ? [{ id, post }] : [];
+    );
+  };
+  const holds = (
+    post: {
+      have?: { id: number } | null;
+      want?: { id: number } | null;
+      sale?: { id: number } | null;
+    },
+    listId: number,
+  ) => [post.have, post.want, post.sale].some((list) => list?.id === listId);
+  const found = [...new Map(refs.map((ref) => [postCardKey(ref), ref]))].flatMap(([key, ref]) => {
+    if (ref.postId === undefined) {
+      const row = named?.rowOf(ref.listId);
+      // the post only while the named list's side is on Trade
+      const post = row && postsOf(row, named!.listById).find((p) => holds(p, ref.listId));
+      return post ? [{ key, postId: row.id, post }] : [];
+    }
+    const row = rows?.rowById.get(ref.postId);
+    const posts = row ? postsOf(row, rows!.listById) : [];
+    const post = posts.find((p) => holds(p, ref.listId)) ?? posts[0];
+    return row && post ? [{ key, postId: row.id, post }] : [];
   });
   if (found.length === 0) return result;
 
@@ -140,39 +206,42 @@ export async function fetchPostCards(
     return { slugs: items.map((item) => item.slug), more, copyCount };
   };
 
-  for (const { id, post } of found) {
+  for (const { key, postId, post } of found) {
     const account = accountOf.get(post.anchor.userId);
     if (!account) continue;
     // a sale list never pairs with a want list, so a sale post's price stands where Wants would
     const price = post.sale ? priceOf.get(post.sale.id) : undefined;
     const address = post.anchor.profileAddress?.toLowerCase() ?? null;
-    result.set(id, {
-      tag: post.tag,
-      tags: post.tags,
-      owner: {
-        userId: account.id,
-        handle: tradeHandle(addressRows.filter((row) => row.userId === account.id)),
-        name: toPartnerIdentity(
-          account.name,
-          [post.have, post.want, post.sale].flatMap((list) =>
-            list ? [{ profileAddress: list.profileAddress, matches: 0 }] : [],
-          ),
-          addressRows.filter((row) => row.userId === account.id),
-        ).name,
+    result.set(key, {
+      postId,
+      post: {
+        tag: post.tag,
+        tags: post.tags,
+        owner: {
+          userId: account.id,
+          handle: tradeHandle(addressRows.filter((row) => row.userId === account.id)),
+          name: toPartnerIdentity(
+            account.name,
+            [post.have, post.want, post.sale].flatMap((list) =>
+              list ? [{ profileAddress: list.profileAddress, matches: 0 }] : [],
+            ),
+            addressRows.filter((row) => row.userId === account.id),
+          ).name,
+        },
+        list: {
+          id: post.anchor.id,
+          slug: post.anchor.slug,
+          name: post.anchor.name,
+          profileSlug: post.anchor.profileSlug,
+          profile: address ? { address, nickname: nicknameOf.get(address) ?? null } : null,
+        },
+        has: side(post.have ?? post.sale),
+        wants: side(post.want),
+        price:
+          price && post.sale?.currency
+            ? { min: Number(price.min), max: Number(price.max), currency: post.sale.currency }
+            : null,
       },
-      list: {
-        id: post.anchor.id,
-        slug: post.anchor.slug,
-        name: post.anchor.name,
-        profileSlug: post.anchor.profileSlug,
-        profile: address ? { address, nickname: nicknameOf.get(address) ?? null } : null,
-      },
-      has: side(post.have ?? post.sale),
-      wants: side(post.want),
-      price:
-        price && post.sale?.currency
-          ? { min: Number(price.min), max: Number(price.max), currency: post.sale.currency }
-          : null,
     });
   }
   return result;
@@ -194,34 +263,47 @@ export type StaffPost = {
 };
 
 /**
- * Posts as staff read them, by the id of a list a report named: the post that holds it now, off
- * Trade sides included, with no `visibleOnTrade` filter, so a block, a sanction or Trade hiding the
- * post never hides it from the console. Posted is the anchor's side on Trade in that row. A
- * trade-blocked owner's post reads as posted; the console shows the sanction.
+ * Posts as staff read them, under {@link postCardKey}, by what a report snapshot names: its row
+ * while the row exists (the post that holds the snapshot's list while one does, else the row's
+ * anchor's), else the post that holds the snapshot's list now. Off Trade sides are included, with
+ * no `visibleOnTrade` filter, so a block, a sanction or Trade hiding the post never hides it from
+ * the console. Posted is the anchor's side on Trade in that row. A trade-blocked owner's post
+ * reads as posted; the console shows the sanction.
  */
-export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPost>> {
-  const result = new Map<number, StaffPost>(
-    listIds.map((id) => [id, { state: "deleted", now: null }]),
+export async function staffPosts(refs: PostCardRef[]): Promise<Map<string, StaffPost>> {
+  const result = new Map<string, StaffPost>(
+    refs.map((ref) => [postCardKey(ref), { state: "deleted", now: null }]),
   );
-  if (listIds.length === 0) return result;
+  if (refs.length === 0) return result;
 
-  const { rowOf, listById } = await namedPostsOf(listIds);
+  const rowIds = unique(refs.flatMap((ref) => (ref.postId === undefined ? [] : [ref.postId])));
+  const [named, rows] = await Promise.all([
+    namedPostsOf(unique(refs.map((ref) => ref.listId))),
+    rowIds.length === 0 ? null : postsByRowOf(rowIds),
+  ]);
 
-  for (const id of listIds) {
-    const row = rowOf(id);
+  for (const [key, ref] of new Map(refs.map((ref) => [postCardKey(ref), ref]))) {
+    const byRow = ref.postId === undefined ? undefined : rows?.rowById.get(ref.postId);
+    const row = byRow ?? named.rowOf(ref.listId);
+    const listById = byRow ? rows!.listById : named.listById;
     const member = (listId: number | null) =>
       listId === null ? null : (listById.get(listId) ?? null);
-    const named = member(id);
+    const holds = (p: {
+      have?: { id: number } | null;
+      want?: { id: number } | null;
+      sale?: { id: number } | null;
+    }) => [p.have, p.want, p.sale].some((list) => list?.id === ref.listId);
+    const listed = member(ref.listId);
     // a list in no row is a post of its own, off Trade, as its lists read it
     const posts = row
       ? postFromRow(row, member(row.leadListId), member(row.wantListId))
-      : named
-        ? pairPosts([{ ...named, linkedListId: null, postId: null, bumpedAt: null }])
+      : listed
+        ? pairPosts([{ ...listed, linkedListId: null, postId: null, bumpedAt: null }])
         : [];
-    const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
+    const post = posts.find(holds) ?? (byRow ? posts[0] : undefined);
     if (!post) continue;
     const members = [post.anchor, ...(post.want && post.want !== post.anchor ? [post.want] : [])];
-    result.set(id, {
+    result.set(key, {
       state:
         row &&
         sideStateOf(row, post.anchor).onTrade &&

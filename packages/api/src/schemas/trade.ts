@@ -39,7 +39,7 @@ export function filterFits(filter: TradeFilter, sides: { have: boolean; want: bo
  * A person's counts against the viewer's lists, in collections. A sale list counts only against a
  * want list open to buying. `swap` is what the two can swap inside one post on each side,
  * `swapTheyHave` what they have in that best pairing, and `swapPair` the pairing: the viewer's
- * lists in it and the person's feed post id.
+ * lists in it and the person's post, by its row (the feed post's `id`).
  */
 export type MatchCounts = {
   theyHave: number;
@@ -73,8 +73,48 @@ export const tabCountsOutputSchema = z.object({ mine: z.number().int() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
-/** A post, by its lead list (the feed post's `id`). */
-export const tradePostInputSchema = z.object({ listId: z.number().int().positive() });
+/**
+ * The ids an input names a post by, for one release: `postId`, and the old field. Either may be a
+ * row id or a list id. A tab loaded before the deploy sends a list id in the old field, or a row
+ * id it read from the new feed; a tab of this build that refetched the old feed during a rollback
+ * sends a list id as `postId`.
+ */
+export type PostRef = { postId?: number; legacyId?: number };
+
+export function postRefOf(
+  postId: number | undefined,
+  legacyId: number | undefined,
+): PostRef | null {
+  if (postId === undefined && legacyId === undefined) return null;
+  return {
+    ...(postId === undefined ? {} : { postId }),
+    ...(legacyId === undefined ? {} : { legacyId }),
+  };
+}
+
+/**
+ * What a ref names, given which ids are `trade_post` rows: `postId` when it is a row, else the old
+ * field as a row when it is one, else the old field as a list; null when neither names anything.
+ * Row ids start above every list id, so no id is both. The services render the same order in SQL.
+ */
+export function resolvePostRef(
+  ref: PostRef,
+  isRow: (id: number) => boolean,
+): { kind: "row" | "list"; id: number } | null {
+  if (ref.postId !== undefined && isRow(ref.postId)) return { kind: "row", id: ref.postId };
+  if (ref.legacyId === undefined) return null;
+  return { kind: isRow(ref.legacyId) ? "row" : "list", id: ref.legacyId };
+}
+
+/** A post, by its row (the feed post's `id`); `listId` is the old field, a list id or a row id. */
+export const tradePostInputSchema = z
+  .object({
+    postId: z.number().int().positive().optional(),
+    listId: z.number().int().positive().optional(),
+  })
+  .refine((input) => input.postId !== undefined || input.listId !== undefined, {
+    message: "post_required",
+  });
 
 export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
@@ -140,7 +180,7 @@ export const PEOPLE_PAGE_SIZE = 12;
 /** A page of one post side's objekts, for the strip's "+N" sheet; `list` and `mutual` narrow the rings as For you's Compare with does. */
 export const sideItemsInputSchema = z.object({
   listId: z.coerce.number<number>().int().positive().meta({
-    description: "The side's list id: a post's `id` or a side's `list.id` from `/trade/people`",
+    description: "A side's `list.id` from `/trade/people`",
   }),
   list: z.string().min(1).optional().meta({
     description:
@@ -220,10 +260,13 @@ const feedSideSchema = z.object({
 const postTagSchema = z.enum(["wtt", "wtb", "wts"]);
 
 const feedPostSchema = z.object({
-  id: z.number().int(),
-  postId: z.number().int().nullable().meta({
+  id: z.number().int().meta({
     description:
-      "The post's own id. It stays through most edits, but changing or removing the post's have or sale list gives the post a new id. `id` is its anchor list's id. Null when no stored post holds its lists.",
+      "The post's id. A post keeps it while it stays one post, whichever of its lists its owner's edits swap or drop. Its anchor list's id is `sides[0].list.id`.",
+  }),
+  postId: z.number().int().meta({
+    deprecated: true,
+    description: "Deprecated: equal to `id`, and removed in a later release. Read `id` instead.",
   }),
   tags: z.array(postTagSchema),
   narrowed: z.boolean(),
@@ -231,7 +274,10 @@ const feedPostSchema = z.object({
   hidden: z.boolean().default(false),
   bumpedAt: z.string().nullable(),
   updatedAt: z.string(),
-  sides: z.array(feedSideSchema),
+  sides: z.array(feedSideSchema).meta({
+    description:
+      "The post's lists in the order have, sale, want. The first is the anchor list, whose slug addresses the post's page.",
+  }),
   match: z
     .object({
       youHave: z.number().int(),
@@ -273,7 +319,12 @@ export const peopleOutputSchema = z.object({
           swap: z.number().int(),
           swapTheyHave: z.number().int(),
           swapPair: z
-            .object({ myListIds: z.array(z.number().int()), theirPostId: z.number().int() })
+            .object({
+              myListIds: z.array(z.number().int()),
+              theirPostId: z.number().int().meta({
+                description: "The `id` of the person's post in the pairing, one of `posts`",
+              }),
+            })
             .nullable(),
         })
         .optional(),

@@ -10,8 +10,15 @@ import {
   swapThroughRules,
 } from "./person-row";
 
-const post = (id: number, bumpedAt: string, match?: { youHave: number; youWant: number }) => ({
+/** A post whose id is its row and whose anchor list is `anchor`, by default a list id of its own. */
+const post = (
+  id: number,
+  bumpedAt: string,
+  match?: { youHave: number; youWant: number },
+  anchor = id + 100,
+) => ({
   id,
+  sides: [{ list: { id: anchor } }],
   bumpedAt,
   updatedAt: bumpedAt,
   match,
@@ -35,8 +42,27 @@ describe("orderPosts", () => {
   });
 
   test("a post never bumped sorts by its last change", () => {
-    const never = { id: 1, bumpedAt: null, updatedAt: "2026-10-12T00:00:00Z" };
+    const never = {
+      id: 1,
+      sides: [{ list: { id: 101 } }],
+      bumpedAt: null,
+      updatedAt: "2026-10-12T00:00:00Z",
+    };
     expect(orderPosts([post(2, "2026-10-01T00:00:00Z"), never]).map((p) => p.id)).toEqual([1, 2]);
+  });
+
+  test("a bump tie goes to the highest anchor list id, whatever the post ids", () => {
+    const bumped = "2026-10-12T00:00:00Z";
+    // post 1000001 leads with list 20, post 1000002 with list 10: as before posts had ids
+    const higherList = post(1000001, bumped, undefined, 20);
+    const lowerList = post(1000002, bumped, undefined, 10);
+    for (const posts of [
+      [higherList, lowerList],
+      [lowerList, higherList],
+    ]) {
+      expect(orderPosts(posts).map((p) => p.id)).toEqual([1000001, 1000002]);
+      expect(leadPost(posts)?.id).toBe(1000001);
+    }
   });
 
   test("no posts has no lead", () => {

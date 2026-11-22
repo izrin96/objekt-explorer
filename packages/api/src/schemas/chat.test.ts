@@ -5,6 +5,7 @@ import {
   isPostCard,
   listConversationsInputSchema,
   messageBodySchema,
+  postCardViewSchema,
   quoteSourceOf,
   REPLY_EXCERPT_MAX,
   replyQuote,
@@ -157,6 +158,22 @@ describe("cards", () => {
     );
   });
 
+  test("an open tab's post input, listSlug alone, parses to the same data", () => {
+    const card = { kind: "post" as const, listSlug: "abc123", withMatch: true };
+    expect(startInputSchema.parse({ to: { kind: "list", slug: "abc123" }, card }).card).toEqual(
+      card,
+    );
+  });
+
+  test("a post input may name its post's row beside the list", () => {
+    const card = { kind: "post" as const, listSlug: "abc123", postId: 1000123 };
+    expect(sendInputSchema.parse({ conversationId: 1, clientId, card }).card).toEqual(card);
+    expect(
+      sendInputSchema.safeParse({ conversationId: 1, clientId, card: { ...card, postId: 0 } })
+        .success,
+    ).toBe(false);
+  });
+
   test("a post input names a list, never a collection", () => {
     for (const card of [
       { kind: "post" },
@@ -185,6 +202,22 @@ describe("cards", () => {
     expect(parsed).toEqual(post);
     expect(isPostCard(parsed)).toBe(true);
     expect(storedObjektCardSchema.safeParse(post).success).toBe(false);
+  });
+
+  test("a stored post card as the previous build writes it, with no postId, parses", () => {
+    const old = { kind: "post" as const, listId: 7 };
+    expect(storedCardSchema.parse(old)).toEqual(old);
+  });
+
+  test("a stored post card keeps its post's row", () => {
+    const card = { kind: "post" as const, listId: 7, postId: 1000123, match };
+    expect(storedCardSchema.parse(card)).toEqual(card);
+  });
+
+  test("a card view from the previous build, with no postId, parses with postId null", () => {
+    const view = { kind: "post" as const, listId: 7, post: null, match: null };
+    expect(postCardViewSchema.parse(view)).toEqual({ ...view, postId: null });
+    expect(postCardViewSchema.parse({ ...view, postId: 1000123 }).postId).toBe(1000123);
   });
 
   test("a saved match parses with or without whether the two could swap", () => {

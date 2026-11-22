@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { reportInputSchema } from "../schemas/moderation";
+import { reportInputSchema, reportPostSchema } from "../schemas/moderation";
 import { flagsOf } from "../schemas/open-to";
 import { namedListVerdict, type SnapshotList, postSnapshot } from "./report-post";
 
@@ -46,6 +46,19 @@ describe("postSnapshot", () => {
       tags: ["wtt"],
       onTrade: true,
     });
+  });
+
+  test("a post read from its row keeps the row as postId", () => {
+    const snapshot = postSnapshot([doubles, wants], 10, 1000123);
+    expect(snapshot?.postId).toBe(1000123);
+    expect(snapshot?.listId).toBe(10);
+    expect(reportPostSchema.parse(snapshot)).toEqual(snapshot!);
+  });
+
+  test("a snapshot filed before posts had ids, with no postId, still parses", () => {
+    const old = postSnapshot([doubles, wants], 10)!;
+    expect("postId" in old).toBe(false);
+    expect(reportPostSchema.parse(old)).toEqual(old);
   });
 
   test("a WTS sale list on its own", () => {
@@ -111,6 +124,29 @@ describe("reportInputSchema", () => {
       share: true,
       alsoBlock: false,
     });
+  });
+
+  test("an open tab's postListId alone parses to the same data", () => {
+    expect(reportInputSchema.parse({ userId: "rin", reason: "spam", postListId: 7 })).toEqual({
+      userId: "rin",
+      reason: "spam",
+      postListId: 7,
+      share: true,
+      alsoBlock: false,
+    });
+  });
+
+  test("postId is a positive integer, kept beside postListId", () => {
+    const parsed = reportInputSchema.parse({
+      userId: "rin",
+      reason: "spam",
+      postId: 1000123,
+      postListId: 7,
+    });
+    expect([parsed.postId, parsed.postListId]).toEqual([1000123, 7]);
+    expect(reportInputSchema.safeParse({ userId: "rin", reason: "spam", postId: 0 }).success).toBe(
+      false,
+    );
   });
 
   test("postListId is a positive integer", () => {

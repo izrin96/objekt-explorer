@@ -17,6 +17,11 @@
  * person never hides their own post, so no hide sits on its hider's own row. It needs migration
  * `hidden_trade_post_by_row`.
  *
+ * Check 8 holds because a feed post's id is its row: no row may read as two posts. A row does
+ * when both its sides are on Trade and its sale lead takes no swaps, since the feed then shows the
+ * sale list and the want list as posts of their own. The writers never write that row. The check
+ * also counts such a row whose lead the feed does not show, which errs toward a stop.
+ *
  * Two offer counts are printed as notes and never set the exit code: a merge can hand an offer's
  * row to another list, or Edit post swapped or dropped any of the post's lists, and an offer
  * made by the old build after the migration has no post id, so neither is wrong data.
@@ -97,6 +102,13 @@ const CHECKS: [label: string, query: SQL][] = [
     sql`SELECT hp.post_id AS id FROM hidden_trade_post hp
         JOIN trade_post tp ON tp.id = hp.post_id
         WHERE tp.user_id = hp.user_id`,
+  ],
+  [
+    "a row that reads as two posts (row ids)",
+    sql`SELECT tp.id FROM trade_post tp
+        JOIN lists o ON o.id = tp.lead_list_id
+        WHERE tp.lead_on_trade AND tp.want_on_trade AND tp.want_list_id IS NOT NULL
+          AND o.list_type = 'sale' AND NOT tp.takes_swaps`,
   ],
 ];
 

@@ -107,6 +107,8 @@ export type StoredMatch = z.infer<typeof storedMatchSchema>;
 const storedPostCardSchema = z.object({
   kind: z.literal("post"),
   listId: z.number().int(),
+  /** the post's row; cards sent before cards named their post have none */
+  postId: z.number().int().optional(),
   match: storedMatchSchema.optional(),
 });
 export type StoredPostCard = z.infer<typeof storedPostCardSchema>;
@@ -145,6 +147,8 @@ export type ObjektCardInput = z.infer<typeof objektCardInputSchema>;
 const postCardInputSchema = z.object({
   kind: z.literal("post"),
   listSlug: slugSchema(12),
+  /** the post's row, which must hold the list; without it the card names the post that holds the list */
+  postId: z.number().int().positive().optional(),
   withMatch: z.boolean().optional(),
 });
 export type PostCardInput = z.infer<typeof postCardInputSchema>;
@@ -292,6 +296,9 @@ const postTagSchema = z.enum(POST_TYPES).exclude(["all"]);
 export const postCardViewSchema = z.object({
   kind: z.literal("post"),
   listId: z.number(),
+  // defaulted, so a view from the previous build (an event, or after a rollback) still parses
+  /** the row of the post shown; null when `post` is */
+  postId: z.number().nullable().default(null),
   post: z
     .object({
       /** the one tag that picks the suggested opening message */

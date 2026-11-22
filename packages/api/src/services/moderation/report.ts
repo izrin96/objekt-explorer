@@ -8,8 +8,9 @@ import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { canReport } from "../../lib/offer-rules";
 import { namedListVerdict, postSnapshot, type SnapshotList } from "../../lib/report-post";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../../lib/sanctions";
-import { sideStateOf } from "../../lib/trade-post-state";
+import { type PostRow, sideStateOf } from "../../lib/trade-post-state";
 import type { ReportInput } from "../../schemas/moderation";
+import { type PostRef, postRefOf, resolvePostRef } from "../../schemas/trade";
 import { lockUsersForWrite } from "../account/cosmo-link";
 import { afterBlockChange, findMembership, parseCard } from "../chat";
 import {
@@ -19,7 +20,8 @@ import {
   publishCancelled,
 } from "../offer/cancel";
 import { fetchOffers } from "../offer/view";
-import { namedPostsOf } from "../trade/feed/post-cards";
+import type { FeedListRow } from "../trade/feed/entries";
+import { namedPostsOf, postsByRowOf } from "../trade/feed/post-cards";
 import { findAccount, refuseModeration } from "./core";
 
 const REPORTS_PER_DAY = 20;
@@ -82,22 +84,42 @@ const snapshotColumns = {
 };
 
 /**
- * The post a report names, as it stands now: the row the list shows ({@link namedPostsOf}), off
- * Trade sides included, each list on Trade as its side in that row is. A list deleted before the
- * report arrives is left off, so the report still goes through; another account's list, or one of
- * another type, is refused as a mismatched conversation or trade is. Being on Trade is recorded,
- * never required.
+ * The post a report names, as it stands now, off Trade sides included, each list on Trade as its
+ * side in its row is, resolved by `resolvePostRef`. A row: another account's is refused. A list,
+ * read through the row it shows ({@link namedPostsOf}): one deleted before the report arrives is
+ * left off, and another account's list, or one of another type, is refused as a mismatched
+ * conversation or trade is. Naming nothing files the report without the post. Being on Trade is
+ * recorded, never required.
  */
-async function reportedPost(targetUserId: string, listId: number) {
-  const [[named], { rowOf, listById }] = await Promise.all([
-    db.select(snapshotColumns).from(lists).where(eq(lists.id, listId)),
-    namedPostsOf([listId]),
+async function reportedPost(targetUserId: string, ref: PostRef) {
+  const ids = [ref.postId, ref.legacyId].flatMap((id) => (id === undefined ? [] : [id]));
+  const legacyId = ref.legacyId;
+  const [[named], namedPosts, byRow] = await Promise.all([
+    legacyId === undefined
+      ? []
+      : db.select(snapshotColumns).from(lists).where(eq(lists.id, legacyId)),
+    legacyId === undefined ? null : namedPostsOf([legacyId]),
+    postsByRowOf(ids),
   ]);
+  const target = resolvePostRef(ref, (id) => byRow.rowById.has(id));
+  if (!target) return null;
+  if (target.kind === "row") {
+    const row = byRow.rowById.get(target.id)!;
+    const lead = byRow.listById.get(row.leadListId);
+    if (!lead) return null;
+    if (namedListVerdict(lead, targetUserId) === "refuse") throw new ORPCError("NOT_FOUND");
+    return snapshotOfRow(row, byRow.listById, lead.id);
+  }
   const verdict = namedListVerdict(named, targetUserId);
   if (verdict === "refuse") throw new ORPCError("NOT_FOUND");
   if (!named) return null;
-  const row = rowOf(listId);
+  const row = namedPosts!.rowOf(target.id);
   if (!row) return postSnapshot([{ ...named, linkedListId: null }], named.id);
+  return snapshotOfRow(row, namedPosts!.listById, named.id);
+}
+
+/** The post a row holds `namedId` in, its lists on Trade as their sides in the row are. */
+function snapshotOfRow(row: PostRow, listById: ReadonlyMap<number, FeedListRow>, namedId: number) {
   const snapshotOf = (id: number | null, partner: number | null): SnapshotList[] => {
     const list = id === null ? undefined : listById.get(id);
     if (!list) return [];
@@ -115,7 +137,8 @@ async function reportedPost(targetUserId: string, listId: number) {
   };
   return postSnapshot(
     [...snapshotOf(row.leadListId, row.wantListId), ...snapshotOf(row.wantListId, row.leadListId)],
-    named.id,
+    namedId,
+    row.id,
   );
 }
 
@@ -146,8 +169,8 @@ export async function fileReport(me: string, input: ReportInput) {
     }
   }
 
-  const post =
-    input.postListId === undefined ? null : await reportedPost(input.userId, input.postListId);
+  const postRef = postRefOf(input.postId, input.postListId);
+  const post = postRef === null ? null : await reportedPost(input.userId, postRef);
 
   const { id, cancelled } = await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_report'), hashtext(${me}))`);

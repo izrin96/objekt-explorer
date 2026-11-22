@@ -247,10 +247,11 @@ describe("swapScore over rows", () => {
       iHaveTheyWant: [swap("yooyeon-205z", 3, 12)],
       posts,
     });
+    // swapPair names the row, not the lead list both rows share
     expect(result).toEqual({
       swap: 1,
       swapTheyHave: 1,
-      swapPair: { myListIds: [3, 4], theirPostId: 10 },
+      swapPair: { myListIds: [3, 4], theirPostId: 101 },
     });
     // through the other want list, the same lead names the other row's pairing
     expect(
@@ -262,7 +263,7 @@ describe("swapScore over rows", () => {
     ).toBe(1);
   });
 
-  test("a tie names the pairing the lead ids name, whatever the row ids", () => {
+  test("a tie goes to the pairing the lead ids name, and swapPair names its row", () => {
     // row 100 is led by list 20, row 101 by list 10: as before rows, the lower lead wins
     const posts: MatchPosts = {
       mine,
@@ -274,6 +275,6 @@ describe("swapScore over rows", () => {
       iHaveTheyWant: [swap("x", 3, 21), swap("y", 3, 11)],
       posts,
     });
-    expect(result.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 10 });
+    expect(result.swapPair).toEqual({ myListIds: [3, 4], theirPostId: 101 });
   });
 });

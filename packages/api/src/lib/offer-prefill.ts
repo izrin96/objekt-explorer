@@ -107,9 +107,9 @@ export function fillMatches<M extends FillMatch>(
   swapPair: MatchCounts["swapPair"],
   post?: { offerIds: ReadonlySet<number>; wantIds: ReadonlySet<number> },
 ): { get: M[]; give: M[] } {
-  // the pairing's own row, since a list in two of their posts names the same lead in both
+  // `post` names lists, so the pairing is checked by its lead; its matches are cut to its own row
   const best = swapPair ? bestPairing(matched) : null;
-  if (swapPair && best && (!post || post.offerIds.has(swapPair.theirPostId))) {
+  if (swapPair && best && (!post || post.offerIds.has(best.theirLead))) {
     const mine = new Set(swapPair.myListIds);
     const inPair = (matches: readonly M[]) =>
       matches.flatMap((match) => {

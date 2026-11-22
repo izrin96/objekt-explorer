@@ -51,8 +51,7 @@ export async function fetchMyPosts(userId: string) {
   const handle = tradeHandle(addressRows);
   // every post carries the person's last and next bump, and whether a trade block hides them
   return own.toSorted(comparePosts).map((post) => ({
-    id: post.anchor.id,
-    postId: post.anchor.postId,
+    id: post.anchor.postId,
     slug: post.anchor.slug,
     tags: post.tags,
     kind: postKindOf(post).kind,

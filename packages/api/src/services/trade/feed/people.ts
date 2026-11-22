@@ -49,7 +49,7 @@ type PeopleContext = LoadContext & { input: PeopleInput };
 async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Promise<Loaded[]> {
   const rows = await fetchPersonRows(query, ids);
   const { posts, identities } = await loadPosts(ctx, rows, rows.length);
-  const atOf = new Map(rows.map((row) => [row.id, row.cursor_at]));
+  const atOf = new Map(rows.map((row) => [row.post_id, row.cursor_at]));
   const byUser = Map.groupBy(posts, (post) => post.userId);
   return ids.flatMap((id): Loaded[] => {
     const group = byUser.get(id);

@@ -9,7 +9,7 @@ const side = (role: PostSideData["role"], copyCount: number) =>
   fromPartial<PostSideData>({ role, list: { id: 1, slug: role }, items: [], copyCount });
 
 const post = (tags: PersonPostData["tags"], sides: PostSideData[]) =>
-  fromPartial<PersonPostData>({ id: 1, tags, sides });
+  fromPartial<PersonPostData>({ id: 1_000_001, tags, sides });
 
 describe("sharePreview", () => {
   test("a person: their name, post count and tags in a fixed order", () => {

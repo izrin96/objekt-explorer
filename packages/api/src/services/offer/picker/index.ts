@@ -15,7 +15,7 @@ import {
 } from "../../../lib/offer-prefill";
 import { oneListOf } from "../../../lib/offer-recipient-rules";
 import { itemFlags } from "../../../lib/offer-rules";
-import { matchCounts } from "../../../lib/trade-person";
+import { bestPairing, matchCounts } from "../../../lib/trade-person";
 import type { Match } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
@@ -202,6 +202,8 @@ export async function suggestOffer(
   // a person with near matches only still gets them
   const partner = recounted.find((row) => row.userId === partnerId);
   const swapPair = partner ? matchCounts(partner).swapPair : null;
+  // `swapPair` names a row; the pair's post is read by its lead list, which the offer keys by
+  const pairLead = swapPair && partner ? bestPairing(partner)?.theirLead : undefined;
   const filled = partner
     ? fillMatches(partner, swapPair, postLists ?? undefined)
     : { get: [], give: [] };
@@ -265,11 +267,11 @@ export async function suggestOffer(
       getMatches.map((match) => match.slug),
     ),
     // a Can swap pair asks from one post already: its key is that post's have or sale list
-    !onePost && !postLists && swapPair && getMatches.length > 0
+    !onePost && !postLists && pairLead !== undefined && getMatches.length > 0
       ? db
           .select({ slug: lists.slug, name: lists.name })
           .from(lists)
-          .where(and(eq(lists.id, swapPair.theirPostId), eq(lists.userId, partnerId)))
+          .where(and(eq(lists.id, pairLead), eq(lists.userId, partnerId)))
       : [],
     nearPicks(me, addressed, nearWanted, theirsRead),
   ]);

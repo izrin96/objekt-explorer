@@ -11,11 +11,12 @@ import { realNickname } from "@repo/lib/address";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import type { PostRef } from "../../schemas/trade";
 import { tradeHandle } from "../../schemas/trade-person";
 import { bumpTradeVersions } from "../moderation/safety-cache";
 import { toPublicUser } from "../profile";
-import { postsCte } from "./feed/query";
-import { hidesOfSql, matchableListSql } from "./lists";
+import { hidePostSql, unhidePostSql } from "./hide-sql";
+import { matchableListSql } from "./lists";
 import { fetchAddresses } from "./matches/holdings";
 
 /** A no-op unless the partner has a list For you or Browse can show (see `trade.hidePartner`). */
@@ -90,44 +91,32 @@ export async function fetchHiddenPartners(viewerId: string) {
 }
 
 /**
- * A no-op unless `listId` leads another account's post on Trade (see `trade.hidePost`). Idle
- * posts count, so a post can be hidden from its page before its owner bumps it. The hide names
- * the post's row, the lowest among the posts the list leads.
+ * A no-op unless `ref` names another account's post on Trade (see `trade.hidePost`). Idle posts
+ * count, so a post can be hidden from its page before its owner bumps it. The hide names the
+ * post's row (`hidePostSql`).
  */
-export async function hidePost(viewerId: string, listId: number) {
-  const inserted = await db.execute<{ post_id: number }>(sql`
-    WITH ${postsCte}
-    INSERT INTO hidden_trade_post (user_id, post_id)
-    SELECT ${viewerId}, min(posts.post_id) FROM posts
-    WHERE posts.id = ${listId} AND posts.user_id <> ${viewerId}
-    HAVING min(posts.post_id) IS NOT NULL
-    ON CONFLICT DO NOTHING
-    RETURNING post_id
-  `);
+export async function hidePost(viewerId: string, ref: PostRef) {
+  const inserted = await db.execute<{ post_id: number }>(hidePostSql(viewerId, ref));
   if (inserted.rows.length > 0) await bumpTradeVersions([viewerId]);
 }
 
-/** Removes the viewer's hide of the row that holds `listId`, whichever list of it is named. */
-export async function unhidePost(viewerId: string, listId: number) {
-  await db.execute(sql`
-    DELETE FROM hidden_trade_post gone
-    USING (VALUES (${listId}::int)) AS named(id)
-    WHERE gone.user_id = ${viewerId}
-      AND gone.post_id IN (SELECT hp.post_id ${hidesOfSql(viewerId, "named")})
-  `);
+/** Removes the viewer's hide of the named row (`unhidePostSql`). */
+export async function unhidePost(viewerId: string, ref: PostRef) {
+  await db.execute(unhidePostSql(viewerId, ref));
   await bumpTradeVersions([viewerId]);
 }
 
 /**
  * The posts the viewer hid, newest hide first, each named by the lists of its row now, on Trade
- * or off, and its owner. One entry per hide, which is one per post; `listId` is the row's lead,
- * which `unhidePost` finds the row by.
+ * or off, and its owner. One entry per hide, which is one per post: `postId` is the row, which
+ * `unhidePost` takes, and `listId` its lead, the old field a tab from before it sends.
  */
 export async function fetchHiddenPosts(viewerId: string) {
   const lead = alias(lists, "lead");
   const want = alias(lists, "want");
   const rows = await db
     .select({
+      postId: tradePost.id,
       listId: lead.id,
       // a list of the post that is on Trade, so the link opens the post page
       slug: sql<string>`CASE
@@ -153,6 +142,7 @@ export async function fetchHiddenPosts(viewerId: string) {
     const owned = addresses.filter((a) => a.userId === row.user.id);
     const bound = owned.find((a) => a.address.toLowerCase() === row.profileAddress?.toLowerCase());
     return {
+      postId: row.postId,
       listId: row.listId,
       slug: row.slug,
       names: row.wantName === null ? [row.name] : [row.name, row.wantName],

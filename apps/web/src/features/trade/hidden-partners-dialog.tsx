@@ -165,11 +165,11 @@ export function HiddenPostsList({ enabled }: { enabled: boolean }) {
   return (
     <ul className="flex flex-col divide-y rounded-lg border">
       {query.data.map((post) => {
-        const pending = unhide.isPending && unhide.variables.listId === post.listId;
+        const pending = unhide.isPending && unhide.variables.postId === post.postId;
         const name = post.user.name ?? "?";
         const title = post.names.join(" · ");
         return (
-          <li key={post.listId} className="flex items-center gap-3 px-3 py-2">
+          <li key={post.postId} className="flex items-center gap-3 px-3 py-2">
             <PersonAvatar name={name} image={post.user.image} className="size-8 shrink-0" />
             <span className="flex min-w-0 flex-1 flex-col">
               {post.handle ? (
@@ -199,7 +199,7 @@ export function HiddenPostsList({ enabled }: { enabled: boolean }) {
               variant="outline"
               size="sm"
               disabled={pending}
-              onClick={() => unhide.mutate({ listId: post.listId })}
+              onClick={() => unhide.mutate({ postId: post.postId, listId: post.listId })}
             >
               <EyeIcon />
               {m.trade_unhide()}

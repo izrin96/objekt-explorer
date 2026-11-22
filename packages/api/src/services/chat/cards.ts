@@ -19,7 +19,7 @@ import {
 import type { ShownSerial } from "../../schemas/offer";
 import { fetchCollectionsBySlug } from "../list/collections";
 import { anchoredSerialIds } from "../objekt/serial-anchored";
-import { fetchPostCards } from "../trade/feed/post-cards";
+import { fetchPostCards, postCardKey } from "../trade/feed/post-cards";
 
 /** Either kind of card; for what is written to `message.card` and for the thread's own readers. */
 export function parseCard(value: unknown): StoredCard | null {
@@ -155,10 +155,11 @@ export async function hydrateCards(cards: CardRef[], viewerId: string | null) {
  * match is not read again: it shows what was true when the card was sent.
  */
 export async function hydratePostCards(cards: StoredPostCard[], viewerId: string | null) {
-  const posts = await fetchPostCards(unique(cards.map((card) => card.listId)), viewerId);
+  const posts = await fetchPostCards(cards, viewerId);
+  const readOf = (card: StoredPostCard) => posts.get(postCardKey(card));
   const slugs = unique(
     cards.flatMap((card) => {
-      const post = posts.get(card.listId);
+      const post = readOf(card)?.post;
       return [
         ...(post?.has?.slugs ?? []),
         ...(post?.wants?.slugs ?? []),
@@ -172,7 +173,8 @@ export async function hydratePostCards(cards: StoredPostCard[], viewerId: string
     view: (card: StoredPostCard): PostCardView => ({
       kind: "post",
       listId: card.listId,
-      post: posts.get(card.listId) ?? null,
+      postId: readOf(card)?.postId ?? null,
+      post: readOf(card)?.post ?? null,
       match: card.match ?? null,
     }),
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<

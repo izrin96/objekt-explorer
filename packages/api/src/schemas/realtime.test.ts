@@ -83,14 +83,14 @@ describe("realtimeEventSchema", () => {
     expect(realtimeEventSchema.safeParse(without).success).toBe(false);
   });
 
-  test("a post card arrives in the message's card", () => {
+  test("a post card arrives in the message's card, its postId null when the server sent none", () => {
     const card = { kind: "post" as const, listId: 9, post: null, match: null };
     const parsed = realtimeEventSchema.parse({
       ...chatMessage,
       message: { ...chatMessage.message, card },
     });
     if (parsed.type !== "chat_message") throw new Error("not a chat message");
-    expect(parsed.message.card).toEqual(card);
+    expect(parsed.message.card).toEqual({ ...card, postId: null });
   });
 
   test("an unknown type is rejected", () => {

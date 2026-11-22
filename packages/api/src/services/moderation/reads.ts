@@ -22,7 +22,7 @@ import {
 import { sanctionedAmong } from "../account/cosmo-link";
 import { fetchPartners } from "../chat";
 import { reputationOf } from "../reputation";
-import { staffPosts } from "../trade/feed/post-cards";
+import { postCardKey, staffPosts } from "../trade/feed/post-cards";
 import { findAccount, sanctionColumns } from "./core";
 import { linkEventsWhere } from "./links";
 import { tradeDetail } from "./trade-detail";
@@ -256,7 +256,7 @@ export async function accountDossier(userId: string) {
   const [{ linkHistory, sharedHolders }, { attached, people }, postsNow] = await Promise.all([
     readLinks(),
     readPeople(),
-    staffPosts([...new Set([...reportedPosts.values()].map((post) => post.listId))]),
+    staffPosts([...reportedPosts.values()]),
   ]);
   const nameOf = (id: string | null) =>
     id === null ? null : (people.get(id) ?? { userId: id, user: null, identity: null });
@@ -286,7 +286,7 @@ export async function accountDossier(userId: string) {
     reports: reports.map((r) => {
       const excerpt = excerptEntrySchema.array().safeParse(r.excerpt);
       const reported = reportedPosts.get(r.id);
-      const now = reported ? postsNow.get(reported.listId) : undefined;
+      const now = reported ? postsNow.get(postCardKey(reported)) : undefined;
       return {
         id: r.id,
         reporter: nameOf(r.reporterId),

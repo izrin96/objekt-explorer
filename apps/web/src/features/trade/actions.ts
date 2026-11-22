@@ -127,41 +127,41 @@ function readsOnePerson(query: Query) {
 }
 
 /** The page minus one post, and minus its person's row once that row holds no other post. */
-function withoutPost(page: PeoplePage, listId: number): PeoplePage {
+function withoutPost(page: PeoplePage, postId: number): PeoplePage {
   return {
     ...page,
     people: page.people.flatMap((person) => {
-      const posts = person.posts.filter((post) => post.id !== listId);
+      const posts = person.posts.filter((post) => post.id !== postId);
       if (posts.length === person.posts.length) return [person];
       return posts.length > 0 ? [{ ...person, posts }] : [];
     }),
   };
 }
 
-function markHidden(page: PeoplePage, listId: number, hidden: boolean): PeoplePage {
+function markHidden(page: PeoplePage, postId: number, hidden: boolean): PeoplePage {
   return {
     ...page,
     people: page.people.map((person) => ({
       ...person,
-      posts: person.posts.map((post) => (post.id === listId ? { ...post, hidden } : post)),
+      posts: person.posts.map((post) => (post.id === postId ? { ...post, hidden } : post)),
     })),
   };
 }
 
 /** Feeds drop a hidden post; the person and post pages keep it and offer Unhide post. */
-async function showHidden(queryClient: QueryClient, listId: number, hidden: boolean) {
+async function showHidden(queryClient: QueryClient, postId: number, hidden: boolean) {
   const key = orpc.trade.people.key();
   await queryClient.cancelQueries({ queryKey: key });
   const update = (change: (page: PeoplePage) => PeoplePage) => (data?: InfiniteData<PeoplePage>) =>
     data ? { ...data, pages: data.pages.map(change) } : data;
   queryClient.setQueriesData<InfiniteData<PeoplePage>>(
     { queryKey: key, predicate: readsOnePerson },
-    update((page) => markHidden(page, listId, hidden)),
+    update((page) => markHidden(page, postId, hidden)),
   );
   if (hidden) {
     queryClient.setQueriesData<InfiniteData<PeoplePage>>(
       { queryKey: key, predicate: (query) => !readsOnePerson(query) },
-      update((page) => withoutPost(page, listId)),
+      update((page) => withoutPost(page, postId)),
     );
   }
 }
@@ -172,7 +172,8 @@ function useHidePost() {
 
   return useMutation(
     orpc.trade.hidePost.mutationOptions({
-      onMutate: ({ listId }) => showHidden(queryClient, listId, true),
+      onMutate: ({ postId }) =>
+        postId === undefined ? undefined : showHidden(queryClient, postId, true),
       // as Hide person: the post is already gone, so the feed refetches on its next mount
       onSuccess: async () => {
         const people = orpc.trade.people.key();
@@ -196,18 +197,24 @@ function useHidePost() {
   );
 }
 
+/**
+ * A post as Hide post and Unhide name it: its id, and its anchor list's id, which the build before
+ * post ids reads, so the call still works after a rollback.
+ */
+export type HidePostRef = { postId: number; listId: number };
+
 /** Hide post with a toast offering Undo. */
 export function useHidePostWithUndo() {
   const hide = useHidePost();
   const unhide = useUnhidePost();
 
   // not `mutate`'s callbacks: hiding can drop the post that calls this, and an unmounted observer skips them
-  return (listId: number) =>
-    void hide.mutateAsync({ listId }).then(
+  return (post: HidePostRef) =>
+    void hide.mutateAsync(post).then(
       () => {
         addActionToast(
           { type: "success", title: m.trade_post_hide_success() },
-          { label: m.common_actions_undo(), onClick: () => unhide.mutate({ listId }) },
+          { label: m.common_actions_undo(), onClick: () => unhide.mutate(post) },
         );
       },
       // the mutation's own onError shows the toast
@@ -221,7 +228,8 @@ export function useUnhidePost() {
 
   return useMutation(
     orpc.trade.unhidePost.mutationOptions({
-      onMutate: ({ listId }) => showHidden(queryClient, listId, false),
+      onMutate: ({ postId }) =>
+        postId === undefined ? undefined : showHidden(queryClient, postId, false),
       onSuccess: () => invalidate(),
       onError: () => {
         void invalidate();

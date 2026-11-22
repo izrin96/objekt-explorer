@@ -2,22 +2,26 @@ import { describe, expect, test } from "bun:test";
 
 import { fromPartial } from "@total-typescript/shoehorn";
 
-import { offerHandleOf, slugTarget, withHandle } from "./person-page";
+import { anchorOf, offerHandleOf, slugTarget, withHandle } from "./person-page";
 import type { PersonPostData, PostSideData } from "./post-types";
 
 const side = (id: number, slug: string, role: PostSideData["role"]) =>
   fromPartial<PostSideData>({ role, list: { id, slug }, items: [], copyCount: 0 });
 
-/** a pair anchored on its have list, as the feed sends it */
+/** a pair anchored on its have list, as the feed sends it: the post's id is its row */
 const pair = (id: number, have: string, want: string) =>
   fromPartial<PersonPostData>({
-    id,
+    id: 1_000_000 + id,
     tags: ["wtt"],
     sides: [side(id, have, "have"), side(id + 1, want, "want")],
   });
 
 const wantOnly = (id: number, want: string) =>
-  fromPartial<PersonPostData>({ id, tags: ["wtb"], sides: [side(id, want, "want")] });
+  fromPartial<PersonPostData>({
+    id: 1_000_000 + id,
+    tags: ["wtb"],
+    sides: [side(id, want, "want")],
+  });
 
 describe("withHandle", () => {
   test("swaps the handle and keeps the rest of the path and the search", () => {
@@ -57,6 +61,18 @@ describe("offerHandleOf", () => {
 
   test("no linked profile, no page and no Make offer", () => {
     expect(offerHandleOf({ handle: null, identity: { address: "0xabc" } })).toBeNull();
+  });
+});
+
+describe("anchorOf", () => {
+  test("is the first side, whose list id is not the post's id", () => {
+    const post = pair(812, "spares", "wants");
+    expect(post.id).toBe(1_000_812);
+    expect(anchorOf(post)?.list.slug).toBe("spares");
+  });
+
+  test("a want-only post's anchor is its want list", () => {
+    expect(anchorOf(wantOnly(30, "hunting"))?.list.slug).toBe("hunting");
   });
 });
 

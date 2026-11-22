@@ -11,6 +11,8 @@ type Match = {
 
 type RowPost = {
   id: number;
+  /** have, sale, want: the first is the anchor list */
+  sides: readonly { list: { id: number } }[];
   bumpedAt: string | null;
   updatedAt: string;
   match?: Match;
@@ -23,9 +25,17 @@ function hits(post: RowPost) {
 
 const bumpTime = (post: RowPost) => Date.parse(post.bumpedAt ?? post.updatedAt);
 
-/** Posts with a match first, most matched collections first, then newest bump first. */
+const anchorId = (post: RowPost) => post.sides[0]?.list.id ?? 0;
+
+/**
+ * Posts with a match first, most matched collections first, then newest bump first. One Bump gives
+ * every post the same time, so a tie goes to the highest anchor list id, as the server's
+ * `comparePosts` breaks it, whatever the post ids.
+ */
 export function orderPosts<P extends RowPost>(posts: readonly P[]): P[] {
-  return posts.toSorted((a, b) => hits(b) - hits(a) || bumpTime(b) - bumpTime(a) || b.id - a.id);
+  return posts.toSorted(
+    (a, b) => hits(b) - hits(a) || bumpTime(b) - bumpTime(a) || anchorId(b) - anchorId(a),
+  );
 }
 
 /** The post Message and Make offer address, and the one whose list leads the row. */

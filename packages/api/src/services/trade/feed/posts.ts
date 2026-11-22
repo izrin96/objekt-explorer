@@ -179,7 +179,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
       identityLists.set(account.id, owned);
 
       posts.push({
-        id: post.anchor.id,
+        id: post.anchor.postId,
         postId: post.anchor.postId,
         tags: post.tags,
         narrowed,

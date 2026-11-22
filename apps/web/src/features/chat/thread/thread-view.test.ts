@@ -136,6 +136,7 @@ describe("postOfferOf", () => {
     return {
       kind: "post",
       listId: 1,
+      postId: null,
       post: {
         tag: "wtt",
         tags: ["wtt"],

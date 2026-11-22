@@ -26,6 +26,7 @@ const post = (
   view: {
     kind: "post",
     listId: 1,
+    postId: null,
     post: tag && fromPartial<NonNullable<PostAttachment["view"]["post"]>>({ tag }),
     match: match && {
       ownerHas: { count: match.theirs, slugs: [] },

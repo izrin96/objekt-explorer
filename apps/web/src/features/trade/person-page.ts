@@ -28,9 +28,9 @@ export function offerHandleOf(person: {
   return person.identity.address?.toLowerCase() ?? person.handle;
 }
 
-/** The post's own list: the have or sale list of a pair, else its only list. */
+/** The post's own list: its first side, the have or sale list of a pair, else its only list. */
 export function anchorOf(post: PersonPostData) {
-  return post.sides.find((side) => side.list.id === post.id) ?? post.sides[0];
+  return post.sides[0];
 }
 
 /** What a post page's slug names among the person's kept posts. */
