@@ -2,36 +2,18 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { userAddress } from "@repo/db/schema";
-import { Addresses } from "@repo/lib";
+import { Addresses, chunkMap } from "@repo/lib";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, count, eq, inArray, min, notInArray } from "drizzle-orm";
+import { and, count, eq, min, notInArray, sql } from "drizzle-orm";
 import type * as z from "zod";
 
-import type {
-  HolderBucketKey,
-  HolderRow,
-  HoldersOutput,
-  holdersInputSchema,
-} from "../../schemas/collections";
+import { TOKEN_CHUNK_SIZE } from "../../constants";
+import { type RankedHolder, type Ranking, rankHolders } from "../../lib/holder-ranking";
+import type { HolderRow, HoldersOutput, holdersInputSchema } from "../../schemas/collections";
 import { getCache } from "../redis";
 
-// with the client's 60 s staleTime on top, figures stay within five minutes of ownership
-const RANKING_TTL = 4 * 60;
-
-// a tuple rather than an object: the largest collections cache ~25k of these
-type RankedHolder = [address: string, copies: number, lowestSerial: number, rank: number];
-
-type Ranking = {
-  summary: HoldersOutput["summary"];
-  holders: RankedHolder[];
-};
-
-function bucketOf(copies: number): HolderBucketKey {
-  if (copies === 1) return "1";
-  if (copies <= 4) return "2-4";
-  if (copies <= 9) return "5-9";
-  return "10+";
-}
+// with the client's 60 s staleTime on top, figures stay within fifteen minutes of ownership
+const RANKING_TTL = 14 * 60;
 
 // the Redis entry can be ~1 MB of JSON, so a short per-process memo skips parsing it on every page
 const MEMO_TTL_MS = 15_000;
@@ -53,8 +35,10 @@ function fetchRanking(slug: string): Promise<Ranking> {
   return ranking;
 }
 
+// Nicknames ride in the ranking, so a rename shows when it next refreshes. Read per page, they
+// made every page a main-database query, and a scraper walks every page about every five minutes.
 function loadRanking(slug: string): Promise<Ranking> {
-  return getCache(`holders:${slug}`, RANKING_TTL, async () => {
+  return getCache(`holders:2:${slug}`, RANKING_TTL, async () => {
     const rows = await indexer
       .select({
         owner: objekts.owner,
@@ -71,65 +55,31 @@ function loadRanking(slug: string): Promise<Ranking> {
       )
       .groupBy(objekts.owner);
 
-    rows.sort((a, b) => b.copies - a.copies || (a.lowestSerial ?? 0) - (b.lowestSerial ?? 0));
-
-    const buckets = new Map<HolderBucketKey, { holders: number; copies: number }>([
-      ["1", { holders: 0, copies: 0 }],
-      ["2-4", { holders: 0, copies: 0 }],
-      ["5-9", { holders: 0, copies: 0 }],
-      ["10+", { holders: 0, copies: 0 }],
-    ]);
-
-    let copies = 0;
-    const holders: RankedHolder[] = [];
-    for (const [index, row] of rows.entries()) {
-      const previous = holders[index - 1];
-      const rank = previous && previous[1] === row.copies ? previous[3] : index + 1;
-      holders.push([row.owner.toLowerCase(), row.copies, row.lowestSerial ?? 0, rank]);
-
-      const bucket = buckets.get(bucketOf(row.copies))!;
-      bucket.holders += 1;
-      bucket.copies += row.copies;
-      copies += row.copies;
-    }
-
-    return {
-      summary: {
-        holders: holders.length,
-        copies,
-        buckets: Array.from(buckets, ([key, { holders, copies }]) => ({ key, holders, copies })),
-      },
-      holders,
-    };
+    const nicknames = await fetchNicknames(rows.map((row) => row.owner.toLowerCase()));
+    return rankHolders(rows, nicknames);
   });
 }
 
+// one array parameter per chunk: the largest collections have ~25k holders
 async function fetchNicknames(addresses: string[]) {
-  const rows =
-    addresses.length === 0
-      ? []
-      : await db
-          .select({
-            address: userAddress.address,
-            nickname: userAddress.nickname,
-          })
-          .from(userAddress)
-          .where(inArray(userAddress.address, addresses));
-
+  const rows = await chunkMap(addresses, TOKEN_CHUNK_SIZE, (batch) =>
+    db
+      .select({ address: userAddress.address, nickname: userAddress.nickname })
+      .from(userAddress)
+      .where(sql`${userAddress.address} = ANY(${sql.param(batch)}::citext[])`),
+  );
   return new Map(rows.map((row) => [row.address.toLowerCase(), row.nickname]));
 }
 
-/** Nicknames are read here rather than in the cached ranking, so a rename shows on the next request. */
 function toRow(
-  [address, copies, lowestSerial, rank]: RankedHolder,
-  nicknames: Awaited<ReturnType<typeof fetchNicknames>>,
+  [address, copies, lowestSerial, rank, nickname]: RankedHolder,
   viewerAddresses: Set<string>,
 ): HolderRow {
   return {
     rank,
     copies,
     lowestSerial,
-    holder: { kind: "public", address, nickname: nicknames.get(address) ?? null },
+    holder: { kind: "public", address, nickname },
     isViewer: viewerAddresses.has(address),
   };
 }
@@ -151,15 +101,11 @@ export async function fetchHolders(
       ? ranking.holders.filter(([address]) => viewerAddresses.has(address))
       : [];
 
-  const nicknames = await fetchNicknames(
-    Array.from(new Set([...page, ...own].map(([address]) => address))),
-  );
-
   const end = input.offset + page.length;
   return {
     summary: ranking.summary,
-    rows: page.map((holder) => toRow(holder, nicknames, viewerAddresses)),
-    viewer: own.map((holder) => toRow(holder, nicknames, viewerAddresses)),
+    rows: page.map((holder) => toRow(holder, viewerAddresses)),
+    viewer: own.map((holder) => toRow(holder, viewerAddresses)),
     nextOffset: end < ranking.holders.length ? end : undefined,
   };
 }
