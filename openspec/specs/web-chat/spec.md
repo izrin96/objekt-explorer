@@ -15,7 +15,7 @@ Two accounts SHALL have at most one conversation between them, whoever starts it
 ### Requirement: Messages and objekt cards
 A message SHALL be text of 1 to 2,000 characters, a card, or both. A card SHALL be one of:
 - an **objekt card**, referring to a collection or a specific objekt, and optionally the list it came from;
-- a **post card**, referring to a Trade post by its list, and optionally carrying a **match** saved when it was sent.
+- a **post card**, referring to a Trade post and the list it was sent from, and optionally carrying a **match** saved when it was sent. A card names the post itself: once a list is in more than one post, the card shows the post it was sent from, and it follows that post through its owner's edits. A card sent before cards named their post shows the post that holds its list.
 
 The thread SHALL render an objekt card as a live objekt card with the collection's art and name. A card for a specific objekt SHALL show its serial. A card from a list SHALL name the list and link to it, and show the list's price when the list is a sale list.
 
@@ -27,7 +27,7 @@ The thread SHALL render a post card, read live from the post, with:
 
 A post card with a match SHALL show, in place of the strips, the two directions between the sender and the post's owner: first the count and up to three objekts of the owner's that are on the sender's wants, then the count and up to three objekts of the sender's that are on the owner's wants. Each direction SHALL be labelled from the viewer's side, in the wording Browse uses: "They have N you want" and "You have N they want", so the sender and the owner each read the card correctly. A direction with no matches SHALL be left out. The match SHALL show what was saved when the card was sent, even after either side's lists change, and SHALL still link to the post.
 
-A post card whose post no longer exists, or whose list is no longer posted on Trade, SHALL say "Post removed" and keep any saved match. A card whose kind the client does not know SHALL be skipped and the message's text still shown. Messages SHALL show their time and be ordered oldest to newest.
+A post card whose post no longer exists, or has no list posted on Trade any more, SHALL say "Post removed" and keep any saved match; a card sent before cards named their post SHALL say so when its list is no longer posted on Trade. A card whose kind the client does not know SHALL be skipped and the message's text still shown. Messages SHALL show their time and be ordered oldest to newest.
 
 #### Scenario: Card from a sale list
 - **WHEN** a user starts a chat from a Market drawer row for SeoYeon 204Z #537 on rin.trades's sale list priced 6,000 KRW and sends it
@@ -54,8 +54,16 @@ A post card whose post no longer exists, or whose list is no longer posted on Tr
 - **THEN** the match card already sent still shows the same counts and objekts
 
 #### Scenario: Post removed
-- **WHEN** the owner deletes the list behind a post card
+- **WHEN** the owner deletes the only list of the post behind a post card
 - **THEN** the card says "Post removed", and the message's text still shows
+
+#### Scenario: The card follows its post through an edit
+- **WHEN** a user sent a post card for mina's post pairing her have list "spares" with her want list "wants", and mina then edits the post to swap "spares" for her have list "doubles"
+- **THEN** the card shows the post with "doubles" and "wants", and its link opens that post's page
+
+#### Scenario: One of two posts holding a list
+- **WHEN** mina's want list "wants" is in two posts, one with her have list "spares" and one with her have list "doubles", and a user sends a post card from the "doubles" post
+- **THEN** the card shows the post with "doubles" and "wants", not the one with "spares"
 
 #### Scenario: Too long
 - **WHEN** a user tries to send 2,001 characters

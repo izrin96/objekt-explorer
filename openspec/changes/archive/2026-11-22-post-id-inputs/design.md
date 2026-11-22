@@ -351,3 +351,49 @@ Put back, in one transaction from `saved/before/` (`putback.sql`): rows 1000522 
 ### Found in 5.3
 
 - `post-block.tsx`'s Message about this post sent its card with `listSlug` alone, so a card from a list's second post resolved to the first: the web-chat scenario "One of two posts holding a list" failed in this path. Task 4.3 named only the row's contact card. It now also sends `postId: post.id`. 5.2 was rerun after it: `bun run check` 0 (`@repo/api` 1344 pass, 2 skip; web 1541; worker 552), `bun run build --filter=web` 0, `bunx oxfmt --check` 0, the stop-list diff empty.
+- **6.1, G1** (production, read-only, 2026-11-22, after `0b0a4430` was pushed).
+  - Drift: the old script (`0129b5c4`) and the new one, checks 1 to 8, all at 0 over 1673 rows. Note 1 read 11: offers on posts Edit post re-led, information. Note 2 read 9.
+  - Counts:
+    - `max(lists.id) < min(trade_post.id)` holds;
+    - `lists_id_seq` is at 19,014, leaving 980,986 below 1,000,000;
+    - decision 10's condition counts 0 rows;
+    - the real `posts` show no post id twice (1,499 posts);
+    - 1,499 rows and 2,251 lists on Trade.
+  - Timing, warm runs, ms. The heaviest three users each hide the next one's largest post:
+
+    | Read | New | Old (`0129b5c4`) |
+    | --- | --- | --- |
+    | Post cards | by row 0.7 to 0.9 | by list 4.7 to 7.1 |
+    | Post cards, by list (the path older cards take) | 4.9 to 13.2 | 4.7 to 7.1 |
+    | Hide's `SELECT` | by post 13 to 41 | by list 13 to 48 |
+    | Hide's `SELECT`, old-tab branch | 12 to 46 | n/a |
+
+    - The first user's Hide was rerun five more times, since its old-tab median read 1.9 times old's across the first three runs. Over eight runs, the new by-post median is about 22 ms, the old-tab branch's about 22 ms, and the old build's about 26 ms. The spread is production load (the holders scraper), not plan work.
+    - No plan has a CTE estimated at 1 row and scanned more than once.
+  - Plan-only: `unhidePost`'s `DELETE` both ways and `resolvePostCard`'s read; nothing executed.
+- **6.2.** The owner brought up web from `:latest` (`0b0a4430`, CI green) at about 09:38 UTC on 2026-11-22, with no migrate and no worker rebuild. The deploy also carried another session's `35375ed6`, `ec16193a` and `2134ce96` (client IP from `cf-connecting-ip`, the holders cache).
+- **6.3, G2** (production, read-only, 09:39 to 09:47 UTC).
+  - Drift: checks 1 to 8 at 0 over 1673 rows; notes unchanged (11, 9).
+  - Load: right after the restart, about 2 minutes of cold caches (load average up to 13.5). Active queries were holders nickname lookups (`user_address` by address), one 4.4 s market count and feed reads around 1 s. No candidates or hide query piled up. From 09:44 the load average was 2.5 to 7, and Postgres bursts tracked Traefik (the scraper).
+  - Sentry: the only issue in the window, WEB-2T (an unhandled rejection on a progress page), was first seen at 09:19, before the deploy, and is unrelated.
+  - Rollback floor: web `0129b5c4`, no data step.
+
+### 7.1 Agent docs
+
+Checked against the code as built (`0b0a4430`), with `writing-for-agents` loaded.
+
+- `packages/api/docs/trade.md`: current, no change. Trade matching names `swapPair.theirPostId` as the row with the tie on `PostLeads`; Partner rules names `resolvePostRef` and `postRefSql` (`services/trade/hide-sql.ts`) with the fallback order; Cache versions reads `trade:person:12`, `trade:mutual-people:12`, `trade:oneway-people:8`; Trade posts says a post's id is its row in every output. Neither "no input takes a post id" nor an Edit post that gives a new id remains (the old `postId` description that said so left `feedPostSchema` in 2.1).
+- `packages/api/docs/chat.md`: current, no change. Its stored card shape, `resolveCard`'s `postId` check and fallback, `fetchPostCards` by row or list, the report's `resolvePostRef` and `staffPosts` match the code. A report excerpt still keeps a post card by its list only (`services/moderation/report.ts:234`), as the doc says.
+- `apps/worker/AGENTS.md`, Trade post drift: current, no change; check 8's text matches the script's header and query.
+- `packages/db/AGENTS.md`, Trade posts: added that a legacy post input reads its value as a row id first, which relies on row ids staying above list ids until `offer-reads-post-id` removes that branch, and that G1 checks the lists sequence's room.
+- `apps/web/docs/trade.md`, Person and post pages: added that a post's `id` is its row and its anchor its first side (`anchorOf`), what takes each, that Hide post and Report this post… also send the anchor's list id for one release, and `orderPosts`' tie on the anchor list id.
+- `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md` need no change: none names a post's id, these inputs or outputs; the API's domain table already sends `services/trade/` (with `hide-sql.ts`) to `docs/trade.md`, and its open-tab rule is the one this change followed.
+
+**For `offer-reads-post-id`, the removals decision 1 defers** (after this build has served a day):
+- the legacy input fields: `tradePostInputSchema.listId` (`trade.hidePost`, `trade.unhidePost`) and `reportInputSchema.postListId`, making `postId` required;
+- the legacy resolution: `PostRef.legacyId`, `resolvePostRef`'s old-field branches and `postRefSql`'s second `WHEN` and list `ELSE` (`services/trade/hide-sql.ts`), the list paths of `reportedPost`, and `hidesOfSql` if `unhidePost` was its last caller;
+- `resolvePostCard`'s reading of a `postId` that names no row as absent (the card's `listSlug` itself stays, decision 5);
+- the web's second field: `HidePostRef.listId` (`features/trade/actions.ts`) and the `listId`/`postListId` the safety dialogs send;
+- `trade.hiddenPosts`' `listId`;
+- the deprecated feed `postId` (Open Question 1), as its own listed public break;
+- the doc sentences that describe each: `packages/api/docs/trade.md` (Partner rules), `packages/api/docs/chat.md` (Chat cards), `packages/db/AGENTS.md` (Trade posts), `apps/web/docs/trade.md` (Person and post pages), and task 6.1's range check.

@@ -167,7 +167,7 @@
 
 ## 6. Rollout
 
-- [ ] 6.1 **G1**, production, read-only, with a go-ahead, after the push and before the web comes up:
+- [x] 6.1 **G1**, production, read-only, with a go-ahead, after the push and before the web comes up:
   - The old drift script: every check at 0.
   - The counts:
     - `SELECT (SELECT max(id) FROM lists) < (SELECT min(id) FROM trade_post)` is true;
@@ -193,8 +193,8 @@
     - a rescanned CTE is estimated at 1 row.
 
   Record everything in As built, then remove the old worktree (`git worktree remove --force`).
-- [ ] 6.2 The owner brings up web from the pushed commit. No migrate, and no worker rebuild. Record the time.
-- [ ] 6.3 **G2**, read-only, with a go-ahead:
+- [x] 6.2 The owner brings up web from the pushed commit. No migrate, and no worker rebuild. Record the time.
+- [x] 6.3 **G2**, read-only, with a go-ahead:
   - the new drift script: every check at 0, check 8 included;
   - the owner opens Browse, For you and Your posts;
   - Sentry shows no new issue for an hour.
@@ -203,7 +203,7 @@
 
 ## 7. Agent docs
 
-- [ ] 7.1 With `writing-for-agents` loaded, check what groups 1 to 5 wrote against the code as built:
+- [x] 7.1 With `writing-for-agents` loaded, check what groups 1 to 5 wrote against the code as built:
   - `packages/api/docs/trade.md` and `packages/api/docs/chat.md`;
   - `apps/worker/AGENTS.md`, Trade post drift;
   - `packages/db/AGENTS.md`, Trade posts: add that a legacy post input reads a value as a row id first, which relies on row ids staying above list ids until the next chain change removes it;

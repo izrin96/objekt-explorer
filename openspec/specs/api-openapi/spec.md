@@ -308,29 +308,6 @@ list's own slug, as before. The document SHALL describe the parameter.
 - **WHEN** a client requests `GET /api/v1/lists/Z1qlA0_rR/entries`
 - **THEN** the response is the list's entries, read by its own slug
 
-### Requirement: Trade feed post ids
-Each post of `GET /trade/people` SHALL carry `postId`, an integer that names the post and stays the same while the post does, beside `id`, the id of the post's anchor list. A post stays the same post when its owner edits it, whichever of its lists the edit swaps or drops. `id`, `swapPair.theirPostId` and every side's `list.id` SHALL keep naming lists. The document SHALL describe `postId`. It SHALL be null only for a post whose lists no stored post holds.
-
-#### Scenario: Both ids on a post
-- **WHEN** a client requests `GET /api/v1/trade/people`, and a person's post pairs have list 812 with want list 813
-- **THEN** that post's `id` is 812 and its `postId` is the post's own id, a different number
-
-#### Scenario: Anchor changes, post id stays
-- **WHEN** a person's Buy post on want list 813 has `postId` 1000123, and the person then pairs have list 900 with it
-- **THEN** the next response shows that post with `id` 900 and `postId` 1000123
-
-#### Scenario: Edit post swaps the have list, post id stays
-- **WHEN** a person's post pairing have list 812 with want list 813 has `postId` 1000200, and the person edits it to swap 812 for have list 950
-- **THEN** the next response shows that post with `id` 950 and `postId` 1000200
-
-#### Scenario: Edit post drops the have list, post id stays
-- **WHEN** a person's post pairing have list 812 with want list 813 has `postId` 1000200, and the person edits it into a Buy post of 813 alone
-- **THEN** the next response shows the Buy post with `id` 813 and `postId` 1000200
-
-#### Scenario: Can swap pair still names a list
-- **WHEN** a signed-in client reads a person whose counts carry `swapPair`
-- **THEN** `swapPair.theirPostId` equals the `id`, not the `postId`, of one of that person's posts in the same response
-
 ### Requirement: List objects carry no bump time
 A list object, as `GET /api/v1/lists/{slug}` returns it and as each entry of `GET /api/v1/profiles/{address}/lists` carries it, SHALL have no `bumpedAt` field, and the document SHALL name none on it. The same holds for `list.findPublic`, `list.find` and `profiles.lists` on `/rpc`. A bump belongs to a Trade post: the Trade feed's posts SHALL keep their `bumpedAt`.
 
@@ -345,3 +322,36 @@ A list object, as `GET /api/v1/lists/{slug}` returns it and as each entry of `GE
 #### Scenario: Feed posts keep their bump
 - **WHEN** a client requests `GET /api/v1/trade/people`
 - **THEN** each post still carries `bumpedAt`
+
+### Requirement: Trade feed posts named by post id
+Each post of `GET /trade/people` SHALL carry `id`, an integer that names the post, never null, unique in the response, and the same while the post is: a post stays the same post when its owner edits it, whichever of its lists the edit swaps or drops. Each post SHALL also carry `postId`, equal to `id`, which the document SHALL describe as deprecated. A post's sides SHALL come in the order have, sale, want, so the first side is the anchor list; each side's `list.id` SHALL keep naming its list.
+
+#### Scenario: A post's id and its anchor
+- **WHEN** a client requests `GET /api/v1/trade/people`, and a person's post pairs have list 812 with want list 813
+- **THEN** that post's `id` is the post's own id, a number other than 812 or 813, its `postId` equals its `id`, and its first side's `list.id` is 812
+
+#### Scenario: Anchor changes, post id stays
+- **WHEN** a person's Buy post on want list 813 has `id` 1000123, and the person then pairs have list 900 with it
+- **THEN** the next response shows that post with `id` 1000123 and first side `list.id` 900
+
+#### Scenario: Edit post swaps the have list, post id stays
+- **WHEN** a person's post pairing have list 812 with want list 813 has `id` 1000200, and the person edits it to swap 812 for have list 950
+- **THEN** the next response shows that post with `id` 1000200 and first side `list.id` 950
+
+#### Scenario: Edit post drops the have list, post id stays
+- **WHEN** a person's post pairing have list 812 with want list 813 has `id` 1000200, and the person edits it into a Buy post of 813 alone
+- **THEN** the next response shows the Buy post with `id` 1000200 and one side, `list.id` 813
+
+### Requirement: Can swap pair names a post
+`swapPair.theirPostId` on a person's counts in `GET /trade/people` SHALL name a post: it SHALL equal the `id` of one of that person's posts in the same response.
+
+#### Scenario: Can swap pair names a post
+- **WHEN** a signed-in client reads a person whose counts carry `swapPair`
+- **THEN** `swapPair.theirPostId` equals the `id` of one of that person's posts in the same response
+
+### Requirement: Side items take a list id
+`GET /trade/lists/{listId}/items` SHALL take a side's `list.id` as `listId`. The document SHALL describe `listId` as a side's `list.id` and SHALL not offer a post's `id` there.
+
+#### Scenario: Side items by a side's list
+- **WHEN** a client requests `GET /api/v1/trade/lists/{listId}/items` with a side's `list.id` from `GET /api/v1/trade/people`
+- **THEN** the response holds that side's items, and the operation's `listId` description names a side's `list.id` only
