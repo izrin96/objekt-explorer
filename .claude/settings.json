@@ -28,9 +28,10 @@
       "Bash(bun run test)",
       "Bash(bun run test:*)",
       "Bash(bunx lefthook:*)",
-      "Bash(./scripts/setup-worktree.sh)"
-    ],
-    "ask": ["Bash(git commit:*)", "Bash(git push:*)"]
+      "Bash(./scripts/setup-worktree.sh)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
   },
   "skillOverrides": {
     "agent-browser": "off",
