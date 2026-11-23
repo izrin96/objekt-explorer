@@ -161,7 +161,7 @@ PGOPTIONS='-c default_transaction_read_only=on' bun run --env-file=../../.env --
 
 ## 7. Rollout
 
-- [ ] 7.1 **G1**, production, read-only, with a go-ahead, after the push and before the web comes up:
+- [x] 7.1 **G1**, production, read-only, with a go-ahead, after the push and before the web comes up:
   - **The gate:** `0b0a4430` has been live 24 hours or more (from about 09:38 UTC on 2026-11-22).
   - **Drift:** the old drift script reads 0 on checks 1 to 8. Record both notes.
   - **The note-1 table:** each offer's id, status, its `post_list_id` list's name, and its row's lead name now (Open Question 1).
@@ -175,21 +175,21 @@ PGOPTIONS='-c default_transaction_read_only=on' bun run --env-file=../../.env --
   - a rescanned node is a CTE estimated at 1 row.
 
   Record everything in As built. Then remove the old worktree (`git worktree remove --force`).
-- [ ] 7.2 The owner brings up web from the pushed commit. No migrate, and no worker rebuild. Record the time.
-- [ ] 7.3 **G2**, read-only, with a go-ahead:
+- [x] 7.2 The owner brings up web from the pushed commit. No migrate, and no worker rebuild. Record the time.
+- [x] 7.3 **G2**, read-only, with a go-ahead:
   - the new drift script reads 0 on every check, note 1 is gone, and note 2 is unchanged;
   - the owner opens a thread with offers, the offer page from a post, and Hidden on Trade;
   - Sentry shows no new issue for an hour.
 
   Record the rollback floor in As built: web `0b0a4430`, no data step; database floor `8b05487c`.
-- [ ] 7.4 **Backfill**, only if the owner chose it (Open Question 3):
+- [x] 7.4 **Backfill**, only if the owner chose it (Open Question 3):
   1. With a go-ahead, read-only: decision 5's classification of note 2's offers.
   2. Show the owner the exact statement with the ids filled in. Run it only with their approval for that statement, in one `psql` session without `default_transaction_read_only`. Record the returned rows.
   3. Read-only: note 2 reads 0, and each of those offers' `post_id` is the row its list leads.
 
 ## 8. Agent docs
 
-- [ ] 8.1 With `writing-for-agents` loaded, check what groups 1 to 5 wrote against the code as built:
+- [x] 8.1 With `writing-for-agents` loaded, check what groups 1 to 5 wrote against the code as built:
   - `packages/api/docs/offers.md`, `trade.md` and `chat.md`;
   - `apps/web/docs/offers.md` and `trade.md`;
   - `apps/worker/AGENTS.md`, Trade post drift;

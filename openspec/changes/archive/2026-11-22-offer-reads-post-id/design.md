@@ -547,3 +547,67 @@ The other timed reads are within 1.5 times the old build locally, or are new rea
 - Sequences were left advanced (offers to 320, trade 94, report 23, row 1000525). Local Valkey keeps the trade versions the pass bumped.
 - No credential in `dev-6.3.log`, `dev-old-6.3.log` or any `s63-*.log`. The old log's matches on "password" are all Paraglide message file names.
 - Every browser context was disposed; both dev servers were stopped.
+
+**7.1 G1** (the coordinator, 2026-11-22 at about 15:15 UTC; production, read-only; logs in `/private/tmp/claude-501/offer-reads-post-id/g1-prod/`).
+- **The gate:** the owner waived the 24-hour gate and deployed the same day. Tabs from before `0b0a4430` fail Hide post and Unhide until they reload; the owner accepted that.
+- **Old drift:** checks 1 to 8 read 0.
+  - Note 1 lists 10 offers. 8764, 9443, 11229 and 11753 were sent on "Physical dco", whose post is led by "Nonshops" now. 13303, 13314, 13315, 13373, 13380 and 13389 were sent on "chaewon wl", whose post is led by "have" now.
+  - Note 2 lists 9 offers.
+- **Open Question 2's count** (`post_id IS NULL AND post_list_id IS NOT NULL`): 73 offers, all closed.
+- **Warm medians, old → new, first pass (ms):**
+
+  | Read | Old | New |
+  | --- | --- | --- |
+  | `fetchOffers`, the four inputs | 43.1, 3.2, 10.0, 17.0 | 37.1, 13.0, 48.0, 12.7 |
+  | `partnerListChoices` list read, three partners | 1.57, 1.01, 1.52 | 1.06, 1.04, 6.25 |
+  | `partnerListChoices` posts read (new) | | 0.34 to 0.58 |
+  | `suggestOffer` row-cut lists | 0.16 to 0.20 | 0.26 to 0.37 |
+  | `postListsOf` by slug | 1.32, 7.79, 0.71 | 2.03, 1.60, 1.33 |
+  | `postListsOf` by row (new) | | 0.06 to 0.07 |
+  | `hidePost` `SELECT`, three viewers | 14.65, 18.08, 43.95 | 15.97, 24.10, 17.32 |
+
+- Three reads passed 1.5 times the old build under live load. Six interleaved reruns gave:
+  - offers-2: 2.3 → 2.4 ms;
+  - offers-3: 7.3 → 9.9 ms (1.35 times);
+  - choices-3: 1.2 → 1.5 ms.
+- **Rescanned CTEs estimated at 1 row:** only `hidePost`'s `on_trade` scans `p` and `h`, at 2 loops (waived).
+- The new `fetchOffers` adds a sequential scan of `trade_post` (1695 rows) under a hash join, about 0.5 ms.
+- The owner chose to deploy.
+
+**7.2** Web came up from `:latest` (CI green on `9ff53720`) at about 15:25 UTC on 2026-11-22. No migrate, and no worker rebuild.
+
+**7.3 G2.**
+- **New drift:** 0 on checks 1 to 8; note 1 is gone; note 2 read 9 before the backfill.
+- **Sentry:** no new issue in the first minutes. The coordinator rechecks at the hour.
+- **The owner's click-throughs:** pending when this was recorded.
+- **Rollback floor:** web `0b0a4430`, with no data step. The database floor stays `8b05487c`.
+
+**7.4 Backfill**, approved by the owner, run as decision 5's statement:
+- ids 8634, 8660, 8665, 8726, 8753, 8797, 8889 and 8934 went to row 1001441 (list 17373). These offers were made on 2026-11-14, before that row existed (2026-11-16).
+- id 9523 went to row 1000171 (list 12388).
+- `UPDATE 9`. Drift after: every check, and note 2, at 0.
+
+**8.1 Agent docs**, checked against `9ff53720` with `writing-for-agents`:
+- `packages/api/docs/offers.md`: matches the code (`posts[]` and its order, `resolvePostRow`, `namedRowOf`, the INSERT, `fetchOffers`' line and the five cases, `postListsOf`, the suggestion's `postId`). No change.
+- `packages/api/docs/trade.md`: matches the code (hide inputs by `postId` alone, no feed `postId`, offer inputs by post id). No change.
+- `packages/api/docs/chat.md`: fixed the report sentence. A tab from before post ids sends `postListId` alone, which the schema strips, and the report is filed with no post.
+- `apps/web/docs/offers.md` (Offer builder) and `apps/web/docs/trade.md`: match the code, including `openPostOf`'s order after the review fix. No change.
+- `apps/worker/AGENTS.md`, Trade post drift: matches the script (note 1 gone, note 2 kept). No change.
+- `packages/db/AGENTS.md`, Trade posts:
+  - `offer.post_id` names the post the line reads, and `post_list_id` is its fallback (written in 5.3);
+  - the NULL window is closed by 7.4's backfill;
+  - nothing relies on row ids staying above list ids.
+- `packages/api/AGENTS.md`, `apps/web/AGENTS.md` and the root `AGENTS.md` need no change: none names a post input, `post_list_id` or a row id.
+
+**Slug fallbacks this change leaves for one release**, for the next change (`shared-lists` or a cleanup before it) to remove once `9ff53720` has served a day:
+- **`offer.create`:** `post` and `wantList`, read with `resolvePostList` and `resolveWantList` only without `postId` (`services/offer/index.ts`, the `byRow` branch).
+- **`offer.suggest`:** `post`, read through `postListsOf`'s by-slug form only without `postId` (`picker/index.ts`).
+- **`offer.suggest`'s output:** `postSlug`, `postName` and `wantSlug`, kept for tabs that read them.
+- **The web:**
+  - the offer page's `?post=`, with `matches.post`;
+  - the slug `offerOnOf.input` sends beside `postId`;
+  - `openPostOf`'s slug inputs (`matchesPost`, `addedPost`);
+  - `postChoicesOf`'s path for a server without `posts[]`;
+  - `AddedMatches.postSlug` and `wantSlug`.
+
+These stay for good: `fromList`, the picker's `wantList`, `lead`, `to`, `start`, `lists[]` and `wantLists[]` (they name lists), and a post card input with `listSlug` alone.

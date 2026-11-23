@@ -1195,7 +1195,9 @@ When the recipient declines an offer holding a "Not on your wants" item, while t
 - **THEN** no notice to turn on Only offers with what I want shows
 
 ### Requirement: The post an offer is on
-An offer SHALL store its post: the Offer on choice or the post it started from, else the one list its asks fit. An offer that asks for nothing new SHALL be on the post under Offer on too, and an offer that names a Buy post and asks for nothing new SHALL be on that Buy post, for a partner with or without a have or sale list on Trade. A counter that asks only for objekts the recipient offered is on no post. An offer to a partner with no have or sale list on Trade that names no Buy post or asks for something, one from a client that named no post and asks for nothing new, and one sent across posts before every offer had to ask from one, are on no post. After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people. An offer on no post SHALL show no "Offer on" line and no other mark about posts, and a post deleted later SHALL drop it.
+An offer SHALL store its post: the Offer on choice or the post it started from, else the one list its asks fit. An offer that asks for nothing new SHALL be on the post under Offer on too, and an offer that names a Buy post and asks for nothing new SHALL be on that Buy post, for a partner with or without a have or sale list on Trade. A counter that asks only for objekts the recipient offered is on no post. An offer to a partner with no have or sale list on Trade that names no Buy post or asks for something, one from a client that named no post and asks for nothing new, and one sent across posts before every offer had to ask from one, are on no post.
+
+After sending, the offer card and the offer page SHALL read "Offer on {post}" for both people, naming the post as it is now: when its owner later edits the post, swapping or dropping any of its lists, or pairs a Buy post with a have list, the line SHALL name the list that leads the post now. When the post no longer exists but the list the offer was sent on still does, the line SHALL name that list. An offer on no post SHALL show no "Offer on" line and no other mark about posts, and an offer whose post and list are both deleted later SHALL drop it.
 
 #### Scenario: Both sides see it
 - **WHEN** an offer on "doubles" is sent
@@ -1229,8 +1231,24 @@ An offer SHALL store its post: the Offer on choice or the post it started from, 
 - **WHEN** a user asks rin.trades, who has no have or sale list on Trade and lets people ask for anything they hold, for an objekt from their collection
 - **THEN** neither card reads "Offer on"
 
+#### Scenario: Post edited
+- **WHEN** an offer on rin.trades's post pairing "doubles" with the want list "hunting" was sent, and rin.trades then edits that post to swap "doubles" for the have list "spares"
+- **THEN** both cards read "Offer on spares", and the offer's items still name the lists they came from
+
+#### Scenario: Buy post paired
+- **WHEN** an offer on rin.trades's Buy post "looking for" was sent, and rin.trades then pairs the have list "doubles" with it
+- **THEN** both cards read "Offer on doubles"
+
+#### Scenario: Lead deleted, post kept
+- **WHEN** an offer on rin.trades's post pairing "doubles" with the want list "hunting", both on Trade, was sent, and rin.trades then deletes "doubles"
+- **THEN** both cards read "Offer on hunting", the Buy post the post became
+
+#### Scenario: Post gone, list kept
+- **WHEN** an offer on "doubles" was sent, and the post ends while "doubles" still exists
+- **THEN** both cards read "Offer on doubles"
+
 #### Scenario: Post deleted
-- **WHEN** rin.trades deletes "doubles" after the offer was sent
+- **WHEN** rin.trades deletes "doubles", posted alone, after the offer was sent
 - **THEN** neither card reads "Offer on"
 
 #### Scenario: Across posts
