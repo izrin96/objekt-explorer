@@ -26,7 +26,7 @@ import { useCosmoArtist } from "@/features/artist/use-cosmo-artist";
 import { useFilterData } from "@/features/filters/use-filter-data";
 import { ListLabel } from "@/features/list/list-label";
 import { getListLinkOption } from "@/features/list/list-link";
-import { useUserLists } from "@/features/user/hooks";
+import { useShelfLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { siteOrigin } from "@/lib/site-origin";
@@ -50,7 +50,7 @@ export function DiscordFormatDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const lists = useUserLists();
+  const lists = useShelfLists();
   const router = useRouter();
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
@@ -182,7 +182,7 @@ function ListPicker({
   id: string;
   label: string;
   value: string;
-  lists: ReturnType<typeof useUserLists>;
+  lists: ReturnType<typeof useShelfLists>;
   invalid: boolean;
   onValueChange: (next: string) => void;
 }) {

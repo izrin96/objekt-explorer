@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toastManager } from "@/components/ui/toast";
-import { useUserLists, useUserProfiles } from "@/features/user/hooks";
+import { useShelfLists, useUserProfiles } from "@/features/user/hooks";
 import { formatCount } from "@/lib/number";
 import { m } from "@/paraglide/messages";
 
@@ -171,7 +171,7 @@ function AddToListForm({
   onDone: () => void;
 }) {
   const { saleOnly } = target;
-  const lists = pickerLists(useUserLists(), saleOnly);
+  const lists = pickerLists(useShelfLists(), saleOnly);
   const profiles = useUserProfiles();
   const [unpicked, setUnpicked] = useState<ReadonlySet<string>>(new Set());
   const [priceValue, setPriceValue] = useState<PriceValue>(EMPTY_PRICE);

@@ -41,7 +41,7 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
-import { useUserLists, useUserProfiles } from "@/features/user/hooks";
+import { useShelfLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { preloadWhenIdle } from "@/lib/preload";
 import { m } from "@/paraglide/messages";
@@ -231,7 +231,7 @@ function MyListsSubmenu({
   onCreateList: () => void;
   onDiscordFormat: () => void;
 }) {
-  const lists = useUserLists();
+  const lists = useShelfLists();
 
   return (
     <MenuSub>

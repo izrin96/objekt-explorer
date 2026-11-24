@@ -96,6 +96,13 @@ export const publicListSchema = baseListSchema.extend({
 });
 export type PublicList = z.infer<typeof publicListSchema>;
 
+// kept off publicListSchema so `/api/v1` list shapes never show the field
+export const ownListSchema = publicListSchema.extend({
+  /** a list that only backs a Trade post's side */
+  postOnly: z.boolean().optional(),
+});
+export type OwnList = z.infer<typeof ownListSchema>;
+
 export const findPublicOutputSchema = publicListSchema.nullable();
 export const profileListsOutputSchema = z.array(publicListSchema);
 

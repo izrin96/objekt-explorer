@@ -1,0 +1,266 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "7cb0c5a9-7b56-45eb-bce6-85331e2eeda9",
+  "prevIds": [
+    "305fc919-c84e-48af-9a85-c97664663a31"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "trade_post_number"
+      ],
+      "writes": [
+        "s|tbl|public.trade_post_number",
+        "n|tbl|public.trade_post_number",
+        "e|tbl|public.trade_post_number",
+        "n|rel|public.trade_post_number",
+        "n|type|public.trade_post_number",
+        "n|rel|public.trade_post_number_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "lists",
+        "post_only"
+      ],
+      "writes": [
+        "s|col|public.lists.post_only",
+        "n|col|public.lists.post_only",
+        "e|col|public.lists.post_only"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "trade_post",
+        "number"
+      ],
+      "writes": [
+        "s|col|public.trade_post.number",
+        "n|col|public.trade_post.number",
+        "e|col|public.trade_post.number"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "trade_post",
+        "trade_post_user_number_uniq"
+      ],
+      "writes": [
+        "s|idx|public.trade_post_user_number_uniq",
+        "n|idx|public.trade_post_user_number_uniq",
+        "e|idx|public.trade_post_user_number_uniq",
+        "n|rel|public.trade_post_user_number_uniq"
+      ],
+      "reads": [
+        "n|tbl|public.trade_post",
+        "n|sch|public",
+        "n|col|public.trade_post.user_id",
+        "n|col|public.trade_post.number"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "lists"
+      ],
+      "writes": [
+        "s|ck|public.lists.lists_post_only_trade_side",
+        "n|ck|public.lists.lists_post_only_trade_side",
+        "e|ck|public.lists.lists_post_only_trade_side",
+        "n|con|public.lists.lists_post_only_trade_side"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "n|col|public.lists.post_only",
+        "n|col|public.lists.list_type"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "lists"
+      ],
+      "writes": [
+        "s|ck|public.lists.lists_post_only_no_profile_slug",
+        "n|ck|public.lists.lists_post_only_no_profile_slug",
+        "e|ck|public.lists.lists_post_only_no_profile_slug",
+        "n|con|public.lists.lists_post_only_no_profile_slug"
+      ],
+      "reads": [
+        "n|tbl|public.lists",
+        "n|sch|public",
+        "n|col|public.lists.post_only",
+        "n|col|public.lists.profile_slug"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "trade_post_number",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "lists",
+        "name": "post_only",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "number",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post_number",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post_number",
+        "name": "last",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post",
+        "name": "trade_post_user_number_uniq",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "number",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "trade_post_number",
+        "name": "trade_post_number_pkey",
+        "columns": [
+          "user_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "lists",
+        "name": "lists_post_only_trade_side",
+        "value": "NOT \"post_only\" OR \"list_type\" IN ('have', 'sale', 'want')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "lists",
+        "name": "lists_post_only_no_profile_slug",
+        "value": "NOT \"post_only\" OR \"profile_slug\" IS NULL",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

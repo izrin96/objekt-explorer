@@ -3,7 +3,7 @@ import * as z from "zod";
 
 import type { User } from "../services/account/auth";
 import { artistIdSchema } from "./common/artist";
-import { publicListSchema } from "./list";
+import { ownListSchema } from "./list";
 import { SANCTION_TYPES } from "./moderation";
 import { baseProfileSchema } from "./profile";
 
@@ -30,7 +30,7 @@ export const providersMap: Record<ProviderId, Provider> = {
 const currentUserOutputSchema = z
   .object({
     user: z.custom<User>(),
-    lists: publicListSchema.array(),
+    lists: ownListSchema.array(),
     profiles: baseProfileSchema.array(),
     /** the profile that names the account to others (see `chatIdentity`); null with none linked */
     defaultAddress: z.string().nullish(),

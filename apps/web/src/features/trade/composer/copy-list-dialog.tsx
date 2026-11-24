@@ -23,7 +23,7 @@ import {
 import { CopyListForm } from "@/features/list/copy-list-dialog";
 import { ListLabel } from "@/features/list/list-label";
 import { listFindOptions } from "@/features/list/queries";
-import { useUserLists } from "@/features/user/hooks";
+import { useShelfLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import type { Slot } from "../post-kind-text";
@@ -44,7 +44,7 @@ export function ComposerCopyDialog({
   finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const id = useId();
-  const lists = useUserLists();
+  const lists = useShelfLists();
   const [slug, setSlug] = useState<string | null>(null);
   const { data: source, error } = useQuery(listFindOptions(slug ?? "", open && slug !== null));
 

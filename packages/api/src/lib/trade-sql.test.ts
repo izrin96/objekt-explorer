@@ -17,6 +17,7 @@ import {
   onTradeRowsSql,
   postRowSql,
   personBumpSql,
+  postLabelSql,
   sideOnTradeSql,
   sideStateSql,
 } from "./trade-sql";
@@ -243,6 +244,14 @@ describe("hiddenRowsSql and hiddenRowAtSql", () => {
     expect(set.params).toEqual(["u1"]);
     expect(flat(hiddenRowAtSql(sql.raw("p.user_id"), sql.raw("p.post_id")))).toBe(
       "(SELECT hidden_row.created_at FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = p.user_id AND hidden_row.post_id = p.post_id)",
+    );
+  });
+});
+
+describe("postLabelSql", () => {
+  test("pads to 3 digits and never cuts a longer number", () => {
+    expect(flat(postLabelSql("tp"))).toBe(
+      "('#P-' || lpad(tp.number::text, greatest(3, length(tp.number::text)), '0'))",
     );
   });
 });

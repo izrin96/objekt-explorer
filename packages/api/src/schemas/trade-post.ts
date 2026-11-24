@@ -493,3 +493,10 @@ export function tradeLineOf(lists: PlanList[], list: PlanList): TradeLine {
   const partner = partnerOf(lists, list);
   return partner ? { state: "paired_off", partner } : { state: "off" };
 }
+
+/** The label of an owner's post number, `#P-001`. The SQL twin is `postLabelSql` (lib/trade-sql.ts). */
+export function postLabel(n: number): string {
+  if (!Number.isSafeInteger(n) || n < 1)
+    throw new RangeError(`post number ${n} is not a positive integer`);
+  return `#P-${String(n).padStart(3, "0")}`;
+}

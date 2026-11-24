@@ -161,3 +161,12 @@ export const hiddenRowAtSql = (viewer: SQL | string, row: SQL) =>
   sql<
     string | null
   >`(SELECT hidden_row.created_at FROM hidden_trade_post hidden_row WHERE hidden_row.user_id = ${viewer} AND hidden_row.post_id = ${row})`;
+
+/**
+ * A post's label, `#P-001`: the SQL twin of `postLabel` (schemas/trade-post.ts). Not
+ * `lpad(n::text, 3, '0')`, which cuts 1234 to `123`; the width grows with the number.
+ */
+export const postLabelSql = (alias?: string) => {
+  const n = column(alias, "number");
+  return sql`('#P-' || lpad(${n}::text, greatest(3, length(${n}::text)), '0'))`;
+};
