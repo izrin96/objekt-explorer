@@ -10,7 +10,7 @@ import { PickerFilterBar } from "@/features/filters/picker-filter-bar";
 import { NO_PICKER_FILTERS } from "@/features/filters/picker-filters";
 import { SingleSelect } from "@/features/filters/single-select";
 import { listOption } from "@/features/list/list-option";
-import { useShelfLists, useUserProfiles } from "@/features/user/hooks";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -63,7 +63,7 @@ type Source = `profile:${string}` | `list:${string}`;
 
 function AttachPicker({ onPick }: { onPick: (attachment: Attachment) => void }) {
   const profiles = useUserProfiles();
-  const lists = useShelfLists();
+  const lists = useUserLists();
   const [picked, setPicked] = useState<Source | null>(null);
   const [filters, setFilters] = useState(NO_PICKER_FILTERS);
 

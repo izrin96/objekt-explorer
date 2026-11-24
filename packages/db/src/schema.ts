@@ -112,8 +112,6 @@ export const lists = pgTable(
     ratio: smallint("ratio"),
     /** a want list drops a hand-added entry when a trade leg delivers its collection to the owner */
     removeOnReceive: boolean("remove_on_receive").notNull().default(false),
-    /** a list that only backs a Trade post's side: made by the composer, never shown where lists are managed */
-    postOnly: boolean("post_only").notNull().default(false),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
@@ -130,11 +128,6 @@ export const lists = pgTable(
     check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
     check("lists_takes_swaps_sale_only", sql`NOT ${t.takesSwaps} OR ${t.listType} = 'sale'`),
     check("lists_ratio_range", sql`${t.ratio} BETWEEN 2 AND 5`),
-    check(
-      "lists_post_only_trade_side",
-      sql`NOT ${t.postOnly} OR ${t.listType} IN ('have', 'sale', 'want')`,
-    ),
-    check("lists_post_only_no_profile_slug", sql`NOT ${t.postOnly} OR ${t.profileSlug} IS NULL`),
   ],
 );
 
@@ -290,8 +283,6 @@ export const tradePost = pgTable(
     matchSale: boolean("match_sale").notNull().default(true),
     /** the post's sale lead also takes swaps; false for any other lead */
     takesSwaps: boolean("takes_swaps").notNull().default(false),
-    /** the owner's running post number, shown as `#P-001`; trigger `trade_post_number_fill` sets it on every insert, so the default is never stored */
-    number: integer("number").notNull().default(0),
   },
   (t) => [
     index("trade_post_user_id_idx").on(t.userId),
@@ -299,17 +290,10 @@ export const tradePost = pgTable(
     index("trade_post_want_list_id_idx")
       .on(t.wantListId)
       .where(sql`want_list_id IS NOT NULL`),
-    uniqueIndex("trade_post_user_number_uniq").on(t.userId, t.number),
     check("trade_post_want_not_lead", sql`${t.wantListId} <> ${t.leadListId}`),
     check("trade_post_open_to_something", sql`${t.matchHave} OR ${t.matchSale}`),
   ],
 );
-
-/** Each owner's last `trade_post.number`, so a deleted post's number never returns. No key to `user`: a user row is scrubbed, never deleted. */
-export const tradePostNumber = pgTable("trade_post_number", {
-  userId: text("user_id").primaryKey(),
-  last: integer("last").notNull(),
-});
 
 export const notification = pgTable(
   "notification",

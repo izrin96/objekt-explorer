@@ -25,7 +25,7 @@ import {
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { EMPTY_DRAFT, NONE, isBindable } from "@/features/list/list-draft";
 import { TagBadge } from "@/features/list/tag-label";
-import { useShelfLists, useUserProfiles } from "@/features/user/hooks";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -73,7 +73,7 @@ export function ComposerSettings({
     if (kind) setChoice((prev) => pickList(lists, prev, kind, slot, slug, replaces));
   };
   const hasProfile = useUserProfiles().length > 0;
-  const hasLists = useShelfLists().length > 0;
+  const hasLists = useUserLists().length > 0;
   // the slot outlives a close, so the dialog keeps its type while it animates out
   const [newList, setNewList] = useState<{ slot: Slot; open: boolean }>({
     slot: "have",

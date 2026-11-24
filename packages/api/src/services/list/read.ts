@@ -11,12 +11,7 @@ import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { refuse } from "../../lib/refuse";
 import { normalizeUserText } from "../../schemas/common/user-text";
-import {
-  needsTradeHandle,
-  type ListPreview,
-  type OwnList,
-  type PublicList,
-} from "../../schemas/list";
+import { needsTradeHandle, type ListPreview, type PublicList } from "../../schemas/list";
 import { tradeHandle } from "../../schemas/trade-person";
 import { messageBarred } from "../moderation/safety";
 import { getCollectionColumns } from "../objekt/collection-columns";
@@ -180,7 +175,6 @@ export async function fetchListForViewer(lookup: ListLookup, viewerId: string | 
 function heldProfileLists(profileAddress: string) {
   return {
     profileAddress,
-    postOnly: false,
     RAW: (list: { profileAddress: AnyColumn; userId: AnyColumn }) => sql`EXISTS (
       SELECT 1 FROM ${userAddress}
       WHERE ${userAddress.address} = ${list.profileAddress}
@@ -192,7 +186,7 @@ function heldProfileLists(profileAddress: string) {
 export async function fetchOwnedLists(
   column: "userId" | "profileAddress",
   identifier: string,
-): Promise<OwnList[]> {
+): Promise<PublicList[]> {
   const found = await db.query.lists.findMany({
     columns: {
       // partial
@@ -208,7 +202,6 @@ export async function fetchOwnedLists(
       matchSale: true,
       matchHave: true,
       takesSwaps: true,
-      postOnly: true,
     },
     where: column === "userId" ? { userId: identifier } : heldProfileLists(identifier),
     with: { userAddress: ownerAddress, ...pairWith },
@@ -224,11 +217,10 @@ export async function fetchOwnedLists(
   // `postLed` and `postWanted` stay out of the result: it is spread into the output, and
   // `user.currentUser` has no output schema to strip them
   // oxlint-disable-next-line oxc/no-map-spread
-  return found.map(({ userAddress, postLed, postWanted, postOnly, ...rest }) => {
+  return found.map(({ userAddress, postLed, postWanted, ...rest }) => {
     const linkedList = pairedListOf({ postLed, postWanted });
     return {
       ...rest,
-      ...(column === "userId" && { postOnly }),
       tradeHandle: needsTradeHandle({ ...rest, linkedList }) ? handle : null,
       profile: userAddress ? toPartialProfile(userAddress) : null,
       linkedList: linkedList ? toLinkedList(linkedList) : null,
@@ -251,7 +243,7 @@ export async function fetchListPreviews(
 ): Promise<ListPreview[]> {
   if (Array.isArray(source) && source.length === 0) return [];
   const scope = Array.isArray(source)
-    ? { slug: { in: source }, postOnly: false }
+    ? { slug: { in: source } }
     : heldProfileLists(source.profileAddress);
 
   // the list page reads only the column its binding uses, so the preview does too

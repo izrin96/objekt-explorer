@@ -12,7 +12,7 @@ import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { ListRows, ListRowsSkeleton } from "@/features/list/list-rows";
 import { listPreviewsOptions } from "@/features/list/queries";
 import { useListPreviews } from "@/features/list/use-list-previews";
-import { useShelfLists } from "@/features/user/hooks";
+import { useUserLists } from "@/features/user/hooks";
 import { currentUserOptions, requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
@@ -24,10 +24,7 @@ export const Route = createFileRoute("/(container)/list/")({
     // a failed preview read leaves the rows to fetch it again, not the page to fail
     await queryClient
       .query({
-        // the page's own slugs, so the prefetched key is the one it reads
-        ...listPreviewsOptions(
-          user?.lists.filter((list) => !list.postOnly).map((list) => list.slug) ?? [],
-        ),
+        ...listPreviewsOptions(user?.lists.map((list) => list.slug) ?? []),
         staleTime: "static",
       })
       .catch(noop);
@@ -38,7 +35,7 @@ export const Route = createFileRoute("/(container)/list/")({
 });
 
 function ListsPage() {
-  const lists = useShelfLists();
+  const lists = useUserLists();
   const getPreview = useListPreviews(lists.map((list) => list.slug));
   const [createOpen, setCreateOpen] = useState(false);
   const [discordOpen, setDiscordOpen] = useState(false);

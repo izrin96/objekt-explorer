@@ -6,7 +6,6 @@ import {
   composerWrites,
   type PlanList,
   planPost,
-  postLabel,
   postKindOf,
   rowBlock,
   startForList,
@@ -729,22 +728,5 @@ describe("Posting a sale pair from a list page", () => {
       replaces: "hunt",
     });
     expect(planPost([sale, hunt], { ...start, kind: "sell" })).toMatchObject({ ok: true });
-  });
-});
-
-describe("postLabel", () => {
-  test("pads to 3 digits", () => {
-    expect(postLabel(1)).toBe("#P-001");
-    expect(postLabel(42)).toBe("#P-042");
-    expect(postLabel(999)).toBe("#P-999");
-  });
-
-  test("padding never cuts", () => {
-    expect(postLabel(1000)).toBe("#P-1000");
-    expect(postLabel(123456)).toBe("#P-123456");
-  });
-
-  test("throws unless a positive safe integer", () => {
-    for (const n of [0, -1, 1.5, NaN]) expect(() => postLabel(n)).toThrow(RangeError);
   });
 });

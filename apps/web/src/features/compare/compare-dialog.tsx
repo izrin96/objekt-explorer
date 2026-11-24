@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ListLabel } from "@/features/list/list-label";
-import { useShelfLists, useUserProfiles } from "@/features/user/hooks";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
@@ -124,7 +124,7 @@ export function CompareDialog({
   const profileChoice = pickedChoice ?? profiles[0]?.address ?? OTHER_PROFILE;
   const choiceProfile = profiles.find((profile) => profile.address === profileChoice);
   const pickedProfile = showPicker ? choiceProfile : undefined;
-  const ownLists = useShelfLists().filter((list) => list.slug !== sourceId);
+  const ownLists = useUserLists().filter((list) => list.slug !== sourceId);
   const showListPicker = targetType === "list" && ownLists.length > 0;
   const listChoice = pickedListChoice ?? ownLists[0]?.slug ?? OTHER_LIST;
   const choiceList = ownLists.find((list) => list.slug === listChoice);
