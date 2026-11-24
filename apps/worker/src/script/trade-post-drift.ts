@@ -5,8 +5,8 @@
  * here compares them with a second copy. It also checks that no offer's `post_id` is another
  * person's row.
  *
- * Check 2 stays a check, not a note, until `shared-lists`: the planner and the readers hold a
- * list in several rows, but `planPost` refuses a list in another post.
+ * Check 2 stays a check, not a note: `planPost` refuses a list in another post, and that refusal
+ * relies on one row per list.
  *
  * Checks 5 and 6 hold whatever rows a list is in. Check 5 reads each list from its end: its
  * `discoverable` is "on Trade in some row", which `writePosts` derives from the rows. Check 6
