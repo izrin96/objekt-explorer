@@ -33,8 +33,8 @@ async function fetchObjektMap(
   return new Map(rows.map((o) => [o.id, o]));
 }
 
-function listingsWhere(collectionSlug: string) {
-  return and(countedListings(), eq(listEntries.collectionSlug, collectionSlug));
+function listingsWhere(rates: Record<string, number>, collectionSlug: string) {
+  return and(countedListings(rates), eq(listEntries.collectionSlug, collectionSlug));
 }
 
 /**
@@ -44,7 +44,7 @@ function listingsWhere(collectionSlug: string) {
 export async function findListings(input: MarketListingsInput, viewerId: string | null) {
   const rates = await getUsdRates();
 
-  const where = listingsWhere(input.collectionSlug);
+  const where = listingsWhere(rates, input.collectionSlug);
 
   const baseQuery = () =>
     db
@@ -146,7 +146,7 @@ export async function fetchMarketStats(collectionSlug: string) {
     })
     .from(listEntries)
     .innerJoin(lists, eq(listEntries.listId, lists.id))
-    .where(listingsWhere(collectionSlug));
+    .where(listingsWhere(rates, collectionSlug));
 
   // aggregate without GROUP BY always yields exactly one row
   return row! satisfies MarketStatsOutput;
